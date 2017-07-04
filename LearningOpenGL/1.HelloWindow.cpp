@@ -33,6 +33,7 @@ namespace HelloWindow {
 		//check GLAD is working
 		if (!gladLoadGLLoader((GLADloadproc)&glfwGetProcAddress)) {
 			std::cout << "failed to initialze glad" << std::endl;
+			return -1;
 		}
 
 		//set up the view port dimensions
