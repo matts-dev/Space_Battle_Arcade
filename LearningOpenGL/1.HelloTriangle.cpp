@@ -25,8 +25,8 @@ const char* fragmentShader =
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"    //always render an orange color"
-"    FragColor = vect4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"    //always render an orange color\n"
+"    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\n\0";
 
 int main() {
@@ -39,7 +39,7 @@ int main() {
 
 	//create window
 	GLFWwindow* window = glfwCreateWindow(width, height, "LearnOpenGL", nullptr, nullptr);
-	if (window == nullptr) {
+	if (window == nullptr) {	
 		std::cout << "failed to create window" << std::endl;
 		glfwTerminate();
 		return -1;
@@ -115,6 +115,11 @@ int main() {
 		0.0f, 0.5f, 0.0f
 	};
 
+	//create a VAO (vertex array object) to store the vertex attributes's configuration state
+	GLuint VAO = 0;
+	glGenVertexArrays(1, &VAO); 
+	glBindVertexArray(VAO); //any state changes will not be recorded into this VAO until another is bound; bind to this VAO to restore state before drawing triangle
+
 	//create VBO (vertex buffer object)
 	GLuint VBO = 0;	//will hold id of buffer object responsible for traingle
 	glGenBuffers(1, &VBO);	//create 1 buffer, pass address of where id should be stored 
@@ -127,7 +132,11 @@ int main() {
 
 	//INSTRUCT OPENGL HOW TO INTERPRET PASSED DATA
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(0)); // note: needs VBO already bound,
+
 	glEnableVertexAttribArray(0); //activates vertex attribute (shader variable) labeled with location 0 
+
+	//unbind the vertex array so other configuration changes are not stored in this VBA
+	glBindVertexArray(0);
 	
 	glUseProgram(shaderProgramID);//set the shader program to use (note: the tutorial places in this in render loop before draw calls, but since we only have 1 shader program I am putting here)
 	// -----------------------------------------------------------------//
@@ -141,10 +150,19 @@ int main() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		glUseProgram(shaderProgramID);
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+
 		//swap and draw
 		glfwSwapBuffers(window);
 		glfwPollEvents(); //update keyboard input, mouse movement, etc.
 	}
+
+	//deallocate resources
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
 
 	//free resources before closing
 	glfwTerminate();
