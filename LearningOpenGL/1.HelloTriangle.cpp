@@ -141,28 +141,77 @@ int main() {
 	glUseProgram(shaderProgramID);//set the shader program to use (note: the tutorial places in this in render loop before draw calls, but since we only have 1 shader program I am putting here)
 	// -----------------------------------------------------------------//
 
+
+
+	// --------------------------- RECTANGLE DATA -----------------------//
+
+	//recycle points uses indices in element buffers
+	float rectVertices[] = {
+		0.5f,  0.5f, 0.0f,  // top right
+		0.5f, -0.5f, 0.0f,  // bottom right
+		-0.5f, -0.5f, 0.0f,  // bottom left
+		-0.5f,  0.5f, 0.0f   // top left 
+	};
+
+	GLuint rectIndices[] = {
+		0, 1, 3,	//first triangle
+		1, 2, 3		//second triangle
+	};
+
+	GLuint VAO_Rect = 0;
+	glGenVertexArrays(1, &VAO_Rect);
+	glBindVertexArray(VAO_Rect);	//build state for VAO_rect
+
+	GLuint VBO_RectPnts = 0;
+	glGenBuffers(1, &VBO_RectPnts);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_RectPnts);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rectVertices), rectVertices, GL_STATIC_DRAW);
+
+	//element array buffer object stores how to use index data
+	GLuint EBO = 0;
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectIndices), rectIndices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(0));
+	glEnableVertexAttribArray(0);
+	
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //this is set by default, no need to do this call; just contrasting two potential modes
+
 	//render loop
 	while (!glfwWindowShouldClose(window)) {
 		//poll input
 		processInput(window);
 
-		//render commands
+		//CLEAR SCREEN (render commands)
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		//SET SHADER FOR DRAWING
 		glUseProgram(shaderProgramID);
+
+		//DRAW TRIANGLE with configuration saved in vao
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
+		//DRAW RECTANGLE using configuration saved in VAO
+		glBindVertexArray(VAO_Rect);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //notice this isn't draw*arrays*, but is draw*elements*
 
 		//swap and draw
 		glfwSwapBuffers(window);
 		glfwPollEvents(); //update keyboard input, mouse movement, etc.
+
 	}
 
 	//deallocate resources
-	glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &VAO); //triangle's resources
 	glDeleteBuffers(1, &VBO);
+
+	glDeleteVertexArrays(1, &VAO_Rect); //rectangle's resources
+	glDeleteBuffers(1, &VBO_RectPnts);
+	glDeleteBuffers(1, &EBO);
 
 	//free resources before closing
 	glfwTerminate();
