@@ -1,6 +1,4 @@
 //1. Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data :
-
-
 #include<iostream>
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
@@ -199,6 +197,6 @@ namespace HT_Challenge1 {
 	}
 }
 
-int main() {
-	HT_Challenge1::main();
-}
+//int main() {
+//	HT_Challenge1::main();
+//}
