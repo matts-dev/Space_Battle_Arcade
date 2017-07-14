@@ -48,9 +48,9 @@ namespace HT_Challenge2 {
 			glfwSwapBuffers(window);
 		}
 
-		glfwTerminate();
 		glDeleteBuffers(2, VBOs);
 		glDeleteVertexArrays(2, VAOs);
+		glfwTerminate();
 		return 0;
 	}
 
@@ -165,7 +165,7 @@ namespace HT_Challenge2 {
 		return true;
 	}
 }
-
-int main() {
-	HT_Challenge2::main();
-}
+//
+//int main() {
+//	HT_Challenge2::main();
+//}
