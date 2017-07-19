@@ -183,6 +183,6 @@ namespace HTChallenge3 {
 
 }
 
-int main() {
-	return HTChallenge3::main();
-}
+//int main() {
+//	return HTChallenge3::main();
+//}
