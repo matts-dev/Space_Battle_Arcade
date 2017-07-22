@@ -178,7 +178,8 @@ namespace HTPractice4 {
 	}
 
 }
+//
+//int main() {
+//	return HTPractice4::main();
+//}
 
-int main() {
-	return HTPractice4::main();
-}
