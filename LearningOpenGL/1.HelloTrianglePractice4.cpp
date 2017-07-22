@@ -125,8 +125,10 @@ namespace HTPractice4 {
 		if(!success){
 			glGetProgramInfoLog(linkedProgram, 256, nullptr, infolog);
 			std::cerr << "failed to link shader program\n" << infolog << std::endl;
-			return 01;
+			return 0;
 		}
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
 
 		return linkedProgram;
 	}
