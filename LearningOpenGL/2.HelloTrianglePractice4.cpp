@@ -2,6 +2,7 @@
 #include<iostream>
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
+#include"Shader.h"
 
 namespace HTPractice4 {
 
@@ -24,12 +25,13 @@ namespace HTPractice4 {
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			processInputs(window);
 			glfwPollEvents();
+			processInputs(window);
 
 			//draw the element!
 			glUseProgram(linkedShader);
 			glBindVertexArray(VAO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glfwSwapBuffers(window);
@@ -165,6 +167,7 @@ namespace HTPractice4 {
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //this will prevent drawing, must bind element every draw?
 		glBindVertexArray(0);
 
 		return true;
@@ -178,7 +181,7 @@ namespace HTPractice4 {
 	}
 
 }
-//
+
 //int main() {
 //	return HTPractice4::main();
 //}
