@@ -6,7 +6,8 @@
 
 Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath):
 	failed(false),
-	linkedProgram(0)
+	linkedProgram(0),
+	active(false)
 {
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -61,9 +62,30 @@ Shader::~Shader()
 {
 }
 
-void Shader::use()
+void Shader::use(bool activate)
 {
+	if (activate)
+		glUseProgram(linkedProgram);
+	else
+		glUseProgram(0);
+}
+
+void Shader::setFloatUniform(const char* uniform, float red, float green, float blue, float alpha)
+{
+	//do not need to be using shader to query location of uniform
+	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
+	
+	//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
+	GLint cachedPreviousShader;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
+
+	//must be using the shader to update uniform value
 	glUseProgram(linkedProgram);
+	glUniform4f(uniformLocation, red, green, blue, alpha);
+
+	//restore previous shader
+	glUseProgram(cachedPreviousShader);
+
 }
 
 bool Shader::shaderCompileSuccess(GLuint shaderID)

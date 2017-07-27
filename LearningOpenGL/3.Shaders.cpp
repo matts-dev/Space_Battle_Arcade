@@ -11,26 +11,50 @@
 #include"Shader.h"
 
 namespace shaders {
+	int main();
 	int main() {
 		GLFWwindow* window = Utils::initOpenGl(800, 400);
 		if (!window) { return -1; }
 
-		Shader basicShader("BasicVertexShader.glsl", "BasicFragShader.glsl");
+		//Check the maximum number of vertex attributes available on this system 
+		int numVertAttribs = 0;
+		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &numVertAttribs);
+		std::cout << "The number of vertex shader attributes on the system is: " << numVertAttribs << std::endl;
+		
+		//Shader basicShader("BasicVertexShader.glsl", "BasicFragShader.glsl");
+		//Shader basicShader("3a.VertWithSingleOut.glsl", "3a.FragWithSingleIn.glsl");
+		//Shader basicShader("3a.VertWithSingleOut.glsl", "3b.FragShaderWithUniform.glsl");
+		Shader basicShader("3a.VertWithSingleOut.glsl", "3b.FragShaderWithUniform.glsl");
+		Shader twoAttribShader("3c.2AtribVertShader.glsl", "3c.2AtribFragShader.glsl");
+
+
 		if (basicShader.createFailed()) { glfwTerminate(); return -1; }
 
 		GLuint VAO, VBO, EAO;
-		Utils::createSingleElementTriangle(EAO, VAO, VBO);
+		//Utils::createSingleElementTriangle(EAO, VAO, VBO); // enable for shader: "FragShaderWithUniform" color fade code with element
+		Utils::createTriangleWithTwoVertexAttributes(VAO, VBO);
+
 
 		while (!glfwWindowShouldClose(window)) {
 			glClearColor(0.f, 0.f, 0.f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			basicShader.use();
+
+			//"3b. FragShaderWithUniform" color fade code with element
+			//basicShader.use();
+			//float timeValue = static_cast<float>(glfwGetTime());
+			//float redValue = (std::sin(timeValue) / 2.0f) + 0.5f;
+			//basicShader.setFloatUniform("globalColor", redValue, 0.0f, 0.0f, 1.0f);
+			//glBindVertexArray(VAO);
+			//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAO);
+			//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+
+			//code for rainbow triangle! (
+			twoAttribShader.use();
 			glBindVertexArray(VAO);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAO);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+
 
 			glfwPollEvents();
 			Utils::setWindowCloseOnEscape(window);

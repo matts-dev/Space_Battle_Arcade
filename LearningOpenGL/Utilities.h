@@ -43,4 +43,9 @@ namespace Utils {
 	* Creates a single triangle, but uses element array objects instead of just using array
 	*/
 	bool createSingleElementTriangle(GLuint& EAO, GLuint& VAO, GLuint& VBO);
+
+	/*
+	* Create a single triangle that that uses two vertex attributes, 0 for position, 1 for color. 
+	*/
+	bool createTriangleWithTwoVertexAttributes(GLuint& VAO, GLuint& VBO);
 }

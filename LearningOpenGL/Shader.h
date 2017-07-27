@@ -15,10 +15,13 @@ public:
 
 	bool createFailed() { return failed; }
 
-	void use();
+	void use(bool activate = true);
+
+	void setFloatUniform(const char* uniform, float red, float green, float blue, float alpha);
 
 private:
 	bool failed;
+	bool active;
 	GLuint linkedProgram;
 
 private:
