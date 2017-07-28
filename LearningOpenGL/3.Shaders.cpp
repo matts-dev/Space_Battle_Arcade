@@ -25,7 +25,9 @@ namespace shaders {
 		//Shader basicShader("3a.VertWithSingleOut.glsl", "3a.FragWithSingleIn.glsl");
 		//Shader basicShader("3a.VertWithSingleOut.glsl", "3b.FragShaderWithUniform.glsl");
 		Shader basicShader("3a.VertWithSingleOut.glsl", "3b.FragShaderWithUniform.glsl");
+
 		Shader twoAttribShader("3c.2AtribVertShader.glsl", "3c.2AtribFragShader.glsl");
+		Shader flippedShaderChallenge1("3.DFlippedVertexShader_Challenge1.glsl", "3c.2AtribFragShader.glsl");
 
 
 		if (basicShader.createFailed()) { glfwTerminate(); return -1; }
@@ -51,7 +53,8 @@ namespace shaders {
 			//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
 
 			//code for rainbow triangle! (
-			twoAttribShader.use();
+			//twoAttribShader.use();
+			flippedShaderChallenge1.use();
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
