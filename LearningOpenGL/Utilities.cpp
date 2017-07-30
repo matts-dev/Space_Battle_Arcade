@@ -95,6 +95,55 @@ namespace Utils {
 		return (VAO && VBO && EAO);
 	}
 
+	bool generate4AttribRectangleElement(GLuint & EAO, GLuint & VAO, GLuint & VBO)
+	{
+		//VERTEX ATTRIBS
+		static const float vertices[] = {
+			// positions          // colors           // texture coords
+			0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+			0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+			-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+		};
+
+		//ELEMENT INDICES FOR TEXTURE TUTORIAL
+		static const GLuint rectIndices[] = {
+			0, 1, 3,	//first triangle
+			1, 2, 3		//second triangle 
+		};
+
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &EAO);
+		glGenBuffers(1, &VBO);
+
+		if (!(EAO && VAO && VBO)) { return false; }
+		
+		//start saving state in VAO
+		glBindVertexArray(VAO);
+		
+		//buffer vertice data
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		//buffer element indices data
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectIndices), rectIndices, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<GLvoid*>(0));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<GLvoid*>(3 * sizeof(float)));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<GLvoid*>(6 * sizeof(float)));
+
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
+
+		//stop saving state in this vertex array object
+		glBindVertexArray(0);
+
+		//if this state is reached, then all previous previous checks are assumed to have passed
+		return true;
+	}
+
 	bool createTriangleWithTwoVertexAttributes(GLuint & VAO, GLuint & VBO)
 	{
 		static const float vertices[] = {

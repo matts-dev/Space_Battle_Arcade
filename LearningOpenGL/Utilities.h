@@ -44,6 +44,9 @@ namespace Utils {
 	*/
 	bool createSingleElementTriangle(GLuint& EAO, GLuint& VAO, GLuint& VBO);
 
+
+	bool generate4AttribRectangleElement(GLuint& EAO, GLuint& VAO, GLuint& VBO);
+
 	/*
 	* Create a single triangle that that uses two vertex attributes, 0 for position, 1 for color. 
 	*/
