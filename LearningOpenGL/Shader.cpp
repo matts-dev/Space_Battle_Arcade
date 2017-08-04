@@ -70,6 +70,11 @@ void Shader::use(bool activate)
 		glUseProgram(0);
 }
 
+GLuint Shader::getId()
+{
+	return linkedProgram;
+}
+
 void Shader::setFloatUniform(const char* uniform, float red, float green, float blue, float alpha)
 {
 	//do not need to be using shader to query location of uniform

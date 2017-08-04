@@ -16,6 +16,7 @@ public:
 	bool createFailed() { return failed; }
 
 	void use(bool activate = true);
+	GLuint getId();
 
 	void setFloatUniform(const char* uniform, float red, float green, float blue, float alpha);
 
