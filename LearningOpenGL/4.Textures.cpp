@@ -109,6 +109,6 @@ namespace Tex {
 
 }
 
-int main() {
-	return Tex::main();
-}
+//int main() {
+//	return Tex::main();
+//}
