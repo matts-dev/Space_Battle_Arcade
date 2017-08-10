@@ -7,16 +7,28 @@
 #include"libraries/stb_image.h"
 
 
-namespace TexCH1 {
+namespace TexCH2 {
 	int main() {
 		GLFWwindow* window = Utils::initOpenGl(800, 600);
 		if (!window) return -1;
 
-		Shader shader3attribs("4. VertShader_3attribs_pos_color_texcoord.glsl", "4. CH1_FragShader.glsl");
+		//Shader shader3attribs("4. VertShader_3attribs_pos_color_texcoord.glsl", "4. CH1_FragShader.glsl");
+		//Shader shader3attribs("4. CH2_VertShader.glsl", "4. CH2_FragShader.glsl"); //shader for 4 smileys on single board
+		Shader shader3attribs("4. VertShader_3attribs_pos_color_texcoord.glsl", "4. FragShader_3attribs_pos_color_texcoord.glsl");
+
+
 		if (shader3attribs.createFailed()) { glfwTerminate(); return -1; }
 
+		static const float vertices[] = {
+			// positions          // colors           // texture coords
+			0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f,   // top right
+			0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f,   // bottom right
+			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+			-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f    // top left 
+		};
+
 		GLuint EAO, VAO, VBO;
-		Utils::generate4AttribRectangleElement(EAO, VAO, VBO);
+		Utils::generateRectForTextChallenge2(vertices, sizeof(vertices), EAO, VAO, VBO);
 
 		//LOAD TEXTURE DATA
 		int tWidth[2], tHeight[2], nrChannels[2];
@@ -30,8 +42,8 @@ namespace TexCH1 {
 		glBindTexture(GL_TEXTURE_2D, Textures[0]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tWidth[0], tHeight[0], 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		stbi_image_free(data);
@@ -90,6 +102,6 @@ namespace TexCH1 {
 
 }
 
-//int main() {
-//	return TexCH1::main();
-//}
+int main() {
+	return TexCH2::main();
+}

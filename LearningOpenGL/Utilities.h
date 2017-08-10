@@ -46,6 +46,7 @@ namespace Utils {
 
 
 	bool generate4AttribRectangleElement(GLuint& EAO, GLuint& VAO, GLuint& VBO);
+	bool generateRectForTextChallenge2(const float vertices[], const size_t verticesSize, GLuint & EAO, GLuint & VAO, GLuint & VBO);
 
 	/*
 	* Create a single triangle that that uses two vertex attributes, 0 for position, 1 for color. 
