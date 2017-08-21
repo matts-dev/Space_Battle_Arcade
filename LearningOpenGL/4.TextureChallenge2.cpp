@@ -8,6 +8,7 @@
 #include"libraries/stb_image.h"
 
 
+
 namespace TexCH2 {
 	int main() {
 		GLFWwindow* window = Utils::initOpenGl(800, 600);

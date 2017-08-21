@@ -1,20 +1,27 @@
 ///Challenge3 Try to display only the center pixels of the texture image on the rectangle in such a way that the individual pixels are getting visible by changing the texture coordinates. Try to set the texture filtering method to GL_NEAREST to see the pixels more clearly:
 #pragma once
 
+#include<iostream>
 #include"Utilities.h"
 #include"Shader.h"
 #include"libraries/stb_image.h"
+#include"glm.hpp"
+#include"gtc/matrix_transform.hpp"
+#include"gtc/type_ptr.hpp"
+#include <chrono>
+#include <thread>
 
 
-namespace TexCH4 {
+namespace Transformations {
 	void pollArrowKeys(GLFWwindow * window, float& valueToControl);
 
 	int main() {
+		//SKIP TO TRANFORMATION SECTION
 		GLFWwindow* window = Utils::initOpenGl(800, 600);
 		if (!window) return -1;
 
 		//Special shader that allows uniforms to be set based on arrow keys
-		Shader shader3attribs("4.CH4_VertShaderArrowKeys.glsl", "4.CH4_FragShaderArrowKeys.glsl");
+		Shader shader3attribs("5.VertShader.glsl", "5.FragShader.glsl");
 
 		if (shader3attribs.createFailed()) { glfwTerminate(); return -1; }
 
@@ -76,6 +83,19 @@ namespace TexCH4 {
 		float mixSetting = 0.5f;
 		glUniform1f(mixRatioUniform, mixSetting);
 
+		//TRANFORMATION 
+		glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+		glm::mat4 translationTransform; //is the identity matrix by default
+		translationTransform = glm::translate(translationTransform, glm::vec3(1.0f, 1.0f, 0.0f));
+		vec = translationTransform * vec; //matrix multiplication is not commutative; order matters 
+		std::cout << "translation vector: "<< vec.x << " " << vec.y << " " << vec.z << std::endl;
+
+		//glm::mat4 rotateAndScaleTransform;
+		//rotateAndScaleTransform = glm::rotate(rotateAndScaleTransform, glm::radians(90.0f), glm::vec3(0.f, 0.f, 1.0f));
+		//rotateAndScaleTransform = glm::scale(rotateAndScaleTransform, glm::vec3(0.5f, 0.5f, 0.5f));
+
+		//GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
+		//glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(rotateAndScaleTransform));
 		while (!glfwWindowShouldClose(window))
 		{
 
@@ -83,6 +103,16 @@ namespace TexCH4 {
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			shader3attribs.use();
+			//UPDATE TRANSFORM
+			glm::mat4 transform;
+			transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
+			transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
+			transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
+
+			GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
+			glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transform));
+
+			//DRAW
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, Textures[0]);
 
@@ -99,6 +129,9 @@ namespace TexCH4 {
 			Utils::setWindowCloseOnEscape(window);
 			pollArrowKeys(window, mixSetting);
 			glfwSwapBuffers(window);
+
+			static long delayMsFor60FPS = static_cast<long>(1 / 60.f * 1000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(delayMsFor60FPS));
 		}
 
 		glDeleteVertexArrays(1, &VAO);
@@ -122,6 +155,6 @@ namespace TexCH4 {
 	}
 }
 
-//int main() {
-//	return TexCH4::main();
-//}
+int main() {
+	return Transformations::main();
+}
