@@ -11,12 +11,15 @@
 #include <chrono>
 #include <thread>
 
-
-namespace Transformations {
+namespace TransformationsCH1 {
 	void pollArrowKeys(GLFWwindow * window, float& valueToControl);
+	void pollFlipPress(GLFWwindow * window, bool& flipped, bool& pressRegistered);
 
 	int main() {
 		//SKIP TO TRANFORMATION SECTION
+		bool bShouldFlip = false;
+		bool bPressRegistered = false;
+
 		GLFWwindow* window = Utils::initOpenGl(800, 600);
 		if (!window) return -1;
 
@@ -42,9 +45,9 @@ namespace Transformations {
 		unsigned char* data = stbi_load("Textures/container.jpg", &(tWidth[0]), &(tHeight[0]), &(nrChannels[0]), 0);
 		if (!data) { glfwTerminate(); return-1; }
 
-		GLuint Textures[2];
-		glGenTextures(2, Textures);
-		glBindTexture(GL_TEXTURE_2D, Textures[0]);
+		GLuint textures[2];
+		glGenTextures(2, textures);
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tWidth[0], tHeight[0], 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
@@ -58,7 +61,7 @@ namespace Transformations {
 		data = stbi_load("Textures/awesomeface3.png", &(tWidth[1]), &(tHeight[1]), &(nrChannels[1]), 0);
 		if (!data) { glfwTerminate(); return-1; }
 
-		glBindTexture(GL_TEXTURE_2D, Textures[1]);
+		glBindTexture(GL_TEXTURE_2D, textures[1]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tWidth[1], tWidth[1], 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -88,7 +91,7 @@ namespace Transformations {
 		glm::mat4 translationTransform; //is the identity matrix by default
 		translationTransform = glm::translate(translationTransform, glm::vec3(1.0f, 1.0f, 0.0f));
 		vec = translationTransform * vec; //matrix multiplication is not commutative; order matters 
-		std::cout << "translation vector: "<< vec.x << " " << vec.y << " " << vec.z << std::endl;
+		std::cout << "translation vector: " << vec.x << " " << vec.y << " " << vec.z << std::endl;
 
 		//glm::mat4 rotateAndScaleTransform;
 		//rotateAndScaleTransform = glm::rotate(rotateAndScaleTransform, glm::radians(90.0f), glm::vec3(0.f, 0.f, 1.0f));
@@ -96,8 +99,11 @@ namespace Transformations {
 
 		//GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
 		//glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(rotateAndScaleTransform));
+		std::cout << "press f to flip rotation and translation order" << std::endl;
 		while (!glfwWindowShouldClose(window))
 		{
+
+			pollFlipPress(window, bShouldFlip, bPressRegistered);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
@@ -105,21 +111,30 @@ namespace Transformations {
 			shader3attribs.use();
 			//UPDATE TRANSFORM
 			glm::mat4 transform;
-			transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
-			transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
+			if (bShouldFlip)
+			{
+				transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
+				transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
+			}
+			else
+			{
+				transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
+				transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
+			}
 			transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
+
 
 			GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
 			glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transform));
 
 			//DRAW
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, Textures[0]);
+			glBindTexture(GL_TEXTURE_2D, textures[0]);
 
 			glUniform1f(mixRatioUniform, mixSetting);
 
 			glActiveTexture(GL_TEXTURE0 + 1);
-			glBindTexture(GL_TEXTURE_2D, Textures[1]);
+			glBindTexture(GL_TEXTURE_2D, textures[1]);
 
 			glBindVertexArray(VAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -153,8 +168,25 @@ namespace Transformations {
 			valueToControl -= incAmount;
 		}
 	}
+
+	void pollFlipPress(GLFWwindow * window, bool& flipped, bool& pressRegistered)
+	{
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !pressRegistered)
+		{
+			flipped = !flipped;
+			pressRegistered = true;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE && pressRegistered)
+		{
+			//if the key isn't pressed, then clear the previous registration of the key
+			//this is a simple mechanism to prevent spamming of flipped bool
+			pressRegistered = false;
+		}
+	}
+
+
 }
 
-//int main() {
-//	return Transformations::main();
-//}
+int main() {
+	return TransformationsCH1::main();
+}
