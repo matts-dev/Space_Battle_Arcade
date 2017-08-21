@@ -11,9 +11,8 @@
 #include <chrono>
 #include <thread>
 
-namespace TransformationsCH1 {
+namespace TransformationsCH2 {
 	void pollArrowKeys(GLFWwindow * window, float& valueToControl);
-	void pollFlipPress(GLFWwindow * window, bool& flipped, bool& pressRegistered);
 
 	int main() {
 		//SKIP TO TRANFORMATION SECTION
@@ -78,7 +77,7 @@ namespace TransformationsCH1 {
 		GLuint texLoc1 = glGetUniformLocation(shader3attribs.getId(), "texture1");
 		GLuint texLoc2 = glGetUniformLocation(shader3attribs.getId(), "texture2");
 
-		//using GL_TEXTURE0 to reenforce that this is the number we're setting
+		//using GL_TEXTURE0 to re-enforce that this is the number we're setting
 		glUniform1i(texLoc1, 0);
 		glUniform1i(texLoc2, GL_TEXTURE1 - GL_TEXTURE0);
 
@@ -103,46 +102,42 @@ namespace TransformationsCH1 {
 		while (!glfwWindowShouldClose(window))
 		{
 
-			pollFlipPress(window, bShouldFlip, bPressRegistered);
+			pollArrowKeys(window, mixSetting);
+			glUniform1f(mixRatioUniform, mixSetting);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			shader3attribs.use();
-			//UPDATE TRANSFORM
-			glm::mat4 transform;
-			if (bShouldFlip)
-			{
-				transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
-				transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
-			}
-			else
-			{
-				transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
-				transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
-			}
-			transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
-
-
-			GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
-			glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transform));
-
-			//DRAW
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, textures[0]);
-
-			glUniform1f(mixRatioUniform, mixSetting);
 
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, textures[1]);
 
+			shader3attribs.use();
+			//UPDATE TRANSFORM
+			glm::mat4 transformBottomRight;
+			transformBottomRight = glm::translate(transformBottomRight, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
+			transformBottomRight = glm::rotate(transformBottomRight, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
+			transformBottomRight = glm::scale(transformBottomRight, glm::vec3(0.5f, 0.5f, 0.5f));
+
+			GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
+			glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transformBottomRight));
+
+			//DRAW
 			glBindVertexArray(VAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+			glm::mat4 transformTopLeft;
+			transformTopLeft = glm::translate(transformTopLeft, glm::vec3(-0.5f, 0.5f, 0.f));
+			float scale = static_cast<float>(std::sin(glfwGetTime()));
+			transformTopLeft = glm::scale(transformTopLeft, glm::vec3(scale, scale, scale));
+
+			glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transformTopLeft));
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glfwPollEvents();
 			Utils::setWindowCloseOnEscape(window);
-			pollArrowKeys(window, mixSetting);
 			glfwSwapBuffers(window);
 
 			static long delayMsFor60FPS = static_cast<long>(1 / 60.f * 1000);
@@ -158,7 +153,7 @@ namespace TransformationsCH1 {
 
 	void pollArrowKeys(GLFWwindow * window, float& valueToControl)
 	{
-		static const float incAmount = 0.0005f;
+		float incAmount = 0.05f;
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
 			valueToControl += incAmount;
@@ -168,25 +163,8 @@ namespace TransformationsCH1 {
 			valueToControl -= incAmount;
 		}
 	}
-
-	void pollFlipPress(GLFWwindow * window, bool& flipped, bool& pressRegistered)
-	{
-		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !pressRegistered)
-		{
-			flipped = !flipped;
-			pressRegistered = true;
-		}
-		else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE && pressRegistered)
-		{
-			//if the key isn't pressed, then clear the previous registration of the key
-			//this is a simple mechanism to prevent spamming of flipped bool
-			pressRegistered = false;
-		}
-	}
-
-
 }
-//
-//int main() {
-//	return TransformationsCH1::main();
-//}
+
+int main() {
+	return TransformationsCH2::main();
+}
