@@ -11,19 +11,23 @@
 #include <chrono>
 #include <thread>
 
-namespace TransformationsCH2 {
+namespace CoordinateSystems {
 	void pollArrowKeys(GLFWwindow * window, float& valueToControl);
+	
+	static const int screenHeight = 600;
+	static const int screenWidth = 800;
 
 	int main() {
 		//SKIP TO TRANFORMATION SECTION
 		bool bShouldFlip = false;
 		bool bPressRegistered = false;
 
-		GLFWwindow* window = Utils::initOpenGl(800, 600);
+		GLFWwindow* window = Utils::initOpenGl(screenWidth, screenHeight);
 		if (!window) return -1;
 
 		//Special shader that allows uniforms to be set based on arrow keys
-		Shader shader3attribs("5.VertShader.glsl", "5.FragShader.glsl");
+		//Shader shader3attribs("5.VertShader.glsl", "5.FragShader.glsl");
+		Shader shader3attribs("6.VertShader.glsl", "6.FragShader.glsl");
 
 		if (shader3attribs.createFailed()) { glfwTerminate(); return -1; }
 
@@ -51,8 +55,6 @@ namespace TransformationsCH2 {
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		stbi_image_free(data);
@@ -68,8 +70,6 @@ namespace TransformationsCH2 {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		stbi_image_free(data);
 
@@ -85,23 +85,30 @@ namespace TransformationsCH2 {
 		float mixSetting = 0.5f;
 		glUniform1f(mixRatioUniform, mixSetting);
 
-		//TRANFORMATION 
-		glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-		glm::mat4 translationTransform; //is the identity matrix by default
-		translationTransform = glm::translate(translationTransform, glm::vec3(1.0f, 1.0f, 0.0f));
-		vec = translationTransform * vec; //matrix multiplication is not commutative; order matters 
-		std::cout << "translation vector: " << vec.x << " " << vec.y << " " << vec.z << std::endl;
+		//rotate the plane
+		glm::mat4 model;
+		model = glm::rotate(model, glm::radians(-55.f), glm::vec3(1.0, 0.0f, 0.0f));
 
-		//glm::mat4 rotateAndScaleTransform;
-		//rotateAndScaleTransform = glm::rotate(rotateAndScaleTransform, glm::radians(90.0f), glm::vec3(0.f, 0.f, 1.0f));
-		//rotateAndScaleTransform = glm::scale(rotateAndScaleTransform, glm::vec3(0.5f, 0.5f, 0.5f));
+		// move the camera backwards by pushing the entire scene forward (negative z direction)
+		glm::mat4 view;
+		view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
 
-		//GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
-		//glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(rotateAndScaleTransform));
-		std::cout << "press f to flip rotation and translation order" << std::endl;
+		//create the project matrix for the perspective 
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(45.f), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
+		
+		shader3attribs.use();
+		GLuint modelIndex = glGetUniformLocation(shader3attribs.getId(), "model");
+		GLuint viewIndex = glGetUniformLocation(shader3attribs.getId(), "view");
+		GLuint projectionIndex = glGetUniformLocation(shader3attribs.getId(), "projection");
+
+		glUniformMatrix4fv(modelIndex, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(viewIndex, 1, GL_FALSE, glm::value_ptr(view));
+		//glUniformMatrix4fv(viewIndex, 1, GL_FALSE, &view[0][0]);
+		glUniformMatrix4fv(projectionIndex, 1, GL_FALSE, glm::value_ptr(projection));
+
 		while (!glfwWindowShouldClose(window))
 		{
-
 			pollArrowKeys(window, mixSetting);
 			glUniform1f(mixRatioUniform, mixSetting);
 
@@ -116,24 +123,16 @@ namespace TransformationsCH2 {
 
 			shader3attribs.use();
 			//UPDATE TRANSFORM
-			glm::mat4 transformBottomRight;
-			transformBottomRight = glm::translate(transformBottomRight, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
-			transformBottomRight = glm::rotate(transformBottomRight, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
-			transformBottomRight = glm::scale(transformBottomRight, glm::vec3(0.5f, 0.5f, 0.5f));
+			//glm::mat4 transformBottomRight;
+			//transformBottomRight = glm::translate(transformBottomRight, glm::vec3(0.5f, -0.5f, 0.f)); //translation should occur first, this prevents rotation/scaling from affecting translation
+			//transformBottomRight = glm::rotate(transformBottomRight, static_cast<float>(glfwGetTime()), glm::vec3(0.f, 0.f, 1.0f));
+			//transformBottomRight = glm::scale(transformBottomRight, glm::vec3(0.5f, 0.5f, 0.5f));
 
-			GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
-			glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transformBottomRight));
+			//GLuint uniformLocation = glGetUniformLocation(shader3attribs.getId(), "transform");
+			//glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transformBottomRight));
 
 			//DRAW
 			glBindVertexArray(VAO);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-			glm::mat4 transformTopLeft;
-			transformTopLeft = glm::translate(transformTopLeft, glm::vec3(-0.5f, 0.5f, 0.f));
-			float scale = static_cast<float>(std::sin(glfwGetTime()));
-			transformTopLeft = glm::scale(transformTopLeft, glm::vec3(scale, scale, scale));
-
-			glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(transformTopLeft));
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glfwPollEvents();
@@ -165,6 +164,6 @@ namespace TransformationsCH2 {
 	}
 }
 
-//int main() {
-//	return TransformationsCH2::main();
-//}
+int main() {
+	return CoordinateSystems::main();
+}
