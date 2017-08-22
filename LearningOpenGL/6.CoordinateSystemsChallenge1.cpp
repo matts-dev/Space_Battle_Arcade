@@ -10,8 +10,9 @@
 #include <chrono>
 #include <thread>
 
-namespace CoordinateSystemsPt3 {
-	void pollArrowKeys(GLFWwindow * window, float& valueToControl);
+namespace CoordinateSystemsCH1 {
+	void pollUpDownArrowKeys(GLFWwindow * window, float& valueToControl);
+	void pollLeftRIghtArrowKeys(GLFWwindow*window, float& valueToControl, float incAmount);
 
 	static const int screenHeight = 600;
 	static const int screenWidth = 800;
@@ -131,9 +132,12 @@ namespace CoordinateSystemsPt3 {
 		//set OpenGL to consider zbuffer in rendering
 		glEnable(GL_DEPTH_TEST);
 
+		float FOV = 45.0f;
+		float aspectRatio = static_cast<float>(screenWidth) / screenHeight;
 		while (!glfwWindowShouldClose(window))
 		{
-			pollArrowKeys(window, mixSetting);
+			pollUpDownArrowKeys(window, FOV);
+			pollLeftRIghtArrowKeys(window, aspectRatio, 0.1f);
 			glUniform1f(mixRatioUniform, mixSetting);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -157,7 +161,7 @@ namespace CoordinateSystemsPt3 {
 				model = glm::translate(model, cubePositions[i]);
 				model = glm::rotate(model, static_cast<float>(glfwGetTime()) * glm::radians(50.0f), glm::vec3(0.5, 0.5f, 0.0f));
 				view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
-				projection = glm::perspective(glm::radians(45.f), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
+				projection = glm::perspective(glm::radians(FOV), aspectRatio, 0.1f, 100.f);
 
 				shader2attribs.use();
 				GLuint modelIndex = glGetUniformLocation(shader2attribs.getId(), "model");
@@ -188,9 +192,9 @@ namespace CoordinateSystemsPt3 {
 		return 0;
 	}
 
-	void pollArrowKeys(GLFWwindow * window, float& valueToControl)
+	void pollUpDownArrowKeys(GLFWwindow * window, float& valueToControl)
 	{
-		float incAmount = 0.05f;
+		float incAmount = 0.5f;
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
 			valueToControl += incAmount;
@@ -200,8 +204,22 @@ namespace CoordinateSystemsPt3 {
 			valueToControl -= incAmount;
 		}
 	}
+
+
+	void pollLeftRIghtArrowKeys(GLFWwindow* window, float& valueToControl, float incAmount)
+	{
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		{
+			valueToControl += incAmount;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		{
+			valueToControl -= incAmount;
+		}
+	}
+
 }
 
-//int main() {
-//	return CoordinateSystemsPt3::main();
-//}
+int main() {
+	return CoordinateSystemsCH1::main();
+}
