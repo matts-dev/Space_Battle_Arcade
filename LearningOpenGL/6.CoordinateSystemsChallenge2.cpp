@@ -249,6 +249,7 @@ namespace CoordinateSystemsCH2 {
 
 }
 
-int main() {
-	return CoordinateSystemsCH2::main();
-}
+
+//int main() {
+//	return CoordinateSystemsCH2::main();
+//}

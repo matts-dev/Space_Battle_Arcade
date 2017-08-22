@@ -10,8 +10,10 @@
 #include <chrono>
 #include <thread>
 
-namespace CoordinateSystemsPt3 {
-	void pollArrowKeys(GLFWwindow * window, float& valueToControl);
+namespace CoordinateSystemsCH3 {
+	void pollUpDownArrowKeys(GLFWwindow * window, float& valueToControl, float incAmount);
+	void pollLeftRightArrowKeys(GLFWwindow*window, float& valueToControl, float incAmount);
+	void pollMovement(GLFWwindow* window, glm::vec3& position);
 
 	static const int screenHeight = 600;
 	static const int screenWidth = 800;
@@ -125,15 +127,32 @@ namespace CoordinateSystemsPt3 {
 			glm::vec3(0.00f, 0.0f, 0.0f),
 			glm::vec3(2.0f, 2.0f, -10.0f),
 			glm::vec3(-5.0f, 5.0f, -20.0f),
-			glm::vec3(-2.f,	-4.f, -10.f)
+			glm::vec3(-2.f,	-4.f, -10.f),
+			glm::vec3(2.0f,  5.0f, -15.0f),
+			glm::vec3(-1.5f, -2.2f, -2.5f),
+			glm::vec3(-3.8f, -2.0f, -12.3f),
+			glm::vec3(2.4f, -0.4f, -3.5f),
+			glm::vec3(-1.7f,  3.0f, -7.5f),
+			glm::vec3(1.3f, -2.0f, -2.5f),
+			glm::vec3(1.5f,  2.0f, -2.5f),
+			glm::vec3(1.5f,  0.2f, -1.5f),
+			glm::vec3(-1.3f,  1.0f, -1.5f)
 		};
 
 		//set OpenGL to consider zbuffer in rendering
 		glEnable(GL_DEPTH_TEST);
 
+		glm::vec3 cameraPositionVector(0.f, 0.f, -3.f);
+		float FOV = 45.0f;
+		float aspectRatio = static_cast<float>(screenWidth) / screenHeight;
+		float yawDegrees = 0.0f;
+		float pitchDegrees = 0.0f;
+
 		while (!glfwWindowShouldClose(window))
 		{
-			pollArrowKeys(window, mixSetting);
+			pollUpDownArrowKeys(window, pitchDegrees, 0.5f);
+			pollLeftRightArrowKeys(window, yawDegrees, 1.f);
+			pollMovement(window, cameraPositionVector);
 			glUniform1f(mixRatioUniform, mixSetting);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -155,9 +174,12 @@ namespace CoordinateSystemsPt3 {
 				glm::mat4 projection;
 
 				model = glm::translate(model, cubePositions[i]);
-				model = glm::rotate(model, static_cast<float>(glfwGetTime()) * glm::radians(50.0f), glm::vec3(0.5, 0.5f, 0.0f));
-				view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
-				projection = glm::perspective(glm::radians(45.f), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
+				if(i % 3 == 0)
+					model = glm::rotate(model, static_cast<float>(glfwGetTime()) * glm::radians(50.0f), glm::vec3(0.5, 0.5f, 0.0f));
+				view = glm::rotate(view, glm::radians(yawDegrees), glm::vec3(0.f, 1.f, 0.0f));
+				view = glm::rotate(view, glm::radians(pitchDegrees), glm::vec3(1.f, 0.f, 0.f));
+				view = glm::translate(view, cameraPositionVector);
+				projection = glm::perspective(glm::radians(FOV), aspectRatio, 0.1f, 100.f);
 
 				shader2attribs.use();
 				GLuint modelIndex = glGetUniformLocation(shader2attribs.getId(), "model");
@@ -188,9 +210,8 @@ namespace CoordinateSystemsPt3 {
 		return 0;
 	}
 
-	void pollArrowKeys(GLFWwindow * window, float& valueToControl)
+	void pollUpDownArrowKeys(GLFWwindow * window, float& valueToControl, float incAmount)
 	{
-		float incAmount = 0.05f;
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
 			valueToControl += incAmount;
@@ -200,8 +221,44 @@ namespace CoordinateSystemsPt3 {
 			valueToControl -= incAmount;
 		}
 	}
+
+
+	void pollLeftRightArrowKeys(GLFWwindow*window, float& valueToControl, float incAmount)
+	{
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		{
+			valueToControl -= incAmount;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		{
+			valueToControl += incAmount;
+		}
+	}
+
+
+	void pollMovement(GLFWwindow* window, glm::vec3& position)
+	{
+		static float movementSpeed = 0.1f;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			position.z += movementSpeed;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			position.z -= movementSpeed;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			position.x += movementSpeed;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			position.x -= movementSpeed;
+		}
+	}
+
 }
 
-//int main() {
-//	return CoordinateSystemsPt3::main();
-//}
+int main() {
+	return CoordinateSystemsCH3::main();
+}
