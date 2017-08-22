@@ -220,6 +220,6 @@ namespace CoordinateSystemsCH1 {
 
 }
 
-int main() {
-	return CoordinateSystemsCH1::main();
-}
+//int main() {
+//	return CoordinateSystemsCH1::main();
+//}
