@@ -52,4 +52,6 @@ namespace Utils {
 	* Create a single triangle that that uses two vertex attributes, 0 for position, 1 for color. 
 	*/
 	bool createTriangleWithTwoVertexAttributes(GLuint& VAO, GLuint& VBO);
+
+	bool generateObject2Attrib(const float* vertices, size_t verticesSize, GLuint& VAO, GLuint& VBO);
 }

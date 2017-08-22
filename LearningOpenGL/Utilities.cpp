@@ -217,4 +217,34 @@ namespace Utils {
 
 		return false;
 	}
+
+	bool generateObject2Attrib(const float* vertices, size_t verticesSize, GLuint& VAO, GLuint& VBO)
+	{
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
+
+		if (!(VAO && VBO)) { return false; }
+
+		//start saving state in VAO
+		glBindVertexArray(VAO);
+
+		//buffer vertex data
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_STATIC_DRAW);
+
+		//buffer element indices data
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<GLvoid*>(0));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<GLvoid*>(3 * sizeof(float)));
+
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+
+		//stop saving state in this vertex array object
+		glBindVertexArray(0);
+
+		//if this state is reached, then all previous previous checks are assumed to have passed
+		return true;
+	}
+
+
 }
