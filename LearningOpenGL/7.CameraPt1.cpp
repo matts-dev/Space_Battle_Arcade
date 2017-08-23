@@ -162,11 +162,39 @@ namespace CameraNamespacePt1 {
 			//	cameraDirection.x, cameraDirection.y, cameraDirection.z, 0.f,
 			//	0.f, 0.f, 0.f, 1.f);
 
-			glm::mat4 customLookAt(
-				cameraRight.x, cameraUp.x, cameraDirection.x, 0.f,
-				cameraRight.y, cameraUp.y, cameraDirection.y, 0.f,
-				cameraRight.z, cameraUp.z, cameraDirection.z, 0.f,
-				0.f, 0.f, 0.f, 1.f);
+			//glm::mat4 customLookAt( //while this looks right, the constructor order isn't column basis vectors, but row basis vectors :\
+			//	cameraRight.x, cameraUp.x, cameraDirection.x, 0.f,
+			//	cameraRight.y, cameraUp.y, cameraDirection.y, 0.f,
+			//	cameraRight.z, cameraUp.z, cameraDirection.z, 0.f,
+			//	0.f, 0.f, 0.f, 1.f);
+
+			//create based on columns
+			//glm::mat4 customLookAt(glm::vec4(cameraRight, 0.f), glm::vec4(cameraUp, 0.f), glm::vec4(cameraDirection, 0.f), glm::vec4(0.f, 0.f, 0.f, 1.f));
+			//glm::mat4 customLookAt(
+			//	glm::vec4(cameraRight.x, cameraUp.x, cameraDirection.x, 0.f),
+			//	glm::vec4(cameraRight.y, cameraUp.y, cameraDirection.y, 0.f),
+			//	glm::vec4(cameraRight.z, cameraUp.z, cameraDirection.z, 0.f),
+			//	glm::vec4(0.f, 0.f, 0.f, 1.f));
+			glm::mat4 customLookAt;
+			customLookAt[0][0] = cameraRight.x;
+			customLookAt[0][1] = cameraUp.x;
+			customLookAt[0][2] = cameraDirection.x;
+			customLookAt[0][3] = 0.f;
+
+			customLookAt[1][0] = cameraRight.y;
+			customLookAt[1][1] = cameraUp.y;
+			customLookAt[1][2] = cameraDirection.y;
+			customLookAt[1][3] = 0.f;
+
+			customLookAt[2][0] = cameraRight.z;
+			customLookAt[2][1] = cameraUp.z;
+			customLookAt[2][2] = cameraDirection.z;
+			customLookAt[2][3] = 0.f;
+
+			customLookAt[3][0] = 0.f;
+			customLookAt[3][1] = 0.f;
+			customLookAt[3][2] = 0.f;
+			customLookAt[3][3] = 1.f;
 
 			glm::mat4 translateCameraPosition;
 			translateCameraPosition = glm::translate(translateCameraPosition, -cameraPosition);
