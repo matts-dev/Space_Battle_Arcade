@@ -17,10 +17,6 @@ namespace CameraNamespacePt1 {
 	static const int screenWidth = 800;
 
 	int main() {
-		//SKIP TO TRANFORMATION SECTION
-		bool bShouldFlip = false;
-		bool bPressRegistered = false;
-
 		GLFWwindow* window = Utils::initOpenGl(screenWidth, screenHeight);
 		if (!window) return -1;
 
@@ -274,7 +270,7 @@ namespace CameraNamespacePt1 {
 		}
 	}
 }
-//
+
 //int main() {
 //	return CameraNamespacePt1::main();
 //}

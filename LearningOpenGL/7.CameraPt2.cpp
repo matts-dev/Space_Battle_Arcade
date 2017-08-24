@@ -26,10 +26,6 @@ namespace CameraNamespacePt2
 
 	int main()
 	{
-		//SKIP TO TRANFORMATION SECTION
-		bool bShouldFlip = false;
-		bool bPressRegistered = false;
-
 		GLFWwindow* window = Utils::initOpenGl(screenWidth, screenHeight);
 		if (!window) return -1;
 

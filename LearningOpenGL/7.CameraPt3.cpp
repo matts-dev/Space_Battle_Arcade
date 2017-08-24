@@ -13,8 +13,6 @@
 
 namespace CameraNamespacePt3
 {
-	void pollArrowKeys(GLFWwindow * window, glm::vec3& position, const glm::vec3& cameraFront, const glm::vec3& cameraUp, const float deltaTime);
-
 	Camera camera;
 	void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 	void mouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
@@ -24,10 +22,6 @@ namespace CameraNamespacePt3
 
 	int main()
 	{
-		//SKIP TO TRANFORMATION SECTION
-		bool bShouldFlip = false;
-		bool bPressRegistered = false;
-
 		GLFWwindow* window = Utils::initOpenGl(screenWidth, screenHeight);
 		if (!window) return -1;
 
@@ -150,9 +144,6 @@ namespace CameraNamespacePt3
 		float lastFrameTime = static_cast<float>(glfwGetTime());
 		float deltaTime = lastFrameTime;
 
-		glm::vec3 cameraPosition(0.f, 0.f, 3.f);
-		glm::vec3 cameraFrontBasis(0.f, 0.f, -1.f);
-		glm::vec3 cameraUpBasis(0.f, 1.f, 0.f);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		glfwSetCursorPosCallback(window, &mouseCallback);
 		glfwSetScrollCallback(window, &mouseScrollCallback);
@@ -162,6 +153,7 @@ namespace CameraNamespacePt3
 			deltaTime = currentTime - lastFrameTime;
 			lastFrameTime = currentTime;
 			camera.pollMovements(window, deltaTime);
+			glm::mat4 lookat = camera.getViewMatrix(); //cache here so generation isn't repeated in loop
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Notice this was changed to clear depth
@@ -183,7 +175,7 @@ namespace CameraNamespacePt3
 
 				model = glm::translate(model, cubePositions[i]);
 				model = glm::rotate(model, static_cast<float>(glm::radians(50.0f) * i), glm::vec3(0.5 * i, 0.5f * i, 0.5f * i));
-				view = camera.getViewMatrix();
+				view = camera.getViewMatrix() = lookat;
 				projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
 
 				shader2attribs.use();
@@ -213,50 +205,6 @@ namespace CameraNamespacePt3
 		glDeleteBuffers(1, &EAO);
 
 		return 0;
-	}
-
-	void pollArrowKeys(GLFWwindow * window, glm::vec3& position, const glm::vec3& cameraFront, const glm::vec3& cameraUp, const float deltaTime)
-	{		
-		
-		
-		static float movementSpeed = 10.f;
-		float adjustedMovementSpeed = movementSpeed * deltaTime;
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		{
-			position += cameraFront * adjustedMovementSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		{
-			position -= cameraFront * adjustedMovementSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		{
-			position -= glm::normalize(glm::cross(cameraFront, cameraUp)) * adjustedMovementSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		{
-			position += glm::normalize(glm::cross(cameraFront, cameraUp)) * adjustedMovementSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		{
-			//camera up should be a normalized vector
-			//position += cameraUp * adjustedMovementSpeed;
-
-			//figure out upward basis vector on fly;
-			//1. we get the right basis vector from the inner most cross product, we don't need to normalize it since we only need for its direction in the next cross product
-			//2. the second (outter) cross product returns the upward basis vector using the front basis vector and the derived right basis vector (from the inner cross product)
-			//3. normalize it since we are going to use its magnitude 
-			position += glm::normalize(glm::cross(glm::cross(cameraFront, cameraUp), cameraFront)) * adjustedMovementSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-		{
-			//camera up should be a normalized vector
-			//position -= cameraUp * adjustedMovementSpeed; 
-
-			//figure out upward basis vector on fly (see above note)
-			position -= glm::normalize(glm::cross(glm::cross(cameraFront, cameraUp), cameraFront)) * adjustedMovementSpeed;
-		}
-
 	}
 
 	void mouseCallback(GLFWwindow* window, double xpos, double ypos)
