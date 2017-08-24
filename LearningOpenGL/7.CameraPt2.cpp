@@ -10,13 +10,22 @@
 #include <chrono>
 #include <thread>
 
-namespace CameraNamespacePt1 {
-	void pollArrowKeys(GLFWwindow * window, float& valueToControl);
+namespace CameraNamespacePt2
+{
+	void pollArrowKeys(GLFWwindow * window, glm::vec3& position, const glm::vec3& cameraFront, const glm::vec3& cameraUp, const float deltaTime);
+
+	float yaw = -90.f;
+	float pitch, lastX, lastY = 0.f;
+	void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+
+	float FOV = 45.f;
+	void mouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 
 	static const int screenHeight = 600;
 	static const int screenWidth = 800;
 
-	int main() {
+	int main()
+	{
 		//SKIP TO TRANFORMATION SECTION
 		bool bShouldFlip = false;
 		bool bPressRegistered = false;
@@ -140,73 +149,39 @@ namespace CameraNamespacePt1 {
 		//set OpenGL to consider zbuffer in rendering
 		glEnable(GL_DEPTH_TEST);
 
+		float lastFrameTime = static_cast<float>(glfwGetTime());
+		float deltaTime = lastFrameTime;
+
+		glm::vec3 cameraPosition(0.f, 0.f, 3.f);
+		glm::vec3 cameraFrontBasis(0.f, 0.f, -1.f);
+		glm::vec3 cameraUpBasis(0.f, 1.f, 0.f);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetCursorPosCallback(window, &mouseCallback);
+		glfwSetScrollCallback(window, &mouseScrollCallback);
 		while (!glfwWindowShouldClose(window))
 		{
+			float currentTime = static_cast<float>(glfwGetTime());
+			deltaTime = currentTime - lastFrameTime;
+			lastFrameTime = currentTime;
+
+			cameraFrontBasis.y = sin(glm::radians(pitch));
+			cameraFrontBasis.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+			cameraFrontBasis.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+			cameraFrontBasis = glm::normalize(cameraFrontBasis);
+
 			//------------ CAMERA ------------------
 			//SET UP CAMERA
-			float cameraSpinRadius = 10.f;
-			glm::vec3 cameraPosition(sin(glfwGetTime()) * cameraSpinRadius, 0.f, cos(glfwGetTime()) * cameraSpinRadius);
-			glm::vec3 cameraTarget(0.f, 0.f, 0.f);
-			//glm::vec3 cameraPosition(6.f, 2.f, 3.f); //testing how if order of custom look at is correct
-			//glm::vec3 cameraTarget(1.f, 4.f, 2.f);
-
-			glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
-
-			glm::vec3 up(0.0f, 1.0f, 0.0f);
-			//remember cross product gives us a vector perpendicular to the other two, normalize vector to make it a base vector
-			glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-			glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));
-			//glm::mat4 customLookAt(
-			//	cameraRight.x, cameraRight.y, cameraRight.z, 0.f,
-			//	cameraUp.x, cameraUp.y, cameraUp.z, 0.f,
-			//	cameraDirection.x, cameraDirection.y, cameraDirection.z, 0.f,
-			//	0.f, 0.f, 0.f, 1.f);
-
-			//glm::mat4 customLookAt( //while this looks right, the constructor order isn't column basis vectors, but row basis vectors :\
-			//	cameraRight.x, cameraUp.x, cameraDirection.x, 0.f,
-			//	cameraRight.y, cameraUp.y, cameraDirection.y, 0.f,
-			//	cameraRight.z, cameraUp.z, cameraDirection.z, 0.f,
-			//	0.f, 0.f, 0.f, 1.f);
-
-			//create based on columns
-			//glm::mat4 customLookAt(glm::vec4(cameraRight, 0.f), glm::vec4(cameraUp, 0.f), glm::vec4(cameraDirection, 0.f), glm::vec4(0.f, 0.f, 0.f, 1.f));
-			//glm::mat4 customLookAt(
-			//	glm::vec4(cameraRight.x, cameraUp.x, cameraDirection.x, 0.f),
-			//	glm::vec4(cameraRight.y, cameraUp.y, cameraDirection.y, 0.f),
-			//	glm::vec4(cameraRight.z, cameraUp.z, cameraDirection.z, 0.f),
-			//	glm::vec4(0.f, 0.f, 0.f, 1.f));
-			// Note: This is column major ordering, thus the first index specifies the column ([0][4] is column 0, [2][3] is column 2)
-			glm::mat4 customLookAt;
-			customLookAt[0][0] = cameraRight.x;
-			customLookAt[0][1] = cameraUp.x;
-			customLookAt[0][2] = cameraDirection.x;
-			customLookAt[0][3] = 0.f;
-
-			customLookAt[1][0] = cameraRight.y;
-			customLookAt[1][1] = cameraUp.y;
-			customLookAt[1][2] = cameraDirection.y;
-			customLookAt[1][3] = 0.f;
-
-			customLookAt[2][0] = cameraRight.z;
-			customLookAt[2][1] = cameraUp.z;
-			customLookAt[2][2] = cameraDirection.z;
-			customLookAt[2][3] = 0.f;
-
-			customLookAt[3][0] = 0.f;
-			customLookAt[3][1] = 0.f;
-			customLookAt[3][2] = 0.f;
-			customLookAt[3][3] = 1.f;
-
-			glm::mat4 translateCameraPosition;
-			translateCameraPosition = glm::translate(translateCameraPosition, -cameraPosition);
-			customLookAt = customLookAt * translateCameraPosition;
-
-			glm::mat4 lookAt = glm::lookAt(cameraPosition, cameraTarget, up);
-			//std::cout << (customLookAt == lookAt ? "true" : "false") << std::endl;
+			//uses cross product to figure out all the basis vectors of a camera looking at a position,
+			//see part 1 for how this calculation is performed, but to summarize it is basically:
+			//1. Determine the direction the camera is looking by taking the vector difference of its position and target position; this will be the Z axis
+			//2. Choose an upward vector (0.f, 1.f, 0.f), this isn't the camera's y axis but is on the same plane as the z and y axis.
+			//3. use cross product of the z-axis and the pseudo-up axis to get a vector perpendicular to this plane and normalize it; this is our right (x) axis
+			//4. now that we have the z and x basis vectors, take the cross product between them and normalize it to get the last perpendicular axis, our y axis
+			//5. use this to construct a 4d homgenous matrix where the basis vectors are specifyed by rows (X, Y, Z, ...)
+			glm::mat4 lookAt = glm::lookAt(cameraPosition, cameraPosition + cameraFrontBasis, cameraUpBasis);
 
 			//------------ END CAMERA ---------------
-			pollArrowKeys(window, mixSetting);
-			glUniform1f(mixRatioUniform, mixSetting);
+			pollArrowKeys(window, cameraPosition, cameraFrontBasis, cameraUpBasis, deltaTime);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Notice this was changed to clear depth
@@ -228,9 +203,8 @@ namespace CameraNamespacePt1 {
 
 				model = glm::translate(model, cubePositions[i]);
 				model = glm::rotate(model, static_cast<float>(glm::radians(50.0f) * i), glm::vec3(0.5 * i, 0.5f * i, 0.5f * i));
-				//view = lookAt;
-				view = customLookAt;
-				projection = glm::perspective(glm::radians(45.f), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
+				view = lookAt;
+				projection = glm::perspective(glm::radians(FOV), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
 
 				shader2attribs.use();
 				GLuint modelIndex = glGetUniformLocation(shader2attribs.getId(), "model");
@@ -261,20 +235,86 @@ namespace CameraNamespacePt1 {
 		return 0;
 	}
 
-	void pollArrowKeys(GLFWwindow * window, float& valueToControl)
+	void pollArrowKeys(GLFWwindow * window, glm::vec3& position, const glm::vec3& cameraFront, const glm::vec3& cameraUp, const float deltaTime)
 	{
-		float incAmount = 0.05f;
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		static float movementSpeed = 10.f;
+		float adjustedMovementSpeed = movementSpeed * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			valueToControl += incAmount;
+			position += cameraFront * adjustedMovementSpeed;
 		}
-		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
-			valueToControl -= incAmount;
+			position -= cameraFront * adjustedMovementSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			position -= glm::normalize(glm::cross(cameraFront, cameraUp)) * adjustedMovementSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			position += glm::normalize(glm::cross(cameraFront, cameraUp)) * adjustedMovementSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		{
+			//camera up should be a normalized vector
+			//position += cameraUp * adjustedMovementSpeed;
+
+			//figure out upward basis vector on fly;
+			//1. we get the right basis vector from the inner most cross product, we don't need to normalize it since we only need for its direction in the next cross product
+			//2. the second (outter) cross product returns the upward basis vector using the front basis vector and the derived right basis vector (from the inner cross product)
+			//3. normalize it since we are going to use its magnitude 
+			position += glm::normalize(glm::cross(glm::cross(cameraFront, cameraUp), cameraFront)) * adjustedMovementSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		{
+			//camera up should be a normalized vector
+			//position -= cameraUp * adjustedMovementSpeed; 
+
+			//figure out upward basis vector on fly (see above note)
+			position -= glm::normalize(glm::cross(glm::cross(cameraFront, cameraUp), cameraFront)) * adjustedMovementSpeed;
 		}
 	}
+
+	static bool firstMouseCall = true;
+	void mouseCallback(GLFWwindow* window, double xpos, double ypos)
+	{
+		if (firstMouseCall)
+		{
+			lastX = static_cast<float>(xpos);
+			lastY = static_cast<float>(ypos);
+			firstMouseCall = false;
+			return;
+		}
+
+		static float sensitivity = 0.1f;
+		float deltaX = static_cast<float>(xpos - lastX);
+		float deltaY = static_cast<float>(lastY - ypos);
+		lastX = static_cast<float>(xpos);
+		lastY = static_cast<float>(ypos);
+
+		yaw += deltaX * sensitivity;
+		pitch += deltaY * sensitivity;
+		
+		if (pitch > 89.f)
+			pitch = 89.f;
+		if (pitch < -89.f)
+			pitch = -89.f;
+	}
+
+
+	void mouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+	{
+		FOV -= static_cast<float>(yOffset);
+
+		//clamp FOV between the two values
+		if (FOV < 1.0f)
+			FOV = 1.0f;
+		if (FOV > 45.0f)
+			FOV = 45.0f;
+	}
 }
-//
-//int main() {
-//	return CameraNamespacePt1::main();
-//}
+
+int main() {
+	return CameraNamespacePt2::main();
+}
