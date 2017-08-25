@@ -13,7 +13,9 @@
 namespace CameraNamespaceX2
 {
 	void pollArrowKeys(GLFWwindow * window, glm::vec3& position, const glm::vec3& cameraFront, const glm::vec3& cameraUp, const float deltaTime);
-	glm::mat4 customLookAt(glm::vec3 position, glm::vec3 targetLocation, glm::vec3 worldUp);
+	glm::mat4 customLookAt1(glm::vec3 position, glm::vec3 targetLocation, glm::vec3 worldUp);
+	glm::mat4 customLookAt2(glm::vec3 position, glm::vec3 targetLocation, glm::vec3 worldUp);
+
 
 	float yaw = -90.f;
 	float pitch, lastX, lastY = 0.f;
@@ -166,7 +168,8 @@ namespace CameraNamespaceX2
 			cameraFront.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
 			cameraFront = glm::normalize(cameraFront);
 
-			glm::mat4 lookAt = customLookAt(cameraPosition, cameraPosition + cameraFront, glm::vec3(0.f, 1.f, 0.f));
+			//glm::mat4 lookAt = customLookAt1(cameraPosition, cameraPosition + cameraFront, glm::vec3(0.f, 1.f, 0.f));
+			glm::mat4 lookAt = customLookAt2(cameraPosition, cameraPosition + cameraFront, glm::vec3(0.f, 1.f, 0.f));
 			//glm::mat4 lookAt = glm::lookAt(cameraPosition, cameraPosition + cameraFront, glm::vec3(0.f, 1.f, 0.f));
 
 			//------------ END CAMERA ---------------
@@ -303,17 +306,15 @@ namespace CameraNamespaceX2
 			FOV = 45.0f;
 	}
 
-	glm::mat4 customLookAt(glm::vec3 position, glm::vec3 targetLocation, glm::vec3 worldUp)
+	glm::mat4 customLookAt1(glm::vec3 position, glm::vec3 targetLocation, glm::vec3 worldUp)
 	{
+		//cross product order is very important for getting this correct
 		glm::vec3 zaxis = glm::normalize(targetLocation - position);
 		glm::vec3 xaxis = glm::normalize(cross(zaxis, worldUp));
 		glm::vec3 yaxis = glm::normalize(cross(xaxis, zaxis));
 
 		glm::mat4 translation;
 		translation = glm::translate(translation, -position);
-		//translation[3][0] = -position.x;
-		//translation[3][1] = -position.y;
-		//translation[3][2] = -position.z;
 
 		//first index is column
 		glm::mat4 rotation;
@@ -323,11 +324,38 @@ namespace CameraNamespaceX2
 		rotation[0][1] = yaxis.x; 
 		rotation[1][1] = yaxis.y;
 		rotation[2][1] = yaxis.z;
-		rotation[0][2] = -zaxis.x; 
+		//invert zaxis because we're supposed to be looking in negative direction,
+		//our derivation of the x and y axes was by defining the positive z axis in the direction we actually want the negatie z axis
+		rotation[0][2] = -zaxis.x;  
 		rotation[1][2] = -zaxis.y;
 		rotation[2][2] = -zaxis.z;
 
 		return rotation * translation;
+	}
+
+	glm::mat4 customLookAt2(glm::vec3 position, glm::vec3 targetLocation, glm::vec3 worldUp)
+	{
+		//define the positive z axis as looking towards us
+		glm::vec3 zaxis = glm::normalize(position - targetLocation);
+		glm::vec3 xaxis = glm::normalize(glm::cross(worldUp, zaxis));
+		glm::vec3 yaxis = glm::normalize(glm::cross(zaxis, xaxis));
+
+		//instead of moving camera forward, move entire scene backwards
+		glm::mat4 translate;
+		translate = glm::translate(translate, -position);
+
+		glm::mat4 rotation;
+		rotation[0][0] = xaxis.x;
+		rotation[1][0] = xaxis.y;
+		rotation[2][0] = xaxis.z;
+		rotation[0][1] = yaxis.x;
+		rotation[1][1] = yaxis.y;
+		rotation[2][1] = yaxis.z;
+		rotation[0][2] = zaxis.x;
+		rotation[1][2] = zaxis.y;
+		rotation[2][2] = zaxis.z;
+
+		return rotation * translate;
 	}
 }
 
