@@ -4,21 +4,26 @@
 #include "Shader.h"
 #include "Utilities.h"
 
-Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath):
+#include"Texture2D.h"
+
+Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath) :
 	failed(false),
 	linkedProgram(0),
-	active(false)
+	active(false),
+	textures()
 {
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	
+
 	//LOAD SOURCES FROM FILE
 	std::string vertShaderSrc, fragShaderSrc;
-	if (failed = !Utils::convertFileToString(vertexShaderFilePath, vertShaderSrc)) {
+	if (failed = !Utils::convertFileToString(vertexShaderFilePath, vertShaderSrc))
+	{
 		std::cerr << "failed to load vertex shader from file" << std::endl;
 		return;
 	}
-	if (failed = !Utils::convertFileToString(fragmentShaderFilePath, fragShaderSrc)) {
+	if (failed = !Utils::convertFileToString(fragmentShaderFilePath, fragShaderSrc))
+	{
 		std::cerr << "failed to load fragment shader from file" << std::endl;
 		return;
 	}
@@ -33,11 +38,13 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 	//COMPILE SHADERS
 	glCompileShader(vertexShader);
 	glCompileShader(fragmentShader);
-	if (failed = !shaderCompileSuccess(vertexShader)) {
+	if (failed = !shaderCompileSuccess(vertexShader))
+	{
 		std::cerr << "failed to compile the vertex shader" << std::endl;
 		return;
 	}
-	if (failed = !shaderCompileSuccess(fragmentShader)) {
+	if (failed = !shaderCompileSuccess(fragmentShader))
+	{
 		std::cerr << "failed to compile the fragment shader" << std::endl;
 		return;
 	}
@@ -47,7 +54,8 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 	glAttachShader(linkedProgram, vertexShader);
 	glAttachShader(linkedProgram, fragmentShader);
 	glLinkProgram(linkedProgram);
-	if (failed = !programLinkSuccess(linkedProgram)) {
+	if (failed = !programLinkSuccess(linkedProgram))
+	{
 		std::cerr << "failed to link shader program" << std::endl;
 		return;
 	}
@@ -65,9 +73,14 @@ Shader::~Shader()
 void Shader::use(bool activate)
 {
 	if (activate)
+	{
 		glUseProgram(linkedProgram);
+		activateTextures();
+	}
 	else
+	{
 		glUseProgram(0);
+	}
 }
 
 GLuint Shader::getId()
@@ -75,11 +88,11 @@ GLuint Shader::getId()
 	return linkedProgram;
 }
 
-void Shader::setFloatUniform(const char* uniform, float red, float green, float blue, float alpha)
+void Shader::setUniform4f(const char* uniform, float red, float green, float blue, float alpha)
 {
 	//do not need to be using shader to query location of uniform
 	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-	
+
 	//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
 	GLint cachedPreviousShader;
 	glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
@@ -93,14 +106,42 @@ void Shader::setFloatUniform(const char* uniform, float red, float green, float 
 
 }
 
+void Shader::setUniform1f(const char* uniformName, float value)
+{
+	GLuint uniformLocationInShader = glGetUniformLocation(getId(), uniformName);
+	glUniform1f(uniformLocationInShader, value);
+}
+
+void Shader::addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName)
+{
+	if (texture)
+	{
+		GLuint textureShaderSampleLocation = glGetUniformLocation(getId(), textureSampleName.c_str());
+		textures.push_back(texture);
+		//NOTE: we're basically setting to use which: GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3, ... GL_TEXTURE16
+		GLuint GL_TEXTURENUM = textures.size() - 1;
+		glUniform1i(textureShaderSampleLocation, GL_TEXTURENUM);
+	}
+}
+
+void Shader::activateTextures()
+{
+	for (size_t i = 0; i < textures.size(); ++i)
+	{
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, textures[i]->getTextureId());
+	}
+}
+
 bool Shader::shaderCompileSuccess(GLuint shaderID)
 {
 	char infolog[256];
 	int success = true;
 
 	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-	
-	if (!success) {
+
+	if (!success)
+	{
 		glGetShaderInfoLog(shaderID, 256, nullptr, infolog);
 		std::cerr << "shader compile fail, infolog:\n" << infolog << std::endl;
 	}
@@ -115,7 +156,8 @@ bool Shader::programLinkSuccess(GLuint programID)
 
 	glGetProgramiv(programID, GL_LINK_STATUS, &success);
 
-	if (!success) {
+	if (!success)
+	{
 		glGetProgramInfoLog(programID, 256, nullptr, infolog);
 		std::cerr << "OpenGL program link fail, infolog:\n" << infolog << std::endl;
 	}

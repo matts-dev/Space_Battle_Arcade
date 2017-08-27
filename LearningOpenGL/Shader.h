@@ -1,6 +1,10 @@
 #pragma once
 
 #include<string>
+#include<memory>
+#include<vector>
+
+class Texture2D;
 
 class Shader
 {
@@ -18,12 +22,17 @@ public:
 	void use(bool activate = true);
 	GLuint getId();
 
-	void setFloatUniform(const char* uniform, float red, float green, float blue, float alpha);
+	void setUniform4f(const char* uniform, float red, float green, float blue, float alpha);
+	void setUniform1f(const char* uniformName, float value);
+	void addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName);
+	void activateTextures();
 
 private:
 	bool failed;
 	bool active;
 	GLuint linkedProgram;
+
+	std::vector<std::shared_ptr<Texture2D>> textures;
 
 private:
 	bool shaderCompileSuccess(GLuint shaderID);

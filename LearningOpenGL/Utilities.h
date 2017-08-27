@@ -54,4 +54,6 @@ namespace Utils {
 	bool createTriangleWithTwoVertexAttributes(GLuint& VAO, GLuint& VBO);
 
 	bool generateObject2Attrib(const float* vertices, size_t verticesSize, GLuint& VAO, GLuint& VBO);
+
+	extern const float cubeVertices[36*5];
 }
