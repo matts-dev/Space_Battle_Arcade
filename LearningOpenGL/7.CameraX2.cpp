@@ -359,6 +359,7 @@ namespace CameraNamespaceX2
 	}
 }
 
-//int main() {
+//int main()
+//{
 //	return CameraNamespaceX2::main();
 //}

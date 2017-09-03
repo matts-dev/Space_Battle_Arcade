@@ -23,6 +23,7 @@ public:
 	GLuint getId();
 
 	void setUniform4f(const char* uniform, float red, float green, float blue, float alpha);
+	void setUniform3f(const char* uniform, float red, float green, float blue);
 	void setUniform1f(const char* uniformName, float value);
 	void addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName);
 	void activateTextures();

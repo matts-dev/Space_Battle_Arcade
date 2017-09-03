@@ -270,7 +270,7 @@ namespace CameraNamespacePt1 {
 		}
 	}
 }
-
+//
 //int main() {
 //	return CameraNamespacePt1::main();
 //}

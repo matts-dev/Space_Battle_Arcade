@@ -106,6 +106,23 @@ void Shader::setUniform4f(const char* uniform, float red, float green, float blu
 
 }
 
+void Shader::setUniform3f(const char* uniform, float red, float green, float blue)
+{
+	//do not need to be using shader to query location of uniform
+	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
+
+	//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
+	GLint cachedPreviousShader;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
+
+	//must be using the shader to update uniform value
+	glUseProgram(linkedProgram);
+	glUniform3f(uniformLocation, red, green, blue);
+
+	//restore previous shader
+	glUseProgram(cachedPreviousShader);
+}
+
 void Shader::setUniform1f(const char* uniformName, float value)
 {
 	GLuint uniformLocationInShader = glGetUniformLocation(getId(), uniformName);

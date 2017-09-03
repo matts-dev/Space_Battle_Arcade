@@ -146,6 +146,6 @@ namespace GettingStartedReview
 	}
 }
 
-int main() {
-	return GettingStartedReview::main();
-}
+//int main() {
+//	return GettingStartedReview::main();
+//}
