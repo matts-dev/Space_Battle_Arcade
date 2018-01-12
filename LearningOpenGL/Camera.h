@@ -13,6 +13,7 @@ public:
 	void incrementFOV(float incrmentValue);
 	void updateRotation(float mousePosX, float mousePosY);
 	float getFOV() { return FOV; }
+	glm::vec3 getCameraPositionCopy();
 
 	Camera();
 	~Camera();

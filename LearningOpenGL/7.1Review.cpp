@@ -103,7 +103,7 @@ namespace GettingStartedReview
 
 				model = glm::translate(model, cubePositions[i]);
 				model = glm::rotate(model, static_cast<float>(glm::radians(50.0f) * i), glm::vec3(0.5 * i, 0.5f * i, 0.5f * i));
-				view = camera.getViewMatrix() = lookat;
+				view = lookat;// camera.getViewMatrix() = lookat;
 				projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
 
 				shader2attribs.use();

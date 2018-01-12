@@ -56,4 +56,5 @@ namespace Utils {
 	bool generateObject2Attrib(const float* vertices, size_t verticesSize, GLuint& VAO, GLuint& VBO);
 
 	extern const float cubeVertices[36*5];
+	extern const float cubeVerticesWithNormals[36*6];
 }

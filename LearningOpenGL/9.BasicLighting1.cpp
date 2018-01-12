@@ -13,14 +13,16 @@
 #include"Camera.h"
 #include "Texture2D.h"
 
-namespace ColorsPt1
+namespace BasicLighting
 {
 	Camera camera;
 	void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 	void mouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
+	void pollKeybinds(GLFWwindow* window, float deltaTime);
 
 	static const int screenHeight = 600;
 	static const int screenWidth = 800;
+	static glm::vec3 lightPos(2.0f, 2.f, 1.f);
 
 	int main()
 	{
@@ -35,6 +37,15 @@ namespace ColorsPt1
 		Shader shaderForLightObject("8.ColorTutVertShader1.glsl", "8.LightSourceFragShader.glsl");
 		if (shaderForLightObject.createFailed()) { glfwTerminate(); return -1; }
 
+		Shader ambientLightShader("8.ColorTutVertShader1.glsl", "9.AmbientLight.fs");
+		if (ambientLightShader.createFailed()) { glfwTerminate(); return -1; }
+
+		Shader diffuseWithAmbientShader("9.BasicLight.vs", "9.DiffuseAmbient.fs");
+		if (diffuseWithAmbientShader.createFailed()) { glfwTerminate(); return -1; }
+
+		Shader phongShader("9.BasicLight.vs", "9.PhongShader_SpecularDiffuseAmbient.fs");
+		if (phongShader.createFailed()) { glfwTerminate(); return -1; }
+
 		//VERTEX BUFFER AND VERTEX ARRAY OBJECTS
 		//Lamp Object
 		GLuint LampVAO, LampVBO;
@@ -42,9 +53,12 @@ namespace ColorsPt1
 		glBindVertexArray(LampVAO);
 		glGenBuffers(1, &LampVBO);
 		glBindBuffer(GL_ARRAY_BUFFER, LampVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Utils::cubeVertices), &Utils::cubeVertices, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<GLvoid*>(0)); //cube position contains 2 texture coordinates, thus stride of 5
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Utils::cubeVerticesWithNormals), &Utils::cubeVerticesWithNormals, GL_STATIC_DRAW);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<GLvoid*>(0)); //cube position contains 2 texture coordinates, thus stride of 5
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<GLvoid*>(0)); //cube with normals take up 6 floats per stride
 		glEnableVertexAttribArray(0);
+		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<GLvoid*>(3*sizeof(float))); //enable last 3 in stride to be normals
+		//glEnableVertexAttribArray(1); //enable normals, this wasn't in tutorial but I think it is needed.
 		glBindVertexArray(0); //stop saving state
 
 		//Non-light emiting objects
@@ -53,23 +67,26 @@ namespace ColorsPt1
 		glGenBuffers(1, &CubeVBO);
 		glBindVertexArray(CubeVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Utils::cubeVertices), &Utils::cubeVertices, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<GLvoid*>(0)); //cube position contains 2 texture coordinates, thus stride of 5
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Utils::cubeVerticesWithNormals), &Utils::cubeVerticesWithNormals, GL_STATIC_DRAW);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<GLvoid*>(0)); //cube position contains 2 texture coordinates, thus stride of 5
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<GLvoid*>(0)); //cube with normals take up 6 floats per stride
 		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<GLvoid*>(3 * sizeof(float))); //enable last 3 in stride to be normals
+		glEnableVertexAttribArray(1); //enable normals, this wasn't in tutorial but I think it is needed.
 		glBindVertexArray(0); //stop saving state to this VAO
 
 
 
-		//TEXTURES
-		//std::shared_ptr<Texture2D> containerTexture = std::make_shared<Texture2D>("Textures/container.jpg");
-		//std::shared_ptr<Texture2D> awesomefaceTexture = std::make_shared<Texture2D>("Textures/awesomeface3.png");
-		//if (!containerTexture->getLoadSuccess() || !awesomefaceTexture->getLoadSuccess())
-		//{
-		//	glfwTerminate();
-		//	return -1;
-		//}
+							  //TEXTURES
+							  //std::shared_ptr<Texture2D> containerTexture = std::make_shared<Texture2D>("Textures/container.jpg");
+							  //std::shared_ptr<Texture2D> awesomefaceTexture = std::make_shared<Texture2D>("Textures/awesomeface3.png");
+							  //if (!containerTexture->getLoadSuccess() || !awesomefaceTexture->getLoadSuccess())
+							  //{
+							  //	glfwTerminate();
+							  //	return -1;
+							  //}
 
-		//CONFIGURING SHADER
+							  //CONFIGURING SHADER
 		shaderForCubes.use();
 		//shader2attribs.addTexture(containerTexture, "texture1");
 		//shader2attribs.addTexture(awesomefaceTexture, "texture2");
@@ -107,16 +124,27 @@ namespace ColorsPt1
 			deltaTime = currentTime - lastFrameTime;
 			lastFrameTime = currentTime;
 			camera.pollMovements(window, deltaTime);
+			pollKeybinds(window, deltaTime);
 			glm::mat4 lookat = camera.getViewMatrix(); //cache here so generation isn't repeated in loop
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Notice this was changed to clear depth
 
+			//Shader& shaderForCubes = ambientLightShader;
+			//Shader& shaderForCubes = diffuseWithAmbientShader;
+			Shader& shaderForCubes = phongShader;
 
 			shaderForCubes.use();
-			shaderForCubes.activateTextures(); 
+			shaderForCubes.activateTextures();
 			shaderForCubes.setUniform3f("objectColor", 1.f, 0.5f, 0.f);
 			shaderForCubes.setUniform3f("lightColor", lightColor.r, lightColor.g, lightColor.b);
+			//if (&shaderForCubes == &diffuseWithAmbientShader){
+			shaderForCubes.setUniform3f("lightPosInWorldSpace", lightPos.x, lightPos.y, lightPos.z);
+			//}
+
+			glm::vec3 camPos = camera.getCameraPositionCopy();
+			shaderForCubes.setUniform3f("viewerPos", camPos.x, camPos.y, camPos.z);
+			
 
 			size_t numElementsInCubeArray = sizeof(cubePositions) / (3 * sizeof(float));
 			for (size_t i = 0; i < numElementsInCubeArray; ++i)
@@ -153,7 +181,7 @@ namespace ColorsPt1
 			glm::mat4 model;
 			glm::mat4 view;
 			glm::mat4 projection;
-			model = glm::translate(model, glm::vec3(2.0f, 2.0f, 0.f));
+			model = glm::translate(model, lightPos);
 			model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 			view = camera.getViewMatrix() = lookat;
 			projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(screenWidth) / screenHeight, 0.1f, 100.f);
@@ -193,9 +221,31 @@ namespace ColorsPt1
 	{
 		camera.incrementFOV(static_cast<float>(yOffset));
 	}
+
+	void pollKeybinds(GLFWwindow* window, float deltaTime){
+		static float movementSpeed = 10.0f;
+
+		float adjustedMovementSpeed = movementSpeed * deltaTime;
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			lightPos.z -= adjustedMovementSpeed;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			lightPos.z += adjustedMovementSpeed;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		{
+			lightPos.x -= adjustedMovementSpeed;
+		} 
+		else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		{
+			lightPos.x += adjustedMovementSpeed;
+		}
+	}
 }
 
-//int main()
-//{
-//	return ColorsPt1::main();
-//}
+int main()
+{
+	BasicLighting::main();
+}

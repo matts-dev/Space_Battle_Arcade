@@ -96,3 +96,8 @@ void Camera::updateRotation(float xpos, float ypos)
 	updateRotationUsingPitchAndYaw();
 }
 
+glm::vec3 Camera::getCameraPositionCopy()
+{
+	return cameraPosition;
+}
+
