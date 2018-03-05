@@ -245,7 +245,7 @@ namespace BasicLighting
 	}
 }
 
-int main()
-{
-	BasicLighting::main();
-}
+//int main()
+//{
+//	BasicLighting::main();
+//}

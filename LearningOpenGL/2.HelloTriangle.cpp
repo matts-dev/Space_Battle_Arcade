@@ -233,6 +233,7 @@ namespace HelloTriangle {
 
 }
 
-//int main() {
+//int main()
+//{
 //	HelloTriangle::main();
 //}

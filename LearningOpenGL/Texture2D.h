@@ -17,6 +17,9 @@ public:
 	void setTexParami(GLenum option, GLint Param);
 	bool getLoadSuccess() { return bLoadSuccess; }
 	GLuint getTextureId() { return textureId; }
+
+	int getWidth() { return width; }
+	int getHeight() { return height; }
 private:
 	bool bLoadSuccess;
 	GLuint textureId;
