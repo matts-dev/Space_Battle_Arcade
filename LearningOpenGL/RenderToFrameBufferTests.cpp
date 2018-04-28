@@ -234,7 +234,7 @@ namespace RenderToFrameBuffer
 	}
 }
 
-int main()
-{
-	RenderToFrameBuffer::main();
-}
+//int main()
+//{
+//	RenderToFrameBuffer::main();
+//}
