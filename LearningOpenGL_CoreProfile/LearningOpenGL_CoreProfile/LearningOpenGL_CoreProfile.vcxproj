@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Libraries\stb_image.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="Utilities.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="1.HelloWindow.cpp" />
+    <ClCompile Include="2.HelloTriangle.cpp" />
+    <ClCompile Include="2.HelloTriangleChallenge1.cpp" />
+    <ClCompile Include="2.HelloTriangleChallenge2.cpp" />
+    <ClCompile Include="2.HelloTriangleChallenge3.cpp" />
+    <ClCompile Include="2.HelloTrianglePractice4.cpp" />
+    <ClCompile Include="3.Shaders.cpp" />
+    <ClCompile Include="4.TextureChallenge2.cpp" />
+    <ClCompile Include="4.TextureChallenge3.cpp" />
+    <ClCompile Include="4.TextureChallenge4.cpp" />
+    <ClCompile Include="4.Textures.cpp" />
+    <ClCompile Include="4.TexturesChallenge1.cpp" />
+    <ClCompile Include="5.Transformations.cpp" />
+    <ClCompile Include="5.TransformationsCH1.cpp" />
+    <ClCompile Include="5.TransformationsCH2.cpp" />
+    <ClCompile Include="6.CoordinateSystems.cpp" />
+    <ClCompile Include="6.CoordinateSystemsChallenge1.cpp" />
+    <ClCompile Include="6.CoordinateSystemsChallenge2.cpp" />
+    <ClCompile Include="6.CoordinateSystemsChallenge3.cpp" />
+    <ClCompile Include="6.CoordinateSystemsPt2.cpp" />
+    <ClCompile Include="6.CoordinateSystemsPt3.cpp" />
+    <ClCompile Include="7.1Review.cpp" />
+    <ClCompile Include="7.CameraPt1.cpp" />
+    <ClCompile Include="7.CameraPt2.cpp" />
+    <ClCompile Include="7.CameraPt3.cpp" />
+    <ClCompile Include="7.CameraX1.cpp" />
+    <ClCompile Include="7.CameraX2.cpp" />
+    <ClCompile Include="8.ColorsPt1.cpp" />
+    <ClCompile Include="9.BasicLighting1.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Libraries\glad.c" />
+    <ClCompile Include="Libraries\stb_image.cpp" />
+    <ClCompile Include="RenderToFrameBufferTests.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="StencilTesting.cpp" />
+    <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="Utilities.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
+    <None Include="3.EOffsetUniformFragShader.glsl" />
+    <None Include="3.FVertexOutToFragForColor.glsl" />
+    <None Include="3a.FragWithSingleIn.glsl" />
+    <None Include="3a.VertWithSingleOut.glsl" />
+    <None Include="3b.FragShaderWithUniform.glsl" />
+    <None Include="3c.2AtribFragShader.glsl" />
+    <None Include="3c.2AtribVertShader.glsl" />
+    <None Include="4. CH1_FragShader.glsl" />
+    <None Include="4. CH2_FragShader.glsl" />
+    <None Include="4. CH2_VertShader.glsl" />
+    <None Include="4. FragShader_3attribs_pos_color_texcoord.glsl" />
+    <None Include="4. VertShader_3attribs_pos_color_texcoord.glsl" />
+    <None Include="4.CH4_FragShaderArrowKeys.glsl" />
+    <None Include="4.CH4_VertShaderArrowKeys.glsl" />
+    <None Include="5.FragShader.glsl" />
+    <None Include="5.VertShader.glsl" />
+    <None Include="6.FragShader.glsl" />
+    <None Include="6.FragShader2.glsl" />
+    <None Include="6.VertShader.glsl" />
+    <None Include="6.VertShader2.glsl" />
+    <None Include="8.ColorTutFragShader1.glsl" />
+    <None Include="8.ColorTutVertShader1.glsl" />
+    <None Include="8.LightSourceFragShader.glsl" />
+    <None Include="9.AmbientLight.fs" />
+    <None Include="9.BasicLight.vs" />
+    <None Include="9.DiffuseAmbient.fs" />
+    <None Include="9.PhongShader_SpecularDiffuseAmbient.fs" />
+    <None Include="BasicFragShader.glsl" />
+    <None Include="BasicVertexShader.glsl" />
+    <None Include="FrameBufferFrag.glsl" />
+    <None Include="SingleColorFrag.glsl" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{75FBBF4F-C641-4888-8D02-7E1F9D555E11}</ProjectGuid>
+    <RootNamespace>LearningOpenGLCoreProfile</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
