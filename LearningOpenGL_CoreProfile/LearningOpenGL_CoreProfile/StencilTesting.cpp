@@ -197,6 +197,6 @@ namespace StencilTesting
 	}
 }
 
-int main() {
-	return StencilTesting::main();
-}
+//int main() {
+//	return StencilTesting::main();
+//}
