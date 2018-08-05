@@ -9,7 +9,7 @@ class Texture2D;
 class Shader
 {
 public:
-	explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath);
+	explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths = true);
 	virtual ~Shader();
 
 	Shader(const Shader&) = delete;
@@ -25,6 +25,8 @@ public:
 	void setUniform4f(const char* uniform, float red, float green, float blue, float alpha);
 	void setUniform3f(const char* uniform, float red, float green, float blue);
 	void setUniform1f(const char* uniformName, float value);
+	void setUniform1i(const char* uniformname, int newValue);
+
 	void addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName);
 	void activateTextures();
 
@@ -38,6 +40,5 @@ private:
 private:
 	bool shaderCompileSuccess(GLuint shaderID);
 	bool programLinkSuccess(GLuint programID);
-
 };
 

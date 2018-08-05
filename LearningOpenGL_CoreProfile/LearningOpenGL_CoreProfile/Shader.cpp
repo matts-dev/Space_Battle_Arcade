@@ -6,7 +6,7 @@
 
 #include"Texture2D.h"
 
-Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath) :
+Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths) :
 	failed(false),
 	linkedProgram(0),
 	active(false),
@@ -17,15 +17,26 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 
 	//LOAD SOURCES FROM FILE
 	std::string vertShaderSrc, fragShaderSrc;
-	if (failed = !Utils::convertFileToString(vertexShaderFilePath, vertShaderSrc))
+	if (stringsAreFilePaths)
 	{
-		std::cerr << "failed to load vertex shader from file" << std::endl;
-		return;
+		if (failed = !Utils::convertFileToString(vertexShaderFilePath, vertShaderSrc))
+		{
+			std::cerr << "failed to load vertex shader from file" << std::endl;
+			return;
+		}
+		if (failed = !Utils::convertFileToString(fragmentShaderFilePath, fragShaderSrc))
+		{
+			std::cerr << "failed to load fragment shader from file" << std::endl;
+			return;
+		}
 	}
-	if (failed = !Utils::convertFileToString(fragmentShaderFilePath, fragShaderSrc))
+	else
 	{
-		std::cerr << "failed to load fragment shader from file" << std::endl;
-		return;
+		//This is a refactor of the original class to allow directly passing the shader source.
+		//could probably refactor this ctor so that we don't need to do this superfluous copy; 
+		//but since this is only generally called at start up I'll let it make an extra copy
+		vertShaderSrc = vertexShaderFilePath;
+		fragShaderSrc = fragmentShaderFilePath;
 	}
 
 	//SET SHADER SOURCES
@@ -122,6 +133,26 @@ void Shader::setUniform3f(const char* uniform, float red, float green, float blu
 	//restore previous shader
 	glUseProgram(cachedPreviousShader);
 }
+
+void Shader::setUniform1i(const char* uniform, int newValue)
+{
+	//TODO figure out a method for caching to prevent code duplication
+
+	//do not need to be using shader to query location of uniform
+	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
+
+	//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
+	GLint cachedPreviousShader;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
+
+	//must be using the shader to update uniform value
+	glUseProgram(linkedProgram);
+	glUniform1i(uniformLocation, newValue);
+
+	//restore previous shader
+	glUseProgram(cachedPreviousShader);
+}
+
 
 void Shader::setUniform1f(const char* uniformName, float value)
 {

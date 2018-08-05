@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Libraries\stb_image.h" />
+    <ClInclude Include="new_src\nu_utils.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="Utilities.h" />
@@ -58,8 +59,26 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Libraries\glad.c" />
     <ClCompile Include="Libraries\stb_image.cpp" />
-    <ClCompile Include="new_src\HelloTriangle\HelloTriangle.cpp" />
-    <ClCompile Include="new_src\HelloTriangle\HelloTriangle_DrawElements.cpp" />
+    <ClCompile Include="new_src\GettingStarted\HelloTriangle\HelloTriangle.cpp" />
+    <ClCompile Include="new_src\GettingStarted\HelloTriangle\HelloTriangle_DrawElements.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders7_SingleVAO_MultipleVBOs.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_5Challenge2.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_2ColorsSetByUniform.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_1PassingColorFromVertexShader.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_3AddingColorToVertexAttributes.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_4UsingShaderAbstraction.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_5Challenge1.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_5Challenge3.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_6PlayingAround.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge1.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_1TriangleSample.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_2RectangleSample.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_3ColorfulRectangleViaModulation.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_4MultipleTexturesUsingTextureunits.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge2.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5CHallenge3.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge4.cpp" />
+    <ClCompile Include="new_src\nu_utils.cpp" />
     <ClCompile Include="RenderToFrameBufferTests.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="StencilTesting.cpp" />

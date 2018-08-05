@@ -30,6 +30,9 @@
     <ClInclude Include="Utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\nu_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -143,10 +146,64 @@
     <ClCompile Include="Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\HelloTriangle\HelloTriangle.cpp">
+    <ClCompile Include="new_src\GettingStarted\HelloTriangle\HelloTriangle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\HelloTriangle\HelloTriangle_DrawElements.cpp">
+    <ClCompile Include="new_src\GettingStarted\HelloTriangle\HelloTriangle_DrawElements.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_1PassingColorFromVertexShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_2ColorsSetByUniform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\nu_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_3AddingColorToVertexAttributes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_4UsingShaderAbstraction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_5Challenge1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_5Challenge3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_5Challenge2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders_6PlayingAround.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Shaders\Shaders7_SingleVAO_MultipleVBOs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_1TriangleSample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_2RectangleSample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_3ColorfulRectangleViaModulation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_4MultipleTexturesUsingTextureunits.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5CHallenge3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
