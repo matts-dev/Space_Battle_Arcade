@@ -78,6 +78,10 @@
     <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge2.cpp" />
     <ClCompile Include="new_src\GettingStarted\Textures\Textures_5CHallenge3.cpp" />
     <ClCompile Include="new_src\GettingStarted\Textures\Textures_5Challenge4.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Transformations\Transformations3_Challenge1.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Transformations\Transformations2_spinning.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Transformations\Transformation1_rotate.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Transformations\Transformations3_Challenge2.cpp" />
     <ClCompile Include="new_src\nu_utils.cpp" />
     <ClCompile Include="RenderToFrameBufferTests.cpp" />
     <ClCompile Include="Shader.cpp" />

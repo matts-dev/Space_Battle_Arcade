@@ -7,7 +7,9 @@
 #include "../../nu_utils.h"
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
-
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
 
 namespace
@@ -21,10 +23,12 @@ namespace
 				out vec4 vertColor;
 				out vec2 texCoord;
 
+				uniform mat4 transform;
+
 				void main(){
 					vertColor = vec4(color, 1.0f); 
 					texCoord = inTexCoord; //reminder, since this is an out variable it will be subject to fragment interpolation (which is what we want)
-					gl_Position = vec4(position, 1);
+					gl_Position = transform * vec4(position, 1);
 				}
 			)";
 	const char* frag_shader_src = R"(
@@ -36,34 +40,20 @@ namespace
 
 				uniform sampler2D texture0;
 				uniform sampler2D texture1;
-				uniform float mixRatio = 0.2f;
 				
 				void main(){
 					fragmentColor = mix(
 							texture(texture0, texCoord),
 							texture(texture1, texCoord),
-							mixRatio);
+							0.2);
 				}
 			)";
 
-	void processInput(GLFWwindow* window, Shader& shader)
+	void processInput(GLFWwindow* window)
 	{
-		static float mixRatio = 0.2f; //probably best to have this scoped outside and set at startup, but whatever, this is just a challenge. :)
-		static const float updateValue = 0.0125f;
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, true);
-		}
-		if (glfwGetKey(window , GLFW_KEY_UP) == GLFW_PRESS)
-		{
-			mixRatio += updateValue;
-			//perhaps cap it at 1.0, but I'm interested to see what happens
-			shader.setUniform1f("mixRatio", mixRatio);
-		}
-		if (glfwGetKey(window , GLFW_KEY_DOWN) == GLFW_PRESS)
-		{
-			mixRatio -= updateValue;
-			shader.setUniform1f("mixRatio", mixRatio);
 		}
 	}
 
@@ -166,9 +156,28 @@ namespace
 		shader.setUniform1i("texture0", 0); //binds sampler "texture0" to texture unit GL_TEXTURE0
 		shader.setUniform1i("texture1", 1); // "												"
 
+		//experiments with glm
+		glm::vec4 vec1(1.0f, 0.0f, 0.0f, 1.0f);
+		glm::mat4 translationMatrix(1.f);
+		translationMatrix = glm::translate(translationMatrix, glm::vec3(1.0f, 1.0f, 0.0f));
+		vec1 = translationMatrix * vec1;
+		std::cout << "<" << vec1.x << ", " << vec1.y << ", "<< vec1.z << ">" << std::endl;
+
+		//single argument matrix ctor makes values along the diagonal 
+		glm::mat4 identityMatrix0;
+		glm::mat4 identityMatrix1(1.0f);
+		glm::mat4 diagonalValues(5.0f);
+
+		//create a transform for the container (rotate * scale)
+		glm::mat4 transform;
+		transform = glm::rotate(transform, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)); //transform * rotation matrix     //notice transform is on the left 
+		transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));						   //transform * scale matrix;		//notice transform is on the left
+		
+		shader.setUniformMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(transform));
+
 		while (!glfwWindowShouldClose(window))
 		{
-			processInput(window, shader);
+			processInput(window);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);

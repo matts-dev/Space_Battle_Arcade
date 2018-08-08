@@ -6,6 +6,43 @@
 
 #include"Texture2D.h"
 
+
+/** 
+	Utility class that uses RAII to cache and restore the currently bound shader in its ctor.
+	When the dtor is called it restores the previous shader.
+
+	Useful for setting uniforms. Since a shader must be active when the uniform is set, this can be used in the scope of a setter.
+	the setter will create an instance of this class, update the uniform, and when the function goes out scope the previous shader will be restored.
+*/
+class RAII_ScopedShaderSwitcher
+{
+//use below to control whether this class functions at compile time.
+#define UNIFORM_UPDATE_CACHE_PREVIOUS_SHADER 1
+
+private:
+#if UNIFORM_UPDATE_CACHE_PREVIOUS_SHADER
+	GLint cachedPreviousShader;
+#endif // UNIFORM_UPDATE_CACHE_PREVIOUS_SHADER
+
+public:
+	RAII_ScopedShaderSwitcher(GLint switchToThisShader)
+	{
+#if UNIFORM_UPDATE_CACHE_PREVIOUS_SHADER
+		//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
+		glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
+		glUseProgram(switchToThisShader);
+#endif // UNIFORM_UPDATE_CACHE_PREVIOUS_SHADER
+	}
+	~RAII_ScopedShaderSwitcher()
+	{
+#if UNIFORM_UPDATE_CACHE_PREVIOUS_SHADER
+		//restore previous shader
+		glUseProgram(cachedPreviousShader);
+#endif // UNIFORM_UPDATE_CACHE_PREVIOUS_SHADER
+	}
+};
+
+
 Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths) :
 	failed(false),
 	linkedProgram(0),
@@ -101,62 +138,48 @@ GLuint Shader::getId()
 
 void Shader::setUniform4f(const char* uniform, float red, float green, float blue, float alpha)
 {
+	RAII_ScopedShaderSwitcher scoped(linkedProgram);
+
 	//do not need to be using shader to query location of uniform
 	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-
-	//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
-	GLint cachedPreviousShader;
-	glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
 
 	//must be using the shader to update uniform value
 	glUseProgram(linkedProgram);
 	glUniform4f(uniformLocation, red, green, blue, alpha);
-
-	//restore previous shader
-	glUseProgram(cachedPreviousShader);
-
 }
 
 void Shader::setUniform3f(const char* uniform, float red, float green, float blue)
 {
-	//do not need to be using shader to query location of uniform
+	RAII_ScopedShaderSwitcher scoped(linkedProgram);
+
 	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-
-	//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
-	GLint cachedPreviousShader;
-	glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
-
-	//must be using the shader to update uniform value
 	glUseProgram(linkedProgram);
 	glUniform3f(uniformLocation, red, green, blue);
-
-	//restore previous shader
-	glUseProgram(cachedPreviousShader);
 }
 
 void Shader::setUniform1i(const char* uniform, int newValue)
 {
-	//TODO figure out a method for caching to prevent code duplication
+	RAII_ScopedShaderSwitcher scoped(linkedProgram);
 
-	//do not need to be using shader to query location of uniform
 	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-
-	//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
-	GLint cachedPreviousShader;
-	glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
-
-	//must be using the shader to update uniform value
 	glUseProgram(linkedProgram);
 	glUniform1i(uniformLocation, newValue);
-
-	//restore previous shader
-	glUseProgram(cachedPreviousShader);
 }
 
+
+void Shader::setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint transpose, float* data)
+{
+	RAII_ScopedShaderSwitcher scoped(linkedProgram);
+
+	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
+	glUseProgram(linkedProgram);
+	glUniformMatrix4fv(uniformLocation, numberMatrices, transpose, data);
+}
 
 void Shader::setUniform1f(const char* uniformName, float value)
 {
 	GLuint uniformLocationInShader = glGetUniformLocation(getId(), uniformName);
+	glUseProgram(linkedProgram);
 	glUniform1f(uniformLocationInShader, value);
 }
 

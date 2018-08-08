@@ -7,7 +7,9 @@
 #include "../../nu_utils.h"
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
-
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
 
 namespace
@@ -21,10 +23,12 @@ namespace
 				out vec4 vertColor;
 				out vec2 texCoord;
 
+				uniform mat4 transform;
+
 				void main(){
 					vertColor = vec4(color, 1.0f); 
 					texCoord = inTexCoord; //reminder, since this is an out variable it will be subject to fragment interpolation (which is what we want)
-					gl_Position = vec4(position, 1);
+					gl_Position = transform * vec4(position, 1);
 				}
 			)";
 	const char* frag_shader_src = R"(
@@ -36,34 +40,20 @@ namespace
 
 				uniform sampler2D texture0;
 				uniform sampler2D texture1;
-				uniform float mixRatio = 0.2f;
 				
 				void main(){
 					fragmentColor = mix(
 							texture(texture0, texCoord),
 							texture(texture1, texCoord),
-							mixRatio);
+							0.2);
 				}
 			)";
 
-	void processInput(GLFWwindow* window, Shader& shader)
+	void processInput(GLFWwindow* window)
 	{
-		static float mixRatio = 0.2f; //probably best to have this scoped outside and set at startup, but whatever, this is just a challenge. :)
-		static const float updateValue = 0.0125f;
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, true);
-		}
-		if (glfwGetKey(window , GLFW_KEY_UP) == GLFW_PRESS)
-		{
-			mixRatio += updateValue;
-			//perhaps cap it at 1.0, but I'm interested to see what happens
-			shader.setUniform1f("mixRatio", mixRatio);
-		}
-		if (glfwGetKey(window , GLFW_KEY_DOWN) == GLFW_PRESS)
-		{
-			mixRatio -= updateValue;
-			shader.setUniform1f("mixRatio", mixRatio);
 		}
 	}
 
@@ -168,7 +158,14 @@ namespace
 
 		while (!glfwWindowShouldClose(window))
 		{
-			processInput(window, shader);
+
+			//create a transform for the container (rotate * scale)
+			glm::mat4 transform;
+			transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f)); //transform * rotation matrix     //notice transform is on the left 
+			transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+			shader.setUniformMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(transform));
+
+			processInput(window);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);

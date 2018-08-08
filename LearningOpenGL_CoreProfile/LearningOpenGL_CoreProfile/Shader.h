@@ -3,6 +3,9 @@
 #include<string>
 #include<memory>
 #include<vector>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
 class Texture2D;
 
@@ -26,9 +29,11 @@ public:
 	void setUniform3f(const char* uniform, float red, float green, float blue);
 	void setUniform1f(const char* uniformName, float value);
 	void setUniform1i(const char* uniformname, int newValue);
+	void setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint normalize, float* data);
 
 	void addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName);
 	void activateTextures();
+
 
 private:
 	bool failed;
