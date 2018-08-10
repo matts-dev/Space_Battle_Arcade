@@ -59,6 +59,12 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Libraries\glad.c" />
     <ClCompile Include="Libraries\stb_image.cpp" />
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_1.cpp" />
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_2More3d.cpp" />
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_3MoreCubes.cpp" />
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_4Challenge1FOV_and_Aspect.cpp" />
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_5Challenge2ViewChanges.cpp" />
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_6Challenges3cpp.cpp" />
     <ClCompile Include="new_src\GettingStarted\HelloTriangle\HelloTriangle.cpp" />
     <ClCompile Include="new_src\GettingStarted\HelloTriangle\HelloTriangle_DrawElements.cpp" />
     <ClCompile Include="new_src\GettingStarted\Shaders\Shaders7_SingleVAO_MultipleVBOs.cpp" />

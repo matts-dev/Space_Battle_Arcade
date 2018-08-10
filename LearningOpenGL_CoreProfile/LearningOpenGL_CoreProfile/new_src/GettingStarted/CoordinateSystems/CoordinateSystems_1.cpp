@@ -7,9 +7,7 @@
 #include "../../nu_utils.h"
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+
 
 
 namespace
@@ -22,13 +20,15 @@ namespace
 				
 				out vec4 vertColor;
 				out vec2 texCoord;
-
-				uniform mat4 transform;
+				
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
 
 				void main(){
 					vertColor = vec4(color, 1.0f); 
 					texCoord = inTexCoord; //reminder, since this is an out variable it will be subject to fragment interpolation (which is what we want)
-					gl_Position = transform * vec4(position, 1);
+					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
 	const char* frag_shader_src = R"(
@@ -98,7 +98,7 @@ namespace
 		}
 		GLuint textureFaceId;
 		glGenTextures(1, &textureFaceId);
-		glActiveTexture(GL_TEXTURE0 + 1);
+		glActiveTexture(GL_TEXTURE0 + 1); //2nd texture unit
 		glBindTexture(GL_TEXTURE_2D, textureFaceId);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -156,6 +156,20 @@ namespace
 		shader.setUniform1i("texture0", 0); //binds sampler "texture0" to texture unit GL_TEXTURE0
 		shader.setUniform1i("texture1", 1); // "												"
 
+		//transformations
+		glm::mat4 model;
+		model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		
+		glm::mat4 view;
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / height, 0.1f, 100.0f);
+
+		shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+		shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+		shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
 		while (!glfwWindowShouldClose(window))
 		{
 			processInput(window);
@@ -173,23 +187,7 @@ namespace
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, textureFaceId);
 
-			//create a transform for the container (rotate * scale)
-			glm::mat4 transform;
-			transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-			transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f)); //transform * rotation matrix     //notice transform is on the left 
-			shader.setUniformMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(transform));
-
 			glBindVertexArray(vao);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
-
-
-			//create a transform for the container (rotate * scale)
-			float time = static_cast<float>(glfwGetTime());
-			float factor = sin(time);
-			transform = glm::mat4(1.f);
-			transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));
-			transform = glm::scale(transform, glm::vec3(factor, factor, 1));
-			shader.setUniformMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(transform));
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
 
 			glfwSwapBuffers(window);

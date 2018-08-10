@@ -7,9 +7,7 @@
 #include "../../nu_utils.h"
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+
 
 
 namespace
@@ -17,25 +15,23 @@ namespace
 	const char* vertex_shader_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
-				layout (location = 1) in vec3 color;	
-				layout (location = 2) in vec2 inTexCoord;
+				layout (location = 1) in vec2 inTexCoord;
 				
-				out vec4 vertColor;
 				out vec2 texCoord;
-
-				uniform mat4 transform;
+				
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
 
 				void main(){
-					vertColor = vec4(color, 1.0f); 
 					texCoord = inTexCoord; //reminder, since this is an out variable it will be subject to fragment interpolation (which is what we want)
-					gl_Position = transform * vec4(position, 1);
+					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
 	const char* frag_shader_src = R"(
 				#version 330 core
 				out vec4 fragmentColor;
 
-				in vec4 vertColor;
 				in vec2 texCoord;
 
 				uniform sampler2D texture0;
@@ -98,7 +94,7 @@ namespace
 		}
 		GLuint textureFaceId;
 		glGenTextures(1, &textureFaceId);
-		glActiveTexture(GL_TEXTURE0 + 1);
+		glActiveTexture(GL_TEXTURE0 + 1); //2nd texture unit
 		glBindTexture(GL_TEXTURE_2D, textureFaceId);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -109,17 +105,49 @@ namespace
 		stbi_image_free(textureData);
 
 		float vertices[] = {
-			// positions          // colors           // texture coords
-			0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-			0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-			-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-		};
-		unsigned int element_indices[] = {
-			0, 1, 3, //first triangle
-			1, 2, 3  //second triangle
-		};
+			//x      y      z       s     t
+			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		};
 
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
@@ -130,21 +158,13 @@ namespace
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-		GLuint ebo;
-		glGenBuffers(1, &ebo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(element_indices), element_indices, GL_STATIC_DRAW);
-
 		//while these match a shader's configuration, we don't actually need an active shader while specifying
 		//because these vertex attribute configurations are associated with the VAO object, not with the compiled shader
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //demonstrating that the vao also stores the state of the ebo
@@ -156,14 +176,30 @@ namespace
 		shader.setUniform1i("texture0", 0); //binds sampler "texture0" to texture unit GL_TEXTURE0
 		shader.setUniform1i("texture1", 1); // "												"
 
+		glEnable(GL_DEPTH_TEST);
+	
 		while (!glfwWindowShouldClose(window))
 		{
 			processInput(window);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			shader.use();
+
+			//transformations
+			glm::mat4 model;
+			model = glm::rotate(model, static_cast<float>(glfwGetTime()) * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+			glm::mat4 view;
+			view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+			glm::mat4 projection;
+			projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / height, 0.1f, 100.0f);
+
+			shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
 			//set texture unit 0 to be the background
 			glActiveTexture(GL_TEXTURE0);
@@ -173,24 +209,8 @@ namespace
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, textureFaceId);
 
-			//create a transform for the container (rotate * scale)
-			glm::mat4 transform;
-			transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-			transform = glm::rotate(transform, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f)); //transform * rotation matrix     //notice transform is on the left 
-			shader.setUniformMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(transform));
-
 			glBindVertexArray(vao);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
-
-
-			//create a transform for the container (rotate * scale)
-			float time = static_cast<float>(glfwGetTime());
-			float factor = sin(time);
-			transform = glm::mat4(1.f);
-			transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));
-			transform = glm::scale(transform, glm::vec3(factor, factor, 1));
-			shader.setUniformMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(transform));
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -200,7 +220,6 @@ namespace
 		glfwTerminate();
 		glDeleteVertexArrays(1, &vao);
 		glDeleteBuffers(1, &vbo);
-		glDeleteBuffers(1, &ebo);
 	}
 }
 

@@ -218,6 +218,24 @@
     <ClCompile Include="new_src\GettingStarted\Transformations\Transformations3_Challenge2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_2More3d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_3MoreCubes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_4Challenge1FOV_and_Aspect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_5Challenge2ViewChanges.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_6Challenges3cpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
