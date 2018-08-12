@@ -45,6 +45,9 @@
     <ClInclude Include="new_src\GettingStarted\Camera\FreeCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="InputTracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -279,6 +282,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\GettingStarted\Camera\FreeCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_6QuaternionCameraDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

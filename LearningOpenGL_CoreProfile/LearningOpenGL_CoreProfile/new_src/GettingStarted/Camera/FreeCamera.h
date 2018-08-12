@@ -26,6 +26,9 @@ public:
 	//setters and getters
 	void setPosition(float x, float y, float z);
 
+	//api
+	void lookAt(glm::vec3 position);
+
 private: //helper fields
 	double lastX;
 	double lastY;
@@ -45,7 +48,7 @@ private:
 	glm::quat quaternion;
 
 	float FOV = 45.0f;
-	float mouseSensitivity = 0.005f;
+	float mouseSensitivity = 0.00125f;
 	float cameraSpeed = 2.5f;
 
 

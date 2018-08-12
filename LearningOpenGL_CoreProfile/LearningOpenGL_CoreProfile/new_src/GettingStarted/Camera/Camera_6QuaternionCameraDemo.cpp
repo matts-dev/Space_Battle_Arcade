@@ -1,5 +1,7 @@
 #pragma once
+#include <chrono>
 #include<iostream>
+#include <thread>
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
@@ -10,6 +12,7 @@
 #include "CameraQuaternionFPS.h"
 #include "CameraQuaternionExperiment1Flawed.h"
 #include "FreeCamera.h"
+#include "../../../InputTracker.h"
 
 namespace
 {
@@ -17,11 +20,9 @@ namespace
 
 	float lastFrameTime = 0.f;
 	float deltaTime = 0.0f;
-
-	float pitch = 0.f;
-	float yaw = -90.f;
-
 	float FOV = 45.0f;
+
+	InputTracker input;
 
 	const char* vertex_shader_src = R"(
 				#version 330 core
@@ -62,11 +63,19 @@ namespace
 		{
 			glfwSetWindowShouldClose(window, true);
 		}
+
+		if (input.isKeyJustPressed(window, GLFW_KEY_L))
+		{
+			camera.lookAt(glm::vec3(0, 0, 0));
+		}
+
 		camera.handleInput(window, deltaTime);
 	}
 
 	void true_main()
 	{
+		using namespace std::chrono_literals;
+
 		camera.setPosition(0.0f, 0.0f, 3.0f);
 		int width = 800;
 		int height = 600;
@@ -213,6 +222,7 @@ namespace
 			deltaTime = currentTime - lastFrameTime;
 			lastFrameTime = currentTime;
 
+			input.updateState(window);
 			processInput(window);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -255,7 +265,7 @@ namespace
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
-
+			std::this_thread::sleep_for(16ms);
 		}
 
 		glfwTerminate();
@@ -263,8 +273,8 @@ namespace
 		glDeleteBuffers(1, &vbo);
 	}
 }
-//
-//int main()
-//{
-//	true_main();
-//}
+
+int main()
+{
+	true_main();
+}

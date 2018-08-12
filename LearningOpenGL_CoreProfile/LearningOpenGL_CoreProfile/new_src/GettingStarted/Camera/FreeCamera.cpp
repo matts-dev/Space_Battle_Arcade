@@ -136,6 +136,13 @@ void FreeCamera::mouseWheelUpdate(double xOffset, double yOffset)
 
 void FreeCamera::handleInput(GLFWwindow* window, float deltaTime)
 {
+	//DISCLAIMER: make sure delta time passed is not 0!
+	float epsilon = 100 * std::numeric_limits<float>::epsilon();
+	if (abs(deltaTime) < epsilon)
+	{
+		return;
+	}
+
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		cameraPosition += w_axis * cameraSpeed * deltaTime;
@@ -172,6 +179,80 @@ void FreeCamera::setPosition(float x, float y, float z)
 	cameraPosition.x = x;
 	cameraPosition.y = y;
 	cameraPosition.z = z;
+}
+
+//helper for float comparisons
+bool valuesAreSame(float first, float second)
+{
+	const float epi = 100 * std::numeric_limits<float>::epsilon();
+	return abs(first - second) < epi;
+}
+
+//helper for vector comparisons
+bool vectorsAreSame(glm::vec3 first, glm::vec3 second)
+{
+	return valuesAreSame(first.x, second.x) && valuesAreSame(first.y, second.y) && valuesAreSame(first.z, second.z);
+}
+
+/**
+	Technique: 
+		1. Get a vector from camera in current looking direction
+		2. Get a vector to the look at position (from the current camera's position
+		3. Calculate the angle between the two vectors by using the dot product == |A||B|cos(theta)) (requries both vectors to be normalized)
+		4. Calculate the axis of rotation for that angle via cross product (view vector CROSS look at vector)
+		5. Calculate a quaternion for such a rotation
+		6. Apply quaterion to current rotation quaternion
+*/
+void FreeCamera::lookAt(glm::vec3 position)
+{
+	using namespace glm;
+
+	//prestep -- make sure we're not trying to lookat the position we're already looking at
+	if (position == cameraPosition)
+	{
+		//notice: probably not reliable to just == on float values but this is edge casey 
+		//I belive if there is just a slight bit of variation this will be safe -- so == is probably okay.
+		return;
+	}
+
+	//1. GET CURRENT VIEW VECTOR
+	//this is reduce logic, the more repost is:
+	// a. calculate a point in front of the camera (cameraPos + -w_axis)
+	// b. get a vector to that point (point - cameraPos)
+	// c. However, those step are superfluous as the vector is just -w_axis.
+	vec3 currentLooking = -w_axis; //w_axis is a normalized vector
+	
+
+	//2. get a vector to the new look at position
+	vec3 newLookAt = normalize(position - cameraPosition);
+
+	//3. calculate the angle between the two vectors
+	float cos_theta = dot(newLookAt, currentLooking);
+	float theta_radians = acos(cos_theta); //imprecision can make values great than one for cos_theta; which acos(x>1) == nan
+	if (isnan(theta_radians))
+		return;
+
+	//4. calculate the axis of rotation 
+	//remember -- in right hand systems rotations occur in the way your fingers roll...
+	//	a.place index finger in direction currently looking,
+	//	b.place middle finger in direction of new looking
+	//	c.thumb is axis of rotation
+	//
+	//we want to rotate toward the the new look at,
+	//so our fingers should curl in that direction... 
+	//this means we need to make it the second vector in our cross product
+	//good measure to normalize this axis -- not sure if it is expected to be normalized with glm quaternion call
+	if (vectorsAreSame(currentLooking, newLookAt)) //prevent nan within cross product for looking at same position
+		return;
+	vec3 rotationAxis = normalize(cross(currentLooking, newLookAt));
+
+	//5. Calculation quaternion rotation
+	quat q = angleAxis(theta_radians, rotationAxis);
+	//6. stack ration onto current rotation
+	quaternion = q * quaternion;
+
+	//rebuild based on new quaternion
+	updateAxes();
 }
 
 void FreeCamera::updateAxes()
