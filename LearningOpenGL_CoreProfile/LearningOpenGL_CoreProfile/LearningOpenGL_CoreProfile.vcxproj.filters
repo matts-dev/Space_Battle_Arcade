@@ -33,6 +33,18 @@
     <ClInclude Include="new_src\nu_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\GettingStarted\Camera\CameraFPS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\GettingStarted\Camera\CameraQuaternionExperiment1Flawed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\GettingStarted\Camera\CameraQuaternionFPS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\GettingStarted\Camera\FreeCamera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -234,6 +246,39 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_6Challenges3cpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_1SpinningCameraWithExplanations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_2MoveableCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_3MouseMovement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_4Challenge1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_4Challenge2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_5UsageFPSCameraAbstraction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\CameraFPS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_5UsageQuaterionCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\CameraQuaternionExperiment1Flawed.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\CameraQuaternionFPS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Camera\FreeCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

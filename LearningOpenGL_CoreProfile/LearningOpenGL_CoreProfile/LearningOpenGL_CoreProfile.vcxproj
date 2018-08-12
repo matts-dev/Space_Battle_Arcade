@@ -20,7 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="new_src\GettingStarted\Camera\FreeCamera.h" />
+    <ClInclude Include="new_src\GettingStarted\Camera\CameraQuaternionFPS.h" />
+    <ClInclude Include="new_src\GettingStarted\Camera\CameraQuaternionExperiment1Flawed.h" />
     <ClInclude Include="Libraries\stb_image.h" />
+    <ClInclude Include="new_src\GettingStarted\Camera\CameraFPS.h" />
     <ClInclude Include="new_src\nu_utils.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture2D.h" />
@@ -57,8 +61,19 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\FreeCamera.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\CameraQuaternionFPS.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\CameraQuaternionExperiment1Flawed.cpp" />
     <ClCompile Include="Libraries\glad.c" />
     <ClCompile Include="Libraries\stb_image.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\CameraFPS.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_4Challenge1.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_1SpinningCameraWithExplanations.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_2MoveableCamera.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_3MouseMovement.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_4Challenge2.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_5UsageFPSCameraAbstraction.cpp" />
+    <ClCompile Include="new_src\GettingStarted\Camera\Camera_5UsageQuaterionCamera.cpp" />
     <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_1.cpp" />
     <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_2More3d.cpp" />
     <ClCompile Include="new_src\GettingStarted\CoordinateSystems\CoordinateSystems_3MoreCubes.cpp" />

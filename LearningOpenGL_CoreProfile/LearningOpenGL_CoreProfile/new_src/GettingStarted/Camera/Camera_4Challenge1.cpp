@@ -8,14 +8,19 @@
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
 
-
-
 namespace
 {
-	float aspect = 1;
+	glm::vec3 cameraPosition(0.f, 0.f, 3.0f);
+	glm::vec3 cameraFront(0.f, 0.f, -1.f);
+	glm::vec3 worldUp(0.f, 1.f, 0.f);
+
+	float lastFrameTime = 0.f;
+	float deltaTime = 0.0f;
+
+	float pitch = 0.f;
+	float yaw = -90.f;
+
 	float FOV = 45.0f;
-	glm::vec3 position(0.f, 0.f, -3.0f);
-	float yRot = 0.0f;
 
 	const char* vertex_shader_src = R"(
 				#version 330 core
@@ -50,36 +55,107 @@ namespace
 				}
 			)";
 
-
-
 	void processInput(GLFWwindow* window)
 	{
+		//fancy projection method works too... but perhaps overkill. cameraFront.x is already the result of xProjections 
+		//float xProjection = glm::dot(glm::vec3(1.f, 0.f, 0.f), cameraFront);
+		//float zProjection = glm::dot(glm::vec3(0.f, 0.f, 1.f), cameraFront);
+		//glm::vec3 frontInXZPlane(xProjection, 0, zProjection);
+		//frontInXZPlane = glm::normalize(frontInXZPlane);
+
+		glm::vec3 frontInXZPlane(cameraFront.x, 0, cameraFront.z);
+		frontInXZPlane = glm::normalize(frontInXZPlane);
+
+		float cameraSpeed = 2.5f * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, true);
 		}
-		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
-			yRot += 1.f;
+			cameraPosition -= frontInXZPlane * cameraSpeed;
 		}
-		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			yRot -= 1.f;
+			cameraPosition += frontInXZPlane * cameraSpeed;
 		}
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
-			position.z += 1.0f;
+			glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp, -cameraFront));
+			cameraPosition += cameraRight * cameraSpeed;
 		}
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
-			position.z -= 1.0f;
+			glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp, -cameraFront));
+			cameraPosition -= cameraRight * cameraSpeed;
 		}
 	}
+
+	double lastX = 400;
+	double lastY = 400;
+	bool refocused = true;
+	void mouseCallback(GLFWwindow* window, double xpos, double ypos)
+	{
+		if (refocused)
+		{
+			lastX = xpos;
+			lastY = ypos;
+			refocused = false;
+		}
+
+		double xOff = xpos - lastX;
+		double yOff = lastY - ypos;
+
+		float sensitivity = 0.05f;
+		xOff *= sensitivity;
+		yOff *= sensitivity;
+
+		yaw += static_cast<float>(xOff);
+		pitch += static_cast<float>(yOff);
+
+		lastX = xpos;
+		lastY = ypos;
+
+		if (pitch > 89.0f)
+			pitch = 89.f;
+		else if (pitch < -89.0f)
+			pitch = -89.f;
+
+		glm::vec3 camDir;
+		camDir.y = sin(glm::radians(pitch));
+		camDir.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		camDir.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+		camDir = glm::normalize(camDir); //perhaps unnecessary
+		cameraFront = camDir;
+	}
+
+	void mouseLeftCallback(GLFWwindow* window, int Enter)
+	{
+		if (Enter != GLFW_TRUE)
+		{
+			refocused = true;
+			//std::cout << "exit" << std::endl;
+		}
+		else
+		{
+			//std::cout << "entered" << std::endl;
+		}
+	}
+
+	void scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+	{
+		if (FOV >= 1.0f && FOV <= 45.0f)
+			FOV -= static_cast<float>(yOffset);
+		if (FOV <= 1.0f)
+			FOV = 1.0f;
+		if (FOV >= 45.0)
+			FOV = 45.0f;
+	}
+
 	void true_main()
 	{
 		int width = 800;
 		int height = 600;
-		aspect = static_cast<float>(width) / height;
 
 		GLFWwindow* window = init_window(width, height);
 
@@ -95,6 +171,13 @@ namespace
 			exit(-1);
 		}
 		stbi_set_flip_vertically_on_load(true);
+
+		//callbacks
+		glfwSetCursorPosCallback(window, &mouseCallback);
+		glfwSetCursorEnterCallback(window, &mouseLeftCallback);
+		glfwSetScrollCallback(window, &scrollCallback);
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		GLuint textureBackgroundId;
 		glGenTextures(1, &textureBackgroundId);
@@ -214,9 +297,36 @@ namespace
 			glm::vec3(-1.3f,  1.0f, -1.5f)
 		};
 
+		//camera
+		glm::vec3 cameraPosDemo(0.f, 0.f, 3.f);
+		glm::vec3 targetDemo(0.f, 0.f, 0.f);
+		glm::vec3 worldUpDemo(0.f, 1.f, 0.f);
+
+		//construct camera basis vectors  (u, v, w) ~~ (x, y, z)
+		glm::vec3 cameraWaxis = glm::normalize(cameraPosDemo - targetDemo); //points towards camera; camera looks down its -z axis (ie down its -w axis)
+		glm::vec3 cameraUaxis = glm::normalize(glm::cross(worldUpDemo, cameraWaxis)); //this is the right axis (ie x-axis)
+		glm::vec3 cameraVaxis = glm::normalize(glm::cross(cameraWaxis, cameraUaxis));
+
+		//this creates a view matrix from two matrices.
+		//the first matrix (ie the matrix on the right which gets applied first) is just translating points by the opposite of the camera's position.
+		//the second matrix (ie matrix on the left) is a matrix where the first 3 rows are the U, V, and W axes of the camera.
+		//		The matrix with the axes of the camera is a change of basis matrix.
+		//		If you think about it, what it does to a vector is a dot product with each of the camera's axes.
+		//		Since the camera axes are all normalized, what this is really doing is projecting the vector on the 3 axes of the camera!
+		//			(recall that a vector dotted with a normal vector is equivalent of getting the scalar projection onto the normal)
+		//		So, the result of the projection is the vector's position in terms of the camera position.
+		//		Since we're saying that the camera's axes align with our NDC axes, we get coordinates in terms x y z that are ready for clipping and projection to NDC 
+		//So, ultimately the lookAt matrix shifts points based on camera's position, then projects them onto the camera's axes -- which are aligned with OpenGL's axes 
+		//
+		//This all relies on the fact that we say the camera axes match the final axes before when we're done processing
+		glm::mat4 viewDemo = glm::lookAt(cameraPosDemo, targetDemo, worldUpDemo);
 
 		while (!glfwWindowShouldClose(window))
 		{
+			float currentTime = static_cast<float>(glfwGetTime());
+			deltaTime = currentTime - lastFrameTime;
+			lastFrameTime = currentTime;
+
 			processInput(window);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -232,27 +342,25 @@ namespace
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, textureFaceId);
 
+			glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, worldUp);
+
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
 				glm::mat4 model;
 				float angle = 20.0f * i;
 				model = glm::translate(model, cubePositions[i]);
-				if (i % 3 == 0){
-					angle = (i + 1) * 36.f + static_cast<float>(glfwGetTime() * 50);
-				}
 				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-				//effectively look at the center because rotating first;
-				glm::mat4 view;
-				view = glm::translate(view, position);
-				view = glm::rotate(view, glm::radians(yRot), glm::vec3(0.f, 1.f, 0.f));
+				//use the camera's view!
+				//glm::mat4 view;
+				//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
 				//author says its best practice to not re-initialize this everytime since it rarely changes; leaving here for close proximity to other matrices
 				glm::mat4 projection;
-				projection = glm::perspective(glm::radians(FOV), aspect, 0.1f, 100.0f);
+				projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
 
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
 				glBindVertexArray(vao);
