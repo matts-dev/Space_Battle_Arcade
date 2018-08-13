@@ -12,7 +12,7 @@ class FreeCamera
 {
 public:
 	FreeCamera(float inFOV);
-	~FreeCamera();
+	virtual ~FreeCamera();
 
 	glm::mat4 getView();
 
@@ -39,7 +39,6 @@ private:
 	const glm::vec3 DEFAULT_AXIS_V = glm::vec3(0, 1.f, 0);
 	const glm::vec3 DEFAULT_AXIS_W = glm::vec3(0, 0, 1.f);
 
-	glm::vec3 previousUp;
 	glm::vec3 cameraPosition;
 	glm::vec3 u_axis;
 	glm::vec3 v_axis;
