@@ -26,6 +26,8 @@ public:
 	//setters and getters
 	void setPosition(float x, float y, float z);
 
+	const glm::vec3& getPosition() { return cameraPosition; }
+
 private: //helper fields
 	double lastX;
 	double lastY;

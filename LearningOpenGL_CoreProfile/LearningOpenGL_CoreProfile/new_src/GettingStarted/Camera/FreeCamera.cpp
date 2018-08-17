@@ -288,7 +288,7 @@ void FreeCamera::mouseMovedPlanar(double xpos, double ypos)
 	}
 
 	//set up mouse deltas
-	float yawFactor = static_cast<float>(lastX - xpos); //these seem backwards
+	float yawFactor = static_cast<float>(lastX - xpos);
 	float pitchFactor = static_cast<float>(ypos - lastY);
 	//yawFactor *= mouseSensitivity;
 	//pitchFactor *= mouseSensitivity;

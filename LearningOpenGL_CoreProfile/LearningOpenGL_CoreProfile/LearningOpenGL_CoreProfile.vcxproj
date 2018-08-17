@@ -106,6 +106,13 @@
     <ClCompile Include="new_src\GettingStarted\Transformations\Transformations2_spinning.cpp" />
     <ClCompile Include="new_src\GettingStarted\Transformations\Transformation1_rotate.cpp" />
     <ClCompile Include="new_src\GettingStarted\Transformations\Transformations3_Challenge2.cpp" />
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting.cpp" />
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge1.cpp" />
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge2TweakingLightingConstants.cpp" />
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge4GouraudShading.cpp" />
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLighting.cpp" />
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLightingV2TransformInVertShader.cpp" />
+    <ClCompile Include="new_src\Lighting\Colors\Colors.cpp" />
     <ClCompile Include="new_src\nu_utils.cpp" />
     <ClCompile Include="RenderToFrameBufferTests.cpp" />
     <ClCompile Include="Shader.cpp" />

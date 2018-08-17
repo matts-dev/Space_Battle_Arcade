@@ -290,6 +290,27 @@
     <ClCompile Include="new_src\GettingStarted\Camera\Camera_6QuaternionCameraDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\Lighting\Colors\Colors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge2TweakingLightingConstants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLightingV2TransformInVertShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge4GouraudShading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
