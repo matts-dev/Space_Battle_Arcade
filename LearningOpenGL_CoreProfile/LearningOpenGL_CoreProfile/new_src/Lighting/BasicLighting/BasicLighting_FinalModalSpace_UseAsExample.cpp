@@ -31,23 +31,15 @@ namespace
 				uniform mat4 view;
 				uniform mat4 projection;
 
-				uniform vec3 lightPosition;
-
 				out vec3 fragNormal;
 				out vec3 fragPosition;
 
-				//this version calculates the lightPos in vert shader (faster) and then passes it to frag shader 
-				// while this does interpolation, the 3 vertices have the same light position and thus frag interpolatino doesn't change the light pos value
-				out vec3 viewLightPos;
-
 				void main(){
 					gl_Position = projection * view * model * vec4(position, 1);
-
-					fragPosition = vec3(view * model * vec4(position, 1));
-					viewLightPos = vec3(view * vec4(lightPosition, 1));
+					fragPosition = vec3(model * vec4(position, 1));
 
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					fragNormal = mat3(transpose(inverse(view * model))) * normal;
+					fragNormal = mat3(transpose(inverse(model))) * normal;
 				}
 			)";
 	const char* frag_shader_src = R"(
@@ -56,11 +48,11 @@ namespace
 
 				uniform vec3 lightColor;
 				uniform vec3 objectColor;
+				uniform vec3 lightPosition;
 				uniform vec3 cameraPosition;
 
 				in vec3 fragNormal;
 				in vec3 fragPosition;
-				in vec3 viewLightPos ;
 
 				/* uniforms can have initial value in GLSL 1.20 and up */
 				uniform float ambientStrength = 0.1f; 
@@ -75,14 +67,13 @@ namespace
 				void main(){
 					vec3 ambientLight = ambientStrength * lightColor;					
 
-					vec3 toLight = normalize(viewLightPos - fragPosition);
+					vec3 toLight = normalize(lightPosition - fragPosition);
 					vec3 normal = normalize(fragNormal); //interpolation of different normalize will cause loss of unit length
 					vec3 diffuseLight = max(dot(toLight, fragNormal), 0) * lightColor * diffuseStrength;
 
-					//when doing calculations in view space, the fragPosition is already a vector relative to the view! 
-					vec3 toView = -normalize(fragPosition);
-					vec3 toReflection = reflect(-toView, normal); //reflect expects vector from light position (tutorial didn't normalize this vector) (note, the tutorial actually reflected the light vector; same difference though)
-					float specularAmount = pow(max(dot(toReflection, toLight), 0), shininess);
+					vec3 toReflection = reflect(-toLight, normal); //reflect expects vector from light position (tutorial didn't normalize this vector)
+					vec3 toView = normalize(cameraPosition - fragPosition);
+					float specularAmount = pow(max(dot(toView, toReflection), 0), shininess);
 					vec3 specularLight = specularStrength * lightColor * specularAmount;
 
 					vec3 lightContribution = (enableAmbient * ambientLight + enableDiffuse*diffuseLight + enableSpecular*specularLight) * objectColor;

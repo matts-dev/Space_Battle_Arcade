@@ -29,7 +29,7 @@ public:
 	void setUniform3f(const char* uniform, float red, float green, float blue);
 	void setUniform1f(const char* uniformName, float value);
 	void setUniform1i(const char* uniformname, int newValue);
-	void setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint normalize, float* data);
+	void setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint normalize, const float* data);
 
 	void addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName);
 	void activateTextures();

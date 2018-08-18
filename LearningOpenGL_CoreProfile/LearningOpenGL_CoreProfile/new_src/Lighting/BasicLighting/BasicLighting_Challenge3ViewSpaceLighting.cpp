@@ -63,7 +63,7 @@ namespace
 				uniform float ambientStrength = 0.1f; 
 				uniform float diffuseStrength = 1.0f;
 				uniform float specularStrength = 0.5f;
-				uniform int shinnyness = 32;
+				uniform int shininess = 32;
 				uniform int enableAmbient = 1;
 				uniform int enableDiffuse = 1;
 				uniform int enableSpecular = 1;
@@ -80,8 +80,8 @@ namespace
 
 					//when doing calculations in view space, the fragPosition is already a vector relative to the view! 
 					vec3 toView = -normalize(fragPosition);
-					vec3 toReflection = reflect(-toView, normal); //reflect expects vector from light position (tutorial didn't normalize this vector)
-					float specularAmount = pow(max(dot(toReflection, toLight), 0), shinnyness);
+					vec3 toReflection = reflect(-toView, normal); //reflect expects vector from light position (tutorial didn't normalize this vector) (note, the tutorial actually reflected the light vector; same difference though)
+					float specularAmount = pow(max(dot(toReflection, toLight), 0), shininess);
 					vec3 specularLight = specularStrength * lightColor * specularAmount;
 
 					vec3 lightContribution = (enableAmbient * ambientLight + enableDiffuse*diffuseLight + enableSpecular*specularLight) * objectColor;
@@ -121,7 +121,7 @@ namespace
 	float ambientStrength = 0.2f;
 	float diffuseStrength = 1.f;
 	float specularStrength = 1.f;
-	int shinnyness = 32;
+	int shininess = 32;
 	float floatValIncrement = 0.25f;
 
 	void processInput(GLFWwindow* window)
@@ -190,13 +190,13 @@ namespace
 		}
 		if (input.isKeyJustPressed(window, GLFW_KEY_P))
 		{
-			shinnyness *= 2;
-			std::cout << "new shinnyness: " << shinnyness << std::endl;
+			shininess *= 2;
+			std::cout << "new shininess: " << shininess << std::endl;
 		}
 		if (input.isKeyJustPressed(window, GLFW_KEY_SEMICOLON))
 		{
-			shinnyness = (shinnyness / 2) == 0 ? 1 : shinnyness / 2;
-			std::cout << "new shinnyness: " << shinnyness << std::endl;
+			shininess = (shininess / 2) == 0 ? 1 : shininess / 2;
+			std::cout << "new shininess: " << shininess << std::endl;
 		}
 
 		camera.handleInput(window, deltaTime);
@@ -344,7 +344,7 @@ namespace
 			shader.setUniform1f("ambientStrength", ambientStrength);
 			shader.setUniform1f("diffuseStrength", diffuseStrength);
 			shader.setUniform1f("specularStrength", specularStrength);
-			shader.setUniform1i("shinnyness", shinnyness);
+			shader.setUniform1i("shininess", shininess);
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);

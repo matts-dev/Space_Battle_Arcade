@@ -11,8 +11,8 @@ in vec3 normalVec;
 in vec3 fragmentPosition;
 
 const float specularIntensity = 0.5f;
-const float shinnynessPower = 32;
-//const float shinnynessPower = 256;
+const float shininessPower = 32;
+//const float shininessPower = 256;
 
 void main()
 {
@@ -33,7 +33,7 @@ void main()
 	vec3 reflectionDir = reflect(-lightDirection, norm); //expecting the vector to be pointing towards fragment position 
 	float rawSpecular = dot(reflectionDir, viewDirection); //both are normals, so we get angle (ie cos(theta))
 	float clampedSpecular = max(rawSpecular, 0.0f);
-	float specFactor = pow(clampedSpecular, shinnynessPower); //this increaess brightness
+	float specFactor = pow(clampedSpecular, shininessPower); //this increaess brightness
 	vec3 specular = specFactor * specularIntensity * lightColor; //specular favors the color of the light, not the object.
 
 	vec3 objectResultColor = (specular + ambient + diffuseFromAngle) * objectColor;

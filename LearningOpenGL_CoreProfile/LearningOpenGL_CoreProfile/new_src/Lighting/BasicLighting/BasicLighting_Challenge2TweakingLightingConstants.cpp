@@ -113,7 +113,7 @@ namespace
 	float ambientStrength = 0.2f;
 	float diffuseStrength = 1.f;
 	float specularStrength = 1.f;
-	int shinnyness = 32;
+	int shininess = 32;
 	float floatValIncrement = 0.25f;
 		
 	void processInput(GLFWwindow* window)
@@ -181,13 +181,13 @@ namespace
 			if (specularStrength < 0) specularStrength = 0;
 		}
 		if (input.isKeyJustPressed(window, GLFW_KEY_P)){
-			shinnyness *= 2;
-			std::cout << "new shinnyness: " << shinnyness << std::endl;
+			shininess *= 2;
+			std::cout << "new shinnyness: " << shininess << std::endl;
 		}
 		if (input.isKeyJustPressed(window, GLFW_KEY_SEMICOLON))
 		{
-			shinnyness = (shinnyness / 2) == 0 ? 1 : shinnyness / 2;
-			std::cout << "new shinnyness: " << shinnyness << std::endl;
+			shininess = (shininess / 2) == 0 ? 1 : shininess / 2;
+			std::cout << "new shinnyness: " << shininess << std::endl;
 		}
 
 		camera.handleInput(window, deltaTime);
@@ -335,7 +335,7 @@ namespace
 			shader.setUniform1f("ambientStrength", ambientStrength);
 			shader.setUniform1f("diffuseStrength", diffuseStrength);
 			shader.setUniform1f("specularStrength", specularStrength);
-			shader.setUniform1i("shinnyness", shinnyness);
+			shader.setUniform1i("shinnyness", shininess);
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);

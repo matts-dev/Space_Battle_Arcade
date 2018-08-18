@@ -21,14 +21,19 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="InputTracker.h" />
+    <ClInclude Include="new_src\Utilities\MeshInstance.h" />
+    <ClInclude Include="new_src\Utilities\MatrixStack.h" />
     <ClInclude Include="new_src\GettingStarted\Camera\FreeCamera.h" />
     <ClInclude Include="new_src\GettingStarted\Camera\CameraQuaternionFPS.h" />
     <ClInclude Include="new_src\GettingStarted\Camera\CameraQuaternionExperiment1Flawed.h" />
     <ClInclude Include="Libraries\stb_image.h" />
     <ClInclude Include="new_src\GettingStarted\Camera\CameraFPS.h" />
     <ClInclude Include="new_src\nu_utils.h" />
+    <ClInclude Include="new_src\Utilities\Mesh.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="new_src\Utilities\SphereMesh.h" />
     <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="new_src\Utilities\Transformable.h" />
     <ClInclude Include="Utilities.h" />
   </ItemGroup>
   <ItemGroup>
@@ -63,6 +68,9 @@
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="InputTracker.cpp" />
+    <ClCompile Include="new_src\Lighting\Materials\MaterialsSphere.cpp" />
+    <ClCompile Include="new_src\Utilities\MeshInstance.cpp" />
+    <ClCompile Include="new_src\Utilities\MatrixStack.cpp" />
     <ClCompile Include="new_src\GettingStarted\Camera\FreeCamera.cpp" />
     <ClCompile Include="new_src\GettingStarted\Camera\CameraQuaternionFPS.cpp" />
     <ClCompile Include="new_src\GettingStarted\Camera\CameraQuaternionExperiment1Flawed.cpp" />
@@ -112,12 +120,20 @@
     <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge4GouraudShading.cpp" />
     <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLighting.cpp" />
     <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLightingV2TransformInVertShader.cpp" />
+    <ClCompile Include="new_src\Lighting\BasicLighting\BasicLighting_FinalModalSpace_UseAsExample.cpp" />
     <ClCompile Include="new_src\Lighting\Colors\Colors.cpp" />
+    <ClCompile Include="new_src\Lighting\Materials\Materials.cpp" />
+    <ClCompile Include="new_src\Lighting\Materials\MaterialsSpheres.cpp" />
+    <ClCompile Include="new_src\Lighting\Materials\Materials_ChangingLightColor.cpp" />
+    <ClCompile Include="new_src\Lighting\Materials\Materials_ChangingLightColor_Preferable.cpp" />
     <ClCompile Include="new_src\nu_utils.cpp" />
+    <ClCompile Include="new_src\Tests\ColorsAutoClamped.cpp" />
     <ClCompile Include="RenderToFrameBufferTests.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="new_src\Utilities\SphereMesh.cpp" />
     <ClCompile Include="StencilTesting.cpp" />
     <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="new_src\Utilities\Transformable.cpp" />
     <ClCompile Include="Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>

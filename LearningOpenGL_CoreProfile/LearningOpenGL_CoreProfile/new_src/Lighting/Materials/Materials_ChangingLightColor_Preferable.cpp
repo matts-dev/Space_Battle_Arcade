@@ -31,61 +31,69 @@ namespace
 				uniform mat4 view;
 				uniform mat4 projection;
 
-				uniform vec3 lightPosition;
-
 				out vec3 fragNormal;
 				out vec3 fragPosition;
 
-				//this version calculates the lightPos in vert shader (faster) and then passes it to frag shader 
-				// while this does interpolation, the 3 vertices have the same light position and thus frag interpolatino doesn't change the light pos value
-				out vec3 viewLightPos;
-
 				void main(){
 					gl_Position = projection * view * model * vec4(position, 1);
-
-					fragPosition = vec3(view * model * vec4(position, 1));
-					viewLightPos = vec3(view * vec4(lightPosition, 1));
+					fragPosition = vec3(model * vec4(position, 1));
 
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					fragNormal = mat3(transpose(inverse(view * model))) * normal;
+					fragNormal = mat3(transpose(inverse(model))) * normal;
 				}
 			)";
 	const char* frag_shader_src = R"(
 				#version 330 core
-				out vec4 fragmentColor;
 
-				uniform vec3 lightColor;
-				uniform vec3 objectColor;
+				out vec4 fragmentColor;
+				
+				struct Material {
+					vec3 ambientColor;    //object's reflected color under ambient
+					vec3 diffuseColor;    //object's reflected color under diffuse
+					vec3 specularColor;   //light's color impact on object
+					int shininess;
+				};
+				uniform Material material;			
+
+				struct Light
+				{
+					vec3 position;
+					
+					//intensities are like strengths -- but they may contain color information.
+					vec3 ambientIntensity;
+					vec3 diffuseIntensity;
+					vec3 specularIntensity;
+				};	
+				uniform Light light;
+
 				uniform vec3 cameraPosition;
 
 				in vec3 fragNormal;
 				in vec3 fragPosition;
-				in vec3 viewLightPos ;
 
 				/* uniforms can have initial value in GLSL 1.20 and up */
-				uniform float ambientStrength = 0.1f; 
-				uniform float diffuseStrength = 1.0f;
-				uniform float specularStrength = 0.5f;
-				uniform int shininess = 32;
 				uniform int enableAmbient = 1;
 				uniform int enableDiffuse = 1;
 				uniform int enableSpecular = 1;
 				
 
 				void main(){
-					vec3 ambientLight = ambientStrength * lightColor;					
+					vec3 ambientLight = light.ambientIntensity * material.ambientColor;					
 
-					vec3 toLight = normalize(viewLightPos - fragPosition);
-					vec3 normal = normalize(fragNormal); //interpolation of different normalize will cause loss of unit length
-					vec3 diffuseLight = max(dot(toLight, fragNormal), 0) * lightColor * diffuseStrength;
+					vec3 toLight = normalize(light.position - fragPosition);
+					vec3 normal = normalize(fragNormal);														//interpolation of different normalize will cause loss of unit length
+					vec3 diffuseLight = max(dot(toLight, fragNormal), 0) * light.diffuseIntensity * material.diffuseColor;
 
-					//when doing calculations in view space, the fragPosition is already a vector relative to the view! 
-					vec3 toView = -normalize(fragPosition);
-					vec3 toReflection = reflect(-toView, normal); //reflect expects vector from light position (tutorial didn't normalize this vector) (note, the tutorial actually reflected the light vector; same difference though)
-					float specularAmount = pow(max(dot(toReflection, toLight), 0), shininess);
-					vec3 specularLight = specularStrength * lightColor * specularAmount;
+					vec3 toReflection = reflect(-toLight, normal);												//reflect expects vector from light position (tutorial didn't normalize this vector)
+					vec3 toView = normalize(cameraPosition - fragPosition);
+					float specularAmount = pow(max(dot(toView, toReflection), 0), material.shininess);
+					vec3 specularLight = light.specularIntensity* specularAmount * material.specularColor;
+					
+					ambientLight *= enableAmbient;
+					diffuseLight *= enableDiffuse;
+					specularLight *= enableSpecular;
 
-					vec3 lightContribution = (enableAmbient * ambientLight + enableDiffuse*diffuseLight + enableSpecular*specularLight) * objectColor;
+					vec3 lightContribution = (ambientLight + diffuseLight + specularLight);
 					
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}
@@ -120,7 +128,7 @@ namespace
 	bool toggleDiffuse = true;
 	bool toggleSpecular = true;
 	float ambientStrength = 0.2f;
-	float diffuseStrength = 1.f;
+	float diffuseStrength = 0.5f;
 	float specularStrength = 1.f;
 	int shininess = 32;
 	float floatValIncrement = 0.25f;
@@ -278,7 +286,7 @@ namespace
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 
-							  //GENERATE LAMP
+		//GENERATE LAMP
 		GLuint lampVAO;
 		glGenVertexArrays(1, &lampVAO);
 		glBindVertexArray(lampVAO);
@@ -315,6 +323,14 @@ namespace
 			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
 
 			//draw light
+			lightcolor.x = static_cast<float>(sin(glfwGetTime() * 2.0f)/2 + 0.5f);
+			lightcolor.y = static_cast<float>(sin(glfwGetTime() * 0.7f)/2 + 0.5f);
+			lightcolor.z = static_cast<float>(sin(glfwGetTime() * 1.3f)/2 + 0.5f);
+
+			glm::vec3 diffuseColor = lightcolor * diffuseStrength;
+			glm::vec3 ambientColor = diffuseColor * ambientStrength; //this is the tutorial did, seems like we should use lightcolor instead of diffuseColor.
+			//glm::vec3 ambientColor = lightcolor * ambientStrength; //this doesn't look as good, ambient is too bright when light gets dim.
+
 			glm::mat4 model;
 			model = glm::rotate(model, glm::radians(rotateLight ? 100 * currentTime : 0), glm::vec3(0, 1.f, 0)); //apply rotation leftmost (after translation) to give it an orbit
 			model = glm::translate(model, lightStart);
@@ -337,15 +353,17 @@ namespace
 			shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			shader.setUniform3f("lightColor", lightcolor.x, lightcolor.y, lightcolor.z);
-			shader.setUniform3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
-			shader.setUniform3f("objectColor", objectcolor.x, objectcolor.y, objectcolor.z);
+			shader.setUniform3f("light.position", lightPos.x, lightPos.y, lightPos.z);
 
 			//tweak parameters
-			shader.setUniform1f("ambientStrength", ambientStrength);
-			shader.setUniform1f("diffuseStrength", diffuseStrength);
-			shader.setUniform1f("specularStrength", specularStrength);
-			shader.setUniform1i("shininess", shininess);
+			shader.setUniform3f("material.ambientColor", 1.0f, 0.5f, 0.31f);
+			shader.setUniform3f("material.diffuseColor", 1.0f, 0.5f, 0.31f);
+			shader.setUniform3f("material.specularColor", 0.5f, 0.5f, 0.5f);
+			shader.setUniform1i("material.shininess", shininess);
+			shader.setUniform3f("light.ambientIntensity", ambientColor.x, ambientColor.y, ambientColor.z);
+			shader.setUniform3f("light.diffuseIntensity", diffuseColor.x, diffuseColor.y, diffuseColor.z);
+			shader.setUniform3f("light.specularIntensity", lightcolor.x, lightcolor.y, lightcolor.z);
+			//shader.setUniform3f("light.specularIntensity", specularStrength, specularStrength, specularStrength);
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);

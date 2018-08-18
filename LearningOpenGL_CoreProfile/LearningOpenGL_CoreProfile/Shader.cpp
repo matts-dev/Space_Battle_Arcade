@@ -167,7 +167,7 @@ void Shader::setUniform1i(const char* uniform, int newValue)
 }
 
 
-void Shader::setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint transpose, float* data)
+void Shader::setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint transpose, const float* data)
 {
 	RAII_ScopedShaderSwitcher scoped(linkedProgram);
 
