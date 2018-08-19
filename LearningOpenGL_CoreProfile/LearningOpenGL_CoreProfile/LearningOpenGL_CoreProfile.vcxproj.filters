@@ -63,6 +63,9 @@
     <ClInclude Include="new_src\Utilities\MeshInstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Utilities\SimpleCubeMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -357,6 +360,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Lighting\Materials\MaterialsSphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Utilities\SimpleCubeMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\Materials\Materialz_Challenge1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

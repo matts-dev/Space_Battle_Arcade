@@ -53,3 +53,13 @@ void Transformable::setScale(glm::vec3 newScale)
 {
 	scale = newScale;
 }
+
+void Transformable::addChild(Transformable* newChild)
+{
+	children.insert(newChild);
+}
+
+void Transformable::removeChild(Transformable* currentChild)
+{
+	children.erase(currentChild);
+}

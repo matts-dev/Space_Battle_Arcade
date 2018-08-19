@@ -4,6 +4,7 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <vector>
+#include <set>
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
@@ -14,10 +15,10 @@
 class Transformable
 {
 private:
-	std::vector<Transformable*> children;
-
+	std::set<Transformable*> children;
+	
 private:
-	/* This does not consider parent transforms and should not be used publically */
+	/* This does not consider parent transforms and should not be used publicly */
 	glm::mat4 getLocalTransform();
 
 protected:
@@ -35,12 +36,15 @@ public:
 	void setRotation(glm::vec3 newRotation);
 	void setScale(glm::vec3 newScale);
 
+	void addChild(Transformable* newChild);
+	void removeChild(Transformable* currentChild);
+
 protected:
-	//abstract function responsible for doing custom rendering of mesh
+	//subclass should override this method to give custom behavior for rendering
 	virtual void renderInternal(const glm::mat4& projection, 
 								const glm::mat4& view,
 								const glm::mat4& model,
-								Shader& shader) = 0;
+								Shader& shader) {};
 
 };
 

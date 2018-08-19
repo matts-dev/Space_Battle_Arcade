@@ -288,7 +288,7 @@ namespace
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 
-							  //GENERATE LAMP
+		//GENERATE LAMP
 		GLuint lampVAO;
 		glGenVertexArrays(1, &lampVAO);
 		glBindVertexArray(lampVAO);
@@ -303,7 +303,8 @@ namespace
 		glEnable(GL_DEPTH_TEST);
 
 		glm::vec3 lightcolor(1.0f, 1.0f, 1.0f);
-		glm::vec3 objectcolor(1.0f, 0.5f, 0.31f);
+		//glm::vec3 objectcolor(1.0f, 0.5f, 0.31f);
+		glm::vec3 objectcolor(1.0f, 1.f, 1.f);
 
 		glm::vec3 objectPos;
 		glm::vec3 lightStart(1.2f, 1.0f, -10.0f);
@@ -313,6 +314,19 @@ namespace
 
 		MatrixStack mstack;
 		MeshInstance sphere1(sphereSource);
+
+		//test transform hiearchy
+		MeshInstance sphereParent(sphereSource);
+		MeshInstance sphereA(sphereSource);
+		MeshInstance sphereB(sphereSource);
+		MeshInstance sphereC(sphereSource);
+		sphereA.setPosition({ 2, 0, 0 });
+		sphereB.setPosition({ 0, 2, 0 });
+		sphereC.setPosition({ 0, 0, 2 });
+		sphereParent.addChild(&sphereA);
+		sphereParent.addChild(&sphereB);
+		sphereParent.addChild(&sphereC);
+
 		sphere1.setPosition({ 10, 0, -10 });
 
 		while (!glfwWindowShouldClose(window))
@@ -330,9 +344,9 @@ namespace
 			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
 
 			//draw light
-			lightcolor.x = static_cast<float>(sin(glfwGetTime() * 2.0f) / 4 + 0.5f);
-			lightcolor.y = static_cast<float>(sin(glfwGetTime() * 0.7f) / 4 + 0.5f);
-			lightcolor.z = static_cast<float>(sin(glfwGetTime() * 1.3f) / 4 + 0.5f);
+			lightcolor.x = static_cast<float>(sin(glfwGetTime() * 2.0f) / 2 + 0.5f);
+			lightcolor.y = static_cast<float>(sin(glfwGetTime() * 0.7f) / 2 + 0.5f);
+			lightcolor.z = static_cast<float>(sin(glfwGetTime() * 1.3f) / 2 + 0.5f);
 
 			glm::vec3 diffuseColor = lightcolor * diffuseStrength;
 			glm::vec3 ambientColor = diffuseColor * ambientStrength; //this is the tutorial did, seems like we should use lightcolor instead of diffuseColor.
@@ -363,9 +377,9 @@ namespace
 			shader.setUniform3f("light.position", lightPos.x, lightPos.y, lightPos.z);
 
 			//tweak parameters
-			shader.setUniform3f("material.ambientColor", 1.0f, 0.5f, 0.31f);
-			shader.setUniform3f("material.diffuseColor", 1.0f, 0.5f, 0.31f);
-			shader.setUniform3f("material.specularColor", 0.5f, 0.5f, 0.5f);
+			shader.setUniform3f("material.ambientColor", objectcolor.x, objectcolor.y, objectcolor.z);
+			shader.setUniform3f("material.diffuseColor", objectcolor.x, objectcolor.y, objectcolor.z);
+			shader.setUniform3f("material.specularColor", objectcolor.x * 0.5f, objectcolor.y * 0.5f, objectcolor.z * 0.5f);
 			shader.setUniform1i("material.shininess", shininess);
 			shader.setUniform3f("light.ambientIntensity", ambientColor.x, ambientColor.y, ambientColor.z);
 			shader.setUniform3f("light.diffuseIntensity", diffuseColor.x, diffuseColor.y, diffuseColor.z);
@@ -378,12 +392,11 @@ namespace
 			const glm::vec3& camPos = camera.getPosition();
 			shader.setUniform3f("cameraPosition", camPos.x, camPos.y, camPos.z);
 
-			//glBindVertexArray(vao);
-			//glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			//sphereSource.render();
-
 			sphere1.render(projection, view, mstack, shader);
+
+			sphereParent.setPosition({ 0, 0, -20 });
+			sphereParent.setRotation({ glfwGetTime() * 55, glfwGetTime() * 20, glfwGetTime() * 40});
+			sphereParent.render(projection, view, mstack, shader);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -398,7 +411,7 @@ namespace
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}
