@@ -484,10 +484,10 @@ namespace
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}
 
 /* Table from http://devernay.free.fr/cours/opengl/materials.html
 emerald			0.0215		0.1745		0.0215		0.07568		0.61424		0.07568		0.633		0.727811	0.633		0.6

@@ -368,6 +368,30 @@
     <ClCompile Include="new_src\Lighting\Materials\Materialz_Challenge1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\GettingStarted\Textures\Textures_DemoLoad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_1DiffuseMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_2SpecularAndDiffuseMapscpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_Challenge2InvertingSpecularMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_Challenge1ColorfulLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_Challenge3ColoredSpecularMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_Challenge4EmissionMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_3NewTextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
