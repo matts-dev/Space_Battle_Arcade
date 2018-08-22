@@ -1,0 +1,4 @@
+Based on the comments section in the tutorial, it would appear that some older AMD (not all) and intel chipsets do not allow sampler2d to be within a shader's struct.
+
+
+Thus, the safest appraoch is to probably not include the sampler2d within a struct, but just to declare it like a normal uniform.
