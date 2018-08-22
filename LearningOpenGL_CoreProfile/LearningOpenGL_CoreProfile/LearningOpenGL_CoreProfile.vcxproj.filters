@@ -392,6 +392,24 @@
     <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_3NewTextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightCasters\BoxesWithSimpleLighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_PointLights.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_DirectionalLighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_Spotlight1HardEdge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_Spotlight2SoftEdge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_Spotlight3SoftAttenuated.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />

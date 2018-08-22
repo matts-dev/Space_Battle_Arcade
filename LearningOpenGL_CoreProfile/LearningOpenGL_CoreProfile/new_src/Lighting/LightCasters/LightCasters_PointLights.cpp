@@ -66,6 +66,10 @@ namespace
 					vec3 ambientIntensity;
 					vec3 diffuseIntensity;
 					vec3 specularIntensity;
+
+					float constant;
+					float linear;
+					float quadratic;
 				};	
 				uniform Light light;
 
@@ -97,8 +101,12 @@ namespace
 					diffuseLight *= enableDiffuse;
 					specularLight *= enableSpecular;
 
-					vec3 lightContribution = (ambientLight + diffuseLight + specularLight);
-					
+					float distance = length(light.position - fragPosition);
+					float attenuation = 1 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
+
+					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * vec3(attenuation);
+					//vec3 lightContribution = vec3(attenuation);	//uncomment to visualize attenuation
+
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}
 			)";
@@ -293,7 +301,7 @@ namespace
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 
-		//GENERATE LAMP
+							  //GENERATE LAMP
 		GLuint lampVAO;
 		glGenVertexArrays(1, &lampVAO);
 		glBindVertexArray(lampVAO);
@@ -324,6 +332,18 @@ namespace
 		glm::vec3 lightStart(1.2f, 0.5f, 2.0f);
 		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+		glm::vec3 cubePositions[] = {
+			glm::vec3(0.0f,  0.0f,  0.0f),
+			glm::vec3(2.0f,  5.0f, -15.0f),
+			glm::vec3(-1.5f, -2.2f, -2.5f),
+			glm::vec3(-3.8f, -2.0f, -12.3f),
+			glm::vec3(2.4f, -0.4f, -3.5f),
+			glm::vec3(-1.7f,  3.0f, -7.5f),
+			glm::vec3(1.3f, -2.0f, -2.5f),
+			glm::vec3(1.5f,  2.0f, -2.5f),
+			glm::vec3(1.5f,  0.2f, -1.5f),
+			glm::vec3(-1.3f,  1.0f, -1.5f)
+		};
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -361,31 +381,40 @@ namespace
 			glBindVertexArray(lampVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 
-			//draw object
-			model = glm::mat4(1.f); //set model to identity matrix
-			model = glm::translate(model, objectPos);
-			model = glm::rotate(model, yRotation, glm::vec3(0.f, 1.f, 0.f));
-			shader.use();
-			shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
-			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			shader.setUniform3f("light.position", lightPos.x, lightPos.y, lightPos.z);
-
+			//draw objects
 			//tweak parameters
+			shader.use();
 			shader.setUniform1i("material.shininess", shininess);
 			shader.setUniform3f("light.ambientIntensity", ambientColor.x, ambientColor.y, ambientColor.z);
 			shader.setUniform3f("light.diffuseIntensity", diffuseColor.x, diffuseColor.y, diffuseColor.z);
 			shader.setUniform3f("light.specularIntensity", lightcolor.x, lightcolor.y, lightcolor.z);
-			//shader.setUniform3f("light.specularIntensity", specularStrength, specularStrength, specularStrength);
+			shader.setUniform1f("light.constant", 1);
+			shader.setUniform1f("light.linear", 0.10f);
+			shader.setUniform1f("light.quadratic", 0.065f);
+
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);
-
+			shader.setUniform3f("light.position", lightPos.x, lightPos.y, lightPos.z);
 
 			const glm::vec3& camPos = camera.getPosition();
 			shader.setUniform3f("cameraPosition", camPos.x, camPos.y, camPos.z);
-			glBindVertexArray(vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
+			{
+				float angle = 20.0f * i;
+				model = glm::mat4(1.f); //set model to identity matrix
+				model = glm::translate(model, cubePositions[i]);
+				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+				glBindVertexArray(vao);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -399,8 +428,27 @@ namespace
 		glDeleteVertexArrays(1, &lampVAO);
 	}
 }
-
+//
 //int main()
 //{
 //	true_main();
 //}
+
+/*
+point light constants chart from Ogre3D engine
+
+distance	constant	linear		quadratic
+7			1.0			0.7			1.8
+13			1.0			0.35		0.44
+20			1.0			0.22		0.20
+32			1.0			0.14		0.07
+50			1.0			0.09		0.032
+65			1.0			0.07		0.017
+100			1.0			0.045		0.0075
+160			1.0			0.027		0.0028
+200			1.0			0.022		0.0019
+325			1.0			0.014		0.0007
+600			1.0			0.007		0.0002
+3250		1.0			0.0014		0.000007
+
+*/

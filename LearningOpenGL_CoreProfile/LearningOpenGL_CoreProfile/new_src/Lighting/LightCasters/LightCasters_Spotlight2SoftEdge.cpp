@@ -61,6 +61,9 @@ namespace
 				struct Light
 				{
 					vec3 position;
+					vec3 direction;
+					float cutoff;
+					float outercutoff;
 					
 					//intensities are like strengths -- but they may contain color information.
 					vec3 ambientIntensity;
@@ -82,13 +85,20 @@ namespace
 				
 
 				void main(){
-					vec3 ambientLight = light.ambientIntensity * vec3(texture(material.diffuseMap, interpTextCoords));	//diffuse color is generally similar to ambient color
 
 					vec3 toLight = normalize(light.position - fragPosition);
-					vec3 normal = normalize(fragNormal);														//interpolation of different normalize will cause loss of unit length
+					float cosTheta = dot(-toLight, normalize(light.direction));
+					
+					//note light.cutoff will have a higher value than light.outercutoff because they're cos(angle) values; Smaller angles will be closer to 1.
+					float epsilon = light.cutoff - light.outercutoff;
+					float intensity = (cosTheta - light.outercutoff) / epsilon;
+					intensity = clamp(intensity, 0, 1);
+
+					vec3 ambientLight = light.ambientIntensity * vec3(texture(material.diffuseMap, interpTextCoords));	
+					vec3 normal = normalize(fragNormal);									
 					vec3 diffuseLight = max(dot(toLight, fragNormal), 0) * light.diffuseIntensity * vec3(texture(material.diffuseMap, interpTextCoords));
 
-					vec3 toReflection = reflect(-toLight, normal);												//reflect expects vector from light position (tutorial didn't normalize this vector)
+					vec3 toReflection = reflect(-toLight, normal);							
 					vec3 toView = normalize(cameraPosition - fragPosition);
 					float specularAmount = pow(max(dot(toView, toReflection), 0), material.shininess);
 					vec3 specularLight = light.specularIntensity* specularAmount * vec3(texture(material.specularMap, interpTextCoords));
@@ -97,8 +107,9 @@ namespace
 					diffuseLight *= enableDiffuse;
 					specularLight *= enableSpecular;
 
-					vec3 lightContribution = (ambientLight + diffuseLight + specularLight);
-					
+					//allow ambient light regardless of spotlight cone
+					vec3 lightContribution = ambientLight + (diffuseLight + specularLight) * intensity;
+
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}
 			)";
@@ -131,7 +142,7 @@ namespace
 	bool toggleAmbient = true;
 	bool toggleDiffuse = true;
 	bool toggleSpecular = true;
-	float ambientStrength = 0.2f;
+	float ambientStrength = 0.1f;
 	float diffuseStrength = 0.5f;
 	float specularStrength = 1.f;
 	int shininess = 32;
@@ -293,7 +304,7 @@ namespace
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 
-		//GENERATE LAMP
+							  //GENERATE LAMP
 		GLuint lampVAO;
 		glGenVertexArrays(1, &lampVAO);
 		glBindVertexArray(lampVAO);
@@ -324,6 +335,18 @@ namespace
 		glm::vec3 lightStart(1.2f, 0.5f, 2.0f);
 		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+		glm::vec3 cubePositions[] = {
+			glm::vec3(0.0f,  0.0f,  0.0f),
+			glm::vec3(2.0f,  5.0f, -15.0f),
+			glm::vec3(-1.5f, -2.2f, -2.5f),
+			glm::vec3(-3.8f, -2.0f, -12.3f),
+			glm::vec3(2.4f, -0.4f, -3.5f),
+			glm::vec3(-1.7f,  3.0f, -7.5f),
+			glm::vec3(1.3f, -2.0f, -2.5f),
+			glm::vec3(1.5f,  2.0f, -2.5f),
+			glm::vec3(1.5f,  0.2f, -1.5f),
+			glm::vec3(-1.3f,  1.0f, -1.5f)
+		};
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -344,48 +367,47 @@ namespace
 			//lightcolor.y = static_cast<float>(sin(glfwGetTime() * 0.7f) / 2 + 0.5f);
 			//lightcolor.z = static_cast<float>(sin(glfwGetTime() * 1.3f) / 2 + 0.5f);
 			glm::vec3 diffuseColor = lightcolor * diffuseStrength;
-			glm::vec3 ambientColor = diffuseColor * ambientStrength; //this is the tutorial did, seems like we should use lightcolor instead of diffuseColor.
-																	 //glm::vec3 ambientColor = lightcolor * ambientStrength; //this doesn't look as good, ambient is too bright when light gets dim.
+			glm::vec3 ambientColor = diffuseColor * ambientStrength; 
 
-			glm::mat4 model;
-			model = glm::rotate(model, glm::radians(rotateLight ? 100 * currentTime : 0), glm::vec3(0, 1.f, 0)); //apply rotation leftmost (after translation) to give it an orbit
-			model = glm::translate(model, lightStart);
-			model = glm::scale(model, glm::vec3(0.2f));
-			lightPos = glm::vec3(model * glm::vec4(0, 0, 0, 1));
 
-			lampShader.use();
-			lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			lampShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
-			lampShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			lampShader.setUniform3f("lightColor", lightcolor.x, lightcolor.y, lightcolor.z);
-			glBindVertexArray(lampVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-
-			//draw object
-			model = glm::mat4(1.f); //set model to identity matrix
-			model = glm::translate(model, objectPos);
-			model = glm::rotate(model, yRotation, glm::vec3(0.f, 1.f, 0.f));
-			shader.use();
-			shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
-			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			shader.setUniform3f("light.position", lightPos.x, lightPos.y, lightPos.z);
-
+			//draw objects
 			//tweak parameters
+			shader.use();
 			shader.setUniform1i("material.shininess", shininess);
 			shader.setUniform3f("light.ambientIntensity", ambientColor.x, ambientColor.y, ambientColor.z);
 			shader.setUniform3f("light.diffuseIntensity", diffuseColor.x, diffuseColor.y, diffuseColor.z);
 			shader.setUniform3f("light.specularIntensity", lightcolor.x, lightcolor.y, lightcolor.z);
-			//shader.setUniform3f("light.specularIntensity", specularStrength, specularStrength, specularStrength);
+
+			shader.setUniform3f("light.position", camera.getPosition());
+			shader.setUniform3f("light.direction", camera.getFront());
+			//shader.setUniform1f("light.cutoff", glm::cos(glm::radians(12.5f)));
+			//shader.setUniform1f("light.outercutoff", glm::cos(glm::radians(17.5f)));
+			shader.setUniform1f("light.cutoff", glm::cos(glm::radians(5.5f)));
+			shader.setUniform1f("light.outercutoff", glm::cos(glm::radians(15.5f)));
+			//shader.setUniform3f()
+
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);
 
-
 			const glm::vec3& camPos = camera.getPosition();
 			shader.setUniform3f("cameraPosition", camPos.x, camPos.y, camPos.z);
-			glBindVertexArray(vao);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+
+			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
+			{
+				float angle = 20.0f * i;
+				glm::mat4 model = glm::mat4(1.f); //set model to identity matrix
+				model = glm::translate(model, cubePositions[i]);
+				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+				glBindVertexArray(vao);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();

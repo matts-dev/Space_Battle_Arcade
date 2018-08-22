@@ -157,6 +157,15 @@ void Shader::setUniform3f(const char* uniform, float red, float green, float blu
 	glUniform3f(uniformLocation, red, green, blue);
 }
 
+void Shader::setUniform3f(const char* uniform, const glm::vec3& vals)
+{
+	RAII_ScopedShaderSwitcher scoped(linkedProgram);
+
+	int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
+	glUseProgram(linkedProgram);
+	glUniform3f(uniformLocation, vals.r, vals.g, vals.b);
+}
+
 void Shader::setUniform1i(const char* uniform, int newValue)
 {
 	RAII_ScopedShaderSwitcher scoped(linkedProgram);

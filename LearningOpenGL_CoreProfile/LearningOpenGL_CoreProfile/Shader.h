@@ -27,6 +27,7 @@ public:
 
 	void setUniform4f(const char* uniform, float red, float green, float blue, float alpha);
 	void setUniform3f(const char* uniform, float red, float green, float blue);
+	void setUniform3f(const char* uniform, const glm::vec3& values);
 	void setUniform1f(const char* uniformName, float value);
 	void setUniform1i(const char* uniformname, int newValue);
 	void setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint normalize, const float* data);

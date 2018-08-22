@@ -70,6 +70,12 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="InputTracker.cpp" />
     <ClCompile Include="new_src\GettingStarted\Textures\Textures_DemoLoad.cpp" />
+    <ClCompile Include="new_src\Lighting\LightCasters\BoxesWithSimpleLighting.cpp" />
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_DirectionalLighting.cpp" />
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_PointLights.cpp" />
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_Spotlight1HardEdge.cpp" />
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_Spotlight2SoftEdge.cpp" />
+    <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_Spotlight3SoftAttenuated.cpp" />
     <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_1DiffuseMap.cpp" />
     <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_2SpecularAndDiffuseMapscpp.cpp" />
     <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_3NewTextureLoader.cpp" />

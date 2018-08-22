@@ -27,6 +27,7 @@ public:
 	void setPosition(float x, float y, float z);
 
 	const glm::vec3& getPosition() { return cameraPosition; }
+	const glm::vec3& getFront() { return cameraFront; }
 
 private: //helper fields
 	double lastX;
