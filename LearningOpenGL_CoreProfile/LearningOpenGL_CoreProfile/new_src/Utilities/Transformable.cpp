@@ -16,6 +16,26 @@ glm::mat4 Transformable::getLocalTransform()
 	return transform;
 }
 
+glm::mat4 Transformable::getTransform()
+{
+	MatrixStack mstack;
+	getRootToLeafTransform(mstack);
+	//return mstack.getCurrentTransform();
+
+	throw std::runtime_error("this feature needs testing before use");
+}
+
+void Transformable::getRootToLeafTransform(MatrixStack& mstack)
+{
+	if (parent != nullptr)
+	{
+		getRootToLeafTransform(mstack);
+	}
+	mstack.pushMatrix(getLocalTransform());
+
+	throw std::runtime_error("this feature needs testing before use");
+}
+
 Transformable::Transformable()
 {
 }
@@ -23,6 +43,11 @@ Transformable::Transformable()
 
 Transformable::~Transformable()
 {
+	for (Transformable* child : children)
+	{
+		//WARNING: becareful not to modify the container with iternal functions while iterating over it.
+		child->parent = nullptr;
+	}
 }
 
 void Transformable::render(const glm::mat4& projection, const glm::mat4& view, MatrixStack& mstack, Shader& shader)
@@ -57,9 +82,25 @@ void Transformable::setScale(glm::vec3 newScale)
 void Transformable::addChild(Transformable* newChild)
 {
 	children.insert(newChild);
+	newChild->parent = this;
 }
 
 void Transformable::removeChild(Transformable* currentChild)
 {
 	children.erase(currentChild);
+	currentChild->parent = nullptr;
+}
+
+glm::vec3 Transformable::getPosition()
+{
+	if (parent == nullptr)
+	{
+		return position;
+	}
+	else
+	{
+		glm::mat4 transform = getTransform();
+		//return glm::vec3(transform * glm::vec4(position, 1.f)); 
+		throw std::runtime_error("this feature needs testing before use");
+	}
 }

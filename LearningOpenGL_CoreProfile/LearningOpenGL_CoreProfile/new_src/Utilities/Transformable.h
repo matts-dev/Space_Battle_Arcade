@@ -16,6 +16,7 @@ class Transformable
 {
 private:
 	std::set<Transformable*> children;
+	Transformable* parent = nullptr;
 	
 private:
 	/* This does not consider parent transforms and should not be used publicly */
@@ -25,6 +26,9 @@ protected:
 	glm::vec3 position{ 0, 0, 0 };
 	glm::vec3 rotation{ 0, 0, 0 };
 	glm::vec3 scale{ 1, 1, 1 };
+
+	glm::mat4 getTransform();
+	void getRootToLeafTransform(MatrixStack& mstack);
 
 public:
 	Transformable();
@@ -39,6 +43,7 @@ public:
 	void addChild(Transformable* newChild);
 	void removeChild(Transformable* currentChild);
 
+	glm::vec3 getPosition();
 protected:
 	//subclass should override this method to give custom behavior for rendering
 	virtual void renderInternal(const glm::mat4& projection, 

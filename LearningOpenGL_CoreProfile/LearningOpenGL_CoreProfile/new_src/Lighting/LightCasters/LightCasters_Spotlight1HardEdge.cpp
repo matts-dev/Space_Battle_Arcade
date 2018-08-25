@@ -312,7 +312,7 @@ namespace
 		glEnableVertexAttribArray(0);
 
 		//textures
-		GLuint deffuseMap = textureLoader("Textures/container2.png", GL_TEXTURE0);
+		GLuint diffuseMap = textureLoader("Textures/container2.png", GL_TEXTURE0);
 		GLuint specularMap = textureLoader("Textures/container2_specular.png", GL_TEXTURE1);
 
 		//shaders

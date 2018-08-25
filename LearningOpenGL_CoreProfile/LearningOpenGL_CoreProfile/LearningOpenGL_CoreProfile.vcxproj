@@ -20,7 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="new_src\ImportingModels\Models\Model.h" />
+    <ClInclude Include="new_src\ImportingModels\Models\LoadedMesh.h" />
+    <ClInclude Include="new_src\Utilities\Lighting\ConeLight.h" />
+    <ClInclude Include="new_src\Utilities\Lighting\DirectionalLight.h" />
     <ClInclude Include="InputTracker.h" />
+    <ClInclude Include="new_src\Utilities\Lighting\LightBase.h" />
+    <ClInclude Include="new_src\Utilities\Lighting\PointLight.h" />
     <ClInclude Include="new_src\Utilities\MeshInstance.h" />
     <ClInclude Include="new_src\Utilities\MatrixStack.h" />
     <ClInclude Include="new_src\GettingStarted\Camera\FreeCamera.h" />
@@ -68,7 +74,14 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\Model.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\LoadedMesh.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\ImportingModels.cpp" />
+    <ClCompile Include="new_src\Lighting\MultipleLights\MultipleLights_2ClassAbstractions.cpp" />
+    <ClCompile Include="new_src\Utilities\Lighting\ConeLight.cpp" />
+    <ClCompile Include="new_src\Utilities\Lighting\DirectionalLight.cpp" />
     <ClCompile Include="InputTracker.cpp" />
+    <ClCompile Include="new_src\Utilities\Lighting\LightBase.cpp" />
     <ClCompile Include="new_src\GettingStarted\Textures\Textures_DemoLoad.cpp" />
     <ClCompile Include="new_src\Lighting\LightCasters\BoxesWithSimpleLighting.cpp" />
     <ClCompile Include="new_src\Lighting\LightCasters\LightCasters_DirectionalLighting.cpp" />
@@ -85,6 +98,8 @@
     <ClCompile Include="new_src\Lighting\LightingMaps\LightingMaps_Challenge4EmissionMap.cpp" />
     <ClCompile Include="new_src\Lighting\Materials\Materialz_Challenge1.cpp" />
     <ClCompile Include="new_src\Lighting\Materials\MaterialsSphere.cpp" />
+    <ClCompile Include="new_src\Lighting\MultipleLights\MultipleLights.cpp" />
+    <ClCompile Include="new_src\Utilities\Lighting\PointLight.cpp" />
     <ClCompile Include="new_src\Utilities\MeshInstance.cpp" />
     <ClCompile Include="new_src\Utilities\MatrixStack.cpp" />
     <ClCompile Include="new_src\GettingStarted\Camera\FreeCamera.cpp" />
@@ -262,7 +277,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -273,7 +288,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -288,7 +303,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -303,7 +318,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
