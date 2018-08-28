@@ -397,7 +397,7 @@ namespace
 			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 		};
 
-		Model meshModel("Models/nanosuit/nanosuit.obj");
+		Model meshModel("Models/plane/planev1.obj");
 
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
@@ -418,7 +418,6 @@ namespace
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 
-							  //GENERATE LAMP
 		GLuint lampVAO;
 		glGenVertexArrays(1, &lampVAO);
 		glBindVertexArray(lampVAO);
@@ -634,8 +633,8 @@ namespace
 
 			{
 				glm::mat4 model(1.f); //set model to identity matrix
-				model = glm::translate(model, glm::vec3(0.f, 0.f, -2.f));
-				model = glm::scale(model, glm::vec3(0.1f));
+				//model = glm::translate(model, glm::vec3(0.f, 0.f, -2.f));
+				//model = glm::scale(model, glm::vec3(0.1f));
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
@@ -675,7 +674,7 @@ namespace
 	}
 }
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}

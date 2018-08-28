@@ -77,6 +77,7 @@
     <ClCompile Include="new_src\ImportingModels\Models\Model.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\LoadedMesh.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\ImportingModels.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\PlaneModelDemo.cpp" />
     <ClCompile Include="new_src\Lighting\MultipleLights\MultipleLights_2ClassAbstractions.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\ConeLight.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\DirectionalLight.cpp" />
