@@ -458,10 +458,34 @@
     <ClCompile Include="new_src\ImportingModels\Models\PlaneModelDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\OpenGLAdvancedTopics\DepthTesting.cpp">
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\StencilBufferTesting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\OpenGLAdvancedTopics\StencilTesting.cpp">
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\DepthBufferTesting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingGrassDiscardFragment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingGrassDiscardFragmentBush.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingUsingBlendFunctionUnsorted.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingUsingBlendFunctionSorted.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingWithPhongLighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingWithPhongLightingTwoSidePlaneCorrection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FaceCulling\faceculling.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FaceCulling\faceculling_challenge1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,13 +1,13 @@
 #pragma once
+#pragma once
 #include<iostream>
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
 #include <string>
-#include "../nu_utils.h"
-#include "../../Shader.h"
-#include "../../Libraries/stb_image.h"
-#include "../../InputTracker.h"
+#include "../../nu_utils.h"
+#include "../../../Shader.h"
+#include "../../../Libraries/stb_image.h"
 
 namespace
 {
@@ -35,7 +35,7 @@ namespace
 				uniform mat4 projection;
 
 				void main(){
-					texCoord = inTexCoord;
+					texCoord = inTexCoord; //reminder, since this is an out variable it will be subject to fragment interpolation (which is what we want)
 					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
@@ -48,40 +48,49 @@ namespace
 				uniform sampler2D texture0;
 				uniform sampler2D texture1;
 				
-				uniform float near;
-				uniform float far;
-				
 				void main(){
-					
 					fragmentColor = mix(
 							texture(texture0, texCoord),
 							texture(texture1, texCoord),
 							0.2);
 				}
 			)";
-	const char* outline_frag_shader_src = R"(
+
+	const char* grass_vertex_shader_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				layout (location = 1) in vec2 inTexCoord;
+				
+				out vec2 texCoord;
+				
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				void main(){
+					texCoord = inTexCoord; 
+					gl_Position = projection * view * model * vec4(position, 1);
+				}
+			)";
+	const char* grass_frag_shader_src = R"(
 				#version 330 core
 				out vec4 fragmentColor;
 
 				in vec2 texCoord;
+
+				uniform sampler2D texture0;
 				
 				void main(){
-					fragmentColor = vec4(0.2f, 0.85f, 0.2f, 1.f);
+					fragmentColor =	texture(texture0, texCoord);
+					if(fragmentColor.a < 0.1f)
+					{
+						discard;
+					}
 				}
 			)";
 
 	void processInput(GLFWwindow* window)
 	{
-		static InputTracker input;
-		input.updateState(window);
-
-		if (input.isKeyJustPressed(window, GLFW_KEY_M))
-		{
-		}
-		if (input.isKeyJustPressed(window, GLFW_KEY_F))
-		{
-		}
-
 		float cameraSpeed = 2.5f * deltaTime;
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
@@ -178,6 +187,14 @@ namespace
 		glViewport(0, 0, width, height);
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 
+		//LOAD BACKGROUND TEXTURE
+		int img_width, img_height, img_nrChannels;
+		unsigned char *textureData = stbi_load("Textures/container.jpg", &img_width, &img_height, &img_nrChannels, 0);
+		if (!textureData)
+		{
+			std::cerr << "failed to load texture" << std::endl;
+			exit(-1);
+		}
 		stbi_set_flip_vertically_on_load(true);
 
 		//callbacks
@@ -187,15 +204,6 @@ namespace
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-
-		//LOAD BACKGROUND TEXTURE
-		int img_width, img_height, img_nrChannels;
-		unsigned char *textureData = stbi_load("Textures/container.jpg", &img_width, &img_height, &img_nrChannels, 0);
-		if (!textureData)
-		{
-			std::cerr << "failed to load texture" << std::endl;
-			exit(-1);
-		}
 		GLuint textureBackgroundId;
 		glGenTextures(1, &textureBackgroundId);
 		glActiveTexture(GL_TEXTURE0); //set this to the first texture unit
@@ -227,13 +235,25 @@ namespace
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		stbi_image_free(textureData);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureBackgroundId);
 
-		//set texture unit 1 to be face
-		glActiveTexture(GL_TEXTURE0 + 1);
-		glBindTexture(GL_TEXTURE_2D, textureFaceId);
-
+		//LOAD GRASS TEXTURE
+		textureData = stbi_load("Textures/grass.png", &img_width, &img_height, &img_nrChannels, 0);
+		if (!textureData)
+		{
+			std::cerr << "failed to load texture" << std::endl;
+			exit(-1);
+		}
+		GLuint textureGrassId;
+		glGenTextures(1, &textureGrassId);
+		glActiveTexture(GL_TEXTURE0 + 2);
+		glBindTexture(GL_TEXTURE_2D, textureGrassId);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		stbi_image_free(textureData);
 
 		float vertices[] = {
 			//x      y      z       s     t
@@ -293,14 +313,39 @@ namespace
 		//because these vertex attribute configurations are associated with the VAO object, not with the compiled shader
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
-
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //demonstrating that the vao also stores the state of the ebo
 
-		Shader outlineShader(vertex_shader_src, outline_frag_shader_src, false);
+
+		float planeVertices[] = {
+			// xyz          // st
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  1.0f, 1.0f
+		};
+
+		GLuint grassVAO;
+		glGenVertexArrays(1, &grassVAO);
+		glBindVertexArray(grassVAO);
+
+		GLuint grassVBO;
+		glGenBuffers(1, &grassVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		Shader grassShader(grass_vertex_shader_src, grass_frag_shader_src, false);
+		grassShader.use();
+		grassShader.setUniform1i("texture0", 2); //bind sampler to 3rd texture slot
 
 		Shader shader(vertex_shader_src, frag_shader_src, false);
 		shader.use();
@@ -309,6 +354,7 @@ namespace
 		shader.setUniform1i("texture0", 0); //binds sampler "texture0" to texture unit GL_TEXTURE0
 		shader.setUniform1i("texture1", 1); // "												"
 
+		glEnable(GL_DEPTH_TEST);
 
 		glm::vec3 cubePositions[] = {
 			glm::vec3(0.0f,  0.0f,  0.0f),
@@ -323,6 +369,13 @@ namespace
 			glm::vec3(-1.3f,  1.0f, -1.5f)
 		};
 
+		std::vector<glm::vec3> vegetationPositions;
+		vegetationPositions.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+		vegetationPositions.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+		vegetationPositions.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+		vegetationPositions.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+		vegetationPositions.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+
 		//camera
 		glm::vec3 cameraPosDemo(0.f, 0.f, 3.f);
 		glm::vec3 targetDemo(0.f, 0.f, 0.f);
@@ -333,8 +386,6 @@ namespace
 		glm::vec3 cameraUaxis = glm::normalize(glm::cross(worldUpDemo, cameraWaxis)); //this is the right axis (ie x-axis)
 		glm::vec3 cameraVaxis = glm::normalize(glm::cross(cameraWaxis, cameraUaxis));
 
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_STENCIL_TEST);
 		while (!glfwWindowShouldClose(window))
 		{
 			float currentTime = static_cast<float>(glfwGetTime());
@@ -344,12 +395,8 @@ namespace
 			processInput(window);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			//glClearStencil(0);
-			//glClearDepth(1.f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-			
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			//DRAW CUBES 
 			shader.use();
 
 			//set texture unit 0 to be the background
@@ -360,64 +407,67 @@ namespace
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, textureFaceId);
 
-			float farDepth = 100.0f;
-			float nearDepth = 0.1f;
-
-			shader.setUniform1f("far", farDepth);
-			shader.setUniform1f("near", nearDepth);
-
 			glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, worldUp);
-			glm::mat4 projection;
-			projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, nearDepth, farDepth);
+			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
+			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
-			// ------------------------------DRAW CUBES AND UPDATE STENCIL ------------------------------
-			//configure stencil buffer for writing 1s on update
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
-			glStencilMask(0xff); //enable writing to stencil buffer
-			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
 				glm::mat4 model;
 				float angle = 20.0f * i;
 				model = glm::translate(model, cubePositions[i]);
 				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
 
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
-				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+				//shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+				//shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
 				glBindVertexArray(vao);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
-			// ------------------------------ DRAW OUTLINES------------------------------
-			glStencilMask(0);						//disable writes
-			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-			glDisable(GL_DEPTH_TEST);
-			//glDepthMask(GL_FALSE);				//unnecessary because depth testing is entirely disabled
-			outlineShader.use();
-			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
+			grassShader.use();
+			glActiveTexture(GL_TEXTURE0 + 2);
+			glBindTexture(GL_TEXTURE_2D, textureGrassId);
+			for (const auto& pos : vegetationPositions)
 			{
-				glm::mat4 model;
-				float angle = 20.0f * i;
-				float scale = 1.2f;
-				model = glm::translate(model, cubePositions[i]);
-				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-				model = glm::scale(model, glm::vec3(scale, scale, scale));
-
-				outlineShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				outlineShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
-				outlineShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-
-				glBindVertexArray(vao);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+				//draw bush
+				for (int i = 0; i < 4; ++i)
+				{
+					glm::vec3 centeroffset(0, 0.5, 0);
+					glm::mat4 model;
+					model = glm::translate(model, pos);
+					model = glm::rotate(model, glm::radians(i * 45.0f), glm::vec3(0, 1, 0));
+					//model = glm::rotate(model, glm::radians(90.0f) * (sin(currentTime)/2 + 0.5f), glm::vec3(1, 0, 0));
+					model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1, 0, 0));
+					model = glm::translate(model, centeroffset); //center texture
+					grassShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					grassShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+					grassShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+					glBindVertexArray(grassVAO);
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+				}
 			}
 
-			glStencilMask(0xff);					 //re-enable writing for stencil buffer clearing
-			glEnable(GL_DEPTH_TEST);
-			//glDepthMask(GL_TRUE);					
-			//-------------------------------------------------------
+			//draw bush
+			for(int i = 0; i < 4; ++i)
+			{
+				glm::vec3 pos(0, 1, 0);
+				glm::vec3 centeroffset(0, 0.5, 0);
+				glm::mat4 model;
+				model = glm::translate(model, pos);
+				model = glm::rotate(model, glm::radians(i * 45.0f), glm::vec3(0, 1, 0));
+				//model = glm::rotate(model, glm::radians(90.0f) * (sin(currentTime)/2 + 0.5f), glm::vec3(1, 0, 0));
+				model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1, 0, 0));
+				model = glm::translate(model, centeroffset); //center texture
+				grassShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				grassShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+				grassShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+				glBindVertexArray(grassVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 
@@ -429,7 +479,7 @@ namespace
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}
