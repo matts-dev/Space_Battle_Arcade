@@ -49,7 +49,8 @@ namespace
 					fragPosition = vec3(model * vec4(position, 1));
 
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					fragNormal = mat3(transpose(inverse(model))) * normal;
+					//fragNormal = mat3(transpose(inverse(model))) * normal;
+					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
 
 					interpTextCoords = textureCoordinates;
 				}

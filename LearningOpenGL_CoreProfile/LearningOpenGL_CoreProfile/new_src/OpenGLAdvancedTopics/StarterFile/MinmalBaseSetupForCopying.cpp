@@ -8,7 +8,6 @@
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
 #include "../../GettingStarted/Camera/CameraFPS.h"
-#include "../../../InputTracker.h"
 
 namespace
 {
@@ -57,30 +56,9 @@ namespace
 
 	void processInput(GLFWwindow* window)
 	{
-		static InputTracker	input;
-		input.updateState(window);
-
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, true);
-		}
-		if (input.isKeyJustPressed(window, GLFW_KEY_O))
-		{
-			static GLuint facemode = GL_FRONT;
-			if (facemode == GL_FRONT)
-				facemode = GL_BACK;
-			else
-				facemode = GL_FRONT;
-			glCullFace(facemode);
-		}
-		if (input.isKeyJustPressed(window, GLFW_KEY_C))
-		{
-			static GLuint windingmode = GL_CW; //clockwise
-			if (windingmode == GL_CW)
-				windingmode = GL_CCW;
-			else
-				windingmode = GL_CW;
-			glFrontFace(windingmode);
 		}
 		camera.handleInput(window, deltaTime);
 	}
@@ -140,50 +118,49 @@ namespace
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		stbi_image_free(textureData);
 
-		//copy and paste of his corrected vertices for face-culling
-		float vertices[] = { //switched last face to change order
-		    // Back face
-		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
-		     0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right         
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
-		    // Front face
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-		    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
-		    // Left face
-		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-		    // Right face
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right         
-		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-		     0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left     
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-		    // Bottom face
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		     0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-		    // Top face
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  // bottom-left        
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f // top-left
+		float vertices[] = {
+			//x      y      z       s     t
+			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 		};
 
 		GLuint vao;
@@ -195,16 +172,13 @@ namespace
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-		//while these match a shader's configuration, we don't actually need an active shader while specifying
-		//because these vertex attribute configurations are associated with the VAO object, not with the compiled shader
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
 
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 
-		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //demonstrating that the vao also stores the state of the ebo
+		glBindVertexArray(0); 
 
 		Shader shader(vertex_shader_src, frag_shader_src, false);
 		shader.use();
@@ -214,12 +188,6 @@ namespace
 		shader.setUniform1i("texture1", 1); // "												"
 
 		glEnable(GL_DEPTH_TEST);
-
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK); //can specify back
-		//glCullFace(GL_FRONT); //weird effect :P
-		glFrontFace(GL_CCW); //counterclockwise is the default, GL_CW for clockwise triangles
-		
 
 		glm::vec3 cubePositions[] = {
 			glm::vec3(0.0f,  0.0f,  0.0f),
@@ -256,6 +224,7 @@ namespace
 			glBindTexture(GL_TEXTURE_2D, textureFaceId);
 
 			glm::mat4 view = camera.getView();
+			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
 
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
@@ -264,13 +233,6 @@ namespace
 				model = glm::translate(model, cubePositions[i]);
 				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-				//use the camera's view!
-				//glm::mat4 view;
-				//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-				//author says its best practice to not re-initialize this everytime since it rarely changes; leaving here for close proximity to other matrices
-				glm::mat4 projection;
-				projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
 
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.

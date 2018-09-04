@@ -50,7 +50,7 @@ namespace
 
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
 					//fragNormal = mat3(transpose(inverse(model))) * normal;
-					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
+					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise models will be too bright!
 
 					interpTextCoords = textureCoordinates;
 				}
@@ -398,7 +398,7 @@ namespace
 			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 		};
 
-		Model meshModel("Models/plane/planev1.obj");
+		Model meshModel("Models/tie_fighter/tie_1blend.obj");
 
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
@@ -634,32 +634,12 @@ namespace
 
 			{
 				glm::mat4 model(1.f); //set model to identity matrix
-				//model = glm::translate(model, glm::vec3(0.f, 0.f, -2.f));
-				//model = glm::scale(model, glm::vec3(0.1f));
+				//model = glm::translate(model, glm::vec3(20.f, 0.f, -2.f));
+				model = glm::scale(model, glm::vec3(0.25f));
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 				meshModel.draw(shader);
-			}
-
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, diffuseMap);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, specularMap);
-			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
-			{
-				float angle = 20.0f * i;
-				glm::mat4 model(1.f); //set model to identity matrix
-				model = glm::translate(model, cubePositions[i]);
-				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
-				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-
-				glBindVertexArray(vao);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
 			glfwSwapBuffers(window);

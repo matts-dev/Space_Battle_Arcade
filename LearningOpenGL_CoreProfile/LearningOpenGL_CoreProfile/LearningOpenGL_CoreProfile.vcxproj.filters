@@ -488,6 +488,30 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\FaceCulling\faceculling_challenge1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\ImportingModels\Models\ModelSpaceshipDemo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\StarterFile\MinmalBaseSetupForCopying.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_1RendingToTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_3GrayScalePostProcessing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_2InveresionPostProcessing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_4SharpenKernelPostProcessing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_5BlurKernelPostProcessing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_6EdgeDetectionPostProcessing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
