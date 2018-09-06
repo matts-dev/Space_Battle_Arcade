@@ -54,62 +54,35 @@ namespace
 				}
 			)";
 
-	const char* postprocess_vertex_shader_src = R"(
+	const char* skybox_vertex_shader_src = R"(
 				#version 330 core
-				layout (location = 0) in vec2 position;				
+				layout (location = 0) in vec3 position;				
 				layout (location = 1) in vec2 inTexCoord;
 				
-				out vec2 texCoord;
+				out vec3 texCoord;
+				
+				uniform mat4 view_without_translation;
+				uniform mat4 projection;
 
 				void main(){
-					texCoord = inTexCoord;
-					gl_Position = vec4(position.x, position.y, 0.0f, 1.0f);
+					texCoord = position;
+					gl_Position = projection * view_without_translation * vec4(position, 1);
 				}
 			)";
-	const char* postprocess_frag_shader_src = R"(
+
+	const char* skybox_frag_shader_src = R"(
 				#version 330 core
 				out vec4 fragmentColor;
 
-				in vec2 texCoord;
+				in vec3 texCoord;
 
-				uniform sampler2D screencapture;
-
-				//radius of kernel effect (large denominator is smaler radius)
-				const float offset = 1 / 300.0f;
+				uniform samplerCube skybox;
 				
 				void main(){
-
-					//notice strange GLSL array initialization syntax (looks like a ctor); glsl doesn't support c-style initializers
-					vec2 offsets[9] = vec2[](
-						vec2(-offset, offset),	//TL
-						vec2(0,	offset),		//TC
-						vec2(offset, offset),	//TR
-						vec2(-offset, 0),		//ML
-						vec2(0, 0),				//center
-						vec2(offset, 0),		//MR
-						vec2(-offset, -offset),	//BL
-						vec2(0, -offset	),		//BC
-						vec2(offset, -offset)	//BR
-					);
-
-					float kernel[] = float[](
-						-1, -1, -1,
-						-1, 9, -1,
-						-1, -1, -1
-					);
-					
-					vec3 sampledTexture[9];
-					for(int i = 0; i < 9; ++i){
-						sampledTexture[i] = vec3(texture(screencapture, texCoord.st + offsets[i]));
-					}					
-
-					vec3 color = vec3(0.0f);
-					for(int i = 0; i < 9; ++i){
-						color += sampledTexture[i] * kernel[i];
-					}
-					fragmentColor = vec4(color, 1.0f);
+					fragmentColor = texture(skybox, texCoord);
 				}
 			)";
+
 
 	void processInput(GLFWwindow* window)
 	{
@@ -175,6 +148,111 @@ namespace
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		stbi_image_free(textureData);
 
+		//-------------------------------------CUBE MAP TEXTURE-------------------------------------
+		float skyboxVertices[] = {
+			// positions          
+			-1.0f,  1.0f, -1.0f,
+			-1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f, -1.0f,
+			1.0f,  1.0f, -1.0f,
+			-1.0f,  1.0f, -1.0f,
+
+			-1.0f, -1.0f,  1.0f,
+			-1.0f, -1.0f, -1.0f,
+			-1.0f,  1.0f, -1.0f,
+			-1.0f,  1.0f, -1.0f,
+			-1.0f,  1.0f,  1.0f,
+			-1.0f, -1.0f,  1.0f,
+
+			1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f,  1.0f,
+			1.0f,  1.0f,  1.0f,
+			1.0f,  1.0f,  1.0f,
+			1.0f,  1.0f, -1.0f,
+			1.0f, -1.0f, -1.0f,
+
+			-1.0f, -1.0f,  1.0f,
+			-1.0f,  1.0f,  1.0f,
+			1.0f,  1.0f,  1.0f,
+			1.0f,  1.0f,  1.0f,
+			1.0f, -1.0f,  1.0f,
+			-1.0f, -1.0f,  1.0f,
+
+			-1.0f,  1.0f, -1.0f,
+			1.0f,  1.0f, -1.0f,
+			1.0f,  1.0f,  1.0f,
+			1.0f,  1.0f,  1.0f,
+			-1.0f,  1.0f,  1.0f,
+			-1.0f,  1.0f, -1.0f,
+
+			-1.0f, -1.0f, -1.0f,
+			-1.0f, -1.0f,  1.0f,
+			1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f, -1.0f,
+			-1.0f, -1.0f,  1.0f,
+			1.0f, -1.0f,  1.0f
+		};
+
+		GLuint skyboxVAO;
+		glGenVertexArrays(1, &skyboxVAO);
+		glBindVertexArray(skyboxVAO);
+
+		GLuint skyboxVBO;
+		glGenBuffers(1, &skyboxVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
+		glEnableVertexAttribArray(0);
+		glBindVertexArray(0);
+
+		std::vector<std::string> faces = {
+			"Textures/skybox1/right.jpg",
+			"Textures/skybox1/left.jpg",
+			"Textures/skybox1/top.jpg",
+			"Textures/skybox1/bottom.jpg",
+			"Textures/skybox1/front.jpg",
+			"Textures/skybox1/back.jpg"
+		};
+
+		GLuint cubeMapTexID;
+		glGenTextures(1, &cubeMapTexID);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexID);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		stbi_set_flip_vertically_on_load(false);
+		int wid, hgt, numChannels;
+		for (size_t i = 0; i < faces.size(); ++i)
+		{
+			unsigned char* data = stbi_load(faces[i].c_str(), &wid, &hgt, &numChannels, 0);
+			if (data)
+			{
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, wid, hgt, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			}
+			else
+			{
+				std::cerr << "failed to load cube map face" << std::endl;
+				exit(-1);
+			}
+			stbi_image_free(data);
+		}
+
+		/* These are defined in sequential order and thus can be incremented in a loop
+		GL_TEXTURE_CUBE_MAP_POSITIVE_X	Right
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_X	Left
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Y	Top
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y	Bottom
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Z	Back
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z	Front
+		*/
+
+
+		//--------------------------------------------------------------------------
+
 		float vertices[] = {
 			//x      y      z       s     t
 			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -220,36 +298,6 @@ namespace
 			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 		};
 
-		float quadVerts[] = {
-			//x    y         s    t
-			-1.0, -1.0,		0.0, 0.0,
-			-1.0, 1.0,		0.0, 1.0,
-			1.0, -1.0,		1.0, 0.0,
-
-			1.0, -1.0,      1.0, 0.0,
-			-1.0, 1.0,      0.0, 1.0,
-			1.0, 1.0,		1.0, 1.0
-		};
-
-		//------------------------ postprocess quad --------------------------------------------------
-		GLuint postVAO;
-		glGenVertexArrays(1, &postVAO);
-		glBindVertexArray(postVAO);
-
-		GLuint postVBO;
-		glGenBuffers(1, &postVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, postVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		glBindVertexArray(0);
-
-		// -------------------------- cubes ---------------------------------------
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -267,11 +315,9 @@ namespace
 
 		glBindVertexArray(0);
 
-
-		Shader postprocessShader(postprocess_vertex_shader_src, postprocess_frag_shader_src, false);
-		postprocessShader.use();
-		postprocessShader.setUniform1i("screencapture", 0);
-
+		Shader skyboxShader(skybox_vertex_shader_src, skybox_frag_shader_src, false);
+		skyboxShader.use();
+		skyboxShader.setUniform1i("skybox", 0);
 
 		Shader shader(vertex_shader_src, frag_shader_src, false);
 		shader.use();
@@ -295,48 +341,6 @@ namespace
 			glm::vec3(3.f,  0.0f, 0.0f)
 		};
 
-		// -------------------------------------- FRAME BUFFER SETUP-------------------------------------------------------------
-		GLuint framebufferObject;
-		glGenFramebuffers(1, &framebufferObject);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject); //bind both read/write to the target framebuffer
-															  ///glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferObject); //this allows us to bind to the specific framebuffer to write to (but not read) {eg glReadPixels}
-															  ///glBindFramebuffer(GL_READ_FRAMEBUFFER, framebufferObject); //we can also specifically bind to a frame buffer to read from (I guess for depth/stencil testing) {eg rendering, clearing, otherWriteOperations}
-
-		GLuint fbo_Texture_ColorAttachment;
-		glGenTextures(1, &fbo_Texture_ColorAttachment);
-		glBindTexture(GL_TEXTURE_2D, fbo_Texture_ColorAttachment);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_INT, nullptr); //pass null to texture data, we only want to allocate memory -- not fill it.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //fix for kernel on edge of screen causing top of screen to bleed to bottom
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER); //fix for kernel on edge of screen causing top of screen to bleed to bottom
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_Texture_ColorAttachment, 0); //last argument is mipmap level
-
-																													 //option A: use plain-old textures for depth and stencil buffers
-		GLuint fbo_Texture_DepthStencilTexture; //this is actually less performant than using a renderbuffer (it is in opengl's native dataformat). 
-		glGenTextures(1, &fbo_Texture_DepthStencilTexture);
-		glBindBuffer(GL_TEXTURE_2D, fbo_Texture_DepthStencilTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH24_STENCIL8, GL_UNSIGNED_INT_24_8, nullptr);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fbo_Texture_DepthStencilTexture, 0);
-		//you can also attach separate depth/stencil buffers with GL_DEPTH_ATTACHEMENT (texture format GL_DEPTH_COMPONENT_ and GL_STENCIL_ATTACHMENT (texture format is GL_STENCIL_INDEX)
-
-		//option B: use the faster renderbuffers (OpenGL native render format) for depth and stencil buffers (these cannot easily be read from, but can be used in depth/stenci tests)
-		GLuint fbo_RenderBufferObject_DepthStencil;
-		glGenRenderbuffers(1, &fbo_RenderBufferObject_DepthStencil);
-		glBindRenderbuffer(GL_RENDERBUFFER, fbo_RenderBufferObject_DepthStencil);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, fbo_RenderBufferObject_DepthStencil); //this overwrites what we set up in option A
-		glBindRenderbuffer(GL_RENDERBUFFER, 0); //unbind the render buffer
-
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			std::cerr << "error on setup of framebuffer" << std::endl;
-		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); //bind to default frame buffer
-											  // -------------------------------------- END FRAME BUFFER -------------------------------------------------------------
-
 		while (!glfwWindowShouldClose(window))
 		{
 			float currentTime = static_cast<float>(glfwGetTime());
@@ -345,12 +349,35 @@ namespace
 
 			processInput(window);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, framebufferObject);
+			glm::mat4 view = camera.getView();
+			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+			//draw skybox
+			glDepthMask(GL_FALSE); //disable writing to depth buffer
+			skyboxShader.use();
+
+			//trim off translation rows from the view 
+			glm::mat4 trimmedView = glm::mat4(glm::mat3(view));
+
+			skyboxShader.setUniformMatrix4fv("view_without_translation",1, GL_FALSE, glm::value_ptr(trimmedView));
+			skyboxShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+			glBindVertexArray(skyboxVAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexID);
+			constexpr unsigned int num_verts = sizeof(skyboxVertices) / 3;
+			glDrawArrays(GL_TRIANGLES, 0, num_verts);
+			
+
+			glDepthMask(GL_TRUE); //enable depth buffer writing for scene depth tests
+			
+			//draw scene
 			shader.use();
+			glBindVertexArray(vao);
 
 			//set texture unit 0 to be the background
 			glActiveTexture(GL_TEXTURE0);
@@ -360,8 +387,6 @@ namespace
 			glActiveTexture(GL_TEXTURE0 + 1);
 			glBindTexture(GL_TEXTURE_2D, textureFaceId);
 
-			glm::mat4 view = camera.getView();
-			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
 
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
@@ -379,21 +404,6 @@ namespace
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
-			//enable default framebuffer object
-			postprocessShader.use();
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glDisable(GL_DEPTH_TEST); //don't let depth buffer disrupt drawing (although this doesn't seem to affect setup)
-
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, fbo_Texture_ColorAttachment);
-
-			glBindVertexArray(postVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-
-			glEnable(GL_DEPTH_TEST); //don't let depth buffer disrupt drawing
-
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 
@@ -403,14 +413,8 @@ namespace
 		glDeleteVertexArrays(1, &vao);
 		glDeleteBuffers(1, &vbo);
 
-		glDeleteVertexArrays(1, &postVAO);
-		glDeleteBuffers(1, &postVBO);
-
-		//framebuffer related
-		glDeleteFramebuffers(1, &framebufferObject);
-		glDeleteTextures(1, &fbo_Texture_ColorAttachment);
-		glDeleteTextures(1, &fbo_Texture_DepthStencilTexture);
-		glDeleteRenderbuffers(1, &fbo_RenderBufferObject_DepthStencil);
+		glDeleteVertexArrays(1, &skyboxVAO);
+		glDeleteBuffers(1, &skyboxVBO);
 	}
 }
 

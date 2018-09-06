@@ -86,6 +86,9 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingGrassDiscardFragmentBush.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingWithPhongLighting.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingWithPhongLightingTwoSidePlaneCorrection.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_1BasicSkybox_NonOptimized.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_2BasicSkybox_FragmentShaderOptimized.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_3EnvironmentMapping_Reflections.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\DepthBufferTesting.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\FaceCulling\faceculling.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\FaceCulling\faceculling_challenge1.cpp" />
