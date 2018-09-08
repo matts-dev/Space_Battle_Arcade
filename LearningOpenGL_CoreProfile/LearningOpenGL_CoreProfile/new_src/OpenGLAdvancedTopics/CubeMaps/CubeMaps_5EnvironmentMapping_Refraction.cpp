@@ -21,6 +21,15 @@ namespace
 
 	float FOV = 45.0f;
 
+	/* Common refractive indices
+	Material	Refractive index
+		Air			1.00
+		Water		1.33
+		Ice			1.309
+		Glass		1.52
+		Diamond		2.42
+	*/
+
 	const char* vertex_shader_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
@@ -34,6 +43,7 @@ namespace
 				uniform mat4 projection;
 
 				void main(){
+		
 					interpNormal = normalize(mat3(transpose(inverse(model))) * normalData);
 					worldPos = vec3(model * vec4(position, 1.0f));
 
@@ -51,11 +61,13 @@ namespace
 				uniform vec3 cameraPos;
 				
 				void main(){
+					float refractiveRatioAirToGlass = 1.0f / 1.52f;
+
 					vec3 normal = normalize(interpNormal);
 					vec3 incident = worldPos - cameraPos;
-					vec3 refl = reflect(incident, normal);
+					vec3 refractionDir = refract(incident, normal, refractiveRatioAirToGlass);
 
-					fragmentColor = vec4(texture(environment, refl).rgb, 1.0f);
+					fragmentColor = vec4(texture(environment, refractionDir).rgb, 1.0f);
 				}
 			)";
 
@@ -291,7 +303,7 @@ namespace
 		shader.use();
 
 		//inform shader which texture units that its samplers should be bound to
-		shader.setUniform1i("environment", 0); 
+		shader.setUniform1i("environment", 0);
 
 
 		glm::vec3 cubePositions[] = {

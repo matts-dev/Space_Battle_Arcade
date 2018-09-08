@@ -69,38 +69,6 @@ public:
 				std::vector<unsigned int> indices);
 	~LoadedMesh();
 
-	void draw(Shader& shader)
-	{
-		using std::string;
-
-		unsigned int diffuseTextureNumber = 0;
-		unsigned int specularTextureNumber = 0;
-		unsigned int currentTextureUnit = GL_TEXTURE0;
-
-		for (unsigned int i = 0; i < textures.size(); ++i)
-		{
-			string uniformName = textures[i].type;
-			if (uniformName == "texture_diffuse")
-			{
-				//naming convention for diffuse is `texture_diffuseN`
-				uniformName = string("material.") + uniformName + std::to_string(currentTextureUnit);
-				++diffuseTextureNumber;
-			}
-			else if (uniformName == "texture_specular")
-			{
-				uniformName = string("material.") + uniformName + std::to_string(currentTextureUnit);
-				++specularTextureNumber;
-			}
-			glActiveTexture(currentTextureUnit);
-			glBindTexture(GL_TEXTURE_2D, textures[i].id);
-			shader.setUniform1i(uniformName.c_str(), currentTextureUnit);
-			++currentTextureUnit;
-		}
-
-		//draw mesh
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, indices.size() , GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
-	}
+	void draw(Shader& shader);
 };
 

@@ -521,6 +521,30 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_3EnvironmentMapping_Reflections.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_4EnvironmentMapping_ReflectionsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_5EnvironmentMapping_Refraction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_6EnvironmentMapping_RefractionsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_7ChallengeModelReflectionMaps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_NonStaggeredData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />

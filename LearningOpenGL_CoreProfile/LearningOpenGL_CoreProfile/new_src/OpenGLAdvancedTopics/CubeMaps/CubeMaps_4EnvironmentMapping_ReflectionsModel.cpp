@@ -8,6 +8,8 @@
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
 #include "../../GettingStarted/Camera/CameraFPS.h"
+#include "../../ImportingModels/Models/Model.h"
+#include "../../ImportingModels/Models/Model.h"
 
 namespace
 {
@@ -287,11 +289,14 @@ namespace
 		skyboxShader.use();
 		skyboxShader.setUniform1i("skybox", 0);
 
+		Model meshModel("Models/nanosuit/nanosuit.obj");
+
+
 		Shader shader(vertex_shader_src, frag_shader_src, false);
 		shader.use();
 
 		//inform shader which texture units that its samplers should be bound to
-		shader.setUniform1i("environment", 0); 
+		shader.setUniform1i("environment", 0);
 
 
 		glm::vec3 cubePositions[] = {
@@ -331,22 +336,12 @@ namespace
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, cubeMapTexID);
 
-			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
-			{
-				glm::mat4 model;
-				float angle = 20.0f * i;
-				model = glm::translate(model, cubePositions[i]);
-				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-
-				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
-				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-
-				glBindVertexArray(vao);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
+			glm::mat4 model(1.f);
+			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+			shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			meshModel.draw(shader);
 
 			//draw skybox last
 			glDepthFunc(GL_LEQUAL);

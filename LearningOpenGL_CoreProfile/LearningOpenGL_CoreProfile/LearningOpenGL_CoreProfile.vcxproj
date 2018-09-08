@@ -80,6 +80,10 @@
     <ClCompile Include="new_src\ImportingModels\Models\ModelSpaceshipDemo.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\PlaneModelDemo.cpp" />
     <ClCompile Include="new_src\Lighting\MultipleLights\MultipleLights_2ClassAbstractions.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_NonStaggeredData.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingUsingBlendFunctionSorted.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingUsingBlendFunctionUnsorted.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingGrassDiscardFragment.cpp" />
@@ -89,6 +93,10 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_1BasicSkybox_NonOptimized.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_2BasicSkybox_FragmentShaderOptimized.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_3EnvironmentMapping_Reflections.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_4EnvironmentMapping_ReflectionsModel.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_5EnvironmentMapping_Refraction.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_6EnvironmentMapping_RefractionsModel.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\CubeMaps\CubeMaps_7ChallengeModelReflectionMaps.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\DepthBufferTesting.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\FaceCulling\faceculling.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\FaceCulling\faceculling_challenge1.cpp" />
