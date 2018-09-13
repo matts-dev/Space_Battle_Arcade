@@ -26,14 +26,18 @@ namespace
 				layout (location = 0) in vec3 position;				
 				layout (location = 1) in vec2 inTexCoord;
 				
-				out vec2 texCoord;
+				out VS_OUT_ITERFACEBLOCK_EXAMPLE
+				{
+					vec2 texCoord;
+				} vs_out_block1;
 				
 				uniform mat4 model;
 				uniform mat4 view;
 				uniform mat4 projection;
 
 				void main(){
-					texCoord = inTexCoord; //reminder, since this is an out variable it will be subject to fragment interpolation (which is what we want)
+					vs_out_block1.texCoord = inTexCoord; 
+
 					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
@@ -43,13 +47,18 @@ namespace
 
 				in vec2 texCoord;
 
+				in VS_OUT_ITERFACEBLOCK_EXAMPLE
+				{
+					vec2 texCoord;
+				} in_vs_block1;
+
 				uniform sampler2D texture0;
 				uniform sampler2D texture1;
 				
 				void main(){
 					fragmentColor = mix(
-							texture(texture0, texCoord),
-							texture(texture1, texCoord),
+							texture(texture0, in_vs_block1.texCoord),
+							texture(texture1, in_vs_block1.texCoord),
 							0.2);
 				}
 			)";
@@ -178,7 +187,7 @@ namespace
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 
-		glBindVertexArray(0); 
+		glBindVertexArray(0);
 
 		Shader shader(vertex_shader_src, frag_shader_src, false);
 		shader.use();
@@ -224,7 +233,7 @@ namespace
 
 			glm::mat4 view = camera.getView();
 			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
-			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  
+			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)

@@ -47,10 +47,11 @@ namespace
 				uniform sampler2D texture1;
 				
 				void main(){
-					fragmentColor = mix(
-							texture(texture0, texCoord),
-							texture(texture1, texCoord),
-							0.2);
+					//fly into box to see effect
+					if(!gl_FrontFacing)
+						fragmentColor = texture(texture0, texCoord);
+					else
+						fragmentColor = texture(texture1, texCoord);
 				}
 			)";
 
@@ -119,48 +120,48 @@ namespace
 		stbi_image_free(textureData);
 
 		float vertices[] = {
-			//x      y      z       s     t
-			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-			-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-			-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-			0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-			0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-			-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		    // Back face
+		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		     0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right         
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		    // Front face
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		    // Left face
+		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		    // Right face
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right         
+		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		     0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left     
+		    // Bottom face
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		     0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		    // Top face
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left        
 		};
 
 		GLuint vao;
@@ -178,11 +179,12 @@ namespace
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 
-		glBindVertexArray(0); 
+		glBindVertexArray(0);
 
 		Shader shader(vertex_shader_src, frag_shader_src, false);
 		shader.use();
 
+		//inform shader which texture units that its samplers should be bound to
 		shader.setUniform1i("texture0", 0); //binds sampler "texture0" to texture unit GL_TEXTURE0
 		shader.setUniform1i("texture1", 1); // "												"
 
@@ -224,8 +226,6 @@ namespace
 
 			glm::mat4 view = camera.getView();
 			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
-			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  
-			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
@@ -233,7 +233,11 @@ namespace
 				float angle = 20.0f * i;
 				model = glm::translate(model, cubePositions[i]);
 				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
 				glBindVertexArray(vao);
 				glDrawArrays(GL_TRIANGLES, 0, 36);

@@ -8,6 +8,7 @@
 #include "../../../Shader.h"
 #include "../../../Libraries/stb_image.h"
 #include "../../GettingStarted/Camera/CameraFPS.h"
+#include <cassert>
 
 namespace
 {
@@ -27,33 +28,54 @@ namespace
 				layout (location = 1) in vec2 inTexCoord;
 				
 				out vec2 texCoord;
-				
+				layout (std140) uniform Matrices
+				{
+					uniform mat4 view;
+					uniform mat4 projection;
+				};
 				uniform mat4 model;
-				uniform mat4 view;
-				uniform mat4 projection;
 
 				void main(){
 					texCoord = inTexCoord; //reminder, since this is an out variable it will be subject to fragment interpolation (which is what we want)
 					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
-	const char* frag_shader_src = R"(
+	const char* red_frag_shader_src = R"(
 				#version 330 core
 				out vec4 fragmentColor;
-
 				in vec2 texCoord;
-
-				uniform sampler2D texture0;
-				uniform sampler2D texture1;
-				
+				vec4 color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 				void main(){
-					fragmentColor = mix(
-							texture(texture0, texCoord),
-							texture(texture1, texCoord),
-							0.2);
+					fragmentColor = color;
 				}
 			)";
-
+	const char* green_frag_shader_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+				in vec2 texCoord;
+				vec4 color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+				void main(){
+					fragmentColor = color;
+				}
+			)";
+	const char* blue_frag_shader_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+				in vec2 texCoord;
+				vec4 color = vec4(0.0f, 0.0f, 1.0f, 1.0f);
+				void main(){
+					fragmentColor = color;
+				}
+			)";
+	const char* yellow_frag_shader_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+				in vec2 texCoord;
+				vec4 color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+				void main(){
+					fragmentColor = color;
+				}
+			)";
 	void processInput(GLFWwindow* window)
 	{
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -65,7 +87,7 @@ namespace
 
 	void true_main()
 	{
-		camera.setPosition(0.0f, 0.0f, 3.0f);
+		camera.setPosition(0.0f, 0.0f, 8.0f);
 		int width = 800;
 		int height = 600;
 
@@ -74,49 +96,8 @@ namespace
 		glViewport(0, 0, width, height);
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 		camera.exclusiveGLFWCallbackRegister(window);
-
-		//LOAD BACKGROUND TEXTURE
-		int img_width, img_height, img_nrChannels;
-		unsigned char *textureData = stbi_load("Textures/container.jpg", &img_width, &img_height, &img_nrChannels, 0);
-		if (!textureData)
-		{
-			std::cerr << "failed to load texture" << std::endl;
-			exit(-1);
-		}
-		stbi_set_flip_vertically_on_load(true);
-
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		GLuint textureBackgroundId;
-		glGenTextures(1, &textureBackgroundId);
-		glActiveTexture(GL_TEXTURE0); //set this to the first texture unit
-		glBindTexture(GL_TEXTURE_2D, textureBackgroundId);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		stbi_image_free(textureData);
-
-		//LOAD FACE TEXTURE
-		textureData = stbi_load("Textures/awesomeface.png", &img_width, &img_height, &img_nrChannels, 0);
-		if (!textureData)
-		{
-			std::cerr << "failed to load texture" << std::endl;
-			exit(-1);
-		}
-		GLuint textureFaceId;
-		glGenTextures(1, &textureFaceId);
-		glActiveTexture(GL_TEXTURE0 + 1); //2nd texture unit
-		glBindTexture(GL_TEXTURE_2D, textureFaceId);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		stbi_image_free(textureData);
 
 		float vertices[] = {
 			//x      y      z       s     t
@@ -174,32 +155,43 @@ namespace
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
-
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 
-		glBindVertexArray(0); 
+		glBindVertexArray(0);
 
-		Shader shader(vertex_shader_src, frag_shader_src, false);
-		shader.use();
+		GLuint ubo;
+		glGenBuffers(1, &ubo);
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+		glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
 
-		shader.setUniform1i("texture0", 0); //binds sampler "texture0" to texture unit GL_TEXTURE0
-		shader.setUniform1i("texture1", 1); // "												"
+		GLuint UBOMatrixBindingSlot = 0;
+		glBindBufferBase(GL_UNIFORM_BUFFER, UBOMatrixBindingSlot, ubo);
+		
+		Shader redshader(vertex_shader_src, red_frag_shader_src, false);
+		Shader greenshader(vertex_shader_src, green_frag_shader_src, false);
+		Shader blueshader(vertex_shader_src, blue_frag_shader_src, false);
+		Shader yellowshader(vertex_shader_src, yellow_frag_shader_src, false);
+
+		std::vector<Shader*> shaders = { &redshader, &greenshader, &blueshader, &yellowshader };
+
+		for (Shader* shader : shaders)
+		{
+			shader->use();
+			GLuint shaderid = shader->getId();
+			GLuint uniformLocIdx = glGetUniformBlockIndex(shaderid, "Matrices");
+			glUniformBlockBinding(shaderid, uniformLocIdx, UBOMatrixBindingSlot);
+		}
 
 		glEnable(GL_DEPTH_TEST);
 
 		glm::vec3 cubePositions[] = {
-			glm::vec3(0.0f,  0.0f,  0.0f),
-			glm::vec3(2.0f,  5.0f, -15.0f),
-			glm::vec3(-1.5f, -2.2f, -2.5f),
-			glm::vec3(-3.8f, -2.0f, -12.3f),
-			glm::vec3(2.4f, -0.4f, -3.5f),
-			glm::vec3(-1.7f,  3.0f, -7.5f),
-			glm::vec3(1.3f, -2.0f, -2.5f),
-			glm::vec3(1.5f,  2.0f, -2.5f),
-			glm::vec3(1.5f,  0.2f, -1.5f),
-			glm::vec3(3.f,  0.0f, 0.0f)
+			glm::vec3( 2.0f,  2.0,  0.0f),
+			glm::vec3(-2.0f,  2.0f,  0.0f),
+			glm::vec3( 2.0f, -2.0f, -0.0f),
+			glm::vec3(-2.0f, -2.0f, -0.0f)
 		};
+		assert( sizeof(cubePositions)/sizeof(glm::vec3) == shaders.size() );
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -212,28 +204,24 @@ namespace
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			shader.use();
-
-			//set texture unit 0 to be the background
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, textureBackgroundId);
-
-			//set texture unit 1 to be face
-			glActiveTexture(GL_TEXTURE0 + 1);
-			glBindTexture(GL_TEXTURE_2D, textureFaceId);
 
 			glm::mat4 view = camera.getView();
 			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
-			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  
-			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			//-------------------------------------------------------------------------------------------------------------------------
+			//update uniform buffer for all shaders!
+			glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view));
+			glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
+			//-------------------------------------------------------------------------------------------------------------------------
 
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
+				shaders[i]->use();
+
 				glm::mat4 model;
 				float angle = 20.0f * i;
 				model = glm::translate(model, cubePositions[i]);
-				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				shaders[i]->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 
 				glBindVertexArray(vao);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -250,7 +238,7 @@ namespace
 	}
 }
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}

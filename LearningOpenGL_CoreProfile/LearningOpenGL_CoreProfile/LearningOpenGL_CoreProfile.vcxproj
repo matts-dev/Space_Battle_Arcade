@@ -84,6 +84,15 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_NonStaggeredData.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshaders_glfragdepth.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshaders_glfragdepth_420glsl.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshader_glfrontfacing.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_interfaceblocks.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_vertshader_vertexid.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshaders_glfragcoords.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_vertshader_pointsize.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_UniformBufferBlocks_AlignmentDemo.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_UniformBufferBlocks_SimpleExample.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingUsingBlendFunctionSorted.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingUsingBlendFunctionUnsorted.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\Blending\BlendingGrassDiscardFragment.cpp" />
@@ -108,6 +117,7 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_6EdgeDetectionPostProcessing.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StarterFile\MinmalBaseSetupForCopying.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StencilBufferTesting.cpp" />
+    <ClCompile Include="new_src\Tests\glm_matrix_data_row_vs_column.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\ConeLight.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\DirectionalLight.cpp" />
     <ClCompile Include="InputTracker.cpp" />

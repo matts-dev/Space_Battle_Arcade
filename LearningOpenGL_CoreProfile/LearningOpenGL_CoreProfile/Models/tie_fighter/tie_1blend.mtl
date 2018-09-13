@@ -12,7 +12,7 @@ d 1.000000
 illum 2
 map_Kd TieTextureSource.png
 
-newmtl Material_TieTextureSource.png
+newmtl Material_UV_Map_Grid
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
 Kd 0.640000 0.640000 0.640000

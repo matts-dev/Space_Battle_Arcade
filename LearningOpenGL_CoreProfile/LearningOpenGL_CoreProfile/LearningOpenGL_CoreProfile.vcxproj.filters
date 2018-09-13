@@ -545,6 +545,36 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_NonStaggeredData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\Tests\glm_matrix_data_row_vs_column.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_vertshader_pointsize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_vertshader_vertexid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshader_glfrontfacing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshaders_glfragcoords.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshaders_glfragdepth.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_fragshaders_glfragdepth_420glsl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_BuiltInVariables_interfaceblocks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_UniformBufferBlocks_AlignmentDemo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvanedGLSL\AdvancedGLSL_UniformBufferBlocks_SimpleExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />

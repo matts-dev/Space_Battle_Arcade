@@ -140,9 +140,9 @@ namespace
 
 		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 
-							  //-------------------------------------------------- advanced data ---------------------------------------------------------------------
+		 //-------------------------------------------------- advanced data ---------------------------------------------------------------------
 
-							  //demo buffering two separate sets of vertice data
+		//demo buffering two separate sets of vertice data
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(tri1), tri1);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri1), sizeof(tri2), tri2);
 
