@@ -183,6 +183,11 @@ void CameraFPS::setPosition(float x, float y, float z)
 	cameraPosition.z = z;
 }
 
+void CameraFPS::setSpeed(float speed)
+{
+	cameraSpeed = speed;
+}
+
 void CameraFPS::calculateEulerAngles()
 {
 	glm::vec3 camDir;

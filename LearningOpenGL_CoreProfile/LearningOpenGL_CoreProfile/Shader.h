@@ -11,8 +11,12 @@ class Texture2D;
 
 class Shader
 {
+private:
+	void initShaderHelper(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths = true);
+
 public:
 	explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths = true);
+	explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths = true);
 	virtual ~Shader();
 
 	Shader(const Shader&) = delete;

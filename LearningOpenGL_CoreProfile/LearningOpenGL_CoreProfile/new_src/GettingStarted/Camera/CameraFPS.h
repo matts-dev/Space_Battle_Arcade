@@ -25,6 +25,7 @@ public:
 
 	//setters and getters
 	void setPosition(float x, float y, float z);
+	void setSpeed(float speed);
 
 	const glm::vec3& getPosition() { return cameraPosition; }
 	const glm::vec3& getFront() { return cameraFront; }

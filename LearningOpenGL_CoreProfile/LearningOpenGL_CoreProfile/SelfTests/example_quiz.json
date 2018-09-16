@@ -1,0 +1,45 @@
+{
+    "questions" :
+    [
+       {
+             "question" : "this is a question: a",
+             "answers" :
+             [
+               {"*":"a"},
+               {"x":"b"},
+               {"x":"c"},
+               {"x":"d"}
+             ]
+       },
+       {
+             "question" : "this is a question: b",
+             "answers" :
+             [
+               {"x":"a"},
+               {"*":"b"},
+               {"x":"c"},
+               {"x":"d"}
+             ]
+       },
+       {
+             "question" : "this is a question: C",
+             "answers" :
+             [
+               {"x":"a"},
+               {"x":"b"},
+               {"*":"c"},
+               {"x":"d"}
+             ]
+       },
+       {
+             "question" : "this is a question: d",
+             "answers" :
+             [
+               {"X":"a"},
+               {"x":"b"},
+               {"x":"c"},
+               {"*":"d"}
+             ]
+       }
+    ]
+}

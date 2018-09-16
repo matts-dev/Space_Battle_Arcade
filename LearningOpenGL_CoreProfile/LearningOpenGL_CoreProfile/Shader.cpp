@@ -42,18 +42,16 @@ public:
 	}
 };
 
-
-Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths) :
-	failed(false),
-	linkedProgram(0),
-	active(false),
-	textures()
+void Shader::initShaderHelper(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths /*= true*/)
 {
+	bool hasGeometryShader = geometryShaderFilePath != "";
+
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	GLuint geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
 
 	//LOAD SOURCES FROM FILE
-	std::string vertShaderSrc, fragShaderSrc;
+	std::string vertShaderSrc, fragShaderSrc, geoShaderSrc;
 	if (stringsAreFilePaths)
 	{
 		if (failed = !Utils::convertFileToString(vertexShaderFilePath, vertShaderSrc))
@@ -66,6 +64,14 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 			std::cerr << "failed to load fragment shader from file" << std::endl;
 			return;
 		}
+		if (hasGeometryShader)
+		{
+			if (failed = !Utils::convertFileToString(geoShaderSrc, geoShaderSrc))
+			{
+				std::cerr << "failed to load fragment shader from file" << std::endl;
+				return;
+			}
+		}
 	}
 	else
 	{
@@ -74,6 +80,7 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 		//but since this is only generally called at start up I'll let it make an extra copy
 		vertShaderSrc = vertexShaderFilePath;
 		fragShaderSrc = fragmentShaderFilePath;
+		geoShaderSrc = geometryShaderFilePath;
 	}
 
 	//SET SHADER SOURCES
@@ -83,9 +90,17 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 	const char* fragShaderSource_cstr = fragShaderSrc.c_str();
 	glShaderSource(fragmentShader, 1, &fragShaderSource_cstr, nullptr);
 
+	const char* geoShaderSource_cstr = geoShaderSrc.c_str();
+	glShaderSource(geometryShader, 1, &geoShaderSource_cstr, nullptr);
+
 	//COMPILE SHADERS
 	glCompileShader(vertexShader);
 	glCompileShader(fragmentShader);
+	if (hasGeometryShader)
+	{
+		glCompileShader(geometryShader);
+	}
+
 	if (failed = !shaderCompileSuccess(vertexShader))
 	{
 		std::cerr << "failed to compile the vertex shader" << std::endl;
@@ -97,10 +112,21 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 		return;
 	}
 
+	if (hasGeometryShader)
+	{
+		if (failed = !shaderCompileSuccess(geometryShader))
+		{
+			std::cerr << "failed to compile the geom shader" << std::endl;
+			return;
+		}
+	}
+
 	//ATTACH AND LINK SHADERS
 	linkedProgram = glCreateProgram();
 	glAttachShader(linkedProgram, vertexShader);
 	glAttachShader(linkedProgram, fragmentShader);
+	if (hasGeometryShader)
+		glAttachShader(linkedProgram, geometryShader);
 	glLinkProgram(linkedProgram);
 	if (failed = !programLinkSuccess(linkedProgram))
 	{
@@ -111,7 +137,27 @@ Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragm
 	//CLEAN UP
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+	glDeleteShader(geometryShader);
+}
 
+Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths /*= true*/)
+	:
+	failed(false),
+	linkedProgram(0),
+	active(false),
+	textures()
+{
+	std::string blankGeometryShader = "";
+	initShaderHelper(vertexShaderFilePath, fragmentShaderFilePath, blankGeometryShader, stringsAreFilePaths);
+}
+
+Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths) :
+	failed(false),
+	linkedProgram(0),
+	active(false),
+	textures()
+{
+	initShaderHelper(vertexShaderFilePath, fragmentShaderFilePath, geometryShaderFilePath, stringsAreFilePaths);
 }
 
 Shader::~Shader()
