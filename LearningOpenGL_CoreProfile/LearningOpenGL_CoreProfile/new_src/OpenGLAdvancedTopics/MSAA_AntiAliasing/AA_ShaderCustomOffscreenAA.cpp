@@ -60,8 +60,6 @@ namespace
 
 				in vec2 texCoord;
 
-				//uniform sampler2D screencapture;
-
 				//notice the sampler
 				uniform sampler2DMS screencapture;
 				uniform int viewport_width;
