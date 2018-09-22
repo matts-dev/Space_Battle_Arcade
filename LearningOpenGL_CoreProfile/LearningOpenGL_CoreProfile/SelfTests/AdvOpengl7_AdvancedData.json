@@ -1,0 +1,114 @@
+{
+  "questions": [
+    {
+      "question": "Which call should be used to allocate buffer memory but does not initialize it?",
+      "answers": [
+        {
+          "*": "glBufferData(GL_ARRAY_BUFFER, sizeof(verts) + sizeof(colors), nullptr, GL_DYNAMIC_DRAW);"
+        },
+        {
+          "x": "glBufferData(GL_ARRAY_BUFFER, sizeof(verts) + sizeof(colors), data, GL_DYNAMIC_DRAW);"
+        }
+      ]
+    },
+
+
+
+    {
+      "question": "What call is required following: glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY); ?",
+      "answers": [
+        {
+          "*": "glUnmapBuffer(GL_ARRAY_BUFFER)"
+        },
+        {
+          "x": "memcpy(ptr, data, sizeof(data));"
+        },
+        {
+          "x": "glBindBuffer(GL_ARRAY_BUFFER, buffer);"
+        },
+        {
+          "x": "d"
+        }
+      ],
+      "comments" : ["You need to unmap the memory for opengl to use it."]
+    },
+
+
+
+
+
+
+
+
+    {
+      "question": "What is the appropriate vertex attribute set up for non-staggered data (eg 3 vertices in the form xxxyyyzzzrrrgggbbb)",
+      "answers": [
+        {
+          "X": "glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0)); \n glEnableVertexAttribArray(0); \n glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))); \n glEnableVertexAttribArray(1);"
+        },
+        {
+          "*": "glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)); \n glEnableVertexAttribArray(0); \n glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(sizeof(verts)));\n glEnableVertexAttribArray(1);"
+        }
+      ]
+    },
+
+    {
+      "question": "What is the appropriate pair of access parameters for glMapBuffer io access?",
+      "answers": [
+        {
+          "*": "GL_READ_ONLY/GL_WRITE_ONLY"
+        },
+        {
+          "x": "GL_MAP_READ_BIT/GL_MAP_WRITE_BIT"
+        }
+      ],
+      "comments" : "The access specification is different for glMapData (GLenum) and the newer glMapDataRange(GLbitfield)"
+    },
+
+    {
+      "question": "What is the appropriate pair of access parameters for glMapBufferRange io access?",
+      "answers": [
+        {
+          "X": "GL_READ_ONLY/GL_WRITE_ONLY"
+        },
+        {
+          "*": "GL_MAP_READ_BIT/GL_MAP_WRITE_BIT"
+        }
+      ],
+      "comments" : "The access specification is different for glMapData (GLenum) and the newer glMapDataRange(GLbitfield)"
+    },
+
+
+
+    {
+      "question": "What happens when glMapData/glMapDataRange fails due to inappropriate parameters?",
+      "answers": [
+        {
+          "*": "The call will return NULL and set an error state"
+        },
+        {
+          "x": "The call will return NULL"
+        },
+        {
+          "x": "The call will set an error state."
+        },
+        {
+          "x": "An access violation will occur."
+        }
+      ]
+    },
+
+    {
+      "question": "What do offset and length represent in glMapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);",
+      "answers": [
+        {
+          "*": "offset signals how far into the memory to start mapping; length represents the length of memory from the offset to map."
+        },
+        {
+          "x": "offset signals how far into the memory to start mapping; length represents the length of buffer."
+        }
+      ]
+    }
+
+  ]
+}

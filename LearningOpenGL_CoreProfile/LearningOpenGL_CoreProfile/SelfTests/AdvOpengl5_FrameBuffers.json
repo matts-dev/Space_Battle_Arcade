@@ -1,0 +1,167 @@
+{
+    "questions" :
+    [
+       {
+             "question" : "Which of the following is the appropriate way to create a framebuffer with the id stored at 'unsigned int fbo'?",
+             "answers" :
+             [
+               {"*":"glGenFrameBuffers(1, &fbo);"},
+               {"x":"glGenBuffers(1, &fbo);"},
+               {"x":"glGenVertexArrays(1, &fbo);"},
+               {"x":"glGenRenderbuffers(1, &fbo);"}
+             ]
+       },
+       {
+             "question" : "What is the appropriate way to bind a framebuffer?",
+             "answers" :
+             [
+               {"*":"glBindFramebuffer(GL_FRAMEBUFFER, fbo);"},
+               {"x":"glBindBuffer(GL_FRAMEBUFFER, fbo);"},
+               {"x":"glFrameBuffer(GL_FRAMEBUFFER, fbo);"},
+               {"x":"glBuffer(GL_FRAMEBUFFER, fbo);"}
+             ]
+       },
+
+       {
+        "question" : "Which of the following is not an appropriate target for glBindFramebuffer?",
+        "answers" :
+        [
+          {"*":"GL_WRITE_FRAMEBUFFER - Binds a framebuffer for reading and drawing/writing"},
+          {"x":"GL_FRAMEBUFFER - Binds a framebuffer for reading and drawing/writing"},
+          {"x":"GL_READ_FRAMEBUFFER - Binds a framebuffer for reading"},
+          {"X":"GL_DRAW_FRAMEBUFFER - Binds a framebuffer for drawing/writing"},
+          {"X":"All are appropriate steps"}
+        ],
+        "explanation" : ""
+        },
+
+
+        {
+          "question" : "What is NOT a required step in preparing a framebuffer for usage? That is, what is not required for a 'complete' framebuffer. ",
+          "answers" :
+          [
+            {"*":"Framebuffer must have a texture attachments"},
+            {"x":"At least one buffer must be attached (color, depth, or stencil)."},
+            {"x":"At least one color attachement"},
+            {"x":"Attachements should be complete (have memory allocated)"},
+            {"x":"Each buffer must have the same number of samples (MSAA Antialiasing samples)"},
+            {"x":"All are required steps"}
+          ],
+          "explanation" : "Framebuffers can use texture attachments OR the new Renderbuffer attachments."
+        },
+
+        {
+          "question" : "What is the appropriate way to check if a framebuffer was successfully created? ",
+          "answers" :
+          [
+            {"*":"if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {...}"},
+            {"x":"int success; glCheckFramebufferiv(GL_FRAMEBUFFER, GL_FRAMEBUFFER_COMPLETE, &success);"},
+            {"x":"glGetError() == GL_NO_ERROR"}
+          ],
+          "explanation" : ""
+       },
+
+       {
+        "question" : "How can one restore writing to the context's displaying framebuffer?",
+        "answers" :
+        [
+          {"*":"glBindFramebuffer(GL_FRAMEBUFFER, 0);"},
+          {"x":"Once a framebuffer is created, you cannot bind to the default framebuffer. You must manage all frame buffers manually."},
+          {"x":"glBindFramebuffer(GL_FRAMEBUFFER, GL_DEFAULT_FRAMEBUFFER);"},
+          {"X":"glBindFramebuffer(GL_FRAMEBUFFER, GLFW_DEFAULT_FRAMEBUFFER);"}
+        ],
+        "explanation" : ""
+      },
+
+      {
+        "question" : "What is the appropriate way to delete a single framebuffer?",
+        "answers" :
+        [
+          {"*":"glDeleteFramebuffers(1, &fbo);"},
+          {"x":"glDeleteBuffers(1, &fbo);"},
+          {"x":"glDeleteRenderbuffers(1, &fbo);"}
+        ],
+        "explanation" : ""
+      },
+      {
+        "question" : "Creating a texture for a framebuffer is largely the same as creating a texture. There are some differences. What is NOT a valid difference between creating a framebuffer texture and a regular texture?",
+        "answers" :
+        [
+          {"*":"Framebuffer textures shouldn't need the setting of texture sampling/filtering functions such as GL_TEXTURE_MIN_FILTER"},
+          {"x":"Framebuffer textures pass NULL to the data parameter of glTexImage2D, because the texture will be filled through renderering. Passing NULL only allocates memory."},
+          {"x":"Framebuffer textures typically are set to the size of the screen (not required though)."},
+          {"X":"Frambuffer textures don't require the setting up mipmaps."},
+          {"X":"Framebuffers of different sizes than the screen require viewport tweaking before rendering."}
+        ],
+        "explanation" : ""
+       },
+
+       {
+        "question" : "What is the correct way to attach a texture to a framebuffer's colorattachment?",
+        "answers" :
+        [
+          {"*":"glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);"},
+          {"x":"glFramebufferTexture2D(GL_FRAMEBUFFER, GL_TEXTURE_2D, texture, 0, GL_COLOR_ATTACHMENT0);"},
+          {"x":"glTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texture, 0);"}
+        ],
+        "explanation" : "glFramebufferTexture2D arguments are: target, attachment, textarget, texture, level"
+        },
+        {
+          "question" : "What is NOT a valid attachment for glFramebufferTexture2D(...);",
+          "answers" :
+          [
+            {"*":"All of the attachments are correct."},
+            {"x":"GL_DEPTH_ATTACHMENT, requires texture's format/internalformat(eg glTextureImage2d(...)'s GL_RGB) to be set to GL_DEPTH_COMPONENT"},
+            {"x":"GL_STENCIL_ATTACHMENT, requires texture's formatinternalformat(eg glTextureImage2d(...)'s GL_RGB) to be set to GL_STENCIL_INDEX"},
+            {"X":"GL_DEPTH_STENCIL_ATTACHMENT, require texture's internalformat(eg glTextureImage2d(...)'s GL_RGB) to be set to GL_DEPTH24_STENCIL8, and format bet set to GL_UNSIGNED_INT_24_8"}
+          ],
+          "explanation" : "glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0,GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);"
+        },
+        
+        {
+          "question" : "What is NOT true about renderbuffer objects?",
+          "answers" :
+          [
+            {"*":"Renderbuffers can only be used for color attachments, not stencil or depth attachments because they require reading/sampling."},
+            {"x":"they're faster than textures because they work in the OpenGL's native format."},
+            {"x":"they're typically write only, making it more difficult to read them for things like post processing (thought not impossible to read, one can use glReadPixels)"},
+            {"X":"Writing/copying operations are much faster, so things like switching buffers is faster"},
+            {"X":"all of these are true"}
+          ],
+          "explanation" : "You can use a renderbuffer attachment for depth/stencil, in fact you probably should since you don't actually sample these for color. Opengl doesn't have a problem using a renderbuffer for depth/stencil tests."
+        },
+
+        {
+          "question" : "What is not a required step in creating and attaching a renderbuffer object to a framebuffer? Don't assume specific example arguments are required, but look at functioncalls/parameterorderings",
+          "answers" :
+          [
+            {"*":"All are required steps."},
+            {"x":"GLuint rbo; glGenRenderbuffers(1, &rbo);"},
+            {"x":"glBindRenderbuffer(GL_RENDERBUFFER, rbo);"},
+            {"X":"glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600"},
+            {"X":"glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);"}
+          ],
+          "explanation" : ""
+        },
+
+        {
+          "question" : "In order to switch to offscreen rendering to a framebuffer, you only need to call `glBindFramebuffer(GL_FRAMEBUFFER, fbo);` on a complete framebuffer",
+          "answers" :
+          [
+            {"*":"true"},
+            {"x":"false"}
+          ],
+          "explanation" : "keywords are 'complete framebuffer'"
+        },
+
+        {
+          "question" : "In post processing, it is often useful to have arrays in GLSL. Which of the following is an example the GLSL array syntax?",
+          "answers" :
+          [
+            {"*":"vec2 offsets[3] = vec2[](vec2(0,0), vec2(1,1), vec2(2,2));"},
+            {"x":"vec2 offsets[] = {vec2(0,0), vec2(1,1), vec2(2,2)};"}
+          ],
+          "explanation" : "GLSL doesn't support c-style initializing of arrays. GLSL array initialization looks like ctor calls."
+        }
+    ]
+}

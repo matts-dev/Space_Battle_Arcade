@@ -36,32 +36,8 @@ private:
 	std::vector<unsigned int> indices;
 
 	GLuint VAO, VBO, EAO;
-	void setupMesh()
-	{
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
-		glGenBuffers(1, &EAO);
-
-		glBindVertexArray(VAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
-		
-		//enable vertex data 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
-
-		//enable normal data
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
-		glEnableVertexAttribArray(1);
-
-		//enable texture coordinate data
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, textureCoords)));
-		glEnableVertexAttribArray(2);
-	}
+	GLuint modelVBO = 0;
+	void setupMesh();
 
 public:
 	LoadedMesh(std::vector<Vertex> vertices,
@@ -70,5 +46,9 @@ public:
 	~LoadedMesh();
 
 	void draw(Shader& shader);
+	void drawInstanced(Shader& shader, unsigned int instanceCount) const;
+	GLuint getVAO();
+	void setInstancedModelMatrixVBO(GLuint modelVBO);
+	void setInstancedModelMatricesData(glm::mat4* modelMatrices, unsigned int count);
 };
 

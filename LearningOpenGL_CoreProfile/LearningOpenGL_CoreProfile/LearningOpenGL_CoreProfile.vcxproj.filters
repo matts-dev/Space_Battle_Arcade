@@ -620,10 +620,34 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_v2_viewspace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_pnt_calc_viewspace.cpp">
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_calc_lengthschange.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_calc_lengthschange.cpp">
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_pnt_calc_viewspace_BEST.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_BasicInstanceIDWithUniforms.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers_With_gl_InstanceID_toshrinkquads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_AsteroidField_NoInstancing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_AsteroidField_Instanced.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OnscreenOpenglMSAA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OffscreenOpenglMSAA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_ShaderCustomOffscreenAA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

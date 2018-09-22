@@ -1,0 +1,123 @@
+{
+    "questions" :
+    [
+       {
+             "question" : "What typically is the performance bottleneck when drawing lots of different meshes?",
+             "answers" :
+             [
+               {"*":"The number of draw calls"},
+               {"x":"The number of triangles"},
+               {"x":"The number of vertices"}
+             ]
+       },
+       {
+             "question" : "Why does a having a lot of draw calls disproportionally reduce the performance?",
+             "answers" :
+             [
+               {"*":"Each draw call requires a lot of set up (selecting buffers, locating attributes) and these require CPU to GPU communication."},
+               {"x":"Each draw calls carries with it more vertex data to draw. Naturally, having more draw calls reduces performance"}
+             ],
+             "explanation" : "The cpu to gpu bus is very slow."
+       },
+       {
+        "question" : "Why does instancing increase performance?",
+        "answers" :
+        [
+          {"*":"It reduces the cpu-gpu communication required to a single point for multiple meshs."},
+          {"x":"It improves GPU cache performance"},
+          {"x":"It imrpoves CPU cache performance"},
+          {"X":"It draws the same mesh triangles in parallel."}
+        ],
+        "explanation" : ""
+      },
+
+      {
+        "question" : "Which of the following enabled instanced drawing?",
+        "answers" :
+        [
+          {"*":"glDrawArraysInstanced/glDrawElementsInstanced"},
+          {"x":"glDrawArrays/glDrawElements"},
+          {"x":"glEnable(GL_INSTANCED);"},
+          {"X":"glEnable(GL_INSTANCE_ID);"}
+        ],
+        "explanation" : ""
+      },
+      {
+        "question" : "What is special about the glDraw____Instanced functions?",
+        "answers" :
+        [
+          {"*":"Their last argument takes an instanced count to be drawn."},
+          {"x":"They require glEnable calls for gl_InstanceID to be enabled"},
+          {"x":"They must use gl_InstanceID in the vertex shader to determine the number of instances to draw."}
+        ],
+        "explanation" : ""
+     },
+     {
+      "question" : "The built in GLSL varaible 'gl_InstanceID' does what?",
+      "answers" :
+      [
+        {"*":"Gives the current instance idx; it can be useful for indexing into uniform arrays."},
+        {"x":"Gives the maximum number of instances that will be drawn."},
+        {"x":"It's Exactly the samse as gl_VertexID, but prefered when instanced drawing."}
+      ],
+      "explanation" : ""
+      },
+
+
+      {
+        "question" : "Using gl_InstanceID to access a uniform array_of_model_matrices is the best approach for instanced rendering.",
+        "answers" :
+        [
+          {"*":"False"},
+          {"x":"True"}
+        ],
+        "explanation" : "Using a instanced array (like a VBO) that is bound to a vertex attribut is the better because it allows having much more instances. There is a limit to how many uniforms can be set."
+      },
+
+      {
+        "question" : "What is not true about 'instanced arrays' ?",
+        "answers" :
+        [
+          {"X":"Instanced arrays are GL_ARRAY_BUFFERS generated on the CPU side."},
+          {"x":"They're bound to vertex attributes."},
+          {"x":"The vertex shader automatically updates the attribute for each instance with glVertexAttribDivisor configuration."},
+          {"*":"They must be updated via uniforms."}
+        ],
+        "explanation" : ""
+      },
+      {
+        "question" : "If we use a instanced array at vertex attribute 2, what does glVertexAttribDivision(2, 1) set up?",
+        "answers" :
+        [
+          {"*":"It configures the in layout(location=2)vertex_attribute to update after 1 instance draw."},
+          {"x":"It enables an instanced vertex attribute, it is used instead of glEnableVertexAttribArray."},
+          {"x":"It configures the perspective division for the vertex attribute after the vertex shader is run."}
+        ],
+        "explanation" : "glEnableVertexAttribArray is still required. glVertexAttribDivision(2, 2) will update every 2 drawn intances; it can be useful when having locally groups instances with similar properties."
+      },
+
+      {
+        "question" : "For the vertex attribute 3, what does glVertexAttribDivision(3, 0) set up?",
+        "answers" :
+        [
+          {"*":"This is the default behavior, it updates the vertex attrib after 0 instances drawn -- ie it updates for every vertex"},
+          {"x":"This enables the vertex attrib to be instanced and updates after each instance is rendered."},
+          {"x":"This disables perspective division for the vertex attrib."},
+          {"X":"It updates the vertex attribut after each instance is drawn."}
+        ],
+        "explanation" : "Perspective division isn't done on vertex attributes. It is done on gl_Position."
+      },
+
+      {
+        "question" : "What is the NOT true about the specialiness of vertex attribute that is of type mat4? (regardless if we'r edoing instancing)",
+        "answers" :
+        [
+          {"x":"The largest a vertex attribute can be is vec4; thus it requires enabling of 4 attrib locations."},
+          {"x":"While only one location is declared in the shader, 4 contiguous attriblocations must be enabled on the cpu side."},
+          {"x":"Data is passed in column by column; vertex attribute strides are calculated via sizeof vec4"},
+          {"*":"You only need to enabled a single vertex attribut for a mat4 for a single layout (location=x)"}
+        ],
+        "explanation" : ""
+      }
+    ]
+}

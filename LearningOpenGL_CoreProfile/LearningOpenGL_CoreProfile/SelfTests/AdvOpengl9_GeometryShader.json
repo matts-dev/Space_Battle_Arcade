@@ -1,0 +1,141 @@
+{
+    "questions" :
+    [
+       {
+             "question" : "What is the appropiate way to specify the input primitive for a geometry shader",
+             "answers" :
+             [
+               {"*":"layout (points) in;"},
+               {"x":"layout (points) in aPoint;"},
+               {"x":"layout (points) in points[]"},
+               {"x":"in points vec4 point[]"}
+             ]
+       },
+
+
+       {
+        "question" : "What is the appropriate way to specify the output primitive for a geometry shader?",
+        "answers" :
+        [
+          {"*":"layout (line_strip, max_vertices = 2) out;"},
+          {"x":"layout (line_strip) out;"},
+          {"x":"out line_strip output;"},
+          {"X":"out line_strip output[3];"}
+        ]
+      },
+
+
+
+      {
+        "question" : "What is NOT a valid input primitive for a geometry shader?",
+        "answers" :
+        [
+          {"*":"All are appropriate input primitives"},
+          {"x":"lines/lines_adjacency"},
+          {"x":"triangles/triangles_adjacency"},
+          {"X":"points "}
+        ]
+      },
+
+      {
+        "question" : "There are only 3 available output primitives available to a geometry shader, choose the one that is NOT available",
+        "answers" :
+        [
+          {"*":"triangle"},
+          {"x":"triangle_strip"},
+          {"x":"line_strip"},
+          {"X":"points"}
+        ]
+      },
+
+      {
+        "question" : "What is the appropiate way to access the second vertex in a triangle from a geometry shader?",
+        "answers" :
+        [
+          {"*":"gl_in[1].gl_Position"},
+          {"x":"gl_in[2].gl_Position"},
+          {"x":"gl_Position[1]"},
+          {"X":"gl_Position[2]"}
+        ]
+      },
+
+      {
+        "question" : "To generate a primitive, the geometry shader emits each vertex individually. How is a primitive's vertex emited?",
+        "answers" :
+        [
+          {"*":"EmitVertex();"},
+          {"x":"EndPrimitive();"},
+          {"x":"gl_out[*].vertexAttrib = value"},
+          {"X":"gl_out[*] = value;"}
+        ]
+      },
+      
+      {
+        "question" : "When a geometry shader builds a primitive (eg triangle_strip, or line_strip) from vertices, How does it signal that it is done working on the current primitive and ready to start on the next?",
+        "answers" :
+        [
+          {"*":"EndPrimitive()"},
+          {"x":"EmitVertex()"},
+          {"x":"EmitPrimitive();"},
+          {"X":"You don't need to! Geometry shaders can only build 1 primitive per call!"}
+        ]
+      },
+
+      {
+        "question" : "How does a geometry shader configure a vertex it needs to emit?",
+        "answers" :
+        [
+          {"*":"The geometry shader configures its 'out' variables to the appropriate state, then calls EmitVertex. The vertex has the current state of all 'out' variables."},
+          {"x":"The geometry shader assigns to the array of 'out' variables the vertexAttributes at the appropriate index"},
+          {"x":"The geometry shader must re-configure each 'out' variable before emiting a vertex, then when EmitVertex is called the variables are passed with the vertex"}
+        ]
+      },
+
+      {
+        "question" : "When generating a triangle_trip from a point, what would happen if you assigend an 'out' color value before the first EmitVertex, but did not assign a color value to the 'out' variable before emiting the last two vertices?",
+        "answers" :
+        [
+          {"*":"All vertices would have the same color, as defined by the first setting of the 'out' color variable."},
+          {"x":"Only the first vertex would have a color, the last two would render black."},
+          {"x":"This is undefined behavior."}
+        ]
+      },
+
+      {
+        "question" : "When creating a cross hair from a point, what must be considered if you are simply adding hard coded values to the point's position?",
+        "answers" :
+        [
+          {"*":"You must consider the screen aspect ratio. 0.1 will not be the same horrizontal distance as it is vertical distance unless the view is a square."},
+          {"x":"You must consider the clipping range."}
+        ]
+      },
+
+      {
+        "question" : "What is the easiest way to send data from a vertex shader to the geometry shader?",
+        "answers" :
+        [
+          {"*":"The easiest way is to define an 'out' interfaceblock and define it in the geometry shader as being an array of 'in'interface blocks"},
+          {"x":"The easiest way is to define an 'out' interfaceblock and define it in the geometry shader as an 'in' variable"},
+          {"x":"Define each variable as an 'out' variable in the vertex shader, then define them as an array of 'in' variables in the geometry shader."},
+          {"X":"Define each variable as an 'out' variable in the vertex shader, then define them as an 'in' variables in the geometry shader."}
+        ]
+      },
+      {
+        "question" : "Why do geometry shaders require their input be arrays, but their output be single values?",
+        "answers" :
+        [
+          {"*":"The input is from a primitive, eg a triangle will have 3 input vertices; using an array allows these to be in the accessed with []. The output variables are emited per vertex -- since vertices are emited individually, the 'out' variables are individual and not arrays."},
+          {"X":"The input is from a primitives, eg a triangle_strip may be more than one primitive; using an array allows each primitive to be accessed with []. The output variables are per primtive, since EndPrimitive is called individually, the 'out' variables individual and are not arrays.  "}
+        ]
+      },
+
+      {
+        "question" : "Is perspective division applied before or after the geometry shader?",
+        "answers" :
+        [
+          {"*":"After the geometry shader emits primtives, based on renderdoc observations."},
+          {"x":"Before the geometry shader is run, so each vertex has been transformed to [-1, 1], based on renderdoc observations."}
+        ]
+      }
+    ]
+}

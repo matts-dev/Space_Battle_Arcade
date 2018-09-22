@@ -17,7 +17,9 @@ public:
 	Model(const char* path);
 	~Model();
 	void draw(Shader& shader);
+	void drawInstanced(Shader& shader, unsigned int instanceCount);
 
+	void setInstancedModelMatricesData(glm::mat4* modelMatrices, unsigned int count);
 private: //members
 	std::vector<LoadedMesh> meshes;
 	std::string directory;

@@ -120,7 +120,7 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_flawed_rotatingnormals_matchestutorialcode.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_flawed_sourcetest.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_calc_lengthschange.cpp" />
-    <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_pnt_calc_viewspace.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_pnt_calc_viewspace_BEST.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_includesprojectionslightmovement.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_v2_viewspace.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PassthroughGeometry_Model.cpp" />
@@ -131,6 +131,14 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_SimplePassthroughGeometryShaderPoints.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_SimplePassthroughGeometryShaderTriangles.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_Simple_COLOR_PassthroughGeometryShaderTriangles.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_AsteroidField_Instanced.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_AsteroidField_NoInstancing.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_BasicInstanceIDWithUniforms.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers_With_gl_InstanceID_toshrinkquads.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_ShaderCustomOffscreenAA.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OffscreenOpenglMSAA.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OnscreenOpenglMSAA.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StarterFile\MinmalBaseSetupForCopying.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StencilBufferTesting.cpp" />
     <ClCompile Include="new_src\Tests\does_out_vars_undergoes_w_division.cpp" />
