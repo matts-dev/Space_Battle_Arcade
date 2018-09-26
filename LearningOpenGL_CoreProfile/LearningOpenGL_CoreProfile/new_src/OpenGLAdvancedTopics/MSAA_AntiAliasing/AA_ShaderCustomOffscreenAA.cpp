@@ -74,10 +74,10 @@ namespace
 					vpCoords.y = int(vpCoords.y * texCoord.y);
 
 					//do a simple average since this is just a demo
-					vec4 sample1 = texelFetch(screencapture, vpCoords, 1);
-					vec4 sample2 = texelFetch(screencapture, vpCoords, 2);
-					vec4 sample3 = texelFetch(screencapture, vpCoords, 3);
-					vec4 sample4 = texelFetch(screencapture, vpCoords, 4);
+					vec4 sample1 = texelFetch(screencapture, vpCoords, 0);
+					vec4 sample2 = texelFetch(screencapture, vpCoords, 1);
+					vec4 sample3 = texelFetch(screencapture, vpCoords, 2);
+					vec4 sample4 = texelFetch(screencapture, vpCoords, 3);
 					fragmentColor = (sample1 + sample2 + sample3 + sample4) / 4.0f;
 				}
 			)";
@@ -309,9 +309,9 @@ namespace
 			postprocessShader.use();
 			glBindVertexArray(postVAO);
 			glActiveTexture(GL_TEXTURE0);
-			//------------------ notice that this is GL_TEXTURE_2D -------------------
+			//------------------ notice that this is NOT GL_TEXTURE_2D -------------------
 			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texMutiSampleColor);
-			//------------------ notice that this is GL_TEXTURE_2D -------------------
+			//------------------ notice that this is NOT GL_TEXTURE_2D -------------------
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			glEnable(GL_DEPTH_TEST); //don't let depth buffer disrupt drawing

@@ -1,0 +1,141 @@
+{
+    "questions" :
+    [
+       {
+             "question" : "How is a cube map sampled?",
+             "answers" :
+             [
+               {"*":"With a direction vector."},
+               {"x":"With a face id and texture coordinates."},
+               {"x":"with two points, the origin and direction of the camera"}
+             ]
+       },
+{
+ "question" : "How does one prepare a texture to be a cubemap? Staring with 'glGenTextures(1, &textureID);'",
+ "answers" :
+ [
+   {"*":"glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);"},
+   {"x":"Individually create 6 different textures and nanually bind them to 6 texture units"},
+   {"x":"glBindTexture(GL_TEXTURE_2D, textureID);"},
+   {"X":"glBindTexture(GL_CUBE_MAP_2D, textureID);"}
+ ],
+ "explanation" : ""
+},
+{
+  "question" : "What is NOT true about the 6 faces of the single cubemap texture?",
+  "answers" :
+  [
+    {"*":"All of the following are true"},
+    {"x":"They are created via calls like: glTexImage2D(GL_TEXTURE_CUBEMAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);"},
+    {"x":"The options are ordered: GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_TEXTURE_CUBE_MAP_POSITIVE_Y,GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_TEXTURE_CUBE_MAP_POSITIVE_Z,GL_TEXTURE_CUBE_MAP_NEGATIVE_Z"},
+    {"X":"The texture options can be iterated over by simplying adding an offset to GL_TEXTURE_CUBEMAP_POSITIVE_X"},
+    {"X":"As long as a the GL_TEXTURE_CUBE_MAP is bound, then bind calls using arguments such as GL_TEXTURE_CUBEMAP_POSITIVE_X will bind the texture to the cube map."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "What is NOT a required part of the fragment shader responsible for rending a cubemap?",
+  "answers" :
+  [
+    {"*":"All are required"},
+    {"x":"uniform samplerCube cubmap;"},
+    {"x":"in vec3 textureDir;"},
+    {"X":"FragColor = texture(cubmap, textureDir);"}
+  ],
+  "explanation" : "The answers are the minmum requirement for sampling."
+},
+{
+  "question" : "What is an effective (and preferred) way  to get the direction vectors to sample a cubemap?",
+  "answers" :
+  [
+    {"*":"Create a cube at (0,0,0), each of its position vectors will also be a direction vector. Render this cube always from the center of the camera."},
+    {"x":"Take the rendered position of the cube (ie the vertexInterpolated position), subtract the origin from it to get a direction vector from the origin (ie the camera) to the position."},
+    {"x":"Use the dot product to calculate the angles between the camera view direction and some arbitrary axis pointing to the front cube map. With the angle, rotate a vector colinear with the arbitrary axis to determine the sampling vector."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "What is not a correct step in a vertex shader designed to sample from a cubemap? Assume the view matrix has had its translation trimmed out.",
+  "answers" :
+  [
+    {"*":"Transform all vectors by the project*view (since there isn't really a model matrix)"},
+    {"x":"The 'out' texure coords should NOT be transformed (project*view). "},
+    {"x":"The 'out' gl_Position SHOULD be transformed (project*view). We want the position to be clipped."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "We do not transform the the texture coords in the vertexshader for a cubemap (TexCoords = aPos). All but one are valid reasons for this. What is the invalid reason?",
+  "answers" :
+  [
+    {"*":"Both the position and the sample vector need to be rotated."},
+    {"x":"Transforming the texture coords would fix the cubemap to the camera; ie it would rotate with the camera."},
+    {"x":"We transform the actual gl_Position. So, what ever texture coordinate we sample, it will be rotated etc."},
+    {"X":"Think about it in two parts, 1.a position being rotated, and 2. a sample arrow(vector) being rotated. The position is rotated for clipping reasons. But the texture that is applied to that rotated position is determined by the sample arrow(vector). If the camera is turned 180, the position behind you is now in front; but we still want that position's texture to be sampled by an arrow that points to the back of the cubemap, not an arrow transformed to the front of the cubemap."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "What is not a valid step in drawing a cubemap BEFORE rendering?",
+  "answers" :
+  [
+    {"*":"All are correct."},
+    {"x":"Turn off depth writing, the cubeshould not prevent objects from being rendered."},
+    {"x":"Simply draw a unit cube with the cubemap shaders."},
+    {"X":"restore depth writing after the cube is drawn."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "What is the problem with drawing a cubemap first?",
+  "answers" :
+  [
+    {"*":"It would be more efficient to draw the cubemap after objects because the depth testing will reduce the number of fragments drawn."},
+    {"x":"You have to disable depth testing."},
+    {"x":"It is less efficient because the fragment shader will not be writing depth values."},
+    {"X":"It makes stencil testing harder because a special configuration is required."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "Should the view matrix have its the translation removed when rendering cubemaps?",
+  "answers" :
+  [
+    {"*":"The translation moves the cube away from the center of the screen, we need the cube to appear as if it is always at the center. For cube maps, only rotation is important. Remove the translation."},
+    {"x":"The translation slides the cube with the camera, but in the opposite way. It should be negated"},
+    {"x":"The translation slides the cube with the camera, it should be maintained."}
+  ],
+  "explanation" : "The translation should be removed on the CPU side before it is sent to the shader."
+},
+{
+  "question" : "Rendering the cubemap after triangle meshes is an optimization because it allows early depth testing. What is one way to do that?",
+  "answers" :
+  [
+    {"*":"Manually set the z value in gl_Position to w. After perspective division (z/w), the z value will be 1, the maximum depth value -- which means it will only pass the depth test if nothing was rendered in the pixel.  This requires setting the depth test to GL_LEQUAL (rather than GL_LESS)"},
+    {"x":"Manually scale the cube to the size of {far - near}. This will force the cube to have a maximum depth value -- which means it will only pass the depth test if nothing was rendered in the pixel. This requires setting the depth test to GL_LEQUAL (rather than GL_LESS) "}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "Cubemaps can be used for reflection. How does that work? Try to visualize the approaches.",
+  "answers" :
+  [
+    {"*":"The sampling vector is determined by reflecting the view direction over the normal."},
+    {"x":"The sampling vector is determined by using the normal of the surface being rendered."},
+    {"x":"The sampling vector is determined by the ray created by fragment position and camera position."},
+    {"X":"The sampling vector is determined by subtracting the the fragment position from camera origin."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "Refraction can be simulated with cubemaps. How is that done?",
+  "answers" :
+  [
+    {"*":"The vector from the camera is refracted with respect to the normal and the refraction ratio."},
+    {"x":"The vector from the camera is refracted with respect to a vector in the surface plane and the refraction ratio."}
+  ],
+  "explanation" : ""
+}
+     
+    ]
+}
