@@ -1,0 +1,84 @@
+{
+    "questions" :
+    [
+{
+  "question" : "What is the 'discard;' glsl keyword?",
+  "answers" :
+  [
+    {"*":"It causes the fragment shader to omit the fragment it is currently processing."},
+    {"x":"It causes the vertex shader to omit the entire vertex of the primitive."},
+    {"x":"It causes the fragment shader to discard fragments with opacity."}
+  ],
+  "explanation" : "discard can be used with opacity, but you will need to program that. It just completely discards the fragment. It is good for things like grass."
+},
+{
+  "question" : "Blending must be enabled with a call to glEnable(GL_BLEND)",
+  "answers" :
+  [
+    {"*":"true"},
+    {"x":"false"}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "The blend equation is 'Csource*Fsource + Cdestination*Fdestination'. What is not true?",
+  "answers" :
+  [
+    {"*":"All are correct."},
+    {"x":"The F values are factor values, which are the percentage of each buffer's color that will become the output"},
+    {"x":"The C values are color values."},
+    {"X":"The destination color is the color currently in the color_buffer, the source color is the newly written color in the fragment shader."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "'glBlendFunc(GLenum sfactor, GLenum dfactor)' allows setting of the factor values in the blend equation (Color = Cs*Fs + Cd*Fd). What is not true?",
+  "answers" :
+  [
+    {"*":"The typical blend function uses GL_SRC_COLOR and GL_ONE_MINUS_SRC_COLOR for blending."},
+    {"x":"GL_SRC_COLOR - set the factor equal to the source color"},
+    {"x":"GL_SRC_ALPHA - sets the factor to the src alpha"},
+    {"X":"GL_ONE_MINUS_SRC_ALPHA - sets the factor to 1-fragmentsAlpha"}
+  ],
+  "explanation" : "GL_SRC_ALPHA and GL_ONE_MINUS_SRC_ALPHA are the typical usage. glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  "
+},
+{
+  "question" : "What is the purpose of glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)?",
+  "answers" :
+  [
+    {"*":"It allows different blending for colors and alpha. RGB will have a different factor setup than the alpha's factor component In the above call, the sources alpha will be written to the framebuffer."},
+    {"x":"It allows you to set both the factor values, and the color values in the blend equation."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "glBlendEquation(GLenum mode) allows you to change the operator in the blend equation (ie the + in C=CsFs+CdFd). What is not a valid setting?",
+  "answers" :
+  [
+    {"*":"GL_FUNC_MULTIPLY"},
+    {"x":"GL_FUNC_ADD"},
+    {"x":"GL_FUNC_SUBTRACT"},
+    {"X":"GL_FUNC_REVERSE_SUBTRACT"}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "The minimal way to enable simple blending is:",
+  "answers" :
+  [
+    {"*":"glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);"},
+    {"x":"glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);glBlendEquation(GL_FUNC_ADD);"}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "What is a simple way to fix incorrect blending?",
+  "answers" :
+  [
+    {"*":"Sort all of your transparent objects in terms of their distance to the camera (potenitally with using a map structure) and render back to front."},
+    {"x":"Check if the color buffer has an alpha value, if it does then a transparent object was rendered. call Discard; in the fragment shader if there was a color before."}
+  ],
+  "explanation" : ""
+}
+    ]
+}

@@ -25,9 +25,6 @@
         },
         {
           "x": "glBindBuffer(GL_ARRAY_BUFFER, buffer);"
-        },
-        {
-          "x": "d"
         }
       ],
       "comments" : ["You need to unmap the memory for opengl to use it."]

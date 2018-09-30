@@ -650,6 +650,24 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_ShaderCustomOffscreenAA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\1_AdvancedLighting\AdvancedLighting_blinn-phong.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\1_AdvancedLighting\AdvancedLighting_doublephongExperiment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_fragShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_OpenGLBuiltIn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_TempTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_textures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />

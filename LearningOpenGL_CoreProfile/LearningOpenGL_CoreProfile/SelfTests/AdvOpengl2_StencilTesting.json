@@ -1,0 +1,54 @@
+{
+    "questions" :
+    [
+{
+  "question" : "What is FALSE about stencil testing?",
+  "answers" :
+  [
+    {"*":"When writing to the stencil buffer, the shader does not read from the stencil buffer."},
+    {"x":"stencil test runs after the fragment shader"},
+    {"x":"stencil test uses an 8bit buffer"},
+    {"x":"Clearing the stencil buffer is done by a call like 'glClear(GL_STENCIL_BUFFER_BIT);' (note: you probably want to bitwise OR in the color and depth buffer bits too)"},
+    {"x":"using the stencil buffer requires a call to 'glEnable(GL_STENCIL_TEST);'"},
+    {"X":"glfw sets up a stencil buffer automatically, but not all windowing libraries do this for you."}
+  ],
+  "explanation" : "To write to a stencil buffer, you need to also pass the current stencil test."
+},
+{
+  "question" : "What is a false statement about the glStencilMask(GLUint mask)?",
+  "answers" :
+  [
+    {"*":"glStencilMask(MASK) - writes to stencil buffer will be: Stencil[x][y] = MASK & stencilWriteValue"},
+    {"x":"Thinking of the mask as a bit vector -- for a specific bit in the stencil buffer, values of 1 enabling writing to the specific bit, values of 0 disable writing to the specific bit."},
+    {"x":"glStencilMask(0xFF) - basically enables writing to the stencil buffer"},
+    {"X":"glStencilMask(0x00) - basically disables writing to the stencil buffer (the buffer should fill up with 0s)"}
+  ],
+  "explanation" : "When a value of 0 is in the mask, that turns off writing. If 0 were anded withe the stencilWriteValue, then the buffer would be updated with a 0. But this isn't the case, the buffer will retain the value it had before."
+},
+{
+  "question" : "What is a false statement about glStencilFunc(GLenum func, GLint ref, GLuint mask)?",
+  "answers" :
+  [
+    {"*":"Everything described is accurate"},
+    {"x":"func is the test function. This function determines whether a fragment passes the stencil test. {eg GL_NEVER, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_EQUAL, GL_NOTEQUAL, GL_ALWAYS}"},
+    {"x":"ref is the value to compare against. if the the stencil buffer contains a 1, and the ref value is 2, and the func is GL_LESS, then the fragment fails stencil testing. ie, GL_LESS implies  ( ref & mask ) < ( stencil & mask )."},
+    {"X":"mask is a value anded with both the ref value, and the stencil buffer value. Say ref=111, and the stencilbuffer=011, and mask=010, then we would test (111 & 010) with (011 &010)"}
+  ],
+  "explanation" : "Review khrono's opengl4 source pages for good information about this function. Clear examples of when things pass and fail."
+},
+{
+  "question" : "What is a false statement about glStencilOp(GLenum sfail, GLenum dpfail, GLenum dppass)",
+  "answers" :
+  [
+    {"*":"The second parameter is the action to take when the depth test fails"},
+    {"x":"The values for the parameters are GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, and GL_INVERT."},
+    {"x":"The values are the actions to take when the parameter passes/fails. (the first two parameters are failure cases, the 3rd parameter is a success case)"},
+    {"x":"The first parameter is the action to take when the stencil test fails"},
+    {"x":"The default setting is glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);"},
+    {"x":"The GL_REPLACE argument means that the stencil value is replaced with the reference value set with glStencilFunc."},
+    {"x":"The third parameter is the action to take when the depth and stencil buffer pass."}
+  ],
+  "explanation" : "Should read: The second parameter is the action to take when the stencil buffer passes, but the depth buffer fails."
+}
+    ]
+}

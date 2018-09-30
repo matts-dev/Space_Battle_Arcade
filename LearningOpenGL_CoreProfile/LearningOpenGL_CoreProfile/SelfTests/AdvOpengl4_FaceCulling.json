@@ -1,0 +1,44 @@
+{
+    "questions" :
+    [
+{
+  "question" : "What is false about 'winding order'?",
+  "answers" :
+  [
+    {"*":"Polygons have a natural winding order and the modeler only needs to set a single triangles winding order for the entire mesh to match that winding order."},
+    {"x":"Typically defined clockwise(CW) or counterclockwise(CCW), it is the order in which vertices of a triangle are input to the vertex shader for the front face."},
+    {"x":"Their order is defined when looking at the front face of the triangle and enumerating the vertices."}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "glEnable(GL_CULL_FACE); is the default behavior",
+  "answers" :
+  [
+    {"*":"false"},
+    {"x":"true"}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "glCullFace(GL_FRONT) can be used to avoid drawing the back face?",
+  "answers" :
+  [
+    {"*":"false, this hides the front face."},
+    {"x":"false, this changes the winding order. Which indirectly changes what face is drawn."},
+    {"x":"true, this only displays the front faces"}
+  ],
+  "explanation" : ""
+},
+{
+  "question" : "glFrontFace(GL_CCW); is the default behavior for OpenGL",
+  "answers" :
+  [
+    {"*":"True, this defines front faces as counter clock wise."},
+    {"x":"False, Opengl defines front faces as GL_CW, that is clock wise"},
+    {"x":"False, this is not a default setting and must be specified when enabling face culling"}
+  ],
+  "explanation" : ""
+}
+    ]
+}

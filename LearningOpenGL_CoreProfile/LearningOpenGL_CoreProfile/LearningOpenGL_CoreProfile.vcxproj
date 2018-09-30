@@ -80,6 +80,12 @@
     <ClCompile Include="new_src\ImportingModels\Models\ModelSpaceshipDemo.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\PlaneModelDemo.cpp" />
     <ClCompile Include="new_src\Lighting\MultipleLights\MultipleLights_2ClassAbstractions.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\1_AdvancedLighting\AdvancedLighting_blinn-phong.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\1_AdvancedLighting\AdvancedLighting_doublephongExperiment.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_textures.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_fragShader.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_OpenGLBuiltIn.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_TempTest.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />

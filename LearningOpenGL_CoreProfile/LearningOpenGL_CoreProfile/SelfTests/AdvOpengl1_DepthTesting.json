@@ -1,0 +1,81 @@
+{
+    "questions" :
+    [
+       {
+             "question" : "What is FALSE about depth testing?",
+             "answers" :
+             [
+               {"*":"Depth testing is disabled by default."},
+               {"x":"Depth testing runs after the stencil buffer"},
+               {"x":"Depth testing *generally* runs after the fragment shader."},
+               {"x":"Depth testing is in screen space. Directly related to the viewport. Screenspace coordinates can be found in the built-in gl_FragCoord."},
+               {"x":"Some hardware allows for 'early depth testing', where Depth testing can run before the fragment shader."}
+             ]
+       },
+{
+ "question" : "What is NOT a required step for enabling depth testing?",
+ "answers" :
+ [
+   {"*":"glfwWindowHint(GLFW_DEPTH_BUFFER, 1);"},
+   {"x":"glEnable(GL_DEPTH_TEST);"},
+   {"x":"glClear(GL_DEPTH_BUFFER_BIT); //probably also want ' | GL_COLOR_BUFFER_BIT'"}
+ ],
+ "explanation" : ""
+},
+
+{
+  "question" : "What does 'glDepthMask(GL_FALSE);' do?",
+  "answers" :
+  [
+    {"*":"It disables writing to the depth buffer."},
+    {"x":"It enables writing to the depth buffer."},
+    {"x":"It removes a bitwise mask that is applied to the depth buffer, the depth buffer is written directly."}
+  ],
+  "explanation" : ""
+ },
+
+ {
+  "question" : "What is not a correct description of the 'glDepthFunc()' arguments?",
+  "answers" :
+  [
+    {"*":"GL_NEVER - depth test never fails"},
+    {"x":"GL_LESS - default behavior,  depth test passes if fragment depth is less than what is in the depth buffer"},
+    {"x":"GL_GREATER - depth test passes if fragment depth is greater than what is in the depth buffer."},
+    {"X":"GL_LEQUAL - depth test passes if fragment depth si less than or equal to what is in the depth buffer."}
+  ],
+  "explanation" : "GL_NEVER	The depth test never passes."
+ },
+
+ {
+  "question" : "Visualizing the depth buffer isn't very useful unless you unmap the [0,1] range back to a range in world space.",
+  "answers" :
+  [
+    {"*":"true"},
+    {"x":"false"}
+  ],
+  "explanation" : ""
+ },
+
+ {
+  "question" : "What is not a Z-fighting avoidance trick?",
+  "answers" :
+  [
+    {"*":"All of the answer are valid techniques"},
+    {"x":"Never place objects too close so that they overlap"},
+    {"x":"set the near place as far as possible to increase depth precision"},
+    {"X":"ues a higher depth precision buffer"}
+  ],
+  "explanation" : ""
+ },
+       {
+             "question" : "this is a question: d",
+             "answers" :
+             [
+               {"X":"a"},
+               {"x":"b"},
+               {"x":"c"},
+               {"*":"d"}
+             ]
+       }
+    ]
+}
