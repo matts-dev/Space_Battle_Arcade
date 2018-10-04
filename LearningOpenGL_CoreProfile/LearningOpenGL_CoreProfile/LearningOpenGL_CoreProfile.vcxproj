@@ -86,6 +86,7 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_fragShader.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_OpenGLBuiltIn.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_TempTest.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />

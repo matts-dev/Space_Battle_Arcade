@@ -304,7 +304,7 @@ namespace
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0); //bind to default frame buffer
-											  // -------------------------------------- END FRAME BUFFER -------------------------------------------------------------
+		// -------------------------------------- END FRAME BUFFER -------------------------------------------------------------
 
 		while (!glfwWindowShouldClose(window))
 		{

@@ -545,7 +545,7 @@ distance	constant	linear		quadratic
 
 */
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}

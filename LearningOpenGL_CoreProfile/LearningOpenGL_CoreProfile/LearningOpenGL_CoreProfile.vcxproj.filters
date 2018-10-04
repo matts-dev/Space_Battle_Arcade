@@ -668,6 +668,9 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_textures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
