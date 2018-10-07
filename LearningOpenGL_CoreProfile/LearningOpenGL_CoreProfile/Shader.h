@@ -36,7 +36,10 @@ public:
 	void setUniform1i(const char* uniformname, int newValue);
 	void setUniformMatrix4fv(const char* uniform, int numberMatrices, GLuint normalize, const float* data);
 
+	/** DEPRECATED: I made this earlier on and now handle textures differently. Leaving so my early files still work.*/
 	void addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName);
+
+	/** DEPRECATED: I made this earlier on and now handle textures differently. Leaving so my early files still work.*/
 	void activateTextures();
 
 

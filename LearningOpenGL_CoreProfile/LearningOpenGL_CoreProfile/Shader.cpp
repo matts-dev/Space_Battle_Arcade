@@ -240,6 +240,7 @@ void Shader::setUniform1f(const char* uniformName, float value)
 
 void Shader::addTexture(std::shared_ptr<Texture2D>& texture, const std::string& textureSampleName)
 {
+	/** DEPRECATED: I made this earlier on and now handle textures differently. Leaving so my early files still work.*/
 	if (texture)
 	{
 		GLuint textureShaderSampleLocation = glGetUniformLocation(getId(), textureSampleName.c_str());
@@ -252,6 +253,7 @@ void Shader::addTexture(std::shared_ptr<Texture2D>& texture, const std::string& 
 
 void Shader::activateTextures()
 {
+	/** DEPRECATED: I made this earlier on and now handle textures differently. Leaving so my early files still work.*/
 	for (size_t i = 0; i < textures.size(); ++i)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);

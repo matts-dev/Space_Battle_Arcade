@@ -31,17 +31,21 @@ namespace
 				uniform mat4 model;
 				uniform mat4 view;
 				uniform mat4 projection;
+				uniform mat4 lightSpaceTransform; //transforms model space to light space
 
 				out vec3 fragNormal;
 				out vec3 fragPosition;
 				out vec2 interpTextCoords;
+				out vec4 fragPos_LightSpace;
 
 				void main(){
-					gl_Position = projection * view * model * vec4(position, 1);
-					fragPosition = vec3(model * vec4(position, 1));
+					vec4 modelPosition = model * vec4(position, 1);
 
-					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
 					fragNormal = normalize(mat3(transpose(inverse(model))) * normal);
+					fragPosition = vec3(modelPosition);
+					fragPos_LightSpace =  lightSpaceTransform * modelPosition;
+					//fragPos_LightSpace =  lightSpaceTransform * vec4(vec3(modelPosition),1);
+					gl_Position = projection * view * model * vec4(position, 1);
 
 					interpTextCoords = textureCoordinates;
 				}
@@ -74,12 +78,40 @@ namespace
 				in vec3 fragNormal;
 				in vec3 fragPosition;
 				in vec2 interpTextCoords;
+				in vec4 fragPos_LightSpace;
 
 				/* uniforms can have initial value in GLSL 1.20 and up */
 				uniform int enableAmbient = 1;
 				uniform int enableDiffuse = 1;
 				uniform int enableSpecular = 1;
+
+				uniform sampler2D directionLightShadowMap;
 				
+				float DetermineIfFragInShadow(vec4 fragPosInLightSpace, vec3 flatNormal, vec3 lightDirFromFragment)
+				{
+					//when we made the depth map, the depths were in clip space (ie their positions were divided by w)
+					//So, if we're going to compare depths, we need to convert our lightspace frag position to into clip space manually
+					vec3 clipSpaceFragPos = (fragPosInLightSpace.xyz) / fragPosInLightSpace.w;
+
+					//textures are in the range [0, 1], so we need to transform our [-1,1] range to [0, 1].
+					//depth maps also range from [0, 1]. We can get both the depth and texture coordinates with a single transformation
+					//we can do these by dividing by 2, which gives us [-0.5, 0.5], then adding 0.5 to give us [0, 1].
+					vec3 transformedRange = (clipSpaceFragPos / 2.0f) + 0.5f;					
+
+					//the red value of the texture represents the depth.
+					float closetDepthToLight = texture(directionLightShadowMap, transformedRange.xy).r;
+
+					float fragDepth = transformedRange.z;
+
+					//combating shadow acne.
+					//I believe this should be the flat normal because smoooth shading on curved surfaces might cause an issue.
+					float bias = 0.05 * (1.0f - dot(flatNormal, lightDirFromFragment));
+					bias = max(0.005, bias);
+					//bias = 0.05f; //hard coded bias to show peter panning effect
+
+					//an object is in shadow when its depth from light is greater than the object closest to the light
+					return (fragDepth - bias) > closetDepthToLight ? 1.0f : 0.0f;
+				}
 
 				void main(){
 					vec3 ambientLight = light.ambientIntensity * vec3(texture(material.diffuseMap, interpTextCoords));	
@@ -97,7 +129,10 @@ namespace
 					diffuseLight *= enableDiffuse;
 					specularLight *= enableSpecular;
 
-					vec3 lightContribution = (ambientLight + diffuseLight + specularLight);
+					float shadowFlag = DetermineIfFragInShadow(fragPos_LightSpace, fragNormal, toLight);
+					float isFragLit = 1.0f - shadowFlag; //basically, we want to multiply this, so if shadow == 1, then we want to multiply by 0
+
+					vec3 lightContribution = (ambientLight + isFragLit*(diffuseLight + specularLight));
 					
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}
@@ -277,50 +312,53 @@ namespace
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		float vertices[] = {
-			// positions______    ___normals _______   texture coords
-			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-			0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-			0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-			0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-			-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-			-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-			0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-			0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-			0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-			-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-			-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-			-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-			-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-			-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-			-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-			0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-			0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-			0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-			0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-			0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-			0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-			-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-			0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-			0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-			0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-			-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-			-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-			0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-			0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-			0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-			-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-		};
+		//-----------------------------------------------------------------------------
+		//vertices are set up for face culling
+		//-----------------------------------------------------------------------------
+        float vertices[] = {
+            // back face
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            // left face
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            // right face
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+            // bottom face
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            // top face
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+             1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+             1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+        };
 
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
@@ -353,11 +391,11 @@ namespace
 		float quadVerts[] = {
 			//x    y         s    t
 			-1.0, -1.0,		0.0, 0.0,
-			-1.0, 1.0,		0.0, 1.0,
 			1.0, -1.0,		1.0, 0.0,
+			-1.0, 1.0,		0.0, 1.0,
 
-			1.0, -1.0,      1.0, 0.0,
 			-1.0, 1.0,      0.0, 1.0,
+			1.0, -1.0,      1.0, 0.0,
 			1.0, 1.0,		1.0, 1.0
 		};
 		GLuint postVAO;
@@ -406,23 +444,23 @@ namespace
 
 		glm::vec3 cubePositions[] = {
 			glm::vec3(0.0f,  -1.0f,  0.0f),
-			glm::vec3(1.0f,  0.0f, -1.0f),
-			glm::vec3(-1.5f, 0.0f, -2.5f),
-			glm::vec3(0.0f, 2.0f, -1.3f),
-			glm::vec3(2.5f,  0.0f, -0.5f)
+			glm::vec3(0.0f, 1.5f, 0.0f),
+			glm::vec3(2.0f, 0.0f, 1.0f),
+			glm::vec3(-1.0f, 0.0f, 2.0f),
+			glm::vec3(-2.5f,  0.1f, 1.5f)
 		};
 		glm::vec3 cubeScales[] = {
-			glm::vec3(20.0f,  1.0f, 20.0f),
-			glm::vec3(1.0f,  1.0f,  1.0f),
-			glm::vec3(1.0f,  1.0f,  1.0f),
-			glm::vec3(1.0f,  1.0f,  1.0f),
-			glm::vec3(1.0f,  1.0f,  1.0f)
+			glm::vec3(25.0f,  0.5f, 25.0f),
+			glm::vec3(0.5f,  0.5f,  0.5f),
+			glm::vec3(0.5f,  0.5f,  0.5f),
+			glm::vec3(0.5f,  0.5f,  0.5f),
+			glm::vec3(0.5f,  0.5f,  0.5f)
 		};
 		glm::vec3 cubeRotations[] = {
 			glm::vec3(0.0f,  0.0f,  0.0f),
-			glm::vec3(0.0f,  0.0f,  45.0f),
-			glm::vec3(0.0f,  33.0f,  0.0f),
-			glm::vec3(0.0f,  10.0f,  10.0f),
+			glm::vec3(0.0f,  0.0f,  0.0f),
+			glm::vec3(0.0f,  0.0f,  0.0f),
+			glm::vec3(0.0f,  0.0f,  0.0f),
 			glm::vec3(0.0f,  0.0f,  0.0f)
 		};
 		//--------------------------------------------------------------------------------------------
@@ -454,6 +492,9 @@ namespace
 			std::cerr << "error creating shadow map fb " << error << std::endl;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		//enable face culling for peter-panning removal
+		glEnable(GL_CULL_FACE);
 		//--------------------------------------------------------------------------------------------
 
 		while (!glfwWindowShouldClose(window))
@@ -477,16 +518,20 @@ namespace
 			top = right = 10.0f;
 			bottom = left = -10.0f;
 			glm::mat4 lightProjection = glm::ortho(left, right, bottom, top, lightNearPlane, lightFarPlane);
+			//glm::mat4 lightProjection = glm::ortho(left, right, -bottom, -top, lightNearPlane, lightFarPlane); //suggestion on tutorial comments, seems to help when front face culling issues. Not sure if depth precision issues on my hardware?
 
 			//configure view, we need to give some location to the light even though it is a directional light 
 			//we need it to actually be positioned so the orthographic view can see the objects to be in shadow.
 			glm::vec3 orthoCamPos = glm::vec3(-2.0f, 4.0f, -1.0f);
-			glm::mat4 lightView = glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+			glm::vec3 orthoCamTarget = glm::vec3(0, 0, 0);
+			glm::mat4 lightView = glm::lookAt(orthoCamPos, orthoCamTarget, glm::vec3(0, 1, 0));
 			glm::mat4 lightSpaceTransform = lightProjection * lightView;
 
 			glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
 			glViewport(0, 0, shadowMapWidth, shadowMapHeight);
 			glClear(GL_DEPTH_BUFFER_BIT);
+
+			glCullFace(GL_FRONT);
 
 			shadowMapShader.use();
 			shadowMapShader.setUniformMatrix4fv("lightSpaceTransform", 1, GL_FALSE, glm::value_ptr(lightSpaceTransform));
@@ -502,6 +547,8 @@ namespace
 				glBindVertexArray(vao);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
+
+			glCullFace(GL_BACK);
 
 			//restore rendering framebuffer and normal view port
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -531,11 +578,22 @@ namespace
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);
+			//--------------------------------------------------------------------------------------------
+			//shader.setUniform3f("light.direction", lightDirection.x, lightDirection.y, lightDirection.z);
+			lightDirection = orthoCamTarget - orthoCamPos;
 			shader.setUniform3f("light.direction", lightDirection.x, lightDirection.y, lightDirection.z);
+			//--------------------------------------------------------------------------------------------
 			const glm::vec3& camPos = camera.getPosition();
 			shader.setUniform3f("cameraPosition", camPos.x, camPos.y, camPos.z);
 			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view)); 
 			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			//------------------------------------------------------
+			shader.setUniformMatrix4fv("lightSpaceTransform", 1, GL_FALSE, glm::value_ptr(lightSpaceTransform));
+
+			shader.setUniform1i("directionLightShadowMap", 5);
+			glActiveTexture(GL_TEXTURE5);
+			glBindTexture(GL_TEXTURE_2D, shadowMapDepthTexture);
+			//------------------------------------------------------
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
 				const glm::vec3& angles = cubeRotations[i];
