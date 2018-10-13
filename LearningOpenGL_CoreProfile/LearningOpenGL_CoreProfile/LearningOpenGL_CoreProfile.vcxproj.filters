@@ -668,7 +668,16 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\2_GammaCorrection\AdvancedLighting_gammaCorrection_textures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping.cpp">
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_directional_basic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_directional_PCF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_DirectionShadowsStarterFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_Directional_PCF_ExtraPractice_MoveableLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

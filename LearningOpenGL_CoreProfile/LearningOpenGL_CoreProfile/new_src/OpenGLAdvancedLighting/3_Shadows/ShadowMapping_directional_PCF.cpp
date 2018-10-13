@@ -89,28 +89,41 @@ namespace
 				
 				float DetermineIfFragInShadow(vec4 fragPosInLightSpace, vec3 flatNormal, vec3 lightDirFromFragment)
 				{
-					//when we made the depth map, the depths were in clip space (ie their positions were divided by w)
-					//So, if we're going to compare depths, we need to convert our lightspace frag position to into clip space manually
+					// !! view previous file for comments explaining this function.!!
+
 					vec3 clipSpaceFragPos = (fragPosInLightSpace.xyz) / fragPosInLightSpace.w;
-
-					//textures are in the range [0, 1], so we need to transform our [-1,1] range to [0, 1].
-					//depth maps also range from [0, 1]. We can get both the depth and texture coordinates with a single transformation
-					//we can do these by dividing by 2, which gives us [-0.5, 0.5], then adding 0.5 to give us [0, 1].
 					vec3 transformedRange = (clipSpaceFragPos / 2.0f) + 0.5f;					
-
-					//the red value of the texture represents the depth.
+					float fragDepth = transformedRange.z;
 					float closetDepthToLight = texture(directionLightShadowMap, transformedRange.xy).r;
 
-					float fragDepth = transformedRange.z;
+					float bias = 0.05f * (1.0f - dot(flatNormal, lightDirFromFragment));
+					bias = max(0.005f, bias);
+					//bias = 0; //if using front face culling, I don't think we need a bias as long as we have solid objects
 
-					//combating shadow acne.
-					//I believe this should be the flat normal because smoooth shading on curved surfaces might cause an issue.
-					float bias = 0.05 * (1.0f - dot(flatNormal, lightDirFromFragment));
-					bias = max(0.005, bias);
-					//bias = 0.05f; //hard coded bias to show peter panning effect
+					//--------------------------------------------- PCF ------------------------------------------
+					int sampleRangeLimit = 2;
+					float shadow = 0.0f;
+					vec2 texelSize = vec2(1.0f) / textureSize(directionLightShadowMap, 0);
+					for(int x = -sampleRangeLimit; x <= sampleRangeLimit; ++x){
+						for(int y = -sampleRangeLimit; y <= sampleRangeLimit; ++y){
+							vec2 sampleLoc = texelSize * vec2(x, y) + transformedRange.xy;
 
-					//an object is in shadow when its depth from light is greater than the object closest to the light
-					return (fragDepth - bias) > closetDepthToLight ? 1.0f : 0.0f;
+							float sampleNeighborDepth = texture(directionLightShadowMap, sampleLoc).r;
+							shadow += fragDepth - bias > sampleNeighborDepth ? 1.0f : 0;
+						}
+					}
+					float numSamples = (sampleRangeLimit * 2 + 1); //with 3x3 we have 9, which is range [-1, 1]. if we got o [-2, 2], we have 4 locations + 0 location which is 2*limit + 1.
+					numSamples = numSamples * numSamples;
+
+					//shadow = shadow / 9.0f;
+					shadow = shadow / numSamples;
+
+					//--------------------------------------------------------------------------------------------
+
+					if(transformedRange.z > 1)
+						shadow = 0;
+
+					return shadow;
 				}
 
 				void main(){
@@ -129,7 +142,7 @@ namespace
 					diffuseLight *= enableDiffuse;
 					specularLight *= enableSpecular;
 
-					float shadowFlag = DetermineIfFragInShadow(fragPos_LightSpace, fragNormal, toLight);
+					float shadowFlag = DetermineIfFragInShadow(fragPos_LightSpace, normal, toLight);
 					float isFragLit = 1.0f - shadowFlag; //basically, we want to multiply this, so if shadow == 1, then we want to multiply by 0
 
 					vec3 lightContribution = (ambientLight + isFragLit*(diffuseLight + specularLight));
@@ -215,6 +228,7 @@ namespace
 	float specularStrength = 1.f;
 	int shininess = 32;
 	float floatValIncrement = 0.25f;
+	bool bFrontFaceCulling = false;
 
 	void processInput(GLFWwindow* window)
 	{
@@ -240,6 +254,10 @@ namespace
 		if (input.isKeyJustPressed(window, GLFW_KEY_F))
 		{
 			bDisplayFramebufferContents = !bDisplayFramebufferContents;
+		}
+		if (input.isKeyJustPressed(window, GLFW_KEY_G))
+		{
+			bFrontFaceCulling = !bFrontFaceCulling;
 		}
 
 		//ambient 
@@ -297,6 +315,8 @@ namespace
 
 		camera.handleInput(window, deltaTime);
 	}
+
+	//----------------------------------------------------------------------------------------------------
 
 	void true_main()
 	{
@@ -445,7 +465,7 @@ namespace
 		glm::vec3 cubePositions[] = {
 			glm::vec3(0.0f,  -1.0f,  0.0f),
 			glm::vec3(0.0f, 1.5f, 0.0f),
-			glm::vec3(2.0f, 0.0f, 1.0f),
+			glm::vec3(2.0f, 0.01f, 1.0f),
 			glm::vec3(-1.0f, 0.0f, 2.0f),
 			glm::vec3(-2.5f,  0.1f, 1.5f)
 		};
@@ -477,8 +497,16 @@ namespace
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapWidth, shadowMapHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr); //notice type is float, because depth is [0, 1]
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		//********* fix texture tiling outside camera range *************
+		float borderColor[] = { 1,1,1,1};
+		//float borderColor[] = { 0,0,0,1 }; //visualize rectangle of shadow
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		//*******************************************************************
 
 		glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
 		//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_NONE, 0); //this is not what the tutorial says to do, but should test to see if this works instead of setting read/draw buffers manually
@@ -531,7 +559,8 @@ namespace
 			glViewport(0, 0, shadowMapWidth, shadowMapHeight);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			glCullFace(GL_FRONT);
+			if (bFrontFaceCulling)
+				glCullFace(GL_FRONT);
 
 			shadowMapShader.use();
 			shadowMapShader.setUniformMatrix4fv("lightSpaceTransform", 1, GL_FALSE, glm::value_ptr(lightSpaceTransform));
@@ -548,14 +577,14 @@ namespace
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
-			glCullFace(GL_BACK);
+			if(bFrontFaceCulling)
+				glCullFace(GL_BACK);
 
 			//restore rendering framebuffer and normal view port
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glViewport(0, 0, width, height);
 			//--------------------------------------------------------------------------------------------
 
-			//draw light
 			//lightcolor.x = static_cast<float>(sin(glfwGetTime() * 2.0f) / 2 + 0.5f);
 			//lightcolor.y = static_cast<float>(sin(glfwGetTime() * 0.7f) / 2 + 0.5f);
 			//lightcolor.z = static_cast<float>(sin(glfwGetTime() * 1.3f) / 2 + 0.5f);
@@ -594,6 +623,7 @@ namespace
 			glActiveTexture(GL_TEXTURE5);
 			glBindTexture(GL_TEXTURE_2D, shadowMapDepthTexture);
 			//------------------------------------------------------
+
 			for (size_t i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); ++i)
 			{
 				const glm::vec3& angles = cubeRotations[i];
@@ -610,6 +640,25 @@ namespace
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
+			//***************************************************************** debug delete
+			////draw quad again for debugging
+			//glCullFace(GL_BACK);
+			//for (size_t i = 0; i < 1; ++i)
+			//{
+			//	const glm::vec3& angles = cubeRotations[i];
+			//	glm::mat4 model = glm::mat4(1.f); //set model to identity matrix
+			//	model = glm::translate(model, cubePositions[i]);
+			//	model = glm::rotate(model, glm::radians(angles.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			//	model = glm::rotate(model, glm::radians(angles.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			//	model = glm::rotate(model, glm::radians(angles.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			//	model = glm::scale(model, cubeScales[i]);
+
+			//	shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+
+			//	glBindVertexArray(vao);
+			//	glDrawArrays(GL_TRIANGLES, 0, 36);
+			//}
+			//*****************************************************************
 			if (bDisplayFramebufferContents)
 			{
 				displayDepthShader.use();
@@ -639,7 +688,7 @@ namespace
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}
