@@ -30,6 +30,7 @@ public:
 	GLuint getId();
 
 	void setUniform4f(const char* uniform, float red, float green, float blue, float alpha);
+	void setUniform4f(const char* uniform, const glm::vec4& values);
 	void setUniform3f(const char* uniform, float red, float green, float blue);
 	void setUniform3f(const char* uniform, const glm::vec3& values);
 	void setUniform1f(const char* uniformName, float value);

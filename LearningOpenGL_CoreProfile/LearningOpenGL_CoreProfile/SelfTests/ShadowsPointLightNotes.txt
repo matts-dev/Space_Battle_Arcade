@@ -1,0 +1,125 @@
+Point Light Shadows (Omnidirectional shadow maps)
+
+Basic Concept
+    Create a depth map
+        -point lights use cubemap depthmap
+        -sample depth from depthmap to determine shadow
+
+Writing to the depth map
+    Method1 (for OpenGL without geometry shaders)
+        -render the scene 6 times, one for each face of cube
+    Method2
+        -render scene once, use geometry shader to draw 6 faces
+
+Generating the depth cubemap
+    *Generate normal texture                    glGenTextures
+    *Bind texture as a cubemap                  glBindTexture
+        *allocate each face                     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, GL_DEPTH_COMPONENT ..., nullptr)
+            -use shadowWidth/shadowHeight   
+    *configure the cubemap                      glTexParameteri(...), GL_TEXTURE_CUBE_MAP with GL_TEXTURE_MAG_FILTER, and GL_TEXTURE_WRAP_* (* = S,T,R)
+
+Configure the shadow framebuffer
+    *bind the framebuffer                       glBindFramebuffer(GL_FRAMEBUFFER, depthfbo);
+    *set the depth attachment                   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubeMapVar, 0);
+    *disable read/write                         glDrawBuffer(GL_NONE); glReadBuffer(GL_NONE);
+    *check framebuffer success
+
+Highlevel Rendering to depth map (more on this below)
+    *viewport to shadow size
+    *bind shadow framebuffer   
+    *configure shaders
+        set light transforms
+    *render scene
+
+Light space transforms
+    *perspective projection for point lights
+        -aspect is shadowWidth/shadowHeight
+        -fov is 90 because rendering to cube's face (imagine a topdown seeing a box, each face gets 90 degrees{two 45s})
+    *view matrices
+        -eachface gets a unique view matrix
+        -lookat from lights position down face's axis
+            -eye=lightPos, 
+            -target = lightPos + axis
+            -updirections need to be derived empiraclly
+        
+Depth shaders
+    *Vertex Shader
+        -write gl_Position as world space
+            -ie just model matrix
+            -this is because the geometry shader will transform it to light's view and projection space.
+    *Geometry Shader
+        -iterate over each face                                                      gl_Layer = int[0,5]; gl_Layer can represent an array, but indices each offset of 0-5 represent a face in a cubemap
+            -transform modelSpace into the face's clip space (projection * view)
+            -generate triangle_strip primitive 
+    *Fragment Shader   
+        -runs for each face automatically
+            -manualy store depth linearly from [0, 1]
+            -depth is just length(fragPos - lightPos)
+                -linearize to [0,1] range by 'depth/far_plane'
+            -write to frag depth via gl_FragDepth
+                -now sampling depth will be easy later
+
+Rending Scene With Shadows
+    *viewport to screensize
+    *clear colors
+    *use lighting shader
+    *activate texture unit                              make sure shader has been previously configured to bind this the samplerCube to this unit#) glActiveTexture(GL_TEXTURE#)
+        *bind depth map to a uniform samplerCube        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubeMap)
+    *draw the scene
+
+Shaders Using Point Shadows
+    *Vertex Shader  
+        -same shader as if we did point lights without shader
+            -doesn't require any special processing of fraglight position like in directional lighting
+    *Fragment Shader    
+        -uniform lightPos
+        -Samples cube depth map
+            *Getting cubemap sample vector
+                - cubeSampleVec = FragPosWorldspace - LightPos
+                - depthMapValue = texture(depthMap, cubeSampleVec).r        //.r is the red channel, which holds the depth
+            * DepthTest
+                -Transform depth from [0, 1] to [0, farplane]           transformed = depth * farplane
+                - InShadow = CurrentDepth > depthMapValue
+                    *removing a bias helps shadow acene: 'CurrentDepth - bias > depthMapValue'
+        -Conditionally renders diffuse and specular based on if in shadow
+
+    
+Visualizing Depth Map (helpful debugging)
+    Option1: Fragment Shader   
+        fragColor = vec4(vec3(depthMapValue/far_plane), 1.0);
+    Option2: EnviornmentMapping
+        -Render the cubemap of the depths as if it were an environment map
+            -lets you see 'what the light sees'
+        
+PCF
+    Slow Method
+        *sample a cube around the fragment, average the shadow
+            -create a cube of offsets
+                -ie 3 nested for loops
+            -allows sampling of a cube around the fragment
+            -sum Shadows
+            -divide by total samples
+
+    Optimized Method   
+        *collection of separable offsets
+            -each is a unique direction (eg (1,1,1), (1,1,0), (1, 1, -1))
+            -there are generally less samples (20) compared to for-loop method (64 with 4 samples)
+        *iterate over these offsets, and average
+        *Disk radius
+            determines size of sample radius around frag position
+                -can be set to grow/shrink with distance
+                    diskRadius = (1.0 + (viewDistance / far_plane)) / far_plane
+
+Final note on geometry shader vs rendering to 6 individual faces 
+    -geometry shader should be profiled
+    -geometry shaders are not always faster due to overhead
+
+GOTCHAS:
+    *checking framebuffer status should pass GL_FRAMEBUFFER as an argument, NOT the ID of the framebuffer.
+    *don't forget to configure the cubemap texture with:
+        -wrapping ST and R, this should be clamp to border
+        -mag/min filtering, this should be set to GL_NEAREST
+
+    *geometry shader for specifying face is gl_Layer
+    *if shadows are appearing at weird depths, check to make sure vectors are in the correct spaces (ie clip space, view space, world space)
+        -it is easy to slip up on which variables are supposed to be in what space between the vertex->geometry->fragment shader. 

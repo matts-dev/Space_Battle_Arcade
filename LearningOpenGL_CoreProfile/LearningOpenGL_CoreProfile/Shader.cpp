@@ -194,6 +194,11 @@ void Shader::setUniform4f(const char* uniform, float red, float green, float blu
 	glUniform4f(uniformLocation, red, green, blue, alpha);
 }
 
+void Shader::setUniform4f(const char* uniform, const glm::vec4& values)
+{
+	setUniform4f(uniform, values.r, values.g, values.b, values.a);
+}
+
 void Shader::setUniform3f(const char* uniform, float red, float green, float blue)
 {
 	RAII_ScopedShaderSwitcher scoped(linkedProgram);

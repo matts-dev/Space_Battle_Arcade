@@ -90,6 +90,11 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_directional_PCF.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_Directional_PCF_ExtraPractice_MoveableLight.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_DirectionShadowsStarterFile.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_basic.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_PCF_ExtraPractice.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_PCF.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_PCF_adjustingBias.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_StarterFile.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />
