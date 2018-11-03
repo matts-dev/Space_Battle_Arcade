@@ -9,7 +9,6 @@
 #include "../../../Libraries/stb_image.h"
 #include "../../GettingStarted/Camera/CameraFPS.h"
 #include "../../../InputTracker.h"
-#include <cstdint>
 
 namespace
 {
@@ -87,114 +86,6 @@ namespace
 				uniform bool bInvertNormals = false;
 				uniform bool bDisableAttenuation = false;
 
-				uniform samplerCube lightDepthMap;
-				uniform float lightFarPlaneDepth;
-
-				const int NUM_SAMPLES = 20;
-				vec3 sampleOffsetDirections[NUM_SAMPLES] = vec3[]
-				(
-				   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
-				   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
-				   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
-				   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
-				   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
-				);   
-
-				float calculateShadow() {
-		
-				//simple hard shadows
-				/*
-					vec3 toFragFromLight = fragPosition - light.position;
-
-					float lightBlockedDepth = texture(lightDepthMap, toFragFromLight).r;
-					lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-					float fragDepthFromLight = length(toFragFromLight);					
-
-					float bias = 0.05f;
-
-					float shadow = fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-				*/
-
-				//expensive soft shadows my version
-				/*
-					vec3 toFragFromLight = fragPosition - light.position;
-					float bias = 0.05f;
-					float samples = 4;
-					float sampleOffset = 0.05f;
-					float increment = sampleOffset / samples;
-
-					float startAroundZero = increment / 2.0f;
-					float sampleHalfRange = ((samples / 2.0) - 1) * increment;
-					float sampleStart = sampleHalfRange + startAroundZero;
-					
-
-					float shadow = 0;
-					for(float x = -sampleStart; x <= sampleStart; x += increment){
-						for(float y = -sampleStart; y <= sampleStart; y += increment){
-							for(float z = -sampleStart; z <= sampleStart; z += increment){
-								vec3 sampleVector = toFragFromLight + vec3(x, y, z);
-								float lightBlockedDepth = texture(lightDepthMap, sampleVector).r;
-
-								lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-								float fragDepthFromLight = length(sampleVector );													
-
-								shadow += fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-							}
-						}
-					}
-					shadow /= samples * samples * samples;
-				*/
-					
-				//expensive shadows tutorial version
-				/*
-					vec3 toFragFromLight = fragPosition - light.position;
-					float bias = 0.05f;
-					float samples = 4;
-					float sampleOffset = 0.1F;
-					float sampleInc = sampleOffset / (samples * 0.5);
-
-					float shadow = 0;
-					for(float x = -sampleOffset ; x < sampleOffset ; x += sampleInc){
-						for(float y = -sampleOffset ; y < sampleOffset ; y += sampleInc){
-							for(float z = -sampleOffset ; z < sampleOffset ; z += sampleInc){
-								vec3 sampleVector = toFragFromLight + vec3(x, y, z);
-								float lightBlockedDepth = texture(lightDepthMap, sampleVector).r;
-
-								lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-								float fragDepthFromLight = length(sampleVector );													
-
-								shadow += fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-							}
-						}
-					}
-					shadow /= samples * samples * samples;
-				*/
-				//soft shadows using separable offsetse
-					vec3 toFragFromLight = fragPosition - light.position;
-					float distance = length(toFragFromLight);
-					float bias = 0.15f; //0.05f;
-
-					//should keep this lower than the bias
-					//don't want the sample radius to reach behind the the cube (into darkness)
-					//float sampleRadius = 0.01f; 
-					float sampleRadius = min( bias / 5.0f, (1.0 + (distance / lightFarPlaneDepth)) / lightFarPlaneDepth);
-					
-
-					float shadow = 0;
-					for(int i = 0; i < NUM_SAMPLES; ++i){
-						vec3 sampleVector = toFragFromLight + sampleRadius * sampleOffsetDirections[i];
-						float lightBlockedDepth = texture(lightDepthMap, sampleVector).r;
-
-						lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-						float fragDepthFromLight = length(sampleVector );													
-
-						shadow += fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-					}
-					shadow /= NUM_SAMPLES;
-
-					return shadow;
-				}
-
 				void main(){
 					vec3 ambientLight = light.ambientIntensity * vec3(texture(material.diffuseMap, interpTextCoords));	//diffuse color is generally similar to ambient color
 
@@ -217,9 +108,7 @@ namespace
 					float attenuation = 1 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
 					attenuation = bDisableAttenuation ? 1 : attenuation;
 
-					float isLitAmount = 1.0f - calculateShadow();
-
-					vec3 lightContribution = (ambientLight + isLitAmount * (diffuseLight + specularLight)) * vec3(attenuation);
+					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * vec3(attenuation);
 					//vec3 lightContribution = vec3(attenuation);	//uncomment to visualize attenuation
 
 					fragmentColor = vec4(lightContribution, 1.0f);
@@ -247,58 +136,6 @@ namespace
 					fragmentColor = vec4(lightColor, 1.f);
 				}
 			)";
-	const char* shadowmap_vertex_shader_src = R"(
-				#version 330 core
-				layout (location = 0) in vec3 position;				
-				
-				uniform mat4 model;
-
-				void main(){
-					gl_Position = model * vec4(position, 1);
-				}
-			)";
-	const char* shadowmap_geometry_shader_src = R"(
-				#version 330 core
-				layout (triangles) in;
-				layout (triangle_strip, max_vertices=18) out;
-
-				uniform mat4 lightTransforms[6];
-
-				out vec4 fragPos;
-				
-				void main(){
-					for(int face = 0; face < 6; ++face){
-						for(int vertex = 0; vertex < 3; ++vertex)
-						{
-							//select face of cubemap to render to.
-							gl_Layer = face;
-						
-							fragPos = gl_in[vertex].gl_Position;
-							gl_Position = lightTransforms[face] * fragPos;
-							EmitVertex();
-						}
-						EndPrimitive();
-						
-					}					
-
-				}
-			)";
-	const char* shadowmap_frag_shader_src = R"(
-				#version 330 core
-				out vec4 fragmentColor;
-
-				in vec4 fragPos;
-			
-				uniform vec4 lightWorldPos;
-				uniform float farPlane;
-				
-				void main(){
-					vec4 toFrag = fragPos - lightWorldPos;
-					
-					gl_FragDepth = length(toFrag) / farPlane;
-				}
-			)";
-
 	struct Transform
 	{
 		glm::vec3 position;
@@ -353,12 +190,12 @@ namespace
 		static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
 		input.updateState(window);
 
-//--------------------------------------------------
+		//--------------------------------------------------
 		if (input.isKeyJustPressed(window, GLFW_KEY_T))
 		{
 			bDisableAttenuation = !bDisableAttenuation;
 		}
-//--------------------------------------------------
+		//--------------------------------------------------
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, true);
@@ -454,13 +291,13 @@ namespace
 			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
 			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
 			-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-			 // front face
-			 -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-			 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-			 -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-			 -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			  // front face
+			  -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+			  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			  -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+			  -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
 			// left face
 			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
 			-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
@@ -469,12 +306,12 @@ namespace
 			-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
 			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
 			 // right face
-			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-			 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-			 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+			  1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			  1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			  1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+			  1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			  1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			  1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
 			 // bottom face
 			 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
 			 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
@@ -508,10 +345,8 @@ namespace
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
 		glEnableVertexAttribArray(2);
 
-		//before unbinding any buffers, make sure VAO isn't recording state.
-		glBindVertexArray(0);
+		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
 
-		//GENERATE LAMP
 		GLuint lampVAO;
 		glGenVertexArrays(1, &lampVAO);
 		glBindVertexArray(lampVAO);
@@ -521,42 +356,8 @@ namespace
 		glEnableVertexAttribArray(0);
 
 		//textures
-		GLuint diffuseMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE0);
-		//GLuint specularMap = textureLoader("Textures/white.png", GL_TEXTURE1);
-		GLuint specularMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE1);
-
-
-		//--------------------------------------------------------------------------------------------
-		// depth map for shadows
-		GLuint shadowWidth = 1024;
-		GLuint shadowHeight = 1024;
-		GLuint shadowCubeMap;
-		glGenTextures(1, &shadowCubeMap);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, shadowCubeMap);
-		for (uint32_t offset = 0; offset < 6; ++offset)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + offset, 0, GL_DEPTH_COMPONENT, shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		
-		//framebuffer for shadowmap rendering
-		GLuint shadowFBO;
-		glGenFramebuffers(1, &shadowFBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowCubeMap, 0);
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			std::cerr << "failed to create the shadow map FBO" << std::endl;
-		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//--------------------------------------------------------------------------------------------
+		GLuint diffuseMap = textureLoader("Textures/brickwall.jpg", GL_TEXTURE0);
+		GLuint specularMap = textureLoader("Textures/brickwall.jpg", GL_TEXTURE1);
 
 		//shaders
 		Shader shader(vertex_shader_src, frag_shader_src, false);
@@ -566,8 +367,6 @@ namespace
 		shader.setUniform1i("material.specularMap", 1);
 
 		Shader lampShader(lamp_vertex_shader_src, lamp_frag_shader_src, false);
-
-		Shader shadowMapShader(shadowmap_vertex_shader_src, shadowmap_frag_shader_src, shadowmap_geometry_shader_src, false);
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -589,14 +388,9 @@ namespace
 
 		Transform cubeTransforms[] = {
 			//pos					rot        scale
-			{ { 4.0f, -3.5f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-			{ { 2.0f, 3.0f, 1.0f },{ 0, 0, 0 },{ 0.75f,0.75f,0.75f } },
-			{ { -3.0f, -1.0f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-			{ { -1.5f, 1.0f, 1.5f},{ 0, 45, 0 },{ 0.5f,0.5f,0.5f } },
+			{ { 0.0f, -0.0f, 0.0f },{ 0, 0, 0 },{ 2.0f,2.0f,0.1f } },
 			{ { -1.5f, 2.0f, -3.0f },{ 60, 0, 60 },{ 0.75f,0.75f,0.75f } }
 		};
-
-		Transform BoundingBox = { { 0.0f, 0.0f, 0.0f },{ 0, 0, 0 },{ 5.0f,5.0f,5.0f } };
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -629,48 +423,6 @@ namespace
 			glBindVertexArray(lampVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 
-			//--------------------------------------------------------------------------------------------
-			float lightFarPlaneDistance = 25.0f;
-
-			glm::mat4 lightProjectionMatrix = glm::perspective(glm::radians(90.0f), shadowWidth / (float)shadowHeight, 0.1f, lightFarPlaneDistance);
-
-			std::vector<glm::mat4> lightViewMatrices;
-			//ordering will need to match ordering of GL_TEXTURE_CUBE_MAP_POSITIVE_X
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)));	//+x
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)));	//-x
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)));	//+y
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)));	//-y
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)));	//+z
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0)));	//-z
-
-			//prepare shadow map shader's uniforms
-			shadowMapShader.use();
-			for (int face = 0; face < 6; ++face)
-			{
-				std::string uniformName = ("lightTransforms[" + std::to_string(face) + "]");
-				shadowMapShader.setUniformMatrix4fv(uniformName.c_str(), 1, GL_FALSE, glm::value_ptr(lightProjectionMatrix * lightViewMatrices[face]));
-			}
-			shadowMapShader.setUniform1f("farPlane", lightFarPlaneDistance);
-			shadowMapShader.setUniform4f("lightWorldPos", glm::vec4(lightPos, 1.0f));
-			
-			glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-			glViewport(0, 0, shadowWidth, shadowHeight);
-			glClear(GL_DEPTH_BUFFER_BIT);
-
-			//not ideal to set uniforms not present, but keeps code simple for this demonstration
-			glm::mat4 placeholder(1.0f);
-			for (size_t i = 0; i < sizeof(cubeTransforms) / sizeof(Transform); ++i)
-			{
-				//will set model matrix for cube and assigns non-existent projection/view uniforms a placeholder value.
-				RenderCube(cubeTransforms[i], shadowMapShader, vao, placeholder, placeholder);
-			}
-
-			//restore viewport for rendering
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glViewport(0, 0, width, height);
-			//--------------------------------------------------------------------------------------------
-
-
 			//draw objects
 			//tweak parameters
 			shader.use();
@@ -685,30 +437,18 @@ namespace
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);
-			shader.setUniform1i("bDisableAttenuation", bDisableAttenuation);
 			shader.setUniform3f("light.position", lightPos.x, lightPos.y, lightPos.z);
-
-			//--------------------------------------------------------------------------------------------
-			shader.setUniform1f("lightFarPlaneDepth", lightFarPlaneDistance);
-			shader.setUniform1i("lightDepthMap", 5);
-
-			glActiveTexture(GL_TEXTURE5);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, shadowCubeMap);
-			
-			//--------------------------------------------------------------------------------------------
+			shader.setUniform1i("bDisableAttenuation", bDisableAttenuation);
 
 			const glm::vec3& camPos = camera.getPosition();
 			shader.setUniform3f("cameraPosition", camPos.x, camPos.y, camPos.z);
 			shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  
+			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 			for (size_t i = 0; i < sizeof(cubeTransforms) / sizeof(Transform); ++i)
 			{
 				RenderCube(cubeTransforms[i], shader, vao, projection, view);
 			}
-			shader.setUniform1i("bInvertNormals", 1);
-			RenderCube(BoundingBox, shader, vao, projection, view);
-			shader.setUniform1i("bInvertNormals", 0);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -722,24 +462,6 @@ namespace
 		glDeleteVertexArrays(1, &lampVAO);
 	}
 }
-/*
-point light constants chart from Ogre3D engine
-
-distance	constant	linear		quadratic
-7			1.0			0.7			1.8
-13			1.0			0.35		0.44
-20			1.0			0.22		0.20
-32			1.0			0.14		0.07
-50			1.0			0.09		0.032
-65			1.0			0.07		0.017
-100			1.0			0.045		0.0075
-160			1.0			0.027		0.0028
-200			1.0			0.022		0.0019
-325			1.0			0.014		0.0007
-600			1.0			0.007		0.0002
-3250		1.0			0.0014		0.000007
-
-*/
 
 //int main()
 //{

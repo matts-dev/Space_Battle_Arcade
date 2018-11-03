@@ -22,6 +22,8 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="new_src\ImportingModels\Models\Model.h" />
     <ClInclude Include="new_src\ImportingModels\Models\LoadedMesh.h" />
+    <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h" />
+    <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h" />
     <ClInclude Include="new_src\Utilities\Lighting\ConeLight.h" />
     <ClInclude Include="new_src\Utilities\Lighting\DirectionalLight.h" />
     <ClInclude Include="InputTracker.h" />
@@ -95,6 +97,14 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_PCF.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_PCF_adjustingBias.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_StarterFile.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMappingBasic_FragShaderTransform.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMappingBasic_VertexShaderTransform.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_FixUVIssueTest.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_LoadedModel_ManualBTCalculation_FragShaderTransform.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_ModelStarterFile.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_StarterFile.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />

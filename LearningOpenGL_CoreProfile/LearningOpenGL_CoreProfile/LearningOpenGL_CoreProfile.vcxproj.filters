@@ -84,6 +84,12 @@
     <ClInclude Include="new_src\ImportingModels\Models\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -693,6 +699,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\OpenGLAdvancedLighting\3_Shadows\ShadowMapping_PointShadows_PCF_ExtraPractice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_StarterFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMappingBasic_FragShaderTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMappingBasic_VertexShaderTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_FixUVIssueTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_LoadedModel_ManualBTCalculation_FragShaderTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_ModelStarterFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -9,7 +9,7 @@
 #include "../../../Libraries/stb_image.h"
 #include "../../GettingStarted/Camera/CameraFPS.h"
 #include "../../../InputTracker.h"
-#include <cstdint>
+#include <assimp/Compiler/pstdint.h>
 
 namespace
 {
@@ -28,23 +28,42 @@ namespace
 				layout (location = 0) in vec3 position;			
 				layout (location = 1) in vec3 normal;	
 				layout (location = 2) in vec2 textureCoordinates;
+				layout (location = 3) in vec3 tangent;	
+				layout (location = 4) in vec3 bitangent;	
 				
 				uniform mat4 model;
 				uniform mat4 view;
 				uniform mat4 projection;
 
-				out vec3 fragNormal;
-				out vec3 fragPosition;
+				uniform vec3 cameraPosition;
+				uniform vec3 lightPosition;
+
 				out vec2 interpTextCoords;
+				out vec3 fragNormal_TS;
+				out vec3 fragPosition_TS;
+				out vec3 lightPos_TS; //light position transformed to tangent space
+				out vec3 cameraPosition_TS;
+				out mat3 TBN_INV; //tangent_bitangent_normal
+				
 
 				void main(){
-					gl_Position = projection * view * model * vec4(position, 1);
-					fragPosition = vec3(model * vec4(position, 1));
-
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					fragNormal = normalize(mat3(transpose(inverse(model))) * normal);
+					mat3 normalModelMatrix = mat3(transpose(inverse(model)));
+
+					fragNormal_TS = normalize(normalModelMatrix * normal);
+					vec3 T = normalize(normalModelMatrix  * tangent);
+					vec3 B = normalize(normalModelMatrix  * bitangent);
+
+					TBN_INV = transpose(mat3(T, B, fragNormal_TS));
+
+					//calculate lighting required vectors in tangent space
+					//this is less expensive than doing matrix multiplies in a fragment shader, since the vertex shader has 3 runs per triangle, while the fragment shader will have a variable large amount of runs for a single triangle
+					lightPos_TS = TBN_INV * lightPosition;
+					cameraPosition_TS = TBN_INV * cameraPosition;
+					fragPosition_TS = TBN_INV * vec3(model * vec4(position, 1));
 
 					interpTextCoords = textureCoordinates;
+					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
 	const char* frag_shader_src = R"(
@@ -54,7 +73,8 @@ namespace
 				
 				struct Material {
 					sampler2D diffuseMap;   
-					sampler2D specularMap;   //light's color impact on object
+					sampler2D specularMap;
+					sampler2D normalMap;
 					int shininess;
 				};
 				uniform Material material;			
@@ -74,11 +94,15 @@ namespace
 				};	
 				uniform Light light;
 
-				uniform vec3 cameraPosition;
-
-				in vec3 fragNormal;
-				in vec3 fragPosition;
+//--------------------------------------------------------------------------------------------
+				//uniform vec3 cameraPosition;
+				in vec3 cameraPosition_TS;
+				in vec3 fragNormal_TS;
+				in vec3 fragPosition_TS;
 				in vec2 interpTextCoords;
+				in mat3 TBN_INV ; //inverse tangent_bitangent_normal
+				in vec3 lightPos_TS; //light position transformed to tangent space
+//--------------------------------------------------------------------------------------------
 
 				/* uniforms can have initial value in GLSL 1.20 and up */
 				uniform int enableAmbient = 1;
@@ -86,126 +110,32 @@ namespace
 				uniform int enableSpecular = 1;
 				uniform bool bInvertNormals = false;
 				uniform bool bDisableAttenuation = false;
-
-				uniform samplerCube lightDepthMap;
-				uniform float lightFarPlaneDepth;
-
-				const int NUM_SAMPLES = 20;
-				vec3 sampleOffsetDirections[NUM_SAMPLES] = vec3[]
-				(
-				   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
-				   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
-				   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
-				   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
-				   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
-				);   
-
-				float calculateShadow() {
-		
-				//simple hard shadows
-				/*
-					vec3 toFragFromLight = fragPosition - light.position;
-
-					float lightBlockedDepth = texture(lightDepthMap, toFragFromLight).r;
-					lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-					float fragDepthFromLight = length(toFragFromLight);					
-
-					float bias = 0.05f;
-
-					float shadow = fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-				*/
-
-				//expensive soft shadows my version
-				/*
-					vec3 toFragFromLight = fragPosition - light.position;
-					float bias = 0.05f;
-					float samples = 4;
-					float sampleOffset = 0.05f;
-					float increment = sampleOffset / samples;
-
-					float startAroundZero = increment / 2.0f;
-					float sampleHalfRange = ((samples / 2.0) - 1) * increment;
-					float sampleStart = sampleHalfRange + startAroundZero;
-					
-
-					float shadow = 0;
-					for(float x = -sampleStart; x <= sampleStart; x += increment){
-						for(float y = -sampleStart; y <= sampleStart; y += increment){
-							for(float z = -sampleStart; z <= sampleStart; z += increment){
-								vec3 sampleVector = toFragFromLight + vec3(x, y, z);
-								float lightBlockedDepth = texture(lightDepthMap, sampleVector).r;
-
-								lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-								float fragDepthFromLight = length(sampleVector );													
-
-								shadow += fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-							}
-						}
-					}
-					shadow /= samples * samples * samples;
-				*/
-					
-				//expensive shadows tutorial version
-				/*
-					vec3 toFragFromLight = fragPosition - light.position;
-					float bias = 0.05f;
-					float samples = 4;
-					float sampleOffset = 0.1F;
-					float sampleInc = sampleOffset / (samples * 0.5);
-
-					float shadow = 0;
-					for(float x = -sampleOffset ; x < sampleOffset ; x += sampleInc){
-						for(float y = -sampleOffset ; y < sampleOffset ; y += sampleInc){
-							for(float z = -sampleOffset ; z < sampleOffset ; z += sampleInc){
-								vec3 sampleVector = toFragFromLight + vec3(x, y, z);
-								float lightBlockedDepth = texture(lightDepthMap, sampleVector).r;
-
-								lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-								float fragDepthFromLight = length(sampleVector );													
-
-								shadow += fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-							}
-						}
-					}
-					shadow /= samples * samples * samples;
-				*/
-				//soft shadows using separable offsetse
-					vec3 toFragFromLight = fragPosition - light.position;
-					float distance = length(toFragFromLight);
-					float bias = 0.15f; //0.05f;
-
-					//should keep this lower than the bias
-					//don't want the sample radius to reach behind the the cube (into darkness)
-					//float sampleRadius = 0.01f; 
-					float sampleRadius = min( bias / 5.0f, (1.0 + (distance / lightFarPlaneDepth)) / lightFarPlaneDepth);
-					
-
-					float shadow = 0;
-					for(int i = 0; i < NUM_SAMPLES; ++i){
-						vec3 sampleVector = toFragFromLight + sampleRadius * sampleOffsetDirections[i];
-						float lightBlockedDepth = texture(lightDepthMap, sampleVector).r;
-
-						lightBlockedDepth = lightBlockedDepth * lightFarPlaneDepth; //[0, 1] -> [0, farPlane]
-						float fragDepthFromLight = length(sampleVector );													
-
-						shadow += fragDepthFromLight - bias > lightBlockedDepth ? 1.0f : 0.0f;
-					}
-					shadow /= NUM_SAMPLES;
-
-					return shadow;
-				}
+				uniform bool bUseNormalMapping = true;
 
 				void main(){
+	//--------------------------------------------------------------------------------------------
 					vec3 ambientLight = light.ambientIntensity * vec3(texture(material.diffuseMap, interpTextCoords));	//diffuse color is generally similar to ambient color
+					vec3 toLight = normalize(lightPos_TS - fragPosition_TS);
 
-					vec3 toLight = normalize(light.position - fragPosition);
-					vec3 normal = normalize(fragNormal);														//interpolation of different normalize will cause loss of unit length
+					vec3 normal;					
+					if(bUseNormalMapping)
+					{
+						normal = texture(material.normalMap, interpTextCoords).rgb;
+						normal = normalize(2.0f * normal - 1.0f);
+					} 
+					else 
+					{
+						normal = normalize(fragNormal_TS);			
+					}
+	
+	//--------------------------------------------------------------------------------------------
+
 					normal = bInvertNormals ? -normal : normal;
 
 					vec3 diffuseLight = max(dot(toLight, normal), 0) * light.diffuseIntensity * vec3(texture(material.diffuseMap, interpTextCoords));
 
 					vec3 toReflection = reflect(-toLight, normal);												//reflect expects vector from light position (tutorial didn't normalize this vector)
-					vec3 toView = normalize(cameraPosition - fragPosition);
+					vec3 toView = normalize(cameraPosition_TS - fragPosition_TS);
 					float specularAmount = pow(max(dot(toView, toReflection), 0), material.shininess);
 					vec3 specularLight = light.specularIntensity* specularAmount * vec3(texture(material.specularMap, interpTextCoords));
 					
@@ -213,18 +143,16 @@ namespace
 					diffuseLight *= enableDiffuse;
 					specularLight *= enableSpecular;
 
-					float distance = length(light.position - fragPosition);
+					float distance = length(lightPos_TS - fragPosition_TS);
 					float attenuation = 1 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
 					attenuation = bDisableAttenuation ? 1 : attenuation;
 
-					float isLitAmount = 1.0f - calculateShadow();
-
-					vec3 lightContribution = (ambientLight + isLitAmount * (diffuseLight + specularLight)) * vec3(attenuation);
-					//vec3 lightContribution = vec3(attenuation);	//uncomment to visualize attenuation
+					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * vec3(attenuation);
 
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}
 			)";
+
 	const char* lamp_vertex_shader_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
@@ -247,58 +175,6 @@ namespace
 					fragmentColor = vec4(lightColor, 1.f);
 				}
 			)";
-	const char* shadowmap_vertex_shader_src = R"(
-				#version 330 core
-				layout (location = 0) in vec3 position;				
-				
-				uniform mat4 model;
-
-				void main(){
-					gl_Position = model * vec4(position, 1);
-				}
-			)";
-	const char* shadowmap_geometry_shader_src = R"(
-				#version 330 core
-				layout (triangles) in;
-				layout (triangle_strip, max_vertices=18) out;
-
-				uniform mat4 lightTransforms[6];
-
-				out vec4 fragPos;
-				
-				void main(){
-					for(int face = 0; face < 6; ++face){
-						for(int vertex = 0; vertex < 3; ++vertex)
-						{
-							//select face of cubemap to render to.
-							gl_Layer = face;
-						
-							fragPos = gl_in[vertex].gl_Position;
-							gl_Position = lightTransforms[face] * fragPos;
-							EmitVertex();
-						}
-						EndPrimitive();
-						
-					}					
-
-				}
-			)";
-	const char* shadowmap_frag_shader_src = R"(
-				#version 330 core
-				out vec4 fragmentColor;
-
-				in vec4 fragPos;
-			
-				uniform vec4 lightWorldPos;
-				uniform float farPlane;
-				
-				void main(){
-					vec4 toFrag = fragPos - lightWorldPos;
-					
-					gl_FragDepth = length(toFrag) / farPlane;
-				}
-			)";
-
 	struct Transform
 	{
 		glm::vec3 position;
@@ -335,6 +211,7 @@ namespace
 	float floatValIncrement = 0.25f;
 	//--------------------------------
 	bool bDisableAttenuation = true;
+	bool bUseNormalMapping = true;
 	//----------------------------------
 
 	void processInput(GLFWwindow* window)
@@ -343,7 +220,7 @@ namespace
 			std::cout << "Press F to switch to depth framebuffer" << std::endl
 				<< "Press R to toggle light rotation" << std::endl
 				<< "Press T to enable light falloff attenuation" << std::endl
-				<< "" << std::endl
+				<< "Press N to toggle normal mapping mode" << std::endl
 				<< "" << std::endl
 				<< "" << std::endl
 				<< std::endl;
@@ -353,12 +230,16 @@ namespace
 		static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
 		input.updateState(window);
 
-//--------------------------------------------------
+		//--------------------------------------------------
 		if (input.isKeyJustPressed(window, GLFW_KEY_T))
 		{
 			bDisableAttenuation = !bDisableAttenuation;
 		}
-//--------------------------------------------------
+		if (input.isKeyJustPressed(window, GLFW_KEY_N))
+		{
+			bUseNormalMapping = !bUseNormalMapping;
+		}
+		//--------------------------------------------------
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, true);
@@ -454,13 +335,13 @@ namespace
 			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
 			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
 			-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-			 // front face
-			 -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-			 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-			 -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-			 -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			  // front face
+			  -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+			  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			  -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+			  -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
 			// left face
 			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
 			-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
@@ -469,12 +350,12 @@ namespace
 			-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
 			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
 			 // right face
-			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-			 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-			 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+			  1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			  1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			  1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+			  1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			  1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			  1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
 			 // bottom face
 			 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
 			 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
@@ -491,6 +372,118 @@ namespace
 			 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
 		};
 
+		//--------------------------------------------------------------------------------------------
+		constexpr int numFloatsInVertex = 8;
+		constexpr int numVertices = sizeof(vertices) / (numFloatsInVertex * sizeof(float));
+
+		float tangents[numVertices * 3];
+		float bitangents[sizeof(tangents)];
+
+		for (int vertex = 0; vertex < numVertices; vertex += 3)
+		{
+			glm::vec3 v0 = glm::vec3(vertices[vertex * 8 + 0], vertices[vertex * 8 + 1], vertices[vertex * 8 + 2]);
+			glm::vec3 v1 = glm::vec3(vertices[(vertex + 1) * 8 + 0], vertices[(vertex + 1) * 8 + 1], vertices[(vertex + 1) * 8 + 2]);
+			glm::vec3 v2 = glm::vec3(vertices[(vertex + 2) * 8 + 0], vertices[(vertex + 2) * 8 + 1], vertices[(vertex + 2) * 8 + 2]);
+
+			const uint32_t st_offset = 6;
+			glm::vec2 st0 = glm::vec2(vertices[vertex * 8 + st_offset + 0], vertices[vertex * 8 + st_offset + 1]);
+			glm::vec2 st1 = glm::vec2(vertices[(vertex + 1)* 8 + st_offset + 0], vertices[(vertex + 1) * 8 + st_offset + 1]);
+			glm::vec2 st2 = glm::vec2(vertices[(vertex + 2) * 8 + st_offset + 0], vertices[(vertex + 2) * 8 + st_offset + 1]);
+
+			glm::vec3 edge1_xyz = v1 - v0;
+			glm::vec3 edge2_xyz = v2 - v0;
+
+			glm::vec2 edge1_st = st1 - st0;
+			glm::vec2 edge2_st = st2 - st0;
+
+			//------
+			glm::vec3 edge1 = v1 - v0;
+			glm::vec3 edge2 = v2 - v0;
+			glm::vec2 deltaUV1 = st1 - st0;
+			glm::vec2 deltaUV2 = st2 - st0;
+
+			GLfloat f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+			
+			glm::vec3 tangent1, bitangent1;
+			tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+			tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+			tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+			tangent1 = glm::normalize(tangent1);
+
+			bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+			bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+			bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+			bitangent1 = glm::normalize(bitangent1);
+			//------
+
+
+			//calculate bitangent and tangenet
+			// notation: E = edge,  dU = delta U texture coordinate, dV = delta V texture coordinate, T = tangent, B = bitangent
+			// note: in terms of texture st, U is s, V is t.
+			//
+			//E1 = dU1 * T + dV1 * B
+			//E2 = dU2 * T + dV2 * B
+			//
+			//expressed in matrices
+			//[ E1x E1y E1z ]  = [ dU1 dV1 ] * [ Tx Ty Tz ]
+			//[ E2x E2y E2z ]  = [ dU2 dV2 ] * [ Bx By Bz ]
+			//
+			//*********** solved for B and T ****************
+			//[ dU1 dV1 ]-1 * [ E1x E1y E1z ]  = [ Tx Ty Tz ]
+			//[ dU2 dV2 ]   * [ E2x E2y E2z ]  = [ Bx By Bz ]
+			//************************************************
+			// express inverse calculation
+			// (1 / (dU1*dV2 - dU2*dV1)) * [  dV2  -dV1 ] * [ E1x E1y E1z ]  = [ Tx Ty Tz ]
+			//                             [ -dU2   dU1 ] *	[ E2x E2y E2z ]  = [ Bx By Bz ]
+			float determinant = 1 / ( (edge1_st.x * edge2_st.y) - (edge2_st.x * edge1_st.y) );
+			glm::mat2 adjugate(1.0f);
+			//more efficient way to calculate this is to defer multiplication of determinant until later (ant not use matrix at all actually), but for clarity doing it this way
+			adjugate[0][0] = determinant * edge2_st.y;  //column0
+			adjugate[0][1] = determinant * -edge2_st.x; //column0
+			adjugate[1][0] = determinant * -edge1_st.y; //column1
+			adjugate[1][1] = determinant * edge1_st.x;  //column1
+
+			//debug verify that glm is column major 
+			//glm::vec2 col1 = adjugate[0] / determinant;
+			//glm::vec2 col2 = adjugate[1] / determinant;
+
+			glm::mat2& inverseMatrix = adjugate;
+
+			glm::vec3 tangent;
+			float firstT = inverseMatrix[0][0];
+			float secondT = inverseMatrix[1][0];
+			tangent.x = inverseMatrix[0].x * edge1_xyz.x + inverseMatrix[1].x * edge2_xyz.x;
+			tangent.y = inverseMatrix[0].x * edge1_xyz.y + inverseMatrix[1].x * edge2_xyz.y;
+			tangent.z = inverseMatrix[0].x * edge1_xyz.z + inverseMatrix[1].x * edge2_xyz.z;
+			tangent = glm::normalize(tangent);
+
+			glm::vec3 bitangent;
+			float firstB = inverseMatrix[0][1];
+			float secondB = inverseMatrix[1][1];
+			bitangent.x = inverseMatrix[0].y * edge1_xyz.x + inverseMatrix[1].y * edge2_xyz.x;
+			bitangent.y = inverseMatrix[0].y * edge1_xyz.y + inverseMatrix[1].y * edge2_xyz.y;
+			bitangent.z = inverseMatrix[0].y * edge1_xyz.z + inverseMatrix[1].y * edge2_xyz.z;
+			bitangent = glm::normalize(bitangent);
+
+			//----
+			bitangent = bitangent1;
+			tangent = tangent1;
+			//----
+
+			//store calculate mesh tangents/bitangents
+			for (int adjacent = 0; adjacent < 3; ++adjacent)
+			{
+				tangents[vertex * 3 + adjacent*3 + 0] = tangent.x;
+				tangents[vertex * 3 + adjacent*3 + 1] = tangent.y;
+				tangents[vertex * 3 + adjacent*3 + 2] = tangent.z;
+
+				bitangents[vertex * 3 + adjacent * 3 + 0] = bitangent.x;
+				bitangents[vertex * 3 + adjacent * 3 + 1] = bitangent.y;
+				bitangents[vertex * 3 + adjacent * 3 + 2] = bitangent.z;
+			}
+		}
+
+		//--------------------------------------------------------------------------------------------
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -508,10 +501,25 @@ namespace
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
 		glEnableVertexAttribArray(2);
 
-		//before unbinding any buffers, make sure VAO isn't recording state.
-		glBindVertexArray(0);
+		//--------------------------------------------------------------------------------------------
+		GLuint tangentsVBO;
+		glGenBuffers(1, &tangentsVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, tangentsVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(tangents), tangents, GL_STATIC_DRAW);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
+		glEnableVertexAttribArray(3);
 
-		//GENERATE LAMP
+		GLuint bitangentsVBO;
+		glGenBuffers(1, &bitangentsVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, bitangentsVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(bitangents), bitangents, GL_STATIC_DRAW);
+		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
+		glEnableVertexAttribArray(4);
+		
+		//--------------------------------------------------------------------------------------------
+
+		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
+
 		GLuint lampVAO;
 		glGenVertexArrays(1, &lampVAO);
 		glBindVertexArray(lampVAO);
@@ -521,41 +529,11 @@ namespace
 		glEnableVertexAttribArray(0);
 
 		//textures
-		GLuint diffuseMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE0);
-		//GLuint specularMap = textureLoader("Textures/white.png", GL_TEXTURE1);
-		GLuint specularMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE1);
-
-
+		GLuint diffuseMap = textureLoader("Textures/brickwall.jpg", GL_TEXTURE0);
+		GLuint specularMap = textureLoader("Textures/brickwall.jpg", GL_TEXTURE1);
 		//--------------------------------------------------------------------------------------------
-		// depth map for shadows
-		GLuint shadowWidth = 1024;
-		GLuint shadowHeight = 1024;
-		GLuint shadowCubeMap;
-		glGenTextures(1, &shadowCubeMap);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, shadowCubeMap);
-		for (uint32_t offset = 0; offset < 6; ++offset)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + offset, 0, GL_DEPTH_COMPONENT, shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		}
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		
-		//framebuffer for shadowmap rendering
-		GLuint shadowFBO;
-		glGenFramebuffers(1, &shadowFBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowCubeMap, 0);
-		glDrawBuffer(GL_NONE);
-		glReadBuffer(GL_NONE);
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			std::cerr << "failed to create the shadow map FBO" << std::endl;
-		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		stbi_set_flip_vertically_on_load(false);
+		GLuint normalMap = textureLoader("Textures/brickwall_normal.jpg", GL_TEXTURE2);
 		//--------------------------------------------------------------------------------------------
 
 		//shaders
@@ -564,10 +542,11 @@ namespace
 		shader.use();
 		shader.setUniform1i("material.diffuseMap", 0);
 		shader.setUniform1i("material.specularMap", 1);
+		//--------------------------------------------------------------------------------------------
+		shader.setUniform1i("material.normalMap", 2);
+		//--------------------------------------------------------------------------------------------
 
 		Shader lampShader(lamp_vertex_shader_src, lamp_frag_shader_src, false);
-
-		Shader shadowMapShader(shadowmap_vertex_shader_src, shadowmap_frag_shader_src, shadowmap_geometry_shader_src, false);
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -575,7 +554,7 @@ namespace
 		glm::vec3 objectcolor(1.0f, 0.5f, 0.31f);
 
 		glm::vec3 objectPos;
-		glm::vec3 lightStart(1.2f, 0.0f, 2.0f);
+		glm::vec3 lightStart(0.0f, 0.0f, 2.0f);
 		glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 		glm::vec3 cubePositions[] = {
@@ -589,14 +568,10 @@ namespace
 
 		Transform cubeTransforms[] = {
 			//pos					rot        scale
-			{ { 4.0f, -3.5f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-			{ { 2.0f, 3.0f, 1.0f },{ 0, 0, 0 },{ 0.75f,0.75f,0.75f } },
-			{ { -3.0f, -1.0f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-			{ { -1.5f, 1.0f, 1.5f},{ 0, 45, 0 },{ 0.5f,0.5f,0.5f } },
+			//{ { 0.0f, -0.0f, 0.0f },{ 0, 0, 0 },{ 2.0f,2.0f,0.1f } },
+			{ { 0.0f, -0.0f, 0.0f },{ 0, 0, 0 },{ 1.0f,1.0f,1.0f } },
 			{ { -1.5f, 2.0f, -3.0f },{ 60, 0, 60 },{ 0.75f,0.75f,0.75f } }
 		};
-
-		Transform BoundingBox = { { 0.0f, 0.0f, 0.0f },{ 0, 0, 0 },{ 5.0f,5.0f,5.0f } };
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -629,48 +604,6 @@ namespace
 			glBindVertexArray(lampVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 
-			//--------------------------------------------------------------------------------------------
-			float lightFarPlaneDistance = 25.0f;
-
-			glm::mat4 lightProjectionMatrix = glm::perspective(glm::radians(90.0f), shadowWidth / (float)shadowHeight, 0.1f, lightFarPlaneDistance);
-
-			std::vector<glm::mat4> lightViewMatrices;
-			//ordering will need to match ordering of GL_TEXTURE_CUBE_MAP_POSITIVE_X
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)));	//+x
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)));	//-x
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)));	//+y
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)));	//-y
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)));	//+z
-			lightViewMatrices.push_back(glm::lookAt(lightPos, lightPos + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0)));	//-z
-
-			//prepare shadow map shader's uniforms
-			shadowMapShader.use();
-			for (int face = 0; face < 6; ++face)
-			{
-				std::string uniformName = ("lightTransforms[" + std::to_string(face) + "]");
-				shadowMapShader.setUniformMatrix4fv(uniformName.c_str(), 1, GL_FALSE, glm::value_ptr(lightProjectionMatrix * lightViewMatrices[face]));
-			}
-			shadowMapShader.setUniform1f("farPlane", lightFarPlaneDistance);
-			shadowMapShader.setUniform4f("lightWorldPos", glm::vec4(lightPos, 1.0f));
-			
-			glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-			glViewport(0, 0, shadowWidth, shadowHeight);
-			glClear(GL_DEPTH_BUFFER_BIT);
-
-			//not ideal to set uniforms not present, but keeps code simple for this demonstration
-			glm::mat4 placeholder(1.0f);
-			for (size_t i = 0; i < sizeof(cubeTransforms) / sizeof(Transform); ++i)
-			{
-				//will set model matrix for cube and assigns non-existent projection/view uniforms a placeholder value.
-				RenderCube(cubeTransforms[i], shadowMapShader, vao, placeholder, placeholder);
-			}
-
-			//restore viewport for rendering
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glViewport(0, 0, width, height);
-			//--------------------------------------------------------------------------------------------
-
-
 			//draw objects
 			//tweak parameters
 			shader.use();
@@ -685,30 +618,23 @@ namespace
 			shader.setUniform1i("enableAmbient", toggleAmbient);
 			shader.setUniform1i("enableDiffuse", toggleDiffuse);
 			shader.setUniform1i("enableSpecular", toggleSpecular);
-			shader.setUniform1i("bDisableAttenuation", bDisableAttenuation);
 			shader.setUniform3f("light.position", lightPos.x, lightPos.y, lightPos.z);
-
 			//--------------------------------------------------------------------------------------------
-			shader.setUniform1f("lightFarPlaneDepth", lightFarPlaneDistance);
-			shader.setUniform1i("lightDepthMap", 5);
-
-			glActiveTexture(GL_TEXTURE5);
-			glBindTexture(GL_TEXTURE_CUBE_MAP, shadowCubeMap);
-			
+			//send copy of light position to vert shader, rather than duplicating light struct in vert shader
+			shader.setUniform3f("lightPosition", lightPos);
 			//--------------------------------------------------------------------------------------------
+			shader.setUniform1i("bDisableAttenuation", bDisableAttenuation);
+			shader.setUniform1i("bUseNormalMapping", bUseNormalMapping);
 
 			const glm::vec3& camPos = camera.getPosition();
 			shader.setUniform3f("cameraPosition", camPos.x, camPos.y, camPos.z);
 			shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  
+			shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 			for (size_t i = 0; i < sizeof(cubeTransforms) / sizeof(Transform); ++i)
 			{
 				RenderCube(cubeTransforms[i], shader, vao, projection, view);
 			}
-			shader.setUniform1i("bInvertNormals", 1);
-			RenderCube(BoundingBox, shader, vao, projection, view);
-			shader.setUniform1i("bInvertNormals", 0);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -718,28 +644,12 @@ namespace
 		glfwTerminate();
 		glDeleteVertexArrays(1, &vao);
 		glDeleteBuffers(1, &vbo);
+		glDeleteBuffers(1, &tangentsVBO);
+		glDeleteBuffers(1, &bitangentsVBO);
 
 		glDeleteVertexArrays(1, &lampVAO);
 	}
 }
-/*
-point light constants chart from Ogre3D engine
-
-distance	constant	linear		quadratic
-7			1.0			0.7			1.8
-13			1.0			0.35		0.44
-20			1.0			0.22		0.20
-32			1.0			0.14		0.07
-50			1.0			0.09		0.032
-65			1.0			0.07		0.017
-100			1.0			0.045		0.0075
-160			1.0			0.027		0.0028
-200			1.0			0.022		0.0019
-325			1.0			0.014		0.0007
-600			1.0			0.007		0.0002
-3250		1.0			0.0014		0.000007
-
-*/
 
 //int main()
 //{
