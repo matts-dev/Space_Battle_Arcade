@@ -105,6 +105,10 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_LoadedModel_ManualBTCalculation_FragShaderTransform.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_ModelStarterFile.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_StarterFile.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_Simple_BEST.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_StarterFile.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_Steep.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_Steep_Interpolated.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />
