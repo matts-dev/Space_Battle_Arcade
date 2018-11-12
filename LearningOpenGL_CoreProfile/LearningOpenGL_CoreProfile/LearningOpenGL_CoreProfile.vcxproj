@@ -109,6 +109,11 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_StarterFile.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_Steep.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_Steep_Interpolated.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_Simple_Exposure.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_Simple_reinhard.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v1.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v2.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StartFile_v2_renderingFromCapturedTexture.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />

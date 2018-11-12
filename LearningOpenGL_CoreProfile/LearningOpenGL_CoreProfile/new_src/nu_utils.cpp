@@ -56,7 +56,7 @@ GLFWwindow* init_window(int width, int height)
 	return window;
 }
 
-GLuint textureLoader(const char* relative_filepath, int texture_unit /*= -1*/)
+GLuint textureLoader(const char* relative_filepath, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
 {
 	int img_width, img_height, img_nrChannels;
 	unsigned char* textureData = stbi_load(relative_filepath, &img_width, &img_height, &img_nrChannels, 0);
@@ -76,17 +76,24 @@ GLuint textureLoader(const char* relative_filepath, int texture_unit /*= -1*/)
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	int mode = -1;
+	int dataFormat = -1;
 	if (img_nrChannels == 3)
-		mode = GL_RGB;
+	{
+		mode = useGammaCorrection ? GL_SRGB: GL_RGB;
+		dataFormat = GL_RGB;
+	}
 	else if (img_nrChannels == 4)
-		mode = GL_RGBA;
+	{
+		mode = useGammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
+		dataFormat = GL_RGBA;
+	}
 	else
 	{
 		std::cerr << "unsupported image format for texture at " << relative_filepath << " there are " << img_nrChannels << "channels" << std::endl;
 		exit(-1);
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, mode, img_width, img_height, 0, mode, GL_UNSIGNED_BYTE, textureData);
+	glTexImage2D(GL_TEXTURE_2D, 0, mode, img_width, img_height, 0, dataFormat, GL_UNSIGNED_BYTE, textureData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT); //causes issue with materials on models
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT); //causes issue with materials on models

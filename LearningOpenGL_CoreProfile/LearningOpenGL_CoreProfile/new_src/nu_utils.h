@@ -12,4 +12,4 @@ void verifyShaderLink(GLuint shaderProgram);
 
 GLFWwindow* init_window(int width, int height);
 
-GLuint textureLoader(const char* relative_filepath, int texture_unit = -1);
+GLuint textureLoader(const char* relative_filepath, int texture_unit = -1, bool useGammaCorrection = false);

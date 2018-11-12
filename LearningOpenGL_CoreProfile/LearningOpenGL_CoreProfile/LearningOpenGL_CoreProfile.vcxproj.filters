@@ -737,6 +737,21 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_Steep.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StartFile_v2_renderingFromCapturedTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_Simple_reinhard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_Simple_Exposure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
