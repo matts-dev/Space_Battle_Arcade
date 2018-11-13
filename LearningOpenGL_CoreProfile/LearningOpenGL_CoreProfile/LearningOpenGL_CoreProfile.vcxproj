@@ -114,6 +114,9 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v1.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v2.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StartFile_v2_renderingFromCapturedTexture.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_GaussianBlur.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_MultipleRenderTargets.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_StarterFile.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />

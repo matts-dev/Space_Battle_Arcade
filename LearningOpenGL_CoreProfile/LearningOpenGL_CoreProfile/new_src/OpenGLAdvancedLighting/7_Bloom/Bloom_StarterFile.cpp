@@ -306,6 +306,26 @@ namespace
 		glm::vec3 rotation;
 		glm::vec3 scale;
 	};
+
+	//--------------------------------------------------------------------------------------------
+	class ColoredPointLight : public PointLight
+	{
+	public: //accessors
+		ColoredPointLight(
+			const glm::vec3& ambientIntensity,
+			const glm::vec3& diffuseIntensity,
+			const glm::vec3& specularIntensity,
+			const float attenuationConstant,
+			const float attenuationLinear,
+			const float attenuationQuadratic,
+			const glm::vec3& position,
+			std::string uniformName, bool InArray = false, unsigned int arrayIndex = 0) :
+			PointLight(ambientIntensity, diffuseIntensity, specularIntensity, attenuationConstant, attenuationLinear, attenuationQuadratic, position, uniformName, InArray, arrayIndex)
+		{
+		}
+		const glm::vec3& getDiffuseColor(){	return diffuseIntensity; }
+	};
+	//--------------------------------------------------------------------------------------------
 	void RenderCube(Transform& transform, Shader& shader, GLuint vao, glm::mat4& projection, glm::mat4& view)
 	{
 		glm::mat4 model = glm::mat4(1.f); //set model to identity matrix
@@ -577,12 +597,12 @@ namespace
 		};
 
 		Transform cubeTransforms[] = {
-			//pos					rot        scale
-			{ { 4.0f, -3.5f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-		{ { 2.0f, 3.0f, 1.0f },{ 0, 0, 0 },{ 0.75f,0.75f,0.75f } },
-		{ { -3.0f, -1.0f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-		{ { -1.5f, 1.0f, 1.5f },{ 0, 45, 0 },{ 0.5f,0.5f,0.5f } },
-		{ { -1.5f, 2.0f, -3.0f },{ 60, 0, 60 },{ 0.75f,0.75f,0.75f } }
+			//pos						rot				scale
+			{ { -2.0f, 0.0f, -8.0f },	{ 0, 0, 45 },	{ 2.0f,		2.0f,	2.0f } },
+			{ { 3.5f, 2.0f, -10.0f },	{ 0, 0, 0 },	{ 5.0f,		5.0f,	2.0f } },
+			{ { -2.0f, -3.0f, -2.0f },	{ 25, 55, 0 },	{ 2.0f,		2.0f,	2.0f } },
+			{ { 1.5f, -2.0f, -5.5f },	{ 0, 45, 0 },	{ 2.0f,		2.0f,	2.0f }},
+			{ { -1.5f, 2.0f, -3.0f },	{ 60, 0, 60 },	{ 2.0f,		2.0f,	2.0f }}
 		};
 
 		Transform BoundingBox = { { 0.0f, 0.0f, -16.0f },{ 0, 0, 0 },{ 8.0f, 8.0f, 50.0f } };
@@ -617,10 +637,12 @@ namespace
 		float quadratic;
 		};
 		*/
+		//BLOOM TUTORIAL: Colors are purposely greater than 1 to exaggerate effect.
+		const float brightMultiply = 1;
 		glm::vec3 pntAmbient(0.05f, 0.05f, 0.05f);
 		glm::vec3 pntDiffuse(0.8f, 0.8f, 0.8f);
 		glm::vec3 pntSpecular(1.f, 1.f, 1.f);
-		PointLight pointLights[] = {
+		ColoredPointLight pointLights[] = {
 			{
 				pntAmbient,
 				pntDiffuse * glm::vec3(12.5),
@@ -633,40 +655,40 @@ namespace
 			},
 			{
 				pntAmbient,
-				pntDiffuse,
+				glm::vec3(1 * brightMultiply, 0, 0),
 				pntSpecular,
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(2.3f, -2.3f, -34.0f),
+				glm::vec3(2.3f, -2.3f, -4.0f),
 				"pointLights",true, 1
 			},
 			{
 				pntAmbient,
-				pntDiffuse,
+				glm::vec3(0, 1 * brightMultiply, 0),
 				pntSpecular,
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(-2.0f, 2.0f, -35.0f),
+				glm::vec3(-2.0f, -2.0f, -1.0f),
 				"pointLights",true, 2
 			},
 			{
 				pntAmbient,
-				pntDiffuse,
+				glm::vec3(0, 0, 1 * brightMultiply),
 				pntSpecular,
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(0.f, 0.f, -35.f),
+				glm::vec3(-1.0f, 0.8f, -5.f),
 				"pointLights",true, 3
 			}
 		};
 
-		PointLight MovingLight =
+		ColoredPointLight MovingLight =
 		{
 			pntAmbient,
-			pntDiffuse,
+			glm::vec3(0.3f * brightMultiply, 0, 1 * brightMultiply),
 			pntSpecular,
 			plghtConstant,
 			0.015f, //linear
@@ -735,11 +757,11 @@ namespace
 		float quadVertices[] = {
 			//x,y,z         s,t
 			-1, -1, 0,      0, 0,
-			1, -1, 0,      1, 0,
-			1,  1, 0,      1, 1,
+			1, -1, 0,       1, 0,
+			1,  1, 0,       1, 1,
 
 			-1, -1, 0,      0, 0,
-			1,  1, 0,      1, 1,
+			1,  1, 0,       1, 1,
 			-1,  1, 0,      0, 1
 		};
 
@@ -792,11 +814,12 @@ namespace
 			lampShader.use();
 			lampShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			lampShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			for (size_t i = 0; i < sizeof(pointLights) / sizeof(PointLight); ++i)
+			for (size_t i = 0; i < sizeof(pointLights) / sizeof(ColoredPointLight); ++i)
 			{
 				glm::mat4 model;
 				model = glm::translate(model, pointLights[i].getPosition());
-				model = glm::scale(model, glm::vec3(0.2f));
+				model = glm::scale(model, glm::vec3(0.5f));
+				glm::vec3 lightcolor = pointLights[i].getDiffuseColor();
 
 				lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				lampShader.setUniform3f("lightColor", lightcolor.x, lightcolor.y, lightcolor.z);

@@ -54,10 +54,17 @@ namespace
 					interpTextCoords = textureCoordinates;
 				}
 			)";
+
 	const char* frag_shader_src = R"(
 				#version 330 core
 
-				out vec4 fragmentColor;
+	//--------------------------------------------------------------------------------------------
+				//layout specifier in fragment shaders designates which color attachment to render to
+				//ie layout (location = 1) means it will write that value to GL_COLOR_ATTACHMENT1
+				layout (location = 0) out vec4 fragmentColor;
+				layout (location = 1) out vec4 brightColorBuffer;
+	
+	//--------------------------------------------------------------------------------------------
 				
 				struct Material {
 					sampler2D diffuseMap;   
@@ -142,6 +149,16 @@ namespace
 					lightContribution += bEnableConeLight * CalculateConeLighting(coneLight, normal, toView);
 
 					fragmentColor = vec4(lightContribution, 1.0f);
+
+					vec3 grayScaleThreshold = vec3(0.2126, 0.7152, 0.0722);
+					float thresholdCheck = dot(grayScaleThreshold, vec3(fragmentColor));
+						
+					float brightnessThreshold = 1.0f;
+					if(thresholdCheck > brightnessThreshold){
+						brightColorBuffer = vec4(fragmentColor.rgb, 1);
+					} else {
+						brightColorBuffer = vec4(0,0,0, 1);
+					}
 				}
 
 				vec3 CalculateDirectionalLighting(DirectionalLight light, vec3 normal, vec3 toView)
@@ -243,6 +260,52 @@ namespace
 				}
 			)";
 
+	const char* gausblur_vertex_shader_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				layout (location = 1) in vec2 texCoord;				
+				
+				out vec2 interpTexCoord;
+
+				void main(){
+					gl_Position = vec4(position, 1);
+					interpTexCoord = texCoord;
+				}
+			)";
+	const char* gausblur_frag_shader_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+
+				in vec2 interpTexCoord;
+
+				uniform sampler2D image;
+				uniform bool horrizontalBlur = false;
+				uniform float weights[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+				
+				void main(){
+					vec2 texelSize = 1.0f / textureSize(image, 0);
+					vec3 color = texture(image, interpTexCoord).rgb;
+					color *= weights[0];
+
+					if(horrizontalBlur){
+						//guessing it is faster for shaders to have 1 branch, rather than 5
+						//hoping glsl loop unrolls? Probably not since real time compilation
+						//**** note these loops start 1 -- because we've already used weight 0 for center ****`
+						for(int texel_idx = 1; texel_idx < 5; ++texel_idx){
+							//calculate mirrored texels at same time
+							color += texture(image, interpTexCoord + vec2(texelSize.x * texel_idx, 0.0f)).rgb * weights[texel_idx];	
+							color += texture(image, interpTexCoord + vec2(-texelSize.x * texel_idx, 0.0f)).rgb * weights[texel_idx];	
+						}
+					} else {
+						for(int texel_idx = 1; texel_idx < 5; ++texel_idx){
+							color += texture(image, interpTexCoord + vec2(0.0f, texelSize.y * texel_idx)).rgb * weights[texel_idx];	
+							color += texture(image, interpTexCoord + vec2(0.0f, -texelSize.y * texel_idx)).rgb * weights[texel_idx];								
+						}					
+					}
+
+					fragmentColor = vec4(color, 1.0f);
+				}
+			)";
 	const char* render_quad_shader_vert_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
@@ -261,15 +324,25 @@ namespace
 
 				in vec2 interpTextureCoords;
 				uniform sampler2D renderTexture;
+				uniform sampler2D gaussianBlur;
 
 				uniform bool bEnableHDR = true;		
+				uniform bool bEnableBloom = true;
 				uniform float exposure = 1.0f;
 				
 				void main(){
 					if(bEnableHDR){
 						vec3 hdrColor = texture(renderTexture, interpTextureCoords).rgb;
+						vec3 blurColor = texture(gaussianBlur, interpTextureCoords).rgb;
 
-						//exposure tone mapping
+						// BLOOM blending of Gblur and scene image
+						// it is important that tone mapping occurs after the blending.
+						if(bEnableBloom){
+							hdrColor += blurColor;
+						}
+
+
+						// HDR exposure tone mapping
 						// exp(value) = e^value
 						// visualize with: e^(-x); where x will be [0, positive_value]
 						//		(hint: larger x values will make the result value smaller)
@@ -296,16 +369,38 @@ namespace
 						fragmentColor = vec4(toneMapped, 1.0f);
 
 					} else {
+						//currently did not implement bloom without HDR support
 						fragmentColor = texture(renderTexture, interpTextureCoords);
 					}
 				}
 			)";
+
 	struct Transform
 	{
 		glm::vec3 position;
 		glm::vec3 rotation;
 		glm::vec3 scale;
 	};
+
+	//--------------------------------------------------------------------------------------------
+	class ColoredPointLight : public PointLight
+	{
+	public: //accessors
+		ColoredPointLight(
+			const glm::vec3& ambientIntensity,
+			const glm::vec3& diffuseIntensity,
+			const glm::vec3& specularIntensity,
+			const float attenuationConstant,
+			const float attenuationLinear,
+			const float attenuationQuadratic,
+			const glm::vec3& position,
+			std::string uniformName, bool InArray = false, unsigned int arrayIndex = 0) :
+			PointLight(ambientIntensity, diffuseIntensity, specularIntensity, attenuationConstant, attenuationLinear, attenuationQuadratic, position, uniformName, InArray, arrayIndex)
+		{
+		}
+		const glm::vec3& getDiffuseColor() { return diffuseIntensity; }
+	};
+	//--------------------------------------------------------------------------------------------
 	void RenderCube(Transform& transform, Shader& shader, GLuint vao, glm::mat4& projection, glm::mat4& view)
 	{
 		glm::mat4 model = glm::mat4(1.f); //set model to identity matrix
@@ -337,6 +432,7 @@ namespace
 	bool bDisableAttenuation = false;
 	bool bEnableConeLight = false;
 	bool bEnableHDR = true;
+	bool bEnableBloom = true;
 	float exposure = 1.0f;
 	float exposureIncrement = 0.5f;
 	//----------------------------------
@@ -349,6 +445,7 @@ namespace
 				<< "Press T to enable light falloff attenuation" << std::endl
 				<< "Press F to enable flashlight" << std::endl
 				<< "Press H to enable High Dynamic Range (HDR)" << std::endl
+				<< "Press B to enable Bloom" << std::endl
 				<< "Press Up/Down to increase/decrease exposure" << std::endl
 				<< std::endl;
 			return 0;
@@ -370,6 +467,10 @@ namespace
 		if (input.isKeyJustPressed(window, GLFW_KEY_H))
 		{
 			bEnableHDR = !bEnableHDR;
+		}
+		if (input.isKeyJustPressed(window, GLFW_KEY_B))
+		{
+			bEnableBloom = !bEnableBloom;
 		}
 		if (input.isKeyDown(window, GLFW_KEY_UP))
 		{
@@ -547,6 +648,8 @@ namespace
 		//textures
 		GLuint diffuseMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE0, false); //lighting calculations set up for non-gamma corrected rendering
 		GLuint specularMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE1, false);
+		//GLuint diffuseMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE0, true); //lighting calculations set up for non-gamma corrected rendering
+		//GLuint specularMap = textureLoader("Textures/woodfloor.png", GL_TEXTURE1, true);
 
 		//shaders
 		Shader shader(vertex_shader_src, frag_shader_src, false);
@@ -561,6 +664,11 @@ namespace
 		Shader quadShader(render_quad_shader_vert_src, render_quad_shader_frag_src, false);
 		quadShader.use();
 		quadShader.setUniform1i("renderTexture", 0);
+
+		Shader gausblurShader(gausblur_vertex_shader_src, gausblur_frag_shader_src, false);
+		gausblurShader.use();
+		//set image to be texture unit 0
+		gausblurShader.setUniform1i("image", 0);
 
 		//--------------------------------------------------------------------------------------------
 
@@ -577,12 +685,12 @@ namespace
 		};
 
 		Transform cubeTransforms[] = {
-			//pos					rot        scale
-			{ { 4.0f, -3.5f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-		{ { 2.0f, 3.0f, 1.0f },{ 0, 0, 0 },{ 0.75f,0.75f,0.75f } },
-		{ { -3.0f, -1.0f, 0.0f },{ 0, 0, 0 },{ 0.5f,0.5f,0.5f } },
-		{ { -1.5f, 1.0f, 1.5f },{ 0, 45, 0 },{ 0.5f,0.5f,0.5f } },
-		{ { -1.5f, 2.0f, -3.0f },{ 60, 0, 60 },{ 0.75f,0.75f,0.75f } }
+			//pos						rot				scale
+			{ { -2.0f, 0.0f, -8.0f },{ 0, 0, 45 },{ 2.0f,		2.0f,	2.0f } },
+		{ { 3.5f, 2.0f, -10.0f },{ 0, 0, 0 },{ 5.0f,		5.0f,	2.0f } },
+		{ { -2.0f, -3.0f, -2.0f },{ 25, 55, 0 },{ 2.0f,		2.0f,	2.0f } },
+		{ { 1.5f, -2.0f, -5.5f },{ 0, 45, 0 },{ 2.0f,		2.0f,	2.0f } },
+		{ { -1.5f, 2.0f, -3.0f },{ 60, 0, 60 },{ 2.0f,		2.0f,	2.0f } }
 		};
 
 		Transform BoundingBox = { { 0.0f, 0.0f, -16.0f },{ 0, 0, 0 },{ 8.0f, 8.0f, 50.0f } };
@@ -617,10 +725,12 @@ namespace
 		float quadratic;
 		};
 		*/
+		//BLOOM TUTORIAL: Colors are purposely greater than 1 to exaggerate effect.
+		const float brightMultiply = 1;
 		glm::vec3 pntAmbient(0.05f, 0.05f, 0.05f);
 		glm::vec3 pntDiffuse(0.8f, 0.8f, 0.8f);
 		glm::vec3 pntSpecular(1.f, 1.f, 1.f);
-		PointLight pointLights[] = {
+		ColoredPointLight pointLights[] = {
 			{
 				pntAmbient,
 				pntDiffuse * glm::vec3(12.5),
@@ -633,40 +743,40 @@ namespace
 			},
 			{
 				pntAmbient,
-				pntDiffuse,
+				glm::vec3(1 * brightMultiply, 0, 0),
 				pntSpecular,
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(2.3f, -2.3f, -34.0f),
+				glm::vec3(2.3f, -2.3f, -4.0f),
 				"pointLights",true, 1
 			},
 			{
 				pntAmbient,
-				pntDiffuse,
+				glm::vec3(0, 1 * brightMultiply, 0),
 				pntSpecular,
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(-2.0f, 2.0f, -35.0f),
+				glm::vec3(-2.0f, -2.0f, -1.0f),
 				"pointLights",true, 2
 			},
 			{
 				pntAmbient,
-				pntDiffuse,
+				glm::vec3(0, 0, 1 * brightMultiply),
 				pntSpecular,
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(0.f, 0.f, -35.f),
+				glm::vec3(-1.0f, 0.8f, -5.f),
 				"pointLights",true, 3
 			}
 		};
 
-		PointLight MovingLight =
+		ColoredPointLight MovingLight =
 		{
 			pntAmbient,
-			pntDiffuse,
+			glm::vec3(0.3f * brightMultiply, 0, 1 * brightMultiply),
 			pntSpecular,
 			plghtConstant,
 			0.015f, //linear
@@ -705,15 +815,30 @@ namespace
 		glGenFramebuffers(1, &fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-		GLuint colorAttachment;
-		glGenTextures(1, &colorAttachment);
-		glBindTexture(GL_TEXTURE_2D, colorAttachment);
+		//perhaps it would be more succinct to generate two textures in an array(ie glGenTextures(2, array)) , but I like for my demos to be very explicit
+		//color attachment 2
+		GLuint colorAttachment_Scene;
+		glGenTextures(1, &colorAttachment_Scene);
+		glBindTexture(GL_TEXTURE_2D, colorAttachment_Scene);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorAttachment, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, /**/GL_COLOR_ATTACHMENT0/**/, GL_TEXTURE_2D, colorAttachment_Scene, 0);
+
+		//color attachment 1
+		GLuint colorAttachment_BloomBrightness;
+		glGenTextures(1, &colorAttachment_BloomBrightness);
+		glBindTexture(GL_TEXTURE_2D, colorAttachment_BloomBrightness);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//the definitions for color attachments are contiguous; thus you can do arithmetic to assign and attachment (usefull if this was done with an array and using loops)
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, /**/GL_COLOR_ATTACHMENT0 + 1/**/, GL_TEXTURE_2D, colorAttachment_BloomBrightness, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, /**/GL_COLOR_ATTACHMENT1/**/, GL_TEXTURE_2D, colorAttachment_BloomBrightness, 0);
 
 		GLuint depthAttachmentRBO;
 		glGenRenderbuffers(1, &depthAttachmentRBO);
@@ -735,11 +860,11 @@ namespace
 		float quadVertices[] = {
 			//x,y,z         s,t
 			-1, -1, 0,      0, 0,
-			1, -1, 0,      1, 0,
-			1,  1, 0,      1, 1,
+			1, -1, 0,       1, 0,
+			1,  1, 0,       1, 1,
 
 			-1, -1, 0,      0, 0,
-			1,  1, 0,      1, 1,
+			1,  1, 0,       1, 1,
 			-1,  1, 0,      0, 1
 		};
 
@@ -762,6 +887,40 @@ namespace
 
 		//--------------------------------------------------------------------------------------------
 
+
+
+		//--------------------------------------------------------------------------------------------
+		//pingpong frame buffers
+		GLuint pingpongFBOS[2];
+		glGenFramebuffers(2, pingpongFBOS);
+
+		GLuint pingpongColorBuffers[2];
+		glGenTextures(2, pingpongColorBuffers);
+
+		for (int buffer = 0; buffer < 2; buffer++)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBOS[buffer]);
+
+			glBindTexture(GL_TEXTURE_2D, pingpongColorBuffers[buffer]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorBuffers[buffer], 0);		
+
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			{
+				GLuint error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+				std::cout << "failure creating pingpong framebuffer" << buffer << std::endl;
+			}
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		//--------------------------------------------------------------------------------------------
+
 		while (!glfwWindowShouldClose(window))
 		{
 			float currentTime = static_cast<float>(glfwGetTime());
@@ -771,6 +930,10 @@ namespace
 			processInput(window);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+			//--------------------------------------------------------------------------------------------
+			GLuint forwardPassDrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+			glDrawBuffers(2, forwardPassDrawBuffers);
+			//--------------------------------------------------------------------------------------------
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -792,11 +955,12 @@ namespace
 			lampShader.use();
 			lampShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			lampShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			for (size_t i = 0; i < sizeof(pointLights) / sizeof(PointLight); ++i)
+			for (size_t i = 0; i < sizeof(pointLights) / sizeof(ColoredPointLight); ++i)
 			{
 				glm::mat4 model;
 				model = glm::translate(model, pointLights[i].getPosition());
-				model = glm::scale(model, glm::vec3(0.2f));
+				model = glm::scale(model, glm::vec3(0.5f));
+				glm::vec3 lightcolor = pointLights[i].getDiffuseColor();
 
 				lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				lampShader.setUniform3f("lightColor", lightcolor.x, lightcolor.y, lightcolor.z);
@@ -870,18 +1034,61 @@ namespace
 			shader.setUniform1i("bInvertNormals", 1);
 			RenderCube(BoundingBox, shader, vao, projection, view);
 			shader.setUniform1i("bInvertNormals", 0);
+			//----------------------------- blur --------------------------------
+			bool horrizontalBlur = false;
+			bool firstIteration = true;
+			int numberBlurPasses = 10;
 
+			gausblurShader.use();
+			gausblurShader.setUniform1i("image", 0); //set active texture unit for sampler2d
+			for (int blurPass = 0; blurPass < numberBlurPasses; ++blurPass)
+			{
+				gausblurShader.setUniform1i("horrizontalBlur", horrizontalBlur);
+				glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBOS[horrizontalBlur]);
+				
+				glActiveTexture(GL_TEXTURE0);
+				//use horizontal status as if it were an index into ping-pong since it will only ever be 0 or 1 (false or true)
+				//take brightness output if first iteration, otherwise, take the color attachment of the other FBO
+				glBindTexture(GL_TEXTURE_2D, firstIteration ? colorAttachment_BloomBrightness : pingpongColorBuffers[!horrizontalBlur]);
+
+				glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+				//draw quad
+				constexpr size_t numQuad = (sizeof(quadVertices) / sizeof(float)) / 5;
+				glBindVertexArray(quadVAO);
+				glDrawArrays(GL_TRIANGLES, 0, numQuad);
+
+				//prepare state for next iteration
+				horrizontalBlur = !horrizontalBlur;
+				firstIteration = false;
+			}
+
+
+			// ---------------------------- draw final ----------------------------
 			//draw render quad (this is where HDR calculations are done)
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			//bind textures
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, colorAttachment);
+			glBindTexture(GL_TEXTURE_2D, colorAttachment_Scene);
+			//glBindTexture(GL_TEXTURE_2D, colorAttachment_BloomBrightness); //DEBUG: visualize brightness color buffer
+			//glBindTexture(GL_TEXTURE_2D, pingpongColorBuffers[!horrizontalBlur]); //DEBUG: visualize output of blur
+			
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, pingpongColorBuffers[!horrizontalBlur]); //get last rendered colorbuffer, !horrizontalBuffer is the index of last buffer
+
+			//configure shader for rendering HDR with bloom
 			quadShader.use();
+			quadShader.setUniform1i("renderTexture", 0);
+			quadShader.setUniform1i("gaussianBlur", 1);
 			quadShader.setUniform1i("bEnableHDR", bEnableHDR);
+			quadShader.setUniform1i("bEnableBloom", bEnableBloom);
 			quadShader.setUniform1f("exposure", exposure);
+			//draw quad
 			constexpr size_t numQuad = (sizeof(quadVertices) / sizeof(float)) / 5;
 			glBindVertexArray(quadVAO);
 			glDrawArrays(GL_TRIANGLES, 0, numQuad);
@@ -892,6 +1099,8 @@ namespace
 		}
 
 		glfwTerminate();
+
+		//TODO clean up VBOS/FBOs/etc
 		glDeleteVertexArrays(1, &vao);
 		glDeleteBuffers(1, &vbo);
 
@@ -899,7 +1108,7 @@ namespace
 	}
 }
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}
