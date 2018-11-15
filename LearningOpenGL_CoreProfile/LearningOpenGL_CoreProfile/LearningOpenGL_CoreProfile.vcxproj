@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -114,9 +114,16 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v1.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StarterFile_v2.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\6_HDR\HDR_StartFile_v2_renderingFromCapturedTexture.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_Experiment.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_GaussianBlur.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_MultipleRenderTargets.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_StarterFile.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_0_StarterFile.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_1BasicMRT.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_2SimpleLighting.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_3CombiningForwardAndDeferredShading.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_5LightVolumes_boundscheck.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_4LightVolumes_no_bounds_check.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />

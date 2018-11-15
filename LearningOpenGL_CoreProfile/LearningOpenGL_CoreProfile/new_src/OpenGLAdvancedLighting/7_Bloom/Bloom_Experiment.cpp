@@ -152,12 +152,14 @@ namespace
 
 					vec3 grayScaleThreshold = vec3(0.2126, 0.7152, 0.0722);
 					float thresholdCheck = dot(grayScaleThreshold, vec3(fragmentColor));
+					
 						
 					float brightnessThreshold = 1.0f;
 					if(thresholdCheck > brightnessThreshold){
 						brightColorBuffer = vec4(fragmentColor.rgb, 1);
 					} else {
-						brightColorBuffer = vec4(0,0,0, 1);
+						//brightColorBuffer = vec4(0,0,0, 1);
+						brightColorBuffer = vec4(fragmentColor.rgb, 1) * (max(thresholdCheck, 0)) ;
 					}
 				}
 
@@ -909,7 +911,7 @@ namespace
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorBuffers[buffer], 0);		
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorBuffers[buffer], 0);
 
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{
@@ -918,7 +920,7 @@ namespace
 			}
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
+
 		//--------------------------------------------------------------------------------------------
 
 		while (!glfwWindowShouldClose(window))
@@ -1045,7 +1047,7 @@ namespace
 			{
 				gausblurShader.setUniform1i("horrizontalBlur", horrizontalBlur);
 				glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBOS[horrizontalBlur]);
-				
+
 				glActiveTexture(GL_TEXTURE0);
 				//use horizontal status as if it were an index into ping-pong since it will only ever be 0 or 1 (false or true)
 				//take brightness output if first iteration, otherwise, take the color attachment of the other FBO
@@ -1077,11 +1079,10 @@ namespace
 			glBindTexture(GL_TEXTURE_2D, colorAttachment_Scene);
 			//glBindTexture(GL_TEXTURE_2D, colorAttachment_BloomBrightness); //DEBUG: visualize brightness color buffer
 			//glBindTexture(GL_TEXTURE_2D, pingpongColorBuffers[!horrizontalBlur]); //DEBUG: visualize output of blur
-			
+
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, pingpongColorBuffers[!horrizontalBlur]); //get last rendered colorbuffer, !horrizontalBuffer is the index of last buffer
 
-			//configure shader for rendering HDR with bloom
 			quadShader.use();
 			quadShader.setUniform1i("renderTexture", 0);
 			quadShader.setUniform1i("gaussianBlur", 1);
@@ -1107,7 +1108,7 @@ namespace
 		glDeleteVertexArrays(1, &lampVAO);
 	}
 }
-
+//
 //int main()
 //{
 //	true_main();

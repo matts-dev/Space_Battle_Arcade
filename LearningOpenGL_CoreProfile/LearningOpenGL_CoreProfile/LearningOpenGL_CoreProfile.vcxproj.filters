@@ -761,6 +761,27 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_MultipleRenderTargets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\7_Bloom\Bloom_Experiment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_0_StarterFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_1BasicMRT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_2SimpleLighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_3CombiningForwardAndDeferredShading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_4LightVolumes_no_bounds_check.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_5LightVolumes_boundscheck.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
