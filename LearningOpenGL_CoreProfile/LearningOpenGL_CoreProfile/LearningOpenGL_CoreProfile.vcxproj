@@ -124,6 +124,7 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_3CombiningForwardAndDeferredShading.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_5LightVolumes_boundscheck.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_4LightVolumes_no_bounds_check.cpp" />
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_6_ManyLights.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glBufferSubdata.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBuffer.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\AdvancedData\AdvancedData_Buffers_glMapBufferRange.cpp" />

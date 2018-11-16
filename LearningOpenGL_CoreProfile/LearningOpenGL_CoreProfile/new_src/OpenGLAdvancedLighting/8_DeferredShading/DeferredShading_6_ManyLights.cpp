@@ -20,6 +20,7 @@
 #include <gtc/matrix_transform.hpp>
 #include "../../Utilities/SphereMesh.h"
 #include <complex>
+#include <stdlib.h>
 
 namespace
 {
@@ -103,6 +104,7 @@ namespace
 					interpTexCoords = texCoords;
 				}
 			)";
+
 	const char* lstage_LIGHTVOLUME_frag_shader_src = R"(
 				#version 330 core
 				out vec4 fragmentColor;
@@ -283,6 +285,9 @@ namespace
 	bool bDrawLightVolumes = false;
 	bool bDebugLightVolumes = false;
 	int displayBuffer = 4;
+	bool bEnableDrawLightCubes = true;
+	float numberLightsToDraw = 4.f; //float to provide timed transition
+	float numLightsIncAmount = 100.0f;
 	void processInput(GLFWwindow* window)
 	{
 		static int initializeOneTimePrintMsg = []() -> int {
@@ -290,6 +295,7 @@ namespace
 				<< "Press L to draw the light volume bounding sphere (they're pretty huge)" << std::endl
 				<< "Press B to decrease light volume size for debugging" << std::endl
 				<< "GBuffer/Render display: 1=normals, 2=positions, 3=diffuse-spec, 4=finalrender" << std::endl
+				<< "Press C to toggle drawing cubes at light sources" << std::endl
 				<< std::endl;
 			return 0;
 		}();
@@ -315,6 +321,10 @@ namespace
 				displayBuffer = key - GLFW_KEY_0;
 			}
 		}
+		if (input.isKeyJustPressed(window, GLFW_KEY_C))
+		{
+			bEnableDrawLightCubes = !bEnableDrawLightCubes;
+		}
 
 		if (input.isKeyJustPressed(window, GLFW_KEY_R))
 		{
@@ -327,6 +337,17 @@ namespace
 		if (input.isKeyJustPressed(window, GLFW_KEY_B))
 		{
 			bDebugLightVolumes = !bDebugLightVolumes;
+		}
+		if (input.isKeyDown(window, GLFW_KEY_UP))
+		{
+			numberLightsToDraw += numLightsIncAmount * deltaTime;
+			std::cout << "lights to draw: " << numberLightsToDraw << std::endl;
+		}
+		if (input.isKeyDown(window, GLFW_KEY_DOWN))
+		{
+			numberLightsToDraw -= numLightsIncAmount * deltaTime;
+			numberLightsToDraw = std::fmax(numberLightsToDraw, 0.0f);
+			std::cout << "lights to draw: " << numberLightsToDraw << std::endl;
 		}
 		
 
@@ -399,11 +420,12 @@ namespace
 		constexpr float positionOffset = 1.0f;
 		constexpr int modelsPerRow = 10;
 		constexpr int numModels = 50;
+		glm::vec3 sceneCenter = glm::vec3(-1, 0, 1);
 		for (int i = 0, row = 0, col = 0; i < numModels; ++i)
 		{
 			ModelInstance modelInstance;
 			modelInstance.transform.position = glm::vec3(positionOffset * col, 0, -positionOffset * row);
-			modelInstance.transform.position -= glm::vec3(1, 0, -1); //displace slightly
+			modelInstance.transform.position += sceneCenter; //displace slightly
 			//modelInstance.transform.scale = glm::vec3(0.1f); //for nanosuit
 			modelInstance.transform.scale = glm::vec3(0.05f); //for tiefighter
 			modelInstance.modelSource = &meshModel;
@@ -515,6 +537,39 @@ namespace
 		float quadratic;
 		};
 		*/
+		const glm::vec3 rectangularVolumeBounds(positionOffset * modelsPerRow, 5, -(numModels / modelsPerRow) * positionOffset);
+		srand(7);
+		auto getRandRange_0to1 = []() -> float {return ((float)(rand() % 100) / 100); };
+		constexpr int NUM_PNT_LIGHTS = 10000;
+		std::vector<ColoredPointLight> pointLights;
+		pointLights.reserve(1000);
+		for (int idx = 0; idx < NUM_PNT_LIGHTS; ++idx)
+		{
+			glm::vec3 pntSpecular(1.f, 1.f, 1.f);
+			glm::vec3 pntAmbient(0.05f, 0.05f, 0.05f);
+			float diffuseRed = getRandRange_0to1();
+			float diffuseGreen = getRandRange_0to1();
+			float diffuseBlue = getRandRange_0to1();
+			glm::vec3 pntDiffuse(diffuseRed, diffuseGreen, diffuseBlue);
+
+			float x = (getRandRange_0to1() * rectangularVolumeBounds.x) - (0.25f * rectangularVolumeBounds.x);//subtraction to force center
+			float y = (getRandRange_0to1() * rectangularVolumeBounds.y) - (0.5f * rectangularVolumeBounds.y); //subtraction to force center
+			float z = (getRandRange_0to1() * rectangularVolumeBounds.z) - (0.25f * rectangularVolumeBounds.z); //subtraction to force center
+			glm::vec3 position = glm::vec3(2) * glm::vec3(x, y, z) + sceneCenter; //multiplied by 2 to allow them to surround objects
+
+			pointLights.emplace_back(
+				pntAmbient,
+				pntDiffuse,
+				pntSpecular,
+				plghtConstant,
+				plghtLinear,
+				plghtQuadratic,
+				position,
+				"pointLights"
+				);
+		}
+
+		/*
 		glm::vec3 pntAmbient(0.05f, 0.05f, 0.05f);
 		glm::vec3 pntDiffuse(0.8f, 0.8f, 0.8f);
 		glm::vec3 pntSpecular(1.f, 1.f, 1.f);
@@ -561,6 +616,7 @@ namespace
 			}
 		};
 		const unsigned int numPointLights = sizeof(pointLights) / sizeof(ColoredPointLight);
+		*/
 
 
 		//--------------------------------------------------------------------------------------------
@@ -690,7 +746,7 @@ namespace
 		
 		SphereMesh sphereMesh(0.095f);
 
-		for (size_t i = 0; i < numPointLights; ++i)
+		for (size_t i = 0; i < pointLights.size(); ++i)
 		{
 			ColoredPointLight& light = pointLights[i];
 
@@ -732,7 +788,8 @@ namespace
 			float Kq = light.getAttenuationQuadratic();
 			
 			//take the strongest component as it will have the furthest attenuation distance
-			float maxLight = std::fmaxf(color.r, std::fmax(color.g, color.b)); //seems like suming up intensities gives better result when using many lights
+			//float maxLight = std::fmaxf(color.r, std::fmax(color.g, color.b));
+			float maxLight = color.r + color.g + color.b;
 
 			//float distance = (-Kl + std::sqrt(Kl*Kl - 4*Kq*(Kc-((256.0f/5.0f)* maxLight) ) ) / (2 * Kq)
 			float A = Kq;
@@ -839,7 +896,7 @@ namespace
 			stencilWriterShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			stencilWriterShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
-			for (size_t i = 0; i < numPointLights; ++i)
+			for (size_t i = 0; i < pointLights.size() && i < (size_t)numberLightsToDraw; ++i)
 			{
 				ColoredPointLight& light = pointLights[i];
 				float lightRadius = bDebugLightVolumes ? 1 : light.lightRadius;
@@ -904,7 +961,7 @@ namespace
 			lampShader.use();
 			lampShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 			lampShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			for (size_t i = 0; i < sizeof(pointLights) / sizeof(ColoredPointLight); ++i)
+			for (size_t i = 0; i < pointLights.size() && i < (size_t)numberLightsToDraw; ++i)
 			{
 				ColoredPointLight& targetLight = pointLights[i];
 				glm::vec3 diffuseColor = targetLight.getDiffuseColor();
@@ -914,12 +971,11 @@ namespace
 				model = glm::translate(model, pointLights[i].getPosition());
 				model = glm::scale(model, glm::vec3(0.2f));
 
-				glm::vec3 lightColor = pointLights[i].getDiffuseColor();
-
 				lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				lampShader.setUniform3f("lightColor", lightcolor.x, lightcolor.y, lightcolor.z);
+				lampShader.setUniform3f("lightColor", diffuseColor.x, diffuseColor.y, diffuseColor.z);
 				glBindVertexArray(lampVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+				if (bEnableDrawLightCubes)
+					glDrawArrays(GL_TRIANGLES, 0, 36);
 
 				//debuging -- visualize light volume
 				if (bDrawLightVolumes)
@@ -1003,7 +1059,7 @@ distance	constant	linear		quadratic
 */
 
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}
