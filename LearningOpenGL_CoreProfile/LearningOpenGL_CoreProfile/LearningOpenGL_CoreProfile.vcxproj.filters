@@ -785,6 +785,15 @@
     <ClCompile Include="new_src\OpenGLAdvancedLighting\8_DeferredShading\DeferredShading_6_ManyLights.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\9_SSAO\SSAO_starterfile_worldspace_deferredrendering.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\9_SSAO\SSAO_starterfile_viewspace_deferredrenderinng.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\OpenGLAdvancedLighting\9_SSAO\SSAO_hemisphere_samples_basic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
