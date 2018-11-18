@@ -1,3 +1,7 @@
+//There's a lot going on in this file since it is ported from the deferred render
+//instead of new secions     being   delinated by ---------
+// new sections relevant to ssao are delinated by ///////////
+
 #pragma once
 #include<iostream>
 
@@ -20,7 +24,7 @@
 #include <gtc/matrix_transform.hpp>
 #include "../../Utilities/SphereMesh.h"
 #include <complex>
-#include <stdlib.h>
+#include <random>
 
 namespace
 {
@@ -49,12 +53,12 @@ namespace
 				out vec2 interpTextCoords;
 
 				void main(){
+					//in real world applications, reduce number of matrix multiplies (or even just do them on CPU) 
 					gl_Position = projection * view * model * vec4(position, 1);
-					fragPosition = vec3(model * vec4(position, 1));
+					fragPosition = vec3(view * model * vec4(position, 1));
 
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					//fragNormal = mat3(transpose(inverse(model))) * normal;
-					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
+					fragNormal = normalize(mat3(transpose(inverse(view * model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
 
 					interpTextCoords = textureCoordinates;
 				}
@@ -96,80 +100,94 @@ namespace
 				uniform mat4 projection;
 				uniform mat4 view;
 				uniform mat4 model;
-				
-				out vec2 interpTexCoords;
 
-				void main(){
-					gl_Position = projection * view * model * vec4(position, 1);
-					interpTexCoords = texCoords;
-				}
-			)";
-
-	const char* lstage_LIGHTVOLUME_frag_shader_src = R"(
-				#version 330 core
-				out vec4 fragmentColor;
-
-				in vec2 interpTexCoords;
-
-				uniform sampler2D positions;
-				uniform sampler2D normals;
-				uniform sampler2D albedo_specs;
-
-				uniform vec3 camPos;
-				uniform float width_pixels = 0;
-				uniform float height_pixels = 0;
-				
-				struct PointLight
+				struct PointLight //change warning: this is also defined in the fragment shader
 				{
 					vec3 position;
 					vec3 ambientIntensity;	vec3 diffuseIntensity;	vec3 specularIntensity;
 					float constant;			float linear;			float quadratic;
 				};	
+				uniform PointLight pointLights; 
 
+				out vec2 interpTexCoords;
+				out vec4 pointLightPos_VS;
+
+				void main(){
+					gl_Position = projection * view * model * vec4(position, 1);
+					interpTexCoords = texCoords;
+
+					pointLightPos_VS = view * vec4(pointLights.position, 1.0f);
+				}
+			)";
+	const char* lstage_LIGHTVOLUME_frag_shader_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+
+				in vec2 interpTexCoords;
+				in vec4 pointLightPos_VS;
+
+				uniform sampler2D positions;
+				uniform sampler2D normals;
+				uniform sampler2D albedo_specs;
+				uniform sampler2D ambient_occlusion;
+
+				uniform float width_pixels = 0;
+				uniform float height_pixels = 0;
+
+				uniform bool bEnableSSAO = true;
+				
+				struct PointLight //change warning: this is also defined in the vertex shader to get position into view space
+				{
+					vec3 position;
+					vec3 ambientIntensity;	vec3 diffuseIntensity;	vec3 specularIntensity;
+					float constant;			float linear;			float quadratic;
+				};	
 				uniform PointLight pointLights; 
 				
 				void main(){
 					//FIGURE OUT SCREEN COORDINATES
 					//gl_FragCoord is window space, eg a 800x600 would be range [0, 800] and [0, 600]; 
-					//so to convert to UV range (ie [0, 1]), we divide teh frag_coord by the pixel values
+					//so to convert to UV range (ie [0, 1]), we divide the frag_coord by the pixel values
 					vec2 screenCoords = vec2(gl_FragCoord.x / width_pixels, gl_FragCoord.y / height_pixels);
-
 
 					//LOAD FROM GBUFFER (When rendering from sphere, we need to convert back to screen coords; alternatively this might could be done with perspective matrix but this way avoids matrix multiplication at expense of uniforms)
 					vec3 fragPosition = texture(positions, screenCoords).rgb;
 					vec3 fragNormal = normalize(texture(normals, screenCoords).rgb);
 					vec3 color = texture(albedo_specs, screenCoords).rgb;
 					float specularStrength = texture(albedo_specs, screenCoords).a;
-
-					//LOAD FROM GBUFFER
-					//vec3 fragPosition = texture(positions, interpTexCoords).rgb;
-					//vec3 fragNormal = normalize(texture(normals, interpTexCoords).rgb);
-					//vec3 color = texture(albedo_specs, interpTexCoords).rgb;
-					//float specularStrength = texture(albedo_specs, interpTexCoords).a;
+					float ambientOcclusionAllowance = bEnableSSAO ? texture(ambient_occlusion, screenCoords).r : 1.0f;
 
 					//STANDARD LIGHT EQUATIONS
 					PointLight light = pointLights; 
 
-					vec3 toLight = normalize(light.position - fragPosition);
+					vec3 toLight = normalize(pointLightPos_VS.xyz - fragPosition);
 					vec3 toReflection = reflect(-toLight, fragNormal);
-					vec3 toView = normalize(camPos - fragPosition);
+					vec3 toView = normalize(-fragPosition); //in view space, camPos = 0,0,0; so camPos - fragPos is just -fragPos; so we get this one for free :) 
 
-					vec3 ambientLight = light.ambientIntensity * color;
+					vec3 ambientLight = light.ambientIntensity * color * ambientOcclusionAllowance;
 
 					vec3 diffuseLight = max(dot(toLight, fragNormal), 0) * light.diffuseIntensity * color;
 
 					float specularAmount = pow(max(dot(toView, toReflection), 0), 32); //shinnyness will need to be embeded in a gbuffer
 					vec3 specularLight = light.specularIntensity* specularAmount * specularStrength;
 
-					float distance = length(light.position - fragPosition);
+					float distance = length(pointLightPos_VS.xyz - fragPosition);
 					float attenuation = 1 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
 
 					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * vec3(attenuation);
 
 					fragmentColor = vec4(lightContribution, 0.0f);
-		
-					//debug getting appropriate screen coords
-					//fragmentColor = vec4(gl_FragCoord.x / width_pixels, gl_FragCoord.y / height_pixels, 0.0, 1.0f);
+
+					//debug visualizations
+					//fragmentColor = vec4(toLight, 1.0f);
+					//fragmentColor = vec4(toReflection, 1.0f);
+					//fragmentColor = vec4(fragNormal, 1.0f);
+					//fragmentColor = vec4(fragPosition, 1.0f);
+					//fragmentColor = vec4(diffuseLight, 1.0f);
+					//fragmentColor = vec4(vec3(attenuation), 1.0f);
+					//fragmentColor = vec4(vec3(distance/1000.0f), 1.0f);
+					//fragmentColor = vec4(pointLightPos_VS.xyz, 1.0f);
+
 				}
 			)";
 
@@ -241,10 +259,151 @@ namespace
 					fragmentColor = texture(renderTexture, interpTextureCoords);
 				}
 			)";
+	const char* SSAO_quad_shader_vert_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				layout (location = 1) in vec2 textureCoords;				
+				out vec2 interpTextureCoords;				
+				void main(){
+					gl_Position = vec4(position, 1);
+					interpTextureCoords = textureCoords;
+				}
+			)";
+	const char* SSAO_quad_shader_frag_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+				in vec2 interpTextureCoords;
 
+				uniform sampler2D positions;
+				uniform sampler2D normals;
+				uniform sampler2D randomNoiseVectors;
 
-	bool rotateLight = true;
+				uniform float radius = 0.5f; //artistic knob to influence ssao; via increasing/decreasing the sample positions radius in hemisphere
+				uniform float rangeCheckStrength = 1.0f; //multiplier that higher numbers decrease the range of ssao samples; thinking of this a clip value -- where increasing value has more clipping on range
+				uniform mat4 projection;
+				
+				const int NUM_SSAO_KERNEL_SAMPLES = 64;
+				uniform vec3 samples[NUM_SSAO_KERNEL_SAMPLES];
 
+				void main(){
+					
+					//rendering whole quad as screen, so we can use interpolated texture coordinates to access gbuffer (as opposed to method when rendering spheres)
+					vec3 position = texture(positions, interpTextureCoords).rgb;
+					vec3 normal = texture(normals, interpTextureCoords).rgb;
+
+					//------GET RANDOM VEC---------
+					//noise pattern is only a 4x4 texture, we need this to tile
+					//tutorial hard-codes resolution into shader, but I'd rather be a little more dynamic.
+					vec2 screenSizePixels = textureSize(positions, 0);
+					vec2 noiseTexSizeInPixels = textureSize(randomNoiseVectors, 0);
+					vec2 conversion = screenSizePixels/noiseTexSizeInPixels;
+					vec2 tiledTexCoords = conversion * interpTextureCoords;
+					//vec2 tiledTexCoords = ((vec2(1200.0f,800.0f)) / 4.0f )* interpTextureCoords; //tutorial's method is hardcoded to screen size
+					vec3 randomXYVec = normalize(texture(randomNoiseVectors, tiledTexCoords).xyz);
+
+					//------CALC TBN---------
+					//this is the method presented in the tutorial series, but I believe it has some issues
+					//this method assumes that the two vectors won't be orthogonal (in which case there isn't a non-zero projection)
+					//it also assumes that the normal and the random vector are no co-linear (which will not be great for crossproduct, will return 0)
+					vec3 tangent = normalize(normal - dot(normal, randomXYVec) * randomXYVec); //my way
+					//vec3 tangent = normalize(randomXYVec - dot(normal, randomXYVec) * normal); //tutorial way
+					vec3 bitangent = cross(normal, tangent);
+
+					mat3 TBN = mat3(tangent, bitangent, normal);
+					
+					//------ OCCLUSION ------------
+					float occlusion = 0.0f;
+					for(int i = 0; i < NUM_SSAO_KERNEL_SAMPLES; ++i){
+						//use the sample to find depth and determine if occlusion should be incremented
+						vec3 sampleLoc_VS = (TBN * samples[i]) * radius  + position;
+						
+						//convert to screen/clip space and sample depth
+						vec4 sampleLoc_CS = projection * vec4(sampleLoc_VS, 1.0f);
+						sampleLoc_CS.xyz /= sampleLoc_CS.w;
+						sampleLoc_CS.xyz = (sampleLoc_CS.xyz * 0.5f) + 0.5f; //convert to UV coordinates [-1, 1] => [0, 1]
+
+						float sampleDepth = texture(positions, sampleLoc_CS.xy).z;
+						
+						//locations are in view space, 0,0,0 is camera;
+						//camera looks in -z direction; that means these z values have negative values (since they're relative to camera)
+						//so... keep in mind that:
+						//more negative means farther away.  Which may explain why the '>' seems backwards.
+						float bias = 0.0f;
+
+						//A: I feel like this method makes more intuitive sense, it checks if the actual fragment's position closer than something sampled from around it; but it is not what the tutorial checks
+						//float occludeFactor = sampleDepth > position.z + bias ? 1.0f : 0.0f; //ie if the sampleDepth is less negative that the fragment's position
+
+						//B: tutorial's method compares if the generated sample's z value is within geometry
+						float occludeFactor = sampleDepth >= (sampleLoc_VS.z + bias) ? 1.0f : 0.0f; //ie if the sampleDepth is less negative that the fragment's position
+
+						//prevent geometry that is very far away from contributing to ambient occlusion 
+						float value_smallWhenFar_LargeWhenNear =  radius / (rangeCheckStrength * abs(position.z - sampleDepth));    //eg radius = 5,   5/abs(4-5) = 5           5/abs(5-100) = 0.052
+						float rangeCheck = smoothstep(0.0f, 1.0f, value_smallWhenFar_LargeWhenNear);	//this is like a LERP, but has a slight curve to it; think of it as LERP
+
+						//range check prevents *abrupt* disable of AmbientOcclusion for distance geometry
+						occlusion += occludeFactor * rangeCheck;
+					}
+					
+					//1. it makes sense that occlusion would be on the range [0, 1.0f] since we're going to be multiplying it against a color
+					//    We can seeing what fraction of samples were occluded (occlusion/num_samples)
+					//2.transform occlusion into something we can multiply the ambient color by
+					//    low occlusion should have a value of 1 to show the full ambient color
+					occlusion = 1.0f - (occlusion / NUM_SSAO_KERNEL_SAMPLES);
+
+					fragmentColor = vec4(vec3(occlusion), 1.0f);
+
+					//debug visualizations
+					//fragmentColor = vec4(position, 1.0f);		//X
+					//fragmentColor = vec4(normal, 1.0f);		//X
+					//fragmentColor = vec4(samples[0], 1.0f);   //X color is consistent
+					//fragmentColor = vec4(samples[1], 1.0f);   //X color is consistent
+					//fragmentColor = vec4(randomXYVec, 1.0f);  //x
+					//fragmentColor = vec4(tangent, 1.0f);    
+					//fragmentColor = vec4(bitangent, 1.0f);    
+					//fragmentColor = vec4(db_sampleLoc_VS, 1.0f);	
+					//fragmentColor = vec4(vec3(db_sampleDepth), 1.0f);
+ 					
+
+				}
+			)";
+
+	const char* SSAO_SIMPLEBLUR_quad_shader_vert_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				layout (location = 1) in vec2 textureCoords;				
+
+				out vec2 interpTextureCoords;				
+
+				void main(){
+					gl_Position = vec4(position, 1);
+					interpTextureCoords = textureCoords;
+				}
+			)";
+	const char* SSAO_SIMPLEBLUR_quad_shader_frag_src = R"(
+				#version 330 core
+
+				out float fragmentRed; 
+
+				in vec2 interpTextureCoords;
+				uniform sampler2D renderTexture;
+
+				void main(){
+					vec2 texelSize = 1.0f / textureSize(renderTexture, 0);
+					float fragmentResult = 0.0f;
+
+					for(int x = -2; x < 2; ++x){
+						for(int y = -2; y < 2; ++y){
+							vec2 offset = vec2(float(x), float(y)) * texelSize;
+						
+							fragmentResult += texture(renderTexture, offset + interpTextureCoords).r;
+						}
+					}
+
+					fragmentRed = fragmentResult / (4.0 * 4.0);
+				}
+			)";
+
+	const int NUM_SSAO_SAMPLES = 64;
 
 	struct Transform
 	{
@@ -282,20 +441,25 @@ namespace
 		float lightRadius = 1.0;
 	};
 
+	bool rotateLight = true;
 	bool bDrawLightVolumes = false;
 	bool bDebugLightVolumes = false;
 	int displayBuffer = 4;
-	bool bEnableDrawLightCubes = true;
-	float numberLightsToDraw = 4.f; //float to provide timed transition
-	float numLightsIncAmount = 100.0f;
+	float ssaoRadiusTweak = 0.5f;
+	const float radiusIncrementAmount = 0.5f;
+	float rangeCheckStrength = 8.0f;
+	const float rangeCheckIncrementAmount = 4.0f;
+	bool bEnableSSAO = true;
+
+
 	void processInput(GLFWwindow* window)
 	{
 		static int initializeOneTimePrintMsg = []() -> int {
 			std::cout << "Press R to toggle light rotation" << std::endl
 				<< "Press L to draw the light volume bounding sphere (they're pretty huge)" << std::endl
 				<< "Press B to decrease light volume size for debugging" << std::endl
-				<< "GBuffer/Render display: 1=normals, 2=positions, 3=diffuse-spec, 4=finalrender" << std::endl
-				<< "Press C to toggle drawing cubes at light sources" << std::endl
+				<< "Press UP/DOWN to increase/decrease SSAO sample radius" << std::endl
+				<< "GBuffer/Render display: 1=normals, 2=positions, 3=diffuse-spec, 4=SSAO preblur, 5=SSAO blur, 6=Final Lighting Pass" << std::endl
 				<< std::endl;
 			return 0;
 		}();
@@ -307,23 +471,38 @@ namespace
 		{
 			glfwSetWindowShouldClose(window, true);
 		}
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			ssaoRadiusTweak += deltaTime * radiusIncrementAmount;
+			std::cout << "SSAO sample radius: " << ssaoRadiusTweak << std::endl;
+		}
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			ssaoRadiusTweak -= deltaTime * radiusIncrementAmount;
+			std::cout << "SSAO sample radius: " << ssaoRadiusTweak << std::endl;
+		}
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
+			rangeCheckStrength -= rangeCheckIncrementAmount * deltaTime;
+			std::cout << "Range check strength: " << rangeCheckStrength << std::endl;
 		}
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
+			rangeCheckStrength += rangeCheckIncrementAmount * deltaTime;
+			std::cout << "Range check strength: " << rangeCheckStrength << std::endl;
 		}
 
-		for (int key = GLFW_KEY_1; key < GLFW_KEY_5; ++key)
+		if (input.isKeyJustPressed(window, GLFW_KEY_O))
+		{
+			bEnableSSAO = !bEnableSSAO;
+		}
+
+		for (int key = GLFW_KEY_1; key < GLFW_KEY_7; ++key)
 		{
 			if (input.isKeyJustPressed(window, key))
 			{
 				displayBuffer = key - GLFW_KEY_0;
 			}
-		}
-		if (input.isKeyJustPressed(window, GLFW_KEY_C))
-		{
-			bEnableDrawLightCubes = !bEnableDrawLightCubes;
 		}
 
 		if (input.isKeyJustPressed(window, GLFW_KEY_R))
@@ -337,17 +516,6 @@ namespace
 		if (input.isKeyJustPressed(window, GLFW_KEY_B))
 		{
 			bDebugLightVolumes = !bDebugLightVolumes;
-		}
-		if (input.isKeyDown(window, GLFW_KEY_UP))
-		{
-			numberLightsToDraw += numLightsIncAmount * deltaTime;
-			std::cout << "lights to draw: " << numberLightsToDraw << std::endl;
-		}
-		if (input.isKeyDown(window, GLFW_KEY_DOWN))
-		{
-			numberLightsToDraw -= numLightsIncAmount * deltaTime;
-			numberLightsToDraw = std::fmax(numberLightsToDraw, 0.0f);
-			std::cout << "lights to draw: " << numberLightsToDraw << std::endl;
 		}
 		
 
@@ -369,63 +537,75 @@ namespace
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		float vertices[] = {
-		    // Back face
-		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-		     0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right         
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+			// x    y      z       s      t   nX     nY     nZ
+		    // Back face 
+		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f, -1.0f,// Bottom-left
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 0.0f, -1.0f,// top-right
+		     0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 0.0f, -1.0f,// bottom-right         
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 0.0f, -1.0f,// top-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f, -1.0f,// bottom-left
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 0.0f, -1.0f,// top-left
 		    // Front face
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-		    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f,// bottom-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f,// bottom-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top-right
+		    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f,// bottom-left
 		    // Left face
-		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
-		    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f, 0.0f, 0.0f,// top-right
+		    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f, 0.0f, 0.0f,// top-left
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f, 0.0f, 0.0f,// bottom-left
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f, 0.0f, 0.0f,// bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,// bottom-right
+		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f, 0.0f, 0.0f,// top-right
 		    // Right face
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right         
-		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-		     0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left     
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f,// top-left
+		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f,// bottom-right
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f,// top-right         
+		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f,// bottom-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f,// top-left
+		     0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f,// bottom-left     
 		    // Bottom face
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
-		     0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, -1.0f, 0.0f,// top-right
+		     0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, -1.0f, 0.0f,// top-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, -1.0f, 0.0f,// bottom-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, -1.0f, 0.0f,// bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, -1.0f, 0.0f,// bottom-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, -1.0f, 0.0f,// top-right
 		    // Top face
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left        
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f,// top-left
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f,// bottom-right
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 1.0f, 0.0f,// top-right     
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f,// bottom-right
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f,// top-left
+		    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f// bottom-left        
 		};
 
-		Model meshModel("Models/nanosuit/nanosuit.obj");
-		//Model meshModel("Models/tie_fighter/tie_1blend.obj"); //models needs a specular map, currently strange specular artifacts due to no specular map. 
+
+		//textures
+		GLuint cubeDiffuseMap = textureLoader("Textures/container2.png", GL_TEXTURE0);
+		GLuint cubeSpecularMap = textureLoader("Textures/container2_specular.png", GL_TEXTURE1);
+		std::vector<Transform> cubeTransforms;
+		cubeTransforms.push_back(Transform{ {0,-1,0},{0,0,0},{30,1,30} });
+		cubeTransforms.push_back(Transform{ { -5,0,0 },{ 0,0,0 },{ 1,1,1 } }); //lone box
+		cubeTransforms.push_back(Transform{ { -3,0,0.5f },{ 0,45,0 },{ 1,1,1 } }); //bottom stack
+		cubeTransforms.push_back(Transform{ { -3,1,0.5f },{ 0,0,0 },{ 1,1,1 } });  //top stack
+		cubeTransforms.push_back(Transform{ { -6.5f,0,0.5f },{ 0,0,0 },{ 1,5,10 } });  //wall-leftside
+		cubeTransforms.push_back(Transform{ { -2,0,-3.0f },{ 0,0,0 },{ 10,5,1 } });  //wall-back
+
+		//Model meshModel("Models/nanosuit/nanosuit.obj");
+		Model meshModel("Models/tie_fighter/tie_1blend.obj");
 
 		std::vector<ModelInstance> models;
 		constexpr float positionOffset = 1.0f;
 		constexpr int modelsPerRow = 10;
 		constexpr int numModels = 50;
-		glm::vec3 sceneCenter = glm::vec3(-1, 0, 1);
 		for (int i = 0, row = 0, col = 0; i < numModels; ++i)
 		{
 			ModelInstance modelInstance;
 			modelInstance.transform.position = glm::vec3(positionOffset * col, 0, -positionOffset * row);
-			modelInstance.transform.position += sceneCenter; //displace slightly
+			modelInstance.transform.position -= glm::vec3(1, 0, -1); //displace slightly
 			//modelInstance.transform.scale = glm::vec3(0.1f); //for nanosuit
 			modelInstance.transform.scale = glm::vec3(0.05f); //for tiefighter
 			modelInstance.modelSource = &meshModel;
@@ -452,8 +632,14 @@ namespace
 		glBindVertexArray(lampVAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);//use same vertex data
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(5 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
 
 		//shaders
 		Shader geometricStageShader(gstage_vertex_shader_src, gstage_frag_shader_src, false);
@@ -467,19 +653,33 @@ namespace
 		lightingStage_LVOLUME_Shader.setUniform1i("positions", 0);
 		lightingStage_LVOLUME_Shader.setUniform1i("normals", 1);
 		lightingStage_LVOLUME_Shader.setUniform1i("albedo_specs", 2);
+		lightingStage_LVOLUME_Shader.setUniform1i("ambient_occlusion", 3);
 
 
 		Shader lampShader(lamp_vertex_shader_src, lamp_frag_shader_src, false);
+		lampShader.use();
 
 		//just for writing stencil buffer data
 		Shader stencilWriterShader(stencilwriter_vertex_shader_src, stencilwriter_frag_shader_src, false);
+		stencilWriterShader.use();
 
 		Shader postProcessShader(render_quad_shader_vert_src, render_quad_shader_frag_src, false);
 		postProcessShader.use();
 		postProcessShader.setUniform1i("renderTexture", 0);
 
+		Shader ssaoShader(SSAO_quad_shader_vert_src, SSAO_quad_shader_frag_src, false);
+		ssaoShader.use();
+		ssaoShader.setUniform1i("positions", 0);
+		ssaoShader.setUniform1i("normals", 1);
+		ssaoShader.setUniform1i("randomNoiseVectors", 2);
+
+		Shader ssaoBlur(SSAO_SIMPLEBLUR_quad_shader_vert_src, SSAO_SIMPLEBLUR_quad_shader_frag_src, false);
+		ssaoBlur.use();
+		ssaoBlur.setUniform1i("renderTexture", 0);
+
 		//for completeness, make sure each shader has a identity model matrix
 		const glm::mat4 identityMatrix(1.0f);
+		ssaoShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
 		lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
 		lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
 		stencilWriterShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
@@ -535,7 +735,7 @@ namespace
 		/*struct PointLight
 		{
 		glm::vec3 position;
-		glm::vec3 ambientIntensity;
+		glm::vec3 ambientIntensity;v
 		glm::vec3 diffuseIntensity;
 		glm::vec3 specularIntensity;
 		//attenuation constants
@@ -544,39 +744,6 @@ namespace
 		float quadratic;
 		};
 		*/
-		const glm::vec3 rectangularVolumeBounds(positionOffset * modelsPerRow, 5, -(numModels / modelsPerRow) * positionOffset);
-		srand(7);
-		auto getRandRange_0to1 = []() -> float {return ((float)(rand() % 100) / 100); };
-		constexpr int NUM_PNT_LIGHTS = 10000;
-		std::vector<ColoredPointLight> pointLights;
-		pointLights.reserve(1000);
-		for (int idx = 0; idx < NUM_PNT_LIGHTS; ++idx)
-		{
-			glm::vec3 pntSpecular(1.f, 1.f, 1.f);
-			glm::vec3 pntAmbient(0.05f, 0.05f, 0.05f);
-			float diffuseRed = getRandRange_0to1();
-			float diffuseGreen = getRandRange_0to1();
-			float diffuseBlue = getRandRange_0to1();
-			glm::vec3 pntDiffuse(diffuseRed, diffuseGreen, diffuseBlue);
-
-			float x = (getRandRange_0to1() * rectangularVolumeBounds.x) - (0.25f * rectangularVolumeBounds.x);//subtraction to force center
-			float y = (getRandRange_0to1() * rectangularVolumeBounds.y) - (0.5f * rectangularVolumeBounds.y); //subtraction to force center
-			float z = (getRandRange_0to1() * rectangularVolumeBounds.z) - (0.25f * rectangularVolumeBounds.z); //subtraction to force center
-			glm::vec3 position = glm::vec3(2) * glm::vec3(x, y, z) + sceneCenter; //multiplied by 2 to allow them to surround objects
-
-			pointLights.emplace_back(
-				pntAmbient,
-				pntDiffuse,
-				pntSpecular,
-				plghtConstant,
-				plghtLinear,
-				plghtQuadratic,
-				position,
-				"pointLights"
-				);
-		}
-
-		/*
 		glm::vec3 pntAmbient(0.05f, 0.05f, 0.05f);
 		glm::vec3 pntDiffuse(0.8f, 0.8f, 0.8f);
 		glm::vec3 pntSpecular(1.f, 1.f, 1.f);
@@ -598,7 +765,7 @@ namespace
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(2.3f, 1.3f, -4.0f),
+				glm::vec3(-5.3f, 2.3f, -2.0f),
 				"pointLights", //true, 1
 			},
 			{
@@ -606,9 +773,9 @@ namespace
 				pntDiffuse,
 				pntSpecular,
 				plghtConstant,
-				plghtLinear,
-				plghtQuadratic,
-				glm::vec3(4.0f, 2.0f, -6.0f),
+				0.22f,
+				0.20f,
+				glm::vec3(-4.0f, 2.0f, 3.0f), 
 				"pointLights",//true, 2
 			},
 			{
@@ -618,12 +785,11 @@ namespace
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(0.f, 1.0f, -3.f),
+				glm::vec3(-1.f, 1.0f, 1.f),
 				"pointLights",//true, 3
 			}
 		};
 		const unsigned int numPointLights = sizeof(pointLights) / sizeof(ColoredPointLight);
-		*/
 
 
 		//--------------------------------------------------------------------------------------------
@@ -753,7 +919,7 @@ namespace
 		
 		SphereMesh sphereMesh(0.095f);
 
-		for (size_t i = 0; i < pointLights.size(); ++i)
+		for (size_t i = 0; i < numPointLights; ++i)
 		{
 			ColoredPointLight& light = pointLights[i];
 
@@ -795,7 +961,7 @@ namespace
 			float Kq = light.getAttenuationQuadratic();
 			
 			//take the strongest component as it will have the furthest attenuation distance
-			//float maxLight = std::fmaxf(color.r, std::fmax(color.g, color.b));
+			//float maxLight = std::fmaxf(color.r, std::fmax(color.g, color.b)); //seems like suming up intensities gives better result when using many lights
 			float maxLight = color.r + color.g + color.b;
 
 			//float distance = (-Kl + std::sqrt(Kl*Kl - 4*Kq*(Kc-((256.0f/5.0f)* maxLight) ) ) / (2 * Kq)
@@ -809,9 +975,152 @@ namespace
 			//light.lightRadius = 1; //DEBUG THAT ONLY FRAGMENTS CONTAINED IN VOLUME RENDERED; turn really low and make sure lighting looks clipped 
 		}
 
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		//CREATE SAMPLE LOCATIONS IN HEMISPHERE
+		std::uniform_real_distribution<float> randomFloatRange_0_to_1(0.0f, 1.0f);
+		std::default_random_engine generator;
+
+		//predefine sample points for ssao depth checking; this is called a kernal
+		//we basically pick random points within the hemisphere that will be used for the SSAO algorithm
+		std::vector<glm::vec3> ssaoKernel;
+		for (int i = 0; i < NUM_SSAO_SAMPLES; ++i)
+		{
+			//we want x and y to be in the range [-1,1];
+			//we want z to be on the range [0, 1];
+			//think of a circle, we're choosing a random xy somewhere in the 360 degrees.
+			//as for z, we want it at some height within half of the sphere 
+			float x = randomFloatRange_0_to_1(generator) * 2.0f - 1.0f; //[0, 1] ->  [0, 2] -> [-1, 1]
+			float y = randomFloatRange_0_to_1(generator) * 2.0f - 1.0f;
+			float z = randomFloatRange_0_to_1(generator);
+
+			glm::vec3 samplePos(x, y, z);
+			samplePos = glm::normalize(samplePos);
+
+			//give the sample a random scale; think of this as pushing/pulling postion to/from the center of the hemisphere
+			samplePos *= randomFloatRange_0_to_1(generator);
+
+			auto lerp = [](float a, float b, float perc) {return a + perc * (b - a); }; //to intuitively understand this way of lerping, think of the floats as vectors (and think about what + and - do to vectors geometrically)
+
+			//it would be nice if samples were more dense around the origin
+			//we can make that happen using a curve; the goal is to have more samples at a lower value
+			// 1- - - - - - - - - -
+			// |                -*-
+			// |              _-  -
+			// |       ___--**    -
+			// | ---***      ^    -
+			// -------------------1. . . . . . . 2     
+			//      curve: x^2
+			//
+			// the above curve has more density below 0.5 than above 0.5 over the entire range of 1;
+			// the ^ marks the spot where it crosses 0.5
+			// using such a curve, we can bias samples to be closer to the origin
+
+			float samplePosInTotal = (float)i / NUM_SSAO_SAMPLES; //range [0, 1]; this will be our x in the x^2
+
+			//bias the sample
+			float biasToCenterWithScale = samplePosInTotal * samplePosInTotal;
+
+			//we don't want to scale by 0, so set a limit to downscaling by 0.1f
+			biasToCenterWithScale = lerp(0.1f, 1.0f, biasToCenterWithScale);
+			samplePos *= biasToCenterWithScale;
+
+			ssaoKernel.push_back(samplePos);
+		}
+
+		//send samples to the shader for storage
+		ssaoShader.use();
+		for (unsigned int i = 0; i < ssaoKernel.size(); ++i)
+		{
+			const glm::vec3& sample = ssaoKernel[i];
+
+			std::string uniformName = std::string("samples[") + std::to_string(i) + std::string("]");
+			ssaoShader.setUniform3f(uniformName.c_str(), sample);
+		}
+
+
+		//CREATE RANDOM ROTATIONS OF SAMPLE HEMISPHERES 
+		//we can keep the sample numbers low if we randomly rotate the kernel
+		//this will help prevent "banding" that occurs with low sample numbers
+		//in the end, we will blur together result so using a randomness isn't too bad 
+
+		std::vector<glm::vec3> noiseRotations;
+		for (int i = 0; i < 16; ++i)
+		{
+			//the normal will be pointing in the +z direction in tangent space
+			//ultimately, we will be creating a TBN matrix to transform the samples from tangent space to viewspace (the space we're doing lighting calculations in this time)
+			//we can simulate rotating the samples by rotating the tangent space's x axis (ie the tangent axis)
+			//the below code picks a random vector that will serve as this tangent; ultimately we will use the cross product to generate an orthonormal basis 
+			//this isnt the exact vector we will use to create a tangent to the normal, but it will be used via the gram-schmidt process to construct a tangent
+			glm::vec3 randomXYPlaneVector(
+				randomFloatRange_0_to_1(generator) * 2.0f -1.0f, //transform [0, 1] to [-1, 1]
+				randomFloatRange_0_to_1(generator) * 2.0f - 1.0f, //transform [0, 1] to [-1, 1]
+				0
+			);
+			noiseRotations.push_back(randomXYPlaneVector);
+		}
+
+		//create a texture to hole the rotation noise vectors
+		GLuint noiseRotationTexture;
+		glGenTextures(1, &noiseRotationTexture);
+		glBindTexture(GL_TEXTURE_2D, noiseRotationTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT, &noiseRotations[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+
+		////CREATE A FBO TO HOLD SSAO OCCLUSION FACTOR  ////
+		GLuint ssaoFBO;
+		glGenFramebuffers(1, &ssaoFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+
+		GLuint ssao_attachment;
+		glGenTextures(1, &ssao_attachment);
+		glBindTexture(GL_TEXTURE_2D, ssao_attachment);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr); //tutorial has pixel format as RGB, not red; perhaps mistake?
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, nullptr); //use extra color channels for debugging
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao_attachment, 0);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+			GLuint error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+			std::cout << "failure in SSAO frame buffer" << std::endl;
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+		// SSAO BLUR BUFFER
+		GLuint ssaoBlurFBO;
+		glGenFramebuffers(1, &ssaoBlurFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+
+		GLuint ssaoBlur_colorAttachment;
+		glGenTextures(1, &ssaoBlur_colorAttachment);
+		glBindTexture(GL_TEXTURE_2D, ssaoBlur_colorAttachment);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoBlur_colorAttachment, 0);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			GLuint error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+			std::cout << "failure in SSAO BLUR frame buffer" << std::endl;
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////
 
 		// --------------------------------------------------------------------------------------------
-
 		while (!glfwWindowShouldClose(window))
 		{
 			float currentTime = static_cast<float>(glfwGetTime());
@@ -859,6 +1168,68 @@ namespace
 				models[i].modelSource->draw(geometricStageShader);
 			}
 
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, cubeDiffuseMap);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, cubeSpecularMap);
+
+			//draw cubes (share same VAO as lamp, don't mistake this for drawning lamp boxes)
+			glBindVertexArray(lampVAO);
+			for (size_t i = 0; i < cubeTransforms.size(); ++i)
+			{
+				Transform& transform = cubeTransforms[i];
+				glm::mat4 model = glm::mat4(1.f); //set model to identity matrix
+				model = glm::translate(model, transform.position);
+				model = glm::rotate(model, glm::radians(transform.rotation.x), glm::vec3(1, 0, 0));
+				model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0, 1, 0));
+				model = glm::rotate(model, glm::radians(transform.rotation.z), glm::vec3(0, 0, 1));
+				model = glm::scale(model, transform.scale);
+				geometricStageShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//--------------------------SSAO STAGE----------------------------------------------------------
+			
+			///// RENDER OCCLUSION 
+			glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, gAttachment_position);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, gAttachment_normals);
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, noiseRotationTexture);
+
+			ssaoShader.use();
+			ssaoShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			ssaoShader.setUniform1f("radius", ssaoRadiusTweak);
+			ssaoShader.setUniform1f("rangeCheckStrength", rangeCheckStrength);
+
+			//draw the quad so SSAO is applied to entire viewing screen
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, numVertsInQuad);
+
+
+			//// BLUR OCCLUSION
+			glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			ssaoBlur.use();
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, ssao_attachment);
+
+			glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, numVertsInQuad);
+
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 			// -------------------------- LIGHTING STAGE ---------------------------------------------------
 
 			glBindFramebuffer(GL_FRAMEBUFFER, lbuffer);
@@ -872,11 +1243,14 @@ namespace
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, gAttachment_albedospec);
 
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, ssaoBlur_colorAttachment);
+
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			//---- COPY DEPTH ---- copy over depth information so lights do not render on top of deferred shading objects
-			//this is needed for forward shading component and for stencil testing light volumes
+			//this is needed for forward shading component and for **stencil testing light volumes**
 			//		FYI tutorial warns about this type of copying might not be portable when copying to/from default framebuffer (ie 0) because the depth buffer formats must match
 			//		(this si fine because we're copying between two FBs that we know match in terms of depth buffer configuration)
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer);
@@ -891,19 +1265,20 @@ namespace
 			glEnable(GL_STENCIL_TEST);
 			
 			lightingStage_LVOLUME_Shader.use();
-			lightingStage_LVOLUME_Shader.setUniform3f("camPos", camPos);
-			lightingStage_LVOLUME_Shader.use();
+			//lightingStage_LVOLUME_Shader.setUniform3f("camPos", camPos); //now rendering in view space
 			lightingStage_LVOLUME_Shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			lightingStage_LVOLUME_Shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 			lightingStage_LVOLUME_Shader.setUniform1f("width_pixels", (float)width);
 			lightingStage_LVOLUME_Shader.setUniform1f("height_pixels", (float)height);
+			lightingStage_LVOLUME_Shader.setUniform1i("bEnableSSAO", bEnableSSAO);
+			
 
 			stencilWriterShader.use();
 			//stencilWriterShader.setUniform3f("camPos", camPos);
 			stencilWriterShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			stencilWriterShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
-			for (size_t i = 0; i < pointLights.size() && i < (size_t)numberLightsToDraw; ++i)
+			for (size_t i = 0; i < numPointLights; ++i)
 			{
 				ColoredPointLight& light = pointLights[i];
 				float lightRadius = bDebugLightVolumes ? 1 : light.lightRadius;
@@ -948,7 +1323,6 @@ namespace
 				lightingStage_LVOLUME_Shader.use();
 				lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(sphereModelMatrix));
 				light.applyUniforms(lightingStage_LVOLUME_Shader);
-
 				glStencilMask(0); //disable writing
 				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 				glStencilFunc(GL_NOTEQUAL, 0, 0xFF); //only write if passed behind front_face (-1) and infront of  back_face(+1); (-1 + 1 = 0);
@@ -965,7 +1339,7 @@ namespace
 			lampShader.use();
 			lampShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 			lampShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			for (size_t i = 0; i < pointLights.size() && i < (size_t)numberLightsToDraw; ++i)
+			for (size_t i = 0; i < sizeof(pointLights) / sizeof(ColoredPointLight); ++i)
 			{
 				ColoredPointLight& targetLight = pointLights[i];
 				glm::vec3 diffuseColor = targetLight.getDiffuseColor();
@@ -975,13 +1349,14 @@ namespace
 				model = glm::translate(model, pointLights[i].getPosition());
 				model = glm::scale(model, glm::vec3(0.2f));
 
-				lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				lampShader.setUniform3f("lightColor", diffuseColor.x, diffuseColor.y, diffuseColor.z);
-				glBindVertexArray(lampVAO);
-				if (bEnableDrawLightCubes)
-					glDrawArrays(GL_TRIANGLES, 0, 36);
+				glm::vec3 lightColor = pointLights[i].getDiffuseColor();
 
-				//debuging -- visualize light volume
+				lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				lampShader.setUniform3f("lightColor", lightcolor.x, lightcolor.y, lightcolor.z);
+				glBindVertexArray(lampVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+
+				//debugging -- visualize light volume
 				if (bDrawLightVolumes)
 				{
 					glm::mat4 sphereModelMatrix;
@@ -1020,6 +1395,12 @@ namespace
 					glBindTexture(GL_TEXTURE_2D, gAttachment_albedospec);
 					break;
 				case 4:
+					glBindTexture(GL_TEXTURE_2D, ssao_attachment);
+					break;
+				case 5:
+					glBindTexture(GL_TEXTURE_2D, ssaoBlur_colorAttachment);
+					break;
+				case 6:
 					glBindTexture(GL_TEXTURE_2D, lAttachment_lighting);
 					break;
 			}
@@ -1062,7 +1443,8 @@ distance	constant	linear		quadratic
 
 */
 
-//int main()
-//{
-//	true_main();
-//}
+
+int main()
+{
+	true_main();
+}

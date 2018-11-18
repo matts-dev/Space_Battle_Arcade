@@ -48,12 +48,12 @@ namespace
 				out vec2 interpTextCoords;
 
 				void main(){
+					//in real world applications, reduce number of matrix multiplies (or even just do them on CPU) 
 					gl_Position = projection * view * model * vec4(position, 1);
-					fragPosition = vec3(model * vec4(position, 1));
+					fragPosition = vec3(view * model * vec4(position, 1));
 
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					//fragNormal = mat3(transpose(inverse(model))) * normal;
-					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
+					fragNormal = normalize(mat3(transpose(inverse(view * model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
 
 					interpTextCoords = textureCoordinates;
 				}
@@ -86,6 +86,7 @@ namespace
 				}
 			)";
 
+	
 	const char* lstage_LIGHTVOLUME_vertex_shader_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
@@ -94,12 +95,23 @@ namespace
 				uniform mat4 projection;
 				uniform mat4 view;
 				uniform mat4 model;
-				
+
+				struct PointLight //change warning: this is also defined in the fragment shader
+				{
+					vec3 position;
+					vec3 ambientIntensity;	vec3 diffuseIntensity;	vec3 specularIntensity;
+					float constant;			float linear;			float quadratic;
+				};	
+				uniform PointLight pointLights; 
+
 				out vec2 interpTexCoords;
+				out vec4 pointLightPos_VS;
 
 				void main(){
 					gl_Position = projection * view * model * vec4(position, 1);
 					interpTexCoords = texCoords;
+
+					pointLightPos_VS = view * vec4(pointLights.position, 1.0f);
 				}
 			)";
 	const char* lstage_LIGHTVOLUME_frag_shader_src = R"(
@@ -107,30 +119,28 @@ namespace
 				out vec4 fragmentColor;
 
 				in vec2 interpTexCoords;
+				in vec4 pointLightPos_VS;
 
 				uniform sampler2D positions;
 				uniform sampler2D normals;
 				uniform sampler2D albedo_specs;
 
-				uniform vec3 camPos;
 				uniform float width_pixels = 0;
 				uniform float height_pixels = 0;
 				
-				struct PointLight
+				struct PointLight //change warning: this is also defined in the vertex shader to get position into view space
 				{
 					vec3 position;
 					vec3 ambientIntensity;	vec3 diffuseIntensity;	vec3 specularIntensity;
 					float constant;			float linear;			float quadratic;
 				};	
-
 				uniform PointLight pointLights; 
 				
 				void main(){
 					//FIGURE OUT SCREEN COORDINATES
 					//gl_FragCoord is window space, eg a 800x600 would be range [0, 800] and [0, 600]; 
-					//so to convert to UV range (ie [0, 1]), we divide teh frag_coord by the pixel values
+					//so to convert to UV range (ie [0, 1]), we divide the frag_coord by the pixel values
 					vec2 screenCoords = vec2(gl_FragCoord.x / width_pixels, gl_FragCoord.y / height_pixels);
-
 
 					//LOAD FROM GBUFFER (When rendering from sphere, we need to convert back to screen coords; alternatively this might could be done with perspective matrix but this way avoids matrix multiplication at expense of uniforms)
 					vec3 fragPosition = texture(positions, screenCoords).rgb;
@@ -138,18 +148,12 @@ namespace
 					vec3 color = texture(albedo_specs, screenCoords).rgb;
 					float specularStrength = texture(albedo_specs, screenCoords).a;
 
-					//LOAD FROM GBUFFER
-					//vec3 fragPosition = texture(positions, interpTexCoords).rgb;
-					//vec3 fragNormal = normalize(texture(normals, interpTexCoords).rgb);
-					//vec3 color = texture(albedo_specs, interpTexCoords).rgb;
-					//float specularStrength = texture(albedo_specs, interpTexCoords).a;
-
 					//STANDARD LIGHT EQUATIONS
 					PointLight light = pointLights; 
 
-					vec3 toLight = normalize(light.position - fragPosition);
+					vec3 toLight = normalize(pointLightPos_VS.xyz - fragPosition);
 					vec3 toReflection = reflect(-toLight, fragNormal);
-					vec3 toView = normalize(camPos - fragPosition);
+					vec3 toView = normalize(-fragPosition); //in view space, camPos = 0,0,0; so camPos - fragPos is just -fragPos; so we get this one for free :) 
 
 					vec3 ambientLight = light.ambientIntensity * color;
 
@@ -158,15 +162,23 @@ namespace
 					float specularAmount = pow(max(dot(toView, toReflection), 0), 32); //shinnyness will need to be embeded in a gbuffer
 					vec3 specularLight = light.specularIntensity* specularAmount * specularStrength;
 
-					float distance = length(light.position - fragPosition);
+					float distance = length(pointLightPos_VS.xyz - fragPosition);
 					float attenuation = 1 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
 
 					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * vec3(attenuation);
 
 					fragmentColor = vec4(lightContribution, 0.0f);
-		
-					//debug getting appropriate screen coords
-					//fragmentColor = vec4(gl_FragCoord.x / width_pixels, gl_FragCoord.y / height_pixels, 0.0, 1.0f);
+
+					//debug visualizations
+					//fragmentColor = vec4(toLight, 1.0f);
+					//fragmentColor = vec4(toReflection, 1.0f);
+					//fragmentColor = vec4(fragNormal, 1.0f);
+					//fragmentColor = vec4(fragPosition, 1.0f);
+					//fragmentColor = vec4(diffuseLight, 1.0f);
+					//fragmentColor = vec4(vec3(attenuation), 1.0f);
+					//fragmentColor = vec4(vec3(distance/1000.0f), 1.0f);
+					//fragmentColor = vec4(pointLightPos_VS.xyz, 1.0f);
+
 				}
 			)";
 
@@ -191,6 +203,26 @@ namespace
 				
 				void main(){
 					fragmentColor = vec4(lightColor, 1.f);
+				}
+			)";
+
+	const char* stencilwriter_vertex_shader_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				void main(){
+					//render to screen space so stencil buffer is filled in 
+					gl_Position = projection * view * model * vec4(position, 1);
+				}
+			)";
+	const char* stencilwriter_frag_shader_src = R"(
+				#version 330 core
+				void main(){
+					//do nothing, let stencil buffer be updated through glStencilFunc/glStencilOp
 				}
 			)";
 	const char* render_quad_shader_vert_src = R"(
@@ -260,12 +292,15 @@ namespace
 	};
 
 	bool bDrawLightVolumes = false;
+	bool bDebugLightVolumes = false;
+	int displayBuffer = 4;
 	void processInput(GLFWwindow* window)
 	{
 		static int initializeOneTimePrintMsg = []() -> int {
 			std::cout << "Press R to toggle light rotation" << std::endl
 				<< "Press L to draw the light volume bounding sphere (they're pretty huge)" << std::endl
-				<< "" << std::endl
+				<< "Press B to decrease light volume size for debugging" << std::endl
+				<< "GBuffer/Render display: 1=normals, 2=positions, 3=diffuse-spec, 4=finalrender" << std::endl
 				<< std::endl;
 			return 0;
 		}();
@@ -283,6 +318,15 @@ namespace
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
 		}
+
+		for (int key = GLFW_KEY_1; key < GLFW_KEY_5; ++key)
+		{
+			if (input.isKeyJustPressed(window, key))
+			{
+				displayBuffer = key - GLFW_KEY_0;
+			}
+		}
+
 		if (input.isKeyJustPressed(window, GLFW_KEY_R))
 		{
 			rotateLight = !rotateLight;
@@ -290,6 +334,10 @@ namespace
 		if (input.isKeyJustPressed(window, GLFW_KEY_L))
 		{
 			bDrawLightVolumes = !bDrawLightVolumes;
+		}
+		if (input.isKeyJustPressed(window, GLFW_KEY_B))
+		{
+			bDebugLightVolumes = !bDebugLightVolumes;
 		}
 		
 
@@ -310,96 +358,67 @@ namespace
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		//float vertices[] = {
-		//	// positions______    ___normals _______   texture coords
-		//	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		//	0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		//	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		//	0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		//	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-		//	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-		//	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		//	0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		//	0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		//	0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		//	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		//	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-		//	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		//	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		//	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		//	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		//	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		//	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		//	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		//	0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		//	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		//	0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		//	0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		//	0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		//	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		//	0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		//	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		//	0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		//	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		//	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-		//	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		//	0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		//	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		//	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		//	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		//	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-		//};
 		float vertices[] = {
-		    // Back face
-		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-		     0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right         
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+			// x    y      z       s      t   nX     nY     nZ
+		    // Back face 
+		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f, -1.0f,// Bottom-left
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 0.0f, -1.0f,// top-right
+		     0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 0.0f, -1.0f,// bottom-right         
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 0.0f, -1.0f,// top-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f, -1.0f,// bottom-left
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 0.0f, -1.0f,// top-left
 		    // Front face
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-		    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f,// bottom-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f,// bottom-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top-right
+		    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f,// bottom-left
 		    // Left face
-		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
-		    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f, 0.0f, 0.0f,// top-right
+		    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f, 0.0f, 0.0f,// top-left
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f, 0.0f, 0.0f,// bottom-left
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f, 0.0f, 0.0f,// bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f, 0.0f, 0.0f,// bottom-right
+		    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f, 0.0f, 0.0f,// top-right
 		    // Right face
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right         
-		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
-		     0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left     
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f,// top-left
+		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f,// bottom-right
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f,// top-right         
+		     0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f,// bottom-right
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f,// top-left
+		     0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f,// bottom-left     
 		    // Bottom face
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
-		     0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
-		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, -1.0f, 0.0f,// top-right
+		     0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.0f, -1.0f, 0.0f,// top-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, -1.0f, 0.0f,// bottom-left
+		     0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.0f, -1.0f, 0.0f,// bottom-left
+		    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, -1.0f, 0.0f,// bottom-right
+		    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, -1.0f, 0.0f,// top-right
 		    // Top face
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
-		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left        
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f,// top-left
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f,// bottom-right
+		     0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 1.0f, 0.0f,// top-right     
+		     0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f,// bottom-right
+		    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f,// top-left
+		    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f// bottom-left        
 		};
 
-		Model meshModel("Models/nanosuit/nanosuit.obj");
+
+		//textures
+		GLuint cubeDiffuseMap = textureLoader("Textures/container2.png", GL_TEXTURE0);
+		GLuint cubeSpecularMap = textureLoader("Textures/container2_specular.png", GL_TEXTURE1);
+		std::vector<Transform> cubeTransforms;
+		cubeTransforms.push_back(Transform{ {0,-1,0},{0,0,0},{30,1,30} });
+		cubeTransforms.push_back(Transform{ { -5,0,0 },{ 0,0,0 },{ 1,1,1 } }); //lone box
+		cubeTransforms.push_back(Transform{ { -3,0,0.5f },{ 0,45,0 },{ 1,1,1 } }); //bottom stack
+		cubeTransforms.push_back(Transform{ { -3,1,0.5f },{ 0,0,0 },{ 1,1,1 } });  //top stack
+		cubeTransforms.push_back(Transform{ { -6.5f,0,0.5f },{ 0,0,0 },{ 1,5,10 } });  //wall-leftside
+		cubeTransforms.push_back(Transform{ { -2,0,-3.0f },{ 0,0,0 },{ 10,5,1 } });  //wall-back
+
+		//Model meshModel("Models/nanosuit/nanosuit.obj");
+		Model meshModel("Models/tie_fighter/tie_1blend.obj");
+
 		std::vector<ModelInstance> models;
 		constexpr float positionOffset = 1.0f;
 		constexpr int modelsPerRow = 10;
@@ -408,7 +427,9 @@ namespace
 		{
 			ModelInstance modelInstance;
 			modelInstance.transform.position = glm::vec3(positionOffset * col, 0, -positionOffset * row);
-			modelInstance.transform.scale = glm::vec3(0.1f);
+			modelInstance.transform.position -= glm::vec3(1, 0, -1); //displace slightly
+			//modelInstance.transform.scale = glm::vec3(0.1f); //for nanosuit
+			modelInstance.transform.scale = glm::vec3(0.05f); //for tiefighter
 			modelInstance.modelSource = &meshModel;
 			models.emplace_back(std::move(modelInstance));
 
@@ -433,8 +454,14 @@ namespace
 		glBindVertexArray(lampVAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);//use same vertex data
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(5 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
 
 		//shaders
 		Shader geometricStageShader(gstage_vertex_shader_src, gstage_frag_shader_src, false);
@@ -451,9 +478,22 @@ namespace
 
 
 		Shader lampShader(lamp_vertex_shader_src, lamp_frag_shader_src, false);
+		lampShader.use();
+
+		//just for writing stencil buffer data
+		Shader stencilWriterShader(stencilwriter_vertex_shader_src, stencilwriter_frag_shader_src, false);
+		stencilWriterShader.use();
+
 		Shader postProcessShader(render_quad_shader_vert_src, render_quad_shader_frag_src, false);
 		postProcessShader.use();
 		postProcessShader.setUniform1i("renderTexture", 0);
+
+		//for completeness, make sure each shader has a identity model matrix
+		const glm::mat4 identityMatrix(1.0f);
+		lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
+		lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
+		stencilWriterShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
+		postProcessShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
 
 
 		glEnable(GL_DEPTH_TEST);
@@ -505,7 +545,7 @@ namespace
 		/*struct PointLight
 		{
 		glm::vec3 position;
-		glm::vec3 ambientIntensity;
+		glm::vec3 ambientIntensity;v
 		glm::vec3 diffuseIntensity;
 		glm::vec3 specularIntensity;
 		//attenuation constants
@@ -535,7 +575,7 @@ namespace
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(2.3f, 1.3f, -4.0f),
+				glm::vec3(-5.3f, 2.3f, -2.0f),
 				"pointLights", //true, 1
 			},
 			{
@@ -543,9 +583,9 @@ namespace
 				pntDiffuse,
 				pntSpecular,
 				plghtConstant,
-				plghtLinear,
-				plghtQuadratic,
-				glm::vec3(4.0f, 2.0f, -6.0f),
+				0.22f,
+				0.20f,
+				glm::vec3(-4.0f, 2.0f, 3.0f), 
 				"pointLights",//true, 2
 			},
 			{
@@ -555,7 +595,7 @@ namespace
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(0.f, 1.0f, -3.f),
+				glm::vec3(-1.f, 1.0f, 1.f),
 				"pointLights",//true, 3
 			}
 		};
@@ -667,11 +707,11 @@ namespace
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lAttachment_lighting, 0);
 
-		GLuint lAttachment_depthRBO;
-		glGenRenderbuffers(1, &lAttachment_depthRBO);
-		glBindRenderbuffer(GL_RENDERBUFFER, lAttachment_depthRBO);
+		GLuint lAttachment_depthStencilRBO;
+		glGenRenderbuffers(1, &lAttachment_depthStencilRBO);
+		glBindRenderbuffer(GL_RENDERBUFFER, lAttachment_depthStencilRBO);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, lAttachment_depthRBO);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, lAttachment_depthStencilRBO);
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
@@ -731,7 +771,8 @@ namespace
 			float Kq = light.getAttenuationQuadratic();
 			
 			//take the strongest component as it will have the furthest attenuation distance
-			float maxLight = std::fmaxf(color.r, std::fmax(color.g, color.b));
+			//float maxLight = std::fmaxf(color.r, std::fmax(color.g, color.b)); //seems like suming up intensities gives better result when using many lights
+			float maxLight = color.r + color.g + color.b;
 
 			//float distance = (-Kl + std::sqrt(Kl*Kl - 4*Kq*(Kc-((256.0f/5.0f)* maxLight) ) ) / (2 * Kq)
 			float A = Kq;
@@ -741,11 +782,11 @@ namespace
 
 			//for tutorial simplicity, just store this as a public variable
 			light.lightRadius = distance;
+			//light.lightRadius = 1; //DEBUG THAT ONLY FRAGMENTS CONTAINED IN VOLUME RENDERED; turn really low and make sure lighting looks clipped 
 		}
 
 
 		// --------------------------------------------------------------------------------------------
-
 		while (!glfwWindowShouldClose(window))
 		{
 			float currentTime = static_cast<float>(glfwGetTime());
@@ -793,13 +834,30 @@ namespace
 				models[i].modelSource->draw(geometricStageShader);
 			}
 
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, cubeDiffuseMap);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, cubeSpecularMap);
+
+			glBindVertexArray(lampVAO);
+			for (size_t i = 0; i < cubeTransforms.size(); ++i)
+			{
+				Transform& transform = cubeTransforms[i];
+				glm::mat4 model = glm::mat4(1.f); //set model to identity matrix
+				model = glm::translate(model, transform.position);
+				model = glm::rotate(model, glm::radians(transform.rotation.x), glm::vec3(1, 0, 0));
+				model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0, 1, 0));
+				model = glm::rotate(model, glm::radians(transform.rotation.z), glm::vec3(0, 0, 1));
+				model = glm::scale(model, transform.scale);
+				geometricStageShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
 			// -------------------------- LIGHTING STAGE ---------------------------------------------------
-			lightingStage_LVOLUME_Shader.use();
-			lightingStage_LVOLUME_Shader.setUniform3f("camPos", camPos);
-			//for (size_t i = 0; i < numPointLights; ++i)
-			//{
-			//	pointLights[i].applyUniforms(lightingStage_LVOLUME_Shader);
-			//}
+
+			glBindFramebuffer(GL_FRAMEBUFFER, lbuffer);
+
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, gAttachment_position);
 
@@ -809,45 +867,92 @@ namespace
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, gAttachment_albedospec);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, lbuffer);
-
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glDepthMask(GL_FALSE);
 
-			//draw quad for lighting
-			//glBindVertexArray(quadVAO);
-			//glDrawArrays(GL_TRIANGLES, 0, numVertsInQuad);
-
-			//draw each sphere as to only apply lighting where the sphere is present
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE);
-			lightingStage_LVOLUME_Shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-			lightingStage_LVOLUME_Shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			lightingStage_LVOLUME_Shader.setUniform1f("width_pixels", (float)width);
-			lightingStage_LVOLUME_Shader.setUniform1f("height_pixels", (float)height);
-			for (size_t i = 0; i < numPointLights; ++i)
-			{
-				ColoredPointLight& light = pointLights[i];
-
-				//note: lights have been disabled as arrays for my light volumes; so they must be updated one at a time.
-				light.applyUniforms(lightingStage_LVOLUME_Shader);
-
-				glm::mat4 sphereModelMatrix;
-				sphereModelMatrix = glm::translate(sphereModelMatrix, light.getPosition());
-				sphereModelMatrix = glm::scale(sphereModelMatrix, glm::vec3(light.lightRadius));
-				lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(sphereModelMatrix));
-				sphereMesh.render();
-			}
-			glDepthMask(GL_TRUE);
-			glDisable(GL_BLEND);
-			// --------------------- FORWARD SHADING COMPONENT -----------------------
-
-			//copy over depth information so lights do not render on top of deferred shading objects
+			//---- COPY DEPTH ---- copy over depth information so lights do not render on top of deferred shading objects
+			//this is needed for forward shading component and for stencil testing light volumes
+			//		FYI tutorial warns about this type of copying might not be portable when copying to/from default framebuffer (ie 0) because the depth buffer formats must match
+			//		(this si fine because we're copying between two FBs that we know match in terms of depth buffer configuration)
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, lbuffer);
 			glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_FRAMEBUFFER, lbuffer);
+			//----------------
+
+			glDepthMask(GL_FALSE);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE);
+			glEnable(GL_STENCIL_TEST);
+			
+			lightingStage_LVOLUME_Shader.use();
+			//lightingStage_LVOLUME_Shader.setUniform3f("camPos", camPos); //now rendering in view space
+			lightingStage_LVOLUME_Shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+			lightingStage_LVOLUME_Shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			lightingStage_LVOLUME_Shader.setUniform1f("width_pixels", (float)width);
+			lightingStage_LVOLUME_Shader.setUniform1f("height_pixels", (float)height);
+
+			stencilWriterShader.use();
+			//stencilWriterShader.setUniform3f("camPos", camPos);
+			stencilWriterShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+			stencilWriterShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+			for (size_t i = 0; i < numPointLights; ++i)
+			{
+				ColoredPointLight& light = pointLights[i];
+				float lightRadius = bDebugLightVolumes ? 1 : light.lightRadius;
+
+				//note: lights have been disabled as arrays for my light volumes; so they must be updated one at a time.
+				glm::mat4 sphereModelMatrix;
+				sphereModelMatrix = glm::translate(sphereModelMatrix, light.getPosition());
+				sphereModelMatrix = glm::scale(sphereModelMatrix, glm::vec3(lightRadius));
+				stencilWriterShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(sphereModelMatrix));
+
+				//------STENCIL PASS---------
+				glDisable(GL_CULL_FACE);
+				glClearStencil(0); //sets value for clearing stencil, for debugging you can change this value 
+				glStencilMask(0xFF);
+				glClear(GL_STENCIL_BUFFER_BIT);
+				glStencilFunc(GL_ALWAYS, 0, 0xFF); //always write stencil results
+
+				//  light volume sphere                                   X
+				//      _____			        _____	                 _____			            _____
+				//    +  +1  +			      +  +1   +	               +   +0  +	              +   +1  +
+				//  +          +		    +          +             +          +		        +     X    +
+				// |            |		   |     X      |           |            |		       |            |
+				//  +          +		    +          +             +          +		    --- +     vp   +  -----
+				//    +  -1   +			      +       +	               +   +0  +		 	|     +      + not    |
+				//      -----			        -----	                 -----			    |behind ----- rendered|
+				//        X                                                                 |_____________________|
+				//      vp                       vp                       vp
+				//
+				// X is object; vp is viewer's position. When stencil is 0, no lighting is applied
+				//
+				// stencil = 0;                stencil = +1              stencil = 0               stencil = +1
+				glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP); //note this is "DEPTH FAILS", less intuitive than depth pass but works better
+				glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP); //note: stencil does not havez negative numbers according to spec
+
+				stencilWriterShader.use();
+				sphereMesh.render(); 
+
+				//------LIGHTING PASS--------
+				glDisable(GL_DEPTH_TEST); //don't allow depth to stop rendering a sphere
+				glEnable(GL_CULL_FACE);
+				glCullFace(GL_FRONT); //use back of sphere for lighting so that if camera is inside sphere lighting is still rendered
+				lightingStage_LVOLUME_Shader.use();
+				lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(sphereModelMatrix));
+				light.applyUniforms(lightingStage_LVOLUME_Shader);
+				glStencilMask(0); //disable writing
+				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+				glStencilFunc(GL_NOTEQUAL, 0, 0xFF); //only write if passed behind front_face (-1) and infront of  back_face(+1); (-1 + 1 = 0);
+				sphereMesh.render();
+				glEnable(GL_DEPTH_TEST); //reenable
+			}
+			glDisable(GL_STENCIL_TEST);
+			glDepthMask(GL_TRUE);
+			glDisable(GL_BLEND);
+			glCullFace(GL_BACK);
+			// --------------------- FORWARD SHADING COMPONENT -----------------------
 
 			//draw light
 			lampShader.use();
@@ -870,18 +975,21 @@ namespace
 				glBindVertexArray(lampVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 
-				//debuging -- visualize light volume
+				//debugging -- visualize light volume
 				if (bDrawLightVolumes)
 				{
 					glm::mat4 sphereModelMatrix;
+					float lightRadius = bDebugLightVolumes ? 1 : targetLight.lightRadius;
 					sphereModelMatrix = glm::translate(sphereModelMatrix, targetLight.getPosition());
-					sphereModelMatrix = glm::scale(sphereModelMatrix, glm::vec3(targetLight.lightRadius));
+					sphereModelMatrix = glm::scale(sphereModelMatrix, glm::vec3(lightRadius));
 					lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(sphereModelMatrix));
 
 					//seems that lines will flicker on backface culling, but doesn't seem to have any effect on solid rendering geometry; so should be fine.
+					glDisable(GL_CULL_FACE);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
 					sphereMesh.render();
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					glEnable(GL_CULL_FACE);
 				}
 			}
 
@@ -893,10 +1001,22 @@ namespace
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			glActiveTexture(GL_TEXTURE0);
-			//glBindTexture(GL_TEXTURE_2D, gAttachment_normals);
-			//glBindTexture(GL_TEXTURE_2D, gAttachment_position);
-			//glBindTexture(GL_TEXTURE_2D, gAttachment_albedospec);
-			glBindTexture(GL_TEXTURE_2D, lAttachment_lighting);
+			
+			switch (displayBuffer)
+			{
+				case 1:
+					glBindTexture(GL_TEXTURE_2D, gAttachment_normals);
+					break;
+				case 2:
+					glBindTexture(GL_TEXTURE_2D, gAttachment_position);
+					break;
+				case 3:
+					glBindTexture(GL_TEXTURE_2D, gAttachment_albedospec);
+					break;
+				case 4:
+					glBindTexture(GL_TEXTURE_2D, lAttachment_lighting);
+					break;
+			}
 
 			postProcessShader.use();
 			glBindVertexArray(quadVAO);

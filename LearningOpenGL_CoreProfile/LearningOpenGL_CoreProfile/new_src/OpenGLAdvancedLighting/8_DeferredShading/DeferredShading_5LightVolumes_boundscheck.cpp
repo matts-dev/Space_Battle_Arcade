@@ -82,7 +82,7 @@ namespace
 					position.rgb = fragPosition;
 					normal.rgb = fragNormal;
 					albedo_spec.rgb = texture(material.texture_diffuse0, interpTextCoords).rgb;
-					albedo_spec.a = texture(material.texture_specular0, interpTextCoords).a;
+					albedo_spec.a = texture(material.texture_specular0, interpTextCoords).r;
 				}
 			)";
 
@@ -133,7 +133,7 @@ namespace
 					vec2 screenCoords = vec2(gl_FragCoord.x / width_pixels, gl_FragCoord.y / height_pixels);
 
 
-					//LOAD FROM GBUFFER
+					//LOAD FROM GBUFFER (When rendering from sphere, we need to convert back to screen coords; alternatively this might could be done with perspective matrix but this way avoids matrix multiplication at expense of uniforms)
 					vec3 fragPosition = texture(positions, screenCoords).rgb;
 					vec3 fragNormal = normalize(texture(normals, screenCoords).rgb);
 					vec3 color = texture(albedo_specs, screenCoords).rgb;
@@ -392,8 +392,8 @@ namespace
 		    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left        
 		};
 
-		//Model meshModel("Models/nanosuit/nanosuit.obj");
-		Model meshModel("Models/tie_fighter/tie_1blend.obj");
+		Model meshModel("Models/nanosuit/nanosuit.obj");
+		//Model meshModel("Models/tie_fighter/tie_1blend.obj");
 
 		std::vector<ModelInstance> models;
 		constexpr float positionOffset = 1.0f;
@@ -404,8 +404,8 @@ namespace
 			ModelInstance modelInstance;
 			modelInstance.transform.position = glm::vec3(positionOffset * col, 0, -positionOffset * row);
 			modelInstance.transform.position -= glm::vec3(1, 0, -1); //displace slightly
-			//modelInstance.transform.scale = glm::vec3(0.1f); //for nanosuit
-			modelInstance.transform.scale = glm::vec3(0.05f); //for tiefighter
+			modelInstance.transform.scale = glm::vec3(0.1f); //for nanosuit
+			//modelInstance.transform.scale = glm::vec3(0.05f); //for tiefighter
 			modelInstance.modelSource = &meshModel;
 			models.emplace_back(std::move(modelInstance));
 
@@ -456,6 +456,12 @@ namespace
 		postProcessShader.use();
 		postProcessShader.setUniform1i("renderTexture", 0);
 
+		//for completeness, make sure each shader has a identity model matrix for rendering quads; seems to work fine without (guessing default uniform mat4 is an identiy matrix)
+		const glm::mat4 identityMatrix(1.0f);
+		lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
+		lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
+		stencilWriterShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
+		postProcessShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(identityMatrix));
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -884,13 +890,9 @@ namespace
 				lightingStage_LVOLUME_Shader.use();
 				lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(sphereModelMatrix));
 				light.applyUniforms(lightingStage_LVOLUME_Shader);
-
 				glStencilMask(0); //disable writing
 				glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 				glStencilFunc(GL_NOTEQUAL, 0, 0xFF); //only write if passed behind front_face (-1) and infront of  back_face(+1); (-1 + 1 = 0);
-				//glStencilFunc(GL_ALWAYS, 0, 0xFF); //DEBUG
-				lightingStage_LVOLUME_Shader.use();
-				lightingStage_LVOLUME_Shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(sphereModelMatrix));
 				sphereMesh.render();
 				glEnable(GL_DEPTH_TEST); //reenable
 			}
@@ -938,7 +940,6 @@ namespace
 					glEnable(GL_CULL_FACE);
 				}
 			}
-
 
 			// --------------------------- POST PROCESSING --------------------------- 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);

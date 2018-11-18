@@ -80,7 +80,7 @@ namespace
 					position.rgb = fragPosition;
 					normal.rgb = fragNormal;
 					albedo_spec.rgb = texture(material.texture_diffuse0, interpTextCoords).rgb;
-					albedo_spec.a = texture(material.texture_specular0, interpTextCoords).a;
+					albedo_spec.a = texture(material.texture_specular0, interpTextCoords).r;
 				}
 			)";
 
