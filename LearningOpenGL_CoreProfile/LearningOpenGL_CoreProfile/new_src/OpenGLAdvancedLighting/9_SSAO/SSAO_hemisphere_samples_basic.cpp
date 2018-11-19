@@ -25,6 +25,7 @@
 #include "../../Utilities/SphereMesh.h"
 #include <complex>
 #include <random>
+#include <limits>
 
 namespace
 {
@@ -403,6 +404,37 @@ namespace
 				}
 			)";
 
+	const char* infinite_depth_filler_shader_vert_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				layout (location = 1) in vec2 textureCoords;				
+
+				out vec2 interpTextureCoords;				
+
+				void main(){
+					//force depth to be 1 after perspective divide (z/w is 1/1 in this case)
+					//this will require changing depth function to LEQUAL instead of default LESS because 1 is clipped
+					gl_Position = vec4(position.xy, 1, 1);
+
+					interpTextureCoords = textureCoords;
+				}
+			)";
+	const char* infinite_depth_filler_shader_frag_src = R"(
+				#version 330 core
+				layout (location = 0) out vec3 gPosition;
+
+				in vec2 interpTextureCoords;
+
+				uniform float infinity;
+
+				void main(){
+					//SSAO actually uses position depths within the position buffer, so we cannot just simply set the depth
+					gPosition = vec3(0, 0, -infinity);
+
+					gl_FragDepth = 1.0f;
+				}
+			)";
+
 	const int NUM_SSAO_SAMPLES = 64;
 
 	struct Transform
@@ -450,6 +482,7 @@ namespace
 	float rangeCheckStrength = 8.0f;
 	const float rangeCheckIncrementAmount = 4.0f;
 	bool bEnableSSAO = true;
+	bool bUseInfiniteDepthCorrection = true;
 
 
 	void processInput(GLFWwindow* window)
@@ -459,6 +492,7 @@ namespace
 				<< "Press L to draw the light volume bounding sphere (they're pretty huge)" << std::endl
 				<< "Press B to decrease light volume size for debugging" << std::endl
 				<< "Press UP/DOWN to increase/decrease SSAO sample radius" << std::endl
+				<< "Press F to toggle background depth fill to maximum value (solves infinity background depth of 0 issue for ssao)" << std::endl
 				<< "GBuffer/Render display: 1=normals, 2=positions, 3=diffuse-spec, 4=SSAO preblur, 5=SSAO blur, 6=Final Lighting Pass" << std::endl
 				<< std::endl;
 			return 0;
@@ -495,6 +529,10 @@ namespace
 		if (input.isKeyJustPressed(window, GLFW_KEY_O))
 		{
 			bEnableSSAO = !bEnableSSAO;
+		}
+		if (input.isKeyJustPressed(window, GLFW_KEY_F))
+		{
+			bUseInfiniteDepthCorrection = !bUseInfiniteDepthCorrection;
 		}
 
 		for (int key = GLFW_KEY_1; key < GLFW_KEY_7; ++key)
@@ -676,6 +714,10 @@ namespace
 		Shader ssaoBlur(SSAO_SIMPLEBLUR_quad_shader_vert_src, SSAO_SIMPLEBLUR_quad_shader_frag_src, false);
 		ssaoBlur.use();
 		ssaoBlur.setUniform1i("renderTexture", 0);
+
+		Shader infiniteDepthCorrection(infinite_depth_filler_shader_vert_src, infinite_depth_filler_shader_frag_src, false);
+		float infinity = std::numeric_limits<float>::infinity();
+		infiniteDepthCorrection.setUniform1f("infinity", infinity); //only later versions of GLSL will give infinity when dividing by zero
 
 		//for completeness, make sure each shader has a identity model matrix
 		const glm::mat4 identityMatrix(1.0f);
@@ -1188,6 +1230,23 @@ namespace
 				geometricStageShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
+
+
+			///////////////////////////////////////////////////
+			//SSAO needs a backdrop for depth calculations to work properly
+			//     if nothing is drawn, the depth is 0; causeing incorrect SSAO on geometry very close to camera (depth of 0 will be within the range check)
+			//     using cube maps and setting depth to the maximum value will solve this issue for SSAO; but we can also solve it by manually setting the depth
+			if (bUseInfiniteDepthCorrection)
+			{
+				glDepthFunc(GL_LEQUAL);
+				infiniteDepthCorrection.use();
+				glBindVertexArray(quadVAO);
+				glDrawArrays(GL_TRIANGLES, 0, numVertsInQuad);
+				glDepthFunc(GL_LESS);
+			}
+
+			///////////////////////////////////////////////
+
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//--------------------------SSAO STAGE----------------------------------------------------------
 			
