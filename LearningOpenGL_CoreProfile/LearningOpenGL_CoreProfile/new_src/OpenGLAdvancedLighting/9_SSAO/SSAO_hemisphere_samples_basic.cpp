@@ -323,7 +323,7 @@ namespace
 						sampleLoc_CS.xyz /= sampleLoc_CS.w;
 						sampleLoc_CS.xyz = (sampleLoc_CS.xyz * 0.5f) + 0.5f; //convert to UV coordinates [-1, 1] => [0, 1]
 
-						float sampleDepth = texture(positions, sampleLoc_CS.xy).z;
+						float sampleDepth = texture(positions, sampleLoc_CS.xy).z; //rename to lookupDepth?
 						
 						//locations are in view space, 0,0,0 is camera;
 						//camera looks in -z direction; that means these z values have negative values (since they're relative to camera)
@@ -332,7 +332,7 @@ namespace
 						float bias = 0.0f;
 
 						//A: I feel like this method makes more intuitive sense, it checks if the actual fragment's position closer than something sampled from around it; but it is not what the tutorial checks
-						//float occludeFactor = sampleDepth > position.z + bias ? 1.0f : 0.0f; //ie if the sampleDepth is less negative that the fragment's position
+						//float occludeFactor = sampleDepth > position.z + bias ? 1.0f : 0.0f; //ie if the sampleDepth is less negative that the fragment's position //causes weird artifact, might be interesting to explore
 
 						//B: tutorial's method compares if the generated sample's z value is within geometry
 						float occludeFactor = sampleDepth >= (sampleLoc_VS.z + bias) ? 1.0f : 0.0f; //ie if the sampleDepth is less negative that the fragment's position

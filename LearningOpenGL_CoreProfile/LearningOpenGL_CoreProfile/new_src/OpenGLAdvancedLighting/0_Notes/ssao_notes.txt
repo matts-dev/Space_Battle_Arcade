@@ -1,0 +1,97 @@
+SSAO notes:
+
+Screen Space Ambient Occlusion:
+	
+	Real world concept:
+		-reallife ambient light is occluded by nearby geometry, it gives a subtle effect.
+			-you can see this in corners, the corners are darker
+		-the effect is subtle, but gives boost in detail
+
+	High level Idea of Method:
+		-For a fragment, sample around it and see if there is any nearby geometry
+			-nearby geometry will provide "some" occlusion
+			-sum up the nearby occlusion
+			-let it throttle the amount of ambient light provided
+
+	Geometric implementation of method
+		1. create a "hemisphere" around the normal of surface
+		2. sample uniform distribution of locations within this hemi sphere
+		3. compare if the sample region is within some geometry or not
+			-a. we can convert the samplePosition into screen coordinates
+			-b. use thes creen coordinates to look into gbuffer and get position at sample
+			-c. check if the sample's depth is deeper than lookup depth
+				-if so, it contributes to occlusion
+				-by deeper, then means lesser since in view space (which is what we will be using) depth is the increasing negative z direction
+
+	Implemenation details
+		1. Create a hemisphere with samples
+			-this is done in tangent space
+				-ie hemisphere matches texture space;
+				-ultimately, think of the z direction matching the normal of the geometry
+			-samples should be uniform distributed
+			-samples should be uploaded to shader via an array
+
+		2. problem: Using the same hemisphere with sample samples over the entire screen will produce a noticable pattern
+			-this is called banding if samples are low
+			-RANDOM ROTATIONs to the samples will help this effect, but not completely solve it
+				-by random choosing a vector in tangent space (in the x/y plane), we can simulate rotating the hemisphere of samples
+					-note: a false intuitition is that this vector will be the tangent directly; it will not
+						-it will be used to generate a tangent vector that is actually used as a rotation
+						-this generation is done with gram-schmidt method
+				-the rotations are done via the change in basis matrix
+					-ie the TBN; (tangent bitangent normal) matrix
+		
+		3. Using Samples
+			Fragment Shader
+				1. convert hemisphere from tangent space to view space
+					-construct TBN matrix and then apply it to samples to convert
+						N = the fragments normal
+						T = derived from gram-schmidt with random rotation vector;
+							basically project vector onto the other, then take the component that is not in the projection (via vector difference)
+								eg: tangent = randomVec - dot(normal, randomVec) * normal		//second half is the projection
+						B = N cross T
+				2. Use the samples in viewspace to lookup the nearby sample positions (which include depth)
+					-convert sample to screen space using the projection matrix
+						-don't forget to divide by w
+					-convert the sampel to texture space by transforming [-1, 1] to [0, 1]
+					-sample the position texture, and extract the depth
+
+				3. compare samples depth with the depth in the geometry
+					-if the sample is deeper than the depth observed, it should contribute to the occlusion
+						eg occlusion += sampleDepth < lookupDepth
+
+				4. normalize depth based on number of samples
+					occlusions / total_samples
+
+				5. bias samples to have more towards center by scaling using a curve
+					// 1- - - - - - - - - -
+					// |                -*-
+					// |              _-  -
+					// |       ___--**    -
+					// | ---***      ^    -
+					// -------------------1. . . . . . . 2     
+					//      curve: x^2
+
+				5. limit ambient lighting based on occlusion
+					lightingAllowance = 1 - normalize_occlusion
+					this factor is just multiplied by the ambient lighting amount
+	
+		4. Additional Fixes
+			1. range check
+				- far away objects shouldn't contribute to ambient occlusion, but the samples may be within geometry
+				- range check makes far away objects have no contribution to occlusion
+				- this should be "smooth" so there isn't an abrupt canceling in ambient occlusion
+
+			2. infinite depth fix
+				-when depth buffer is cleared, depth has a value of 0 and a gbuffer position of 0,0,0
+					-when items are close to the camera, they will receive occlusion if adjacent to a place where no geometry was rendered
+				-drawing a quad (or cubemap) and setting its depth to a high value (for stencil buffering light volumes) and its gposition to (?, ?, -infinity) will prevent this
+					-light volume stencil buffering uses actual depth
+					-ssao uses gbuffer position's Z value to determine depth
+			3. tiling the random noise vector
+				the random rotation noise vectors can be stored in a small texture and tiled
+					-but the interpolated texture coordiantes are always [0, 1] for a fullscreen quad
+					-so we need to scale up the [0, 1] by some factor, and turn on texture repeating
+					-the factor scale up is fullscreenTextureSize/sizeOfNoiseVectors
+
+			4. blur ambient occlusion to hide regular noise pattern
