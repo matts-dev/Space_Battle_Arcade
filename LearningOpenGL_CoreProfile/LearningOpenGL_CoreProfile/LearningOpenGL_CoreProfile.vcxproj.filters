@@ -90,6 +90,9 @@
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Utilities\SphereMeshTextured.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -792,6 +795,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\OpenGLAdvancedLighting\9_SSAO\SSAO_hemisphere_samples_basic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Utilities\SphereMeshTextured.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\PBR\PBR_point_lights.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\PBR\pbr_starterfile_pointlights_singlesphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\PBR\pbr_starterfile_pointlights_multispheres.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\PBR\PBR_point_lights_material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -87,6 +87,11 @@ GLuint textureLoader(const char* relative_filepath, int texture_unit /*= -1*/, b
 		mode = useGammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
 		dataFormat = GL_RGBA;
 	}
+	else if (img_nrChannels == 1)
+	{
+		mode = GL_RED;
+		dataFormat = GL_RED;
+	}
 	else
 	{
 		std::cerr << "unsupported image format for texture at " << relative_filepath << " there are " << img_nrChannels << "channels" << std::endl;
