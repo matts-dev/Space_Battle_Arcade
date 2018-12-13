@@ -460,6 +460,7 @@ namespace
 		return value;
 	}
 
+	constexpr int numEnvMaps = 6;
 	bool rotateLight = true;
 	bool bUseWireFrame = false;
 	bool bUseTexture = false;
@@ -512,7 +513,15 @@ namespace
 		{
 			if (input.isKeyJustPressed(window, key))
 			{
-				displayScreen = key - GLFW_KEY_0;
+				if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL))
+				{
+					activeEnvironmentMap = key - GLFW_KEY_1; //minus 1 so that when 1 is pressed, we activate 0
+					activeEnvironmentMap = clamp(activeEnvironmentMap, 0, numEnvMaps - 1);
+				}
+				else
+				{
+					displayScreen = key - GLFW_KEY_0;
+				}
 			}
 		}
 		camera.handleInput(window, deltaTime);
@@ -551,7 +560,7 @@ namespace
 		else
 		{
 			std::cerr << "ERROR LOADING IMAGE: " << filepath << std::endl;
-			std::exit(-1);
+			//std::exit(-1); don't crash so all HDR textures don't need to be copied to debug/release folders for RenderDoc debugging
 		}
 
 		return hdrTexture;
@@ -580,6 +589,13 @@ namespace
 
 		//HDR environment equirectangular textures
 		GLuint hdr_newportTexture = loadHDRTexture("Textures/hdr/newport_loft.hdr");
+		GLuint hdr_popcornlobby = loadHDRTexture("Textures/hdr/dl/Lobby-Center_2k.hdr");
+		GLuint hdr_milkyway = loadHDRTexture("Textures/hdr/dl/Milkyway_small.hdr");
+		GLuint hdr_sierra = loadHDRTexture("Textures/hdr/dl/Sierra_Madre_B_Ref.hdr");
+		GLuint hdr_icelake = loadHDRTexture("Textures/hdr/dl/Ice_Lake_Ref.hdr");
+		GLuint hdr_winterforest = loadHDRTexture("Textures/hdr/dl/WinterForest_Ref.hdr");
+
+		GLuint envHdrMaps[] = { hdr_newportTexture, hdr_popcornlobby, hdr_milkyway, hdr_sierra, hdr_icelake, hdr_winterforest };
 
 
 		Shader shader(vertex_shader_src, frag_shader_src, false);
@@ -615,7 +631,7 @@ namespace
 		float lastLightRotationAngle = 0.0f;
 
 		// ------------------- Rendering Equirectangular map to cubemap --------------------------------
-		constexpr int numEnvMaps = 1;
+
 		GLuint environmentMaps[numEnvMaps];
 
 		glm::mat4 envProjectionMat = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -663,7 +679,7 @@ namespace
 		glActiveTexture(GL_TEXTURE9);
 		for (size_t i = 0; i < sizeof(environmentMaps) / sizeof(GLuint); ++i)
 		{
-			glBindTexture(GL_TEXTURE_2D, hdr_newportTexture);
+			glBindTexture(GL_TEXTURE_2D, envHdrMaps[i]);
 			environmentMaps[i] = genEnvironmentFloatCubeMapTexture(FBOSize, FBOSize);
 			for (int face = 0; face < 6; ++face)
 			{
