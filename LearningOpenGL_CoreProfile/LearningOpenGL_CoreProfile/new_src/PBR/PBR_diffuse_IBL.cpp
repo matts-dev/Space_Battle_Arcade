@@ -11,6 +11,7 @@
 #include "../Utilities/SphereMesh.h"
 #include "../../InputTracker.h"
 #include "../Utilities/SphereMeshTextured.h"
+#include "../Utilities/SimpleCubeMesh.h"
 
 namespace
 {
@@ -78,6 +79,8 @@ namespace
 				uniform Material material;
 				uniform int screenCaptureIdx = 0;
 
+				uniform samplerCube irradianceMap;
+
 				uniform vec3 albedo_u;
 				uniform float metalic_u;
 				uniform float roughness_u;
@@ -122,9 +125,15 @@ namespace
                 vec3 F_FreshnelApproximation(vec3 halfway, vec3 toView, vec3 zeroIncidenceConstant)
                 {
 					float cos_theta = max(dot(halfway, toView), 0.0f);
-
                     return zeroIncidenceConstant + (1.0f - zeroIncidenceConstant) * pow(1.0f - cos_theta, 5.0f);
                 }
+				/** This version is for ambient light where there are no roughness terms in the calculation */
+                vec3 F_FreshnelApproximationRoughnessVersion(vec3 halfway, vec3 toView, vec3 zeroIncidenceConstant, float roughness)
+                {
+					float cos_theta = max(dot(halfway, toView), 0.0f);
+                    return zeroIncidenceConstant + ( max(vec3(1.0f - roughness) - zeroIncidenceConstant, 0.0f) ) * pow(1.0f - cos_theta, 5.0f);
+                }
+
 
 				//-------------- Normal Mapping Trick -------------
 				//the precomputation of tangents and bitangents is preferable to this method for performance reasons
@@ -225,8 +234,13 @@ namespace
 								capture9_normal = normal;
 					}							
 
-					//adhoc ambiance; IBL will provide ambience when implemented in a later file
-					L0 += vec3(0.03f) * albedo * (AO);
+					// IBL based diffuse ambient
+					vec3 ambient = texture(irradianceMap, normal).rgb;
+						//vec3 kSpecular = F_FreshnelApproximation(normal, toView, zeroIncidence);
+					vec3 kSpecular = F_FreshnelApproximationRoughnessVersion(normal, toView, zeroIncidence, roughness);
+					vec3 kDiffuse = vec3(1.0f) - kSpecular;
+					kDiffuse *= (1.0f - metalness); //metalness should always be on range [0, 1]
+					L0 += ambient * albedo * kDiffuse * AO;
 
 					//map to ldr (Reinhard method)
 					L0 = L0 / (L0 + 1);
@@ -283,6 +297,159 @@ namespace
 					fragmentColor = vec4(lightColor, 1.f);
 				}
 			)";
+///-------------------------------------------------------------------------------------------
+	const char* equiToCube_vert_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+
+				out vec3 localPos;
+				
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				void main(){
+					//we do not want texture rotating with the cubemap, so this lacks view transform
+					localPos = position;
+
+					//rotate cube map appropriately
+					gl_Position = projection * view * vec4(position, 1);
+				}
+			)";
+	const char* equiToCube_frag_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+
+				in vec3 localPos;
+
+				uniform sampler2D equirectangularHDRImage;
+							
+				const vec2 invAtan = vec2(0.1591f, 0.3183f);
+				void main(){
+					vec3 dir = normalize(localPos);			
+					
+					//tutorial doesn't cover the math behind going from a equirectangular projection back to sphere.
+					//sample sphere position in equirect map
+					vec2 uv = vec2(atan(dir.z, dir.x), asin(dir.y));
+					uv *= invAtan;
+					uv += 0.5f;
+
+					//sample equirectangular map with converted coordinates
+					vec3 color = texture(equirectangularHDRImage, uv).rgb;
+
+					//debug
+					//color = vec3(1,0,0);
+					//color = texture(equirectangularHDRImage, -vec2(0.4f, 0.5f)).rgb;
+					color = color / (1 + color);
+					
+					fragmentColor = vec4(color, 1.0f);
+				}
+			)";
+	///-------------------------------------------------------------------------------------------
+	const char* skybox_vert_shader = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+
+				out vec3 texCoord;
+
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				void main(){
+					mat4 view_notranslation = mat4(mat3(view));
+
+					texCoord = position;
+
+					gl_Position = projection * view_notranslation * vec4(position, 1);
+					gl_Position = gl_Position.xyww; //force depth to be largest possible
+				}
+			)";
+	const char* skybox_frag_shader = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+				
+				in vec3 texCoord;
+
+				uniform samplerCube skybox;
+				
+				void main(){
+					//in order for this to pass the depth test, the depth function must be set to glDepthFunc(GL_LEQUAL) otherwise this will never be less than default depth
+					vec3 color = texture(skybox, texCoord).rgb;
+					
+					//HDR tonemap to LDR
+					color = color / (1 + color);
+
+					//gamma correct
+					color = pow(color, vec3(1.0f/2.2f));
+
+					fragmentColor = vec4(color, 1.0f);
+				}
+			)";
+///-------------------------------------------------------------------------------------------
+	const char* hemisphere_convolver_vert_src = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				out vec3 localPosition;
+
+				void main(){
+					
+					mat4 rotatedView = mat4(mat3(view)); //trim off translation
+
+					localPosition = position;
+					gl_Position = projection * rotatedView * vec4(position, 1);
+				}
+			)";
+	const char* hemisphere_convolver_frag_src = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+
+				in vec3 localPosition;
+
+				uniform samplerCube environmentMap;
+
+				const float PI = 3.14159;
+				
+				void main(){
+					//create basis vectors for transforming local(tangent) space into world space.
+					vec3 normal = normalize(localPosition);
+					vec3 tempUp = vec3(0.0f,1.0f,0.0f);
+					vec3 right = normalize(cross(tempUp, normal));
+					vec3 up = normalize(cross(normal, right));
+
+					float stepSize = 0.025f;
+					float horiStep = stepSize;// * (2 * PI);
+					float vertStep = stepSize;// * PI/2;
+
+					vec3 irradiance = vec3(0.0f);			
+					int numSamples = 0;
+
+					for(float hori_angle = 0.0f; hori_angle < 2.0f * PI; hori_angle += horiStep)
+					{
+						for(float angle_from_zenith = 0.0f; angle_from_zenith < PI * 0.5f; angle_from_zenith += vertStep)
+						{
+							vec3 localPos;
+							localPos.x = sin(angle_from_zenith) * cos(hori_angle);
+							localPos.y = sin(angle_from_zenith) * sin(hori_angle);
+							localPos.z = cos(angle_from_zenith);
+
+							vec3 worldPos = (right * localPos.x) + (up * localPos.y) + (normal * localPos.z);
+							
+							//cos(angle_from_zenith) accounts for incoming light angle reducing brightness (same as in blinn-phong)
+							//sin(angle_from_zenith) weights samples near horrizontal more heavily to compensate for more samples around zenith (remember: sin(90) = 1, sin(0) = 0; 0 being at zenth, and 90 being at horrizontal)
+							irradiance += texture(environmentMap, worldPos).rgb * cos(angle_from_zenith) * sin(angle_from_zenith);
+							numSamples++;
+						}
+					}
+
+					//average irradiance, pre-multiply by pi so when we divide by pi later it cancels out.
+					irradiance = (irradiance * PI) / float(numSamples);
+
+					fragmentColor = vec4(irradiance, 1.0f);
+				}
+			)";
 
 
 	template <typename T>
@@ -298,6 +465,7 @@ namespace
 	bool bUseTexture = false;
 	unsigned int numLightsToRender = 4;
 	int displayScreen = 0;
+	int activeEnvironmentMap = 0;
 	void processInput(GLFWwindow* window)
 	{
 		static int initializeOneTimePrintMsg = []() -> int {
@@ -361,6 +529,34 @@ namespace
 		float ao; //ambient occlusion factor
 	};
 
+	GLuint loadHDRTexture(const char* filepath)
+	{
+		stbi_set_flip_vertically_on_load(true);
+		int width, height, numChannels;
+		float* data = stbi_loadf(filepath, &width, &height, &numChannels, 0);
+
+		GLuint hdrTexture = 0;
+		if (data)
+		{
+			glGenTextures(1, &hdrTexture);
+			glBindTexture(GL_TEXTURE_2D, hdrTexture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cerr << "ERROR LOADING IMAGE: " << filepath << std::endl;
+			std::exit(-1);
+		}
+
+		return hdrTexture;
+	}
+
 	void true_main()
 	{
 		camera.setPosition(0.0f, 0.0f, 3.0f);
@@ -382,6 +578,9 @@ namespace
 		GLuint metalicTexture = textureLoader("Textures/pbr_rustediron1/rustediron2_metallic.png", GL_TEXTURE2, useSRGB);
 		GLuint roughnessTexture = textureLoader("Textures/pbr_rustediron1/rustediron2_roughness.png", GL_TEXTURE3, useSRGB);
 
+		//HDR environment equirectangular textures
+		GLuint hdr_newportTexture = loadHDRTexture("Textures/hdr/newport_loft.hdr");
+
 
 		Shader shader(vertex_shader_src, frag_shader_src, false);
 		shader.use();
@@ -390,8 +589,13 @@ namespace
 		shader.setUniform1i("material.metalic", 2);
 		shader.setUniform1i("material.roughness", 3);
 		shader.setUniform1i("material.AO", 4);
+		shader.setUniform1i("irradianceMap", 5);
 
 		Shader lampShader(lamp_vertex_shader_src, lamp_frag_shader_src, false);
+
+		Shader equiToCubemapShader(equiToCube_vert_src, equiToCube_frag_src, false);
+		Shader skyboxShader(skybox_vert_shader, skybox_frag_shader, false);
+		Shader convolveShader(hemisphere_convolver_vert_src, hemisphere_convolver_frag_src, false);
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -405,15 +609,114 @@ namespace
 			glm::vec3(1.2f, 5.0f, 2.0f),
 			glm::vec3(-10, -10, 2.0f),
 			glm::vec3(-10,  10, 2.0f),
-			glm::vec3( 10,  10, 2.0f)
+			glm::vec3(10,  10, 2.0f)
 		};
 
 		float lastLightRotationAngle = 0.0f;
 
+		// ------------------- Rendering Equirectangular map to cubemap --------------------------------
+		constexpr int numEnvMaps = 1;
+		GLuint environmentMaps[numEnvMaps];
+
+		glm::mat4 envProjectionMat = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+		const GLuint FBOSize = 512;
+
+		//see ShadowMapping_PointShadows_Basic.cpp for explanation for discussion about why these are created the way they are.
+		std::vector<glm::mat4> viewMatrices;
+		viewMatrices.emplace_back(glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0, -1, 0)));
+		viewMatrices.emplace_back(glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0, -1, 0)));
+		viewMatrices.emplace_back(glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0, 0, 1)));
+		viewMatrices.emplace_back(glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0, 0, -1)));
+		viewMatrices.emplace_back(glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0, -1, 0)));
+		viewMatrices.emplace_back(glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0, -1, 0)));
+
+		GLuint captureFBO, captureRBO; //RBO is for depth attachment -- may not be necessary
+		glGenFramebuffers(1, &captureFBO);
+		glGenRenderbuffers(1, &captureRBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+		glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, FBOSize, FBOSize);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
+		auto genEnvironmentFloatCubeMapTexture = [](unsigned int width_lambda, unsigned int height_lambda) -> GLuint {
+			GLuint environmentCubeMap;
+			glGenTextures(1, &environmentCubeMap);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, environmentCubeMap);
+			for (size_t face = 0; face < 6; ++face)
+			{
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGB16F, width_lambda, height_lambda, 0, GL_RGB, GL_FLOAT, nullptr);
+			}
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+			return environmentCubeMap;
+		};
+
+		//load environment map
+		SimpleCubeMesh cubeMesh;
+		glViewport(0, 0, FBOSize, FBOSize);
+		equiToCubemapShader.use();
+		equiToCubemapShader.setUniform1i("equirectangularHDRImage", 9);
+		equiToCubemapShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(envProjectionMat));
+		glActiveTexture(GL_TEXTURE9);
+		for (size_t i = 0; i < sizeof(environmentMaps) / sizeof(GLuint); ++i)
+		{
+			glBindTexture(GL_TEXTURE_2D, hdr_newportTexture);
+			environmentMaps[i] = genEnvironmentFloatCubeMapTexture(FBOSize, FBOSize);
+			for (int face = 0; face < 6; ++face)
+			{
+				equiToCubemapShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(viewMatrices[face]));
+
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, environmentMaps[i], 0);
+				if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) { std::cerr << "error on setup of environment HDR framebuffer" << std::endl; }
+
+				glClearColor(0, 0, 0, 1);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				cubeMesh.render();
+			}
+		}
+
+		//--------------------------------- CONVOLVE ENVIRONMENT MAPS -------------------------------------------
+		convolveShader.use();
+		convolveShader.setUniform1i("environmentMap", 9);
+		convolveShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(envProjectionMat));
+		glActiveTexture(GL_TEXTURE9);
+		GLuint irradianceMaps[numEnvMaps];
+		constexpr unsigned int convolveSize = 32;
+
+		glViewport(0, 0, convolveSize, convolveSize);
+		for (size_t i = 0; i < sizeof(irradianceMaps) / sizeof(GLuint); ++i)
+		{
+			irradianceMaps[i] = genEnvironmentFloatCubeMapTexture(convolveSize, convolveSize);
+			
+			//bind after texture generation since it inherently requires binding to cubemap
+			glBindTexture(GL_TEXTURE_CUBE_MAP, environmentMaps[i]);
+			std::cout << "convolving environment map:" << i << std::endl;
+			for (int face = 0; face < 6; ++face)
+			{
+				convolveShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(viewMatrices[face]));
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, irradianceMaps[i], 0);
+				if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) { std::cerr << "error on setup of convolve HDR framebuffer" << std::endl; }
+				glClearColor(0, 0, 0, 1);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				cubeMesh.render();
+			}
+		}
+
+		std::cout << std::endl; 
+		//restore usage of default framebuffer;
+		glViewport(0, 0, width, height);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// ------------------- END FRAMEBUFFERS --------------------------------
+
+
+
 		//SphereMeshTextured sphereMesh(1.0f);
 		//SphereMeshTextured sphereMesh(0.5f);
 		SphereMeshTextured sphereMesh;
-
 		std::vector<SphereData> sphereMeshes;
 		int numRows = 7;
 		int numCols = 7;
@@ -437,6 +740,16 @@ namespace
 				inserted.ao = 1.0f;
 			}
 		}
+
+		//textures bindings probably changed, fix up before rendering
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, albedoTexure);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, normalTexture);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, metalicTexture);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, roughnessTexture);
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -506,6 +819,9 @@ namespace
 				shader.setUniform3f(uniformPosition.c_str(), lightPos.x, lightPos.y, lightPos.z);
 			}
 
+			glActiveTexture(GL_TEXTURE5);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMaps[activeEnvironmentMap]);
+
 			for (unsigned int idx = 0; idx < sphereMeshes.size(); ++idx)
 			{
 				model = glm::mat4(1.0f);
@@ -518,16 +834,29 @@ namespace
 				sphereMesh.render();
 			}
 
+			//render skybox
+			glDepthFunc(GL_LEQUAL);
+			skyboxShader.use();
+			skyboxShader.setUniform1i("skybox", 6);
+			skyboxShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+			skyboxShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			glActiveTexture(GL_TEXTURE6);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, environmentMaps[activeEnvironmentMap]);
+			//glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMaps[activeEnvironmentMap]);
+			cubeMesh.render();
+			glDepthFunc(GL_LESS);
+
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 
 		}
+		//TODO: clean up gl resources (vaos, textures, etc)
 
 		glfwTerminate();
 	}
 }
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}

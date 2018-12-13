@@ -809,7 +809,7 @@
     <ClCompile Include="new_src\PBR\pbr_starterfile_pointlights_multispheres.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\PBR\PBR_point_lights_material.cpp">
+    <ClCompile Include="new_src\PBR\PBR_diffuse_IBL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

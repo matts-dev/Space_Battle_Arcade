@@ -190,8 +190,8 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OnscreenOpenglMSAA.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StarterFile\MinmalBaseSetupForCopying.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StencilBufferTesting.cpp" />
+    <ClCompile Include="new_src\PBR\PBR_diffuse_IBL.cpp" />
     <ClCompile Include="new_src\PBR\PBR_point_lights.cpp" />
-    <ClCompile Include="new_src\PBR\PBR_point_lights_material.cpp" />
     <ClCompile Include="new_src\PBR\pbr_starterfile_pointlights_multispheres.cpp" />
     <ClCompile Include="new_src\PBR\pbr_starterfile_pointlights_singlesphere.cpp" />
     <ClCompile Include="new_src\Tests\does_out_vars_undergoes_w_division.cpp" />

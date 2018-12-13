@@ -57,7 +57,7 @@ namespace
 	const char* skybox_vertex_shader_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
-				layout (location = 1) in vec2 inTexCoord;
+				//layout (location = 1) in vec2 inTexCoord; //not needed?
 				
 				out vec3 texCoord;
 				
