@@ -93,6 +93,9 @@
     <ClInclude Include="new_src\Utilities\SphereMeshTextured.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Utilities\CubeTexturedMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -810,6 +813,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\PBR\PBR_diffuse_IBL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\PBR\PBR_specular_IBL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\PBR\0_PBR_FINAL_multiplematerials.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Utilities\CubeTexturedMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

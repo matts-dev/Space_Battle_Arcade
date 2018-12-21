@@ -24,6 +24,7 @@
     <ClInclude Include="new_src\ImportingModels\Models\LoadedMesh.h" />
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h" />
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h" />
+    <ClInclude Include="new_src\Utilities\CubeTexturedMesh.h" />
     <ClInclude Include="new_src\Utilities\Lighting\ConeLight.h" />
     <ClInclude Include="new_src\Utilities\Lighting\DirectionalLight.h" />
     <ClInclude Include="InputTracker.h" />
@@ -191,11 +192,14 @@
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StarterFile\MinmalBaseSetupForCopying.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedTopics\StencilBufferTesting.cpp" />
     <ClCompile Include="new_src\PBR\PBR_diffuse_IBL.cpp" />
+    <ClCompile Include="new_src\PBR\0_PBR_FINAL_multiplematerials.cpp" />
     <ClCompile Include="new_src\PBR\PBR_point_lights.cpp" />
+    <ClCompile Include="new_src\PBR\PBR_specular_IBL.cpp" />
     <ClCompile Include="new_src\PBR\pbr_starterfile_pointlights_multispheres.cpp" />
     <ClCompile Include="new_src\PBR\pbr_starterfile_pointlights_singlesphere.cpp" />
     <ClCompile Include="new_src\Tests\does_out_vars_undergoes_w_division.cpp" />
     <ClCompile Include="new_src\Tests\glm_matrix_data_row_vs_column.cpp" />
+    <ClCompile Include="new_src\Utilities\CubeTexturedMesh.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\ConeLight.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\DirectionalLight.cpp" />
     <ClCompile Include="InputTracker.cpp" />

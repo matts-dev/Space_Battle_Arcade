@@ -203,6 +203,7 @@ glm::vec3 SphereMesh::copyAndRotatePointXAxis(const glm::vec3& toCopy, float rot
 void SphereMesh::render()
 {
 	glBindVertexArray(vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); //renderdoc flagged this draw call as an error without binding an ebo -- I thought the VAO captured the state of ebo, but renderdoc says otherwise. :) 
 
 	glDrawElements(GL_TRIANGLES, triangleElementIndices.size(), GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
 

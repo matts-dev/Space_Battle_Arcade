@@ -339,7 +339,7 @@ namespace
 					//debug
 					//color = vec3(1,0,0);
 					//color = texture(equirectangularHDRImage, -vec2(0.4f, 0.5f)).rgb;
-					color = color / (1 + color);
+					//color = color / (1 + color); //DO NOT tonemap here, tonemapping will be done by renderer -- we want extra lighting information
 					
 					fragmentColor = vec4(color, 1.0f);
 				}
@@ -475,6 +475,7 @@ namespace
 				<< " Press T to toggle between textured mode" << std::endl
 				<< " Press number keys to change views" << std::endl
 				<< " \t 0=PBR, 1=D, 2=G, 3=F, 4=rough, 5=metal, 6=geoLightComponent, 7=geoViewComponent, 8=albedo, 9=normal" << std::endl
+				<< " Hold left control and press 1-6 to change environments" << std::endl
 				//vec3 capture1_D, capture2_G, capture3_F, capture4_r, capture5_m, capture6_Gl, capture7_Gv, capture8_albedo, capture9_normal;
 				<< std::endl;
 			return 0;
@@ -872,7 +873,7 @@ namespace
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}
