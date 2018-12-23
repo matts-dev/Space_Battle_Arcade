@@ -261,7 +261,7 @@ textureTangentNormal.y = 1.0f - textureTangentNormal.y;
 					vec3 prefilter = textureLod(prefilterMap, R, roughness * MAX_PREFILT_MIP).rgb;		//roughness is [0,1], so very rough will give us max mip (ie 1*max)
 					vec3 ambSpecular = prefilter * (F * envBRDF.r + vec3(envBRDF.g));					//scale=r and bias=g
 
-					L0 += (ambDiffuse + ambSpecular) * AO;					//specular already has kSpecular(ie F) in the equation.
+					L0 += (ambDiffuse + ambSpecular) * AO;					
 
 					//map to ldr (Reinhard method)
 					L0 = L0 / (L0 + 1);
@@ -1492,7 +1492,7 @@ textureTangentNormal.y = 1.0f - textureTangentNormal.y;
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}
