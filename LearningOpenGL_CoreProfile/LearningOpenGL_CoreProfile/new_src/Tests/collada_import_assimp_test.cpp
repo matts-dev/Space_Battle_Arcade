@@ -16,7 +16,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "../ImportingModels/Models/Model.h"
+#include "../ImportingModels/Models/AnimatedModelLoader/Model_NM_Anim.h"
 
 namespace
 {
@@ -342,8 +342,8 @@ namespace
 	void true_main()
 	{
 		camera.setPosition(0.0f, 0.0f, 3.0f);
-		int width = 800;
-		int height = 600;
+		int width = 1200;
+		int height = 800;
 
 		GLFWwindow* window = init_window(width, height);
 
@@ -398,7 +398,7 @@ namespace
 			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 		};
 
-		Model meshModel("Models/3dBoxMan/3dBoxMan.dae");
+		Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan.dae");
 
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
@@ -635,6 +635,7 @@ namespace
 			{
 				glm::mat4 model(1.f); //set model to identity matrix
 				//model = glm::translate(model, glm::vec3(20.f, 0.f, -2.f));
+				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 				model = glm::scale(model, glm::vec3(0.25f));
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
