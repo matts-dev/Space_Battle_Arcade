@@ -1,2 +1,8 @@
 https://sketchfab.com/models/ca311b94a0c249a1abc6697d105253e5
 https://learnopengl.com/Model-Loading/Model
+
+
+//animation model 
+http://www.katsbits.com/download/models/
+https://www.katsbits.com/download/models/md5-example.php
+http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html

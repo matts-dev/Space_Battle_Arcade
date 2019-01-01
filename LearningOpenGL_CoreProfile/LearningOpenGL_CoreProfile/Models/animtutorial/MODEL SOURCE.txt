@@ -1,0 +1,9 @@
+I do not own this model, but it is publically available at these tutorials. Permission to use should be requested from that site.
+
+http://ogldev.atspace.co.uk/
+
+//animation model 
+http://www.katsbits.com/download/models/
+https://www.katsbits.com/download/models/md5-example.php
+http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
+https://www.3dgep.com/loading-and-animating-md5-models-with-opengl/

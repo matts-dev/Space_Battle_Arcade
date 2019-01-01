@@ -96,6 +96,12 @@
     <ClInclude Include="new_src\Utilities\CubeTexturedMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -825,6 +831,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Tests\collada_import_assimp_test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Tests\glm_vs_aimatrix4x4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

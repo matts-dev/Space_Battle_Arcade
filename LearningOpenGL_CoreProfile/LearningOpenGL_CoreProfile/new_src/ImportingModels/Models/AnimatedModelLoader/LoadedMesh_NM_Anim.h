@@ -49,6 +49,7 @@ struct Bone
 	std::string name;
 	std::vector<aiVertexWeight> weights;
 	aiMatrix4x4 meshToBoneTransform;
+	aiMatrix4x4 finalAnimatedBoneTransform;
 	int uniqueID = -1;
 };
 

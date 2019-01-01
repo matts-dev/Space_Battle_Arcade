@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.h" />
+    <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.h" />
     <ClInclude Include="new_src\ImportingModels\Models\Model.h" />
     <ClInclude Include="new_src\ImportingModels\Models\LoadedMesh.h" />
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h" />
@@ -78,6 +80,9 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\Model.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\LoadedMesh.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\ImportingModels.cpp" />
@@ -200,6 +205,7 @@
     <ClCompile Include="new_src\Tests\collada_import_assimp_test.cpp" />
     <ClCompile Include="new_src\Tests\does_out_vars_undergoes_w_division.cpp" />
     <ClCompile Include="new_src\Tests\glm_matrix_data_row_vs_column.cpp" />
+    <ClCompile Include="new_src\Tests\glm_vs_aimatrix4x4.cpp" />
     <ClCompile Include="new_src\Utilities\CubeTexturedMesh.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\ConeLight.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\DirectionalLight.cpp" />
