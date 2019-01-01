@@ -352,8 +352,8 @@ void Model_NM_Anim::loadModel_NM_Anim(std::string path)
 {
 	//--------------------------------------------------------------------------------------------
 	//const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	//const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals); //smooth normals required for bob model
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices); //smooth normals required for bob model, adding aiProcessJointIdenticavertices to better match tutorial
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals); //smooth normals required for bob model
+	//const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices); //smooth normals required for bob model, adding aiProcessJointIdenticavertices to better match tutorial
 	//--------------------------------------------------------------------------------------------
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -493,6 +493,7 @@ LoadedMesh_NM_Anim Model_NM_Anim::processMesh(aiMesh* mesh, const aiScene* scene
 				//to vertex data, add an influencing bone and its weight; these will be used to lookup into bone transforms array
 				vertexBoneData[vertId].boneWeights[curBone] = bone->mWeights[wgt].mWeight;
 				vertexBoneData[vertId].boneIds[curBone] = cacheBone.uniqueID;
+				vertexBoneData[vertId].currentBone++;
 			}
 
 			//todo: may need to switch these over the shared pointers since each data structure has its own copy of its bone
