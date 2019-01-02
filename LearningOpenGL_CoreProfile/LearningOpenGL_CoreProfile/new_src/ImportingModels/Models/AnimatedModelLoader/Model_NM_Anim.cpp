@@ -352,8 +352,8 @@ void Model_NM_Anim::loadModel_NM_Anim(std::string path)
 {
 	//--------------------------------------------------------------------------------------------
 	//const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals); //smooth normals required for bob model
-	//const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices); //smooth normals required for bob model, adding aiProcessJointIdenticavertices to better match tutorial
+	//const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals); //smooth normals required for bob model
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices); //smooth normals required for bob model, adding aiProcessJointIdenticavertices to better match tutorial
 	//--------------------------------------------------------------------------------------------
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -376,7 +376,7 @@ void Model_NM_Anim::processNode(aiNode* node, const aiScene* scene)
 	for (uint32_t i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		meshes.push_back(processMesh(mesh, scene));
+		meshes.push_back(processMesh(mesh, scene, node));
 	}
 
 	for (uint32_t i = 0; i < node->mNumChildren; ++i)
@@ -385,7 +385,10 @@ void Model_NM_Anim::processNode(aiNode* node, const aiScene* scene)
 	}
 }
 
-LoadedMesh_NM_Anim Model_NM_Anim::processMesh(aiMesh* mesh, const aiScene* scene)
+
+
+
+LoadedMesh_NM_Anim Model_NM_Anim::processMesh(aiMesh* mesh, const aiScene* scene, const aiNode* parentNode)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;

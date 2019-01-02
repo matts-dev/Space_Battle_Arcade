@@ -1,0 +1,13 @@
+set up paper2d
+*import texture, right click, spriteactions->apply_paper2d
+*modify default sprite texture
+    -show engine/plugin content (view options at bottom)
+        Paper2D content
+            -dupliate and modify default sprite material
+                -feed color into base color, not emissive color (this way it actually uses lights)
+                -set specular to 0 (make a constant)
+                -set roughness to 1 (make a constant)
+            -change blend mode to translucent
+*change to forward rendering
+*disable light culling.
+    project settins -> min screen radius for lights = 0

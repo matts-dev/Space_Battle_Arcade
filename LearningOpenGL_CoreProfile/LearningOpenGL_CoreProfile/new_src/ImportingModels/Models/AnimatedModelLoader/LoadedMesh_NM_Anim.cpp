@@ -1,5 +1,8 @@
 #include "LoadedMesh_NM_Anim.h"
 #include <iostream>
+#include <assimp\scene.h>
+#include "Model_NM_Anim.h"
+#include <gtc\type_ptr.hpp>
 
 
 void LoadedMesh_NM_Anim::setupMesh()
@@ -58,14 +61,16 @@ void LoadedMesh_NM_Anim::setupMesh()
 	glEnableVertexAttribArray(6);
 }
 
-LoadedMesh_NM_Anim::LoadedMesh_NM_Anim(std::vector<Vertex>& vertices, 
-	std::vector<MaterialTexture>& textures, 
+LoadedMesh_NM_Anim::LoadedMesh_NM_Anim(
+	std::vector<Vertex>& vertices,
+	std::vector<MaterialTexture>& textures,
 	std::vector<unsigned int>& indices,
 	std::vector<NormalData>& normalData,
 	std::vector<VertexBoneData>& vertexBoneData,
-	std::map<std::string, Bone>& nameToBoneMap)
-	: vertices(vertices), 
-	textures(textures), 
+	std::map<std::string, Bone>& nameToBoneMap
+	) : 
+	vertices(vertices),
+	textures(textures),
 	indices(indices),
 	normalData(normalData),
 	nameToBoneMap(nameToBoneMap)
@@ -130,13 +135,6 @@ void LoadedMesh_NM_Anim::draw(Shader& shader)
 		shader.setUniform1i(uniformName.c_str(), currentTextureUnit - GL_TEXTURE0);
 		++currentTextureUnit;
 	}
-
-	//deactivate other texture units
-	//for (unsigned int i = currentTextureUnit; i <= GL_TEXTURE19; ++i)
-	//{
-	//	glActiveTexture(i);
-	//	glBindTexture(GL_TEXTURE_2D, 0); //this just binds to default texture, it isn't reliable for getting a black texture in place. uniforms should be used to control turning textures on and off.
-	//}
 
 	//draw mesh
 	glBindVertexArray(VAO);

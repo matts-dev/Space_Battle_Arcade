@@ -54,8 +54,6 @@ namespace
 				uniform mat4 globalBones[MAX_BONES_PER_MODEL];
 				uniform bool bRenderAnimation = true;
 
-				//uniform mat4 testTransform; //todo remove this, it is for testing what to do about vertices lacking weights 
-
 				out vec3 fragNormal;
 				out vec3 fragPosition;
 				out vec2 interpTextCoords;
@@ -68,16 +66,12 @@ namespace
 						mat4 transformBone4 = globalBones[boneIds.w] * boneWeights.w;
 
 						//tutorial doesn't do this, but I believe there will be an issue if a vertex has no associated bones
-						float remainingWeight = 1.0f - (boneWeights.x + boneWeights.y + boneWeights.z + boneWeights.w);
-						mat4 noBoneTransform = mat4(1.0f); //equal to identity matrix
-						noBoneTransform *= remainingWeight; 
+						//note: the default position of mesh isn't aligned w/ bones it seems, so this doesn't actually give desired result. :\ I guess for now just make sure all vertices have weight
+						//float remainingWeight = 1.0f - (boneWeights.x + boneWeights.y + boneWeights.z + boneWeights.w);
+						//mat4 noBoneTransform = mat4(1.0f); //equal to identity matrix
+						///noBoneTransform *= remainingWeight; 
 
 						mat4 boneTransform = transformBone1 + transformBone2 + transformBone3 + transformBone4;			// + noBoneTransform;
-						//mat4 boneTransform = transformBone1 + transformBone2 + transformBone3 + transformBone4 + noBoneTransform;
-						if(remainingWeight > 0.998f){
-							boneTransform = mat4(1.0f);
-							//boneTransform = testTransform;
-						}
 
 						gl_Position = projection * view * model * boneTransform * vec4(position, 1);
 
@@ -448,8 +442,10 @@ namespace
 
 		glm::vec3 modelScale(0.20f);
 		//Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan.dae");
+		Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan_FullWeights.dae");
+		
 		//Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan.fbx");
-		Model_NM_Anim meshModel("Models/animtutorial/boblampclean.md5mesh"); modelScale = glm::vec3(0.025f);
+		//Model_NM_Anim meshModel("Models/animtutorial/boblampclean.md5mesh"); modelScale = glm::vec3(0.025f);
 
 		GLuint vao;
 		glGenVertexArrays(1, &vao);

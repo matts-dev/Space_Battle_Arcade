@@ -38,6 +38,12 @@ public:
 	void sendBoneTransformsToShader(Shader& shader, const char* uniformMat4ArrayName);
 	AnimationData startAnimation(uint32_t animationID, bool bLoop);
 
+	//helper conversions
+	static glm::vec3 toGlmVec3(const aiVector3D& aiVec3);
+	static aiVector3D toAiVec3(const glm::vec3& glmVec3);
+	static aiMatrix4x4 toAiMat4(glm::mat4 glmMat4);
+	static glm::mat4 toGlmMat4(aiMatrix4x4 aiMat4);
+
 private: //members
 	std::vector<LoadedMesh_NM_Anim> meshes;
 	std::string directory;
@@ -57,7 +63,7 @@ private://methods
 	void loadModel_NM_Anim(std::string path);
 
 	void processNode(aiNode* node, const aiScene* scene);
-	LoadedMesh_NM_Anim processMesh(aiMesh* mesh, const aiScene* scene);
+	LoadedMesh_NM_Anim processMesh(aiMesh* mesh, const aiScene* scene, const aiNode* parentNode);
 
 	std::vector<MaterialTexture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 
@@ -74,11 +80,6 @@ private:
 	aiMatrix4x4 interpolateRotationKeys(aiNodeAnim* animNode, float animationTimeInTicks);
 	aiMatrix4x4 interpolateScaleKeys(aiNodeAnim* animNode, float animationTimeInTicks);
 
-	//helper conversions
-	static glm::vec3 toGlmVec3(const aiVector3D& aiVec3);
-	aiVector3D toAiVec3(const glm::vec3& glmVec3);
-	aiMatrix4x4 toAiMat4(glm::mat4 glmMat4);
-	glm::mat4 toGlmMat4(aiMatrix4x4 aiMat4);
 };
 
 

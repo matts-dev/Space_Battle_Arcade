@@ -12,6 +12,7 @@
 #include "../../../../Shader.h"
 #include <assimp/mesh.h>
 #include <map>
+#include <assimp/scene.h>
 
 
 struct Vertex
@@ -72,7 +73,8 @@ private:
 	std::map<std::string, Bone>& nameToBoneMap;
 
 public:
-	LoadedMesh_NM_Anim(std::vector<Vertex>& vertices,
+	LoadedMesh_NM_Anim(
+		std::vector<Vertex>& vertices,
 		std::vector<MaterialTexture>& textures,
 		std::vector<unsigned int>& indices,
 		std::vector<NormalData>& normalData,
