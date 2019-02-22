@@ -4,19 +4,19 @@
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
 #include <string>
-#include "../../../nu_utils.h"
-#include "../../../../Shader.h"
-#include "../../../../Libraries/stb_image.h"
-#include "../../../GettingStarted/Camera/CameraFPS.h"
-#include "../../../../InputTracker.h"
-#include "../../../Utilities/Lighting/DirectionalLight.h"
-#include "../../../Utilities/Lighting/ConeLight.h"
-#include "../../../Utilities/Lighting/PointLight.h"
+#include "../../nu_utils.h"
+#include "../../../Shader.h"
+#include "../../../Libraries/stb_image.h"
+#include "../../GettingStarted/Camera/CameraFPS.h"
+#include "../../../InputTracker.h"
+#include "../../Utilities/Lighting/DirectionalLight.h"
+#include "../../Utilities/Lighting/ConeLight.h"
+#include "../../Utilities/Lighting/PointLight.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "../../../ImportingModels/Models/AnimatedModelLoader/Model_NM_Anim.h"
+#include "Model.h"
 
 namespace
 {
@@ -30,63 +30,27 @@ namespace
 
 	float FOV = 45.0f;
 
-	//see below crash as to why bones shouldn't be set as uniforms
-	constexpr int MAX_BONES_PER_MODEL = 128; //if changing this, don't forget to change in shader; 
-	//constexpr int MAX_BONES_PER_MODEL = 1024; CRASH: cannot locate suitable resource to bind variable possibly large array
-
 	const char* vertex_shader_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;			
 				layout (location = 1) in vec3 normal;	
 				layout (location = 2) in vec2 textureCoordinates;
-				layout (location = 3) in vec3 tangent;
-				layout (location = 4) in vec3 bitangent;
-				layout (location = 5) in ivec4 boneIds;
-				layout (location = 6) in vec4 boneWeights;
-
-				//#define MAX_BONES_PER_MODEL 1024
-				#define MAX_BONES_PER_MODEL 128
 				
 				uniform mat4 model;
 				uniform mat4 view;
 				uniform mat4 projection;
-
-				uniform mat4 globalBones[MAX_BONES_PER_MODEL];
-				uniform bool bRenderAnimation = true;
 
 				out vec3 fragNormal;
 				out vec3 fragPosition;
 				out vec2 interpTextCoords;
 
 				void main(){
-					if(bRenderAnimation){
-						mat4 transformBone1 = globalBones[boneIds.x] * boneWeights.x;
-						mat4 transformBone2 = globalBones[boneIds.y] * boneWeights.y;
-						mat4 transformBone3 = globalBones[boneIds.z] * boneWeights.z;
-						mat4 transformBone4 = globalBones[boneIds.w] * boneWeights.w;
+					gl_Position = projection * view * model * vec4(position, 1);
+					fragPosition = vec3(model * vec4(position, 1));
 
-						//tutorial doesn't do this, but I believe there will be an issue if a vertex has no associated bones
-						//note: the default position of mesh isn't aligned w/ bones it seems, so this doesn't actually give desired result. :\ I guess for now just make sure all vertices have weight
-						//float remainingWeight = 1.0f - (boneWeights.x + boneWeights.y + boneWeights.z + boneWeights.w);
-						//mat4 noBoneTransform = mat4(1.0f); //equal to identity matrix
-						///noBoneTransform *= remainingWeight; 
-
-						mat4 boneTransform = transformBone1 + transformBone2 + transformBone3 + transformBone4;			// + noBoneTransform;
-
-						gl_Position = projection * view * model * boneTransform * vec4(position, 1);
-
-						//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-						fragNormal = normalize(mat3(transpose(inverse(model * boneTransform))) * normal); //must normalize before interpolation! Otherwise models will be too bright!						
-						fragPosition = vec3(model * boneTransform * vec4(position, 1));
-
-					} else {
-						gl_Position = projection * view * model * vec4(position, 1);
-
-						//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-						fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise models will be too bright!
-						fragPosition = vec3(model * vec4(position, 1));
-					}
-
+					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
+					//fragNormal = mat3(transpose(inverse(model))) * normal;
+					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise models will be too bright!
 
 					interpTextCoords = textureCoordinates;
 				}
@@ -280,6 +244,12 @@ namespace
 				}
 			)";
 
+	struct Transform
+	{
+		glm::vec3 position;
+		glm::vec3 rotation;
+		glm::vec3 scale;
+	};
 
 	float yRotation = 0.f;
 	bool rotateLight = true;
@@ -292,17 +262,11 @@ namespace
 	int shininess = 32;
 	float floatValIncrement = 0.25f;
 	bool toggleFlashLight = false;
-	bool bRenderAnimation = true;
 
 	void processInput(GLFWwindow* window)
 	{
 		static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
 		input.updateState(window);
-
-		if (input.isKeyJustPressed(window, GLFW_KEY_E))
-		{
-			bRenderAnimation = !bRenderAnimation;
-		}
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
@@ -440,13 +404,26 @@ namespace
 			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 		};
 
-		glm::vec3 modelScale(0.20f);
-		//Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan.dae");
-		Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan_FullWeights.dae");
+//------------------------------------------------------------------------------------------------------------------
+		Model centerModel("Models/TestModels/XW/xwing.obj");
 
-		
-		//Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan.fbx");
-		//Model_NM_Anim meshModel("Models/animtutorial/boblampclean.md5mesh"); modelScale = glm::vec3(0.025f);
+		//test models
+		Transform XwingTransform = { glm::vec3(-5,0,-5), glm::vec3(0,45.0f,0), glm::vec3(0.33f,0.33f,0.33f) };
+		Model XwingModel("Models/TestModels/XW/xwing.obj");
+
+		Transform MC80Tranfrom = { glm::vec3(-8,0,0), glm::vec3(0,90.0f,0), glm::vec3(0.25f,0.25f,0.25f) };
+		Model MC80Model("Models/TestModels/MC/MC80StarCruiser.obj");
+
+		Transform TieTranfrom = { glm::vec3(5,0,-5), glm::vec3(0,-45.0f,0), glm::vec3(0.25f, 0.25f, 0.25f) };
+		Model TieModel("Models/TestModels/TF/tie_1blend.obj");
+
+		Transform StarDestroyerTranfrom = { glm::vec3(8,0,0), glm::vec3(0,-90.0f,0), glm::vec3(1,1,1) };
+		Model StarDestroyerModel("Models/TestModels/SD/stardestroyer.obj");
+
+
+
+
+//------------------------------------------------------------------------------------------------------------------
 
 		GLuint vao;
 		glGenVertexArrays(1, &vao);
@@ -551,8 +528,8 @@ namespace
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(0.7f, 0.2f, 2.0f),
-				"pointLights",true, 0
+				glm::vec3(1.7f, 0.3f, 2.0f),
+				"pointLights",true, 
 			},
 			{
 				pntAmbient,
@@ -581,7 +558,7 @@ namespace
 				plghtConstant,
 				plghtLinear,
 				plghtQuadratic,
-				glm::vec3(0.f, 0.f, -3.f),
+				glm::vec3(-3.0f, -1.0f, -3.f),
 				"pointLights",true, 3
 			}
 		};
@@ -609,7 +586,6 @@ namespace
 			camera.getFront(),
 			"coneLight"
 		);
-		AnimationData walkAnim = meshModel.startAnimation(0, true);
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -680,20 +656,35 @@ namespace
 
 			const glm::vec3& camPos = camera.getPosition();
 			shader.setUniform3f("cameraPosition", camPos.x, camPos.y, camPos.z);
-
-			shader.setUniform1i("bRenderAnimation", bRenderAnimation);
-			meshModel.prepareAnimationsForData(walkAnim);
-			meshModel.sendBoneTransformsToShader(shader, "globalBones");
 			{
 				glm::mat4 model(1.f); //set model to identity matrix
-				//model = glm::translate(model, glm::vec3(20.f, 0.f, -2.f));
-				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-				model = glm::scale(model, modelScale);
+				model = glm::translate(model, glm::vec3(0.f, 0.f, -5.f));
+				model = glm::scale(model, glm::vec3(0.25f));
+				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+				centerModel.draw(shader);
+			}
+
+			//don't actually use lambdas like this in real code, this is to just place drawing code to this spot
+			auto DrawMesh = [view, projection](Model& meshModel, const Transform& transform, Shader& shader)
+			{
+				glm::mat4 model(1.f); //set model to identity matrix
+				model = glm::translate(model, transform.position); 
+				model = glm::rotate(model, glm::radians(transform.rotation.x), glm::vec3(1, 0, 0));
+				model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0, 1, 0));
+				model = glm::rotate(model, glm::radians(transform.rotation.z), glm::vec3(0, 0, 1));
+				model = glm::scale(model, transform.scale);
 				shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				shader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 				shader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 				meshModel.draw(shader);
-			}
+			};
+			DrawMesh(XwingModel, XwingTransform, shader);
+			DrawMesh(MC80Model, MC80Tranfrom, shader);
+			DrawMesh(TieModel, TieTranfrom, shader);
+			DrawMesh(StarDestroyerModel, StarDestroyerTranfrom, shader);
+			
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();

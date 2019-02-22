@@ -93,7 +93,7 @@ void Model_NM_Anim::prepareAnimationsForData(AnimationData& inOut_AnimationData)
 			}
 		}
 
-		//now that looping time points are complete, convert back to ticks 
+		//now that looping time points are complete, convert new time to ticks 
 		float animInTicks = static_cast<float>(animCurSeconds * anim->mTicksPerSecond);
 
 		//create a mapping of channel name to animation node for quick lookup; (animation node contains bone transform data)
@@ -463,7 +463,7 @@ LoadedMesh_NM_Anim Model_NM_Anim::processMesh(aiMesh* mesh, const aiScene* scene
 		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 	}
 
-	vertexBoneData.resize(vertices.size()); //default construct all bone weights to 0
+	vertexBoneData.resize(vertices.size()); //default constructor all bone weights to 0
 
 	std::map<std::string, Bone> nameToBoneMap;
 	if (mesh->HasBones())

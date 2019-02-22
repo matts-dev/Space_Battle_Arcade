@@ -102,6 +102,12 @@
     <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATUnitTestUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -843,6 +849,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\ImportingModels\Models\ModelTestFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATUnitTestUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DCube.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

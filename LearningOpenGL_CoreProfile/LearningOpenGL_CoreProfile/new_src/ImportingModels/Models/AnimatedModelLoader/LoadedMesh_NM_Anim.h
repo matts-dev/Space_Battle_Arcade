@@ -35,7 +35,7 @@ struct VertexBoneData
 	//0 initialize weights
 	unsigned int boneIds[MAX_NUM_BONES] = { 0 };
 	float boneWeights[MAX_NUM_BONES] = { 0 };
-	int currentBone = 0;
+	int currentBone = 0; //represents bones [0,3], this is incremented as we process; perhaps a better name is nextBone?
 };
 
 struct MaterialTexture

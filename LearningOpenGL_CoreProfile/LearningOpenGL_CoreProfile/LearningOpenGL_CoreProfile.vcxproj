@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATUnitTestUtils.h" />
     <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.h" />
     <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.h" />
     <ClInclude Include="new_src\ImportingModels\Models\Model.h" />
@@ -42,6 +43,7 @@
     <ClInclude Include="new_src\nu_utils.h" />
     <ClInclude Include="new_src\Utilities\Mesh.h" />
     <ClInclude Include="new_src\Utilities\SphereMeshTextured.h" />
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATComponent.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="new_src\Utilities\SphereMesh.h" />
     <ClInclude Include="new_src\Utilities\SimpleCubeMesh.h" />
@@ -80,6 +82,9 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATUnitTestUtils.cpp" />
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest2D.cpp" />
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DCube.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.cpp" />
@@ -88,6 +93,7 @@
     <ClCompile Include="new_src\ImportingModels\Models\ImportingModels.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\ModelSpaceshipDemo.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\PlaneModelDemo.cpp" />
+    <ClCompile Include="new_src\ImportingModels\Models\ModelTestFile.cpp" />
     <ClCompile Include="new_src\Lighting\MultipleLights\MultipleLights_2ClassAbstractions.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\1_AdvancedLighting\AdvancedLighting_blinn-phong.cpp" />
     <ClCompile Include="new_src\OpenGLAdvancedLighting\1_AdvancedLighting\AdvancedLighting_doublephongExperiment.cpp" />
@@ -290,6 +296,7 @@
     <ClCompile Include="new_src\Tests\ColorsAutoClamped.cpp" />
     <ClCompile Include="new_src\Utilities\SphereMeshTextured.cpp" />
     <ClCompile Include="RenderToFrameBufferTests.cpp" />
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATComponent.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="new_src\Utilities\SphereMesh.cpp" />
     <ClCompile Include="new_src\Utilities\SimpleCubeMesh.cpp" />
