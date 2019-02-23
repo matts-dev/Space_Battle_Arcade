@@ -8,13 +8,16 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
+/** 
+	Vectors with the suffix _n can be assumed to be normalized.
+*/
 class CameraFPS
 {
 public:
 	CameraFPS(float inFOV, float inYaw, float inPitch);
 	~CameraFPS();
 
-	glm::mat4 getView();
+	glm::mat4 getView() const;
 
 	//callbacks
 	void mouseMoved(double xpos, double ypos);
@@ -25,10 +28,17 @@ public:
 
 	//setters and getters
 	void setPosition(float x, float y, float z);
+	void setYaw(float inYaw);
+	void setPitch(float inPitch);
 	void setSpeed(float speed);
 
-	const glm::vec3& getPosition() { return cameraPosition; }
-	const glm::vec3& getFront() { return cameraFront; }
+	const glm::vec3& getPosition() const { return cameraPosition; }
+	const glm::vec3 getFront() const { return cameraFront_n; }
+	const glm::vec3 getRight() const;
+	const glm::vec3 getUp() const;
+	float getFOV() const { return FOV; }
+	float getYaw() const { return yaw; }
+	float getPitch() const { return pitch; }
 
 private: //helper fields
 	double lastX;
@@ -38,8 +48,8 @@ private: //helper fields
 
 private:
 	glm::vec3 cameraPosition;
-	glm::vec3 cameraFront;
-	glm::vec3 worldUp;
+	glm::vec3 cameraFront_n;
+	glm::vec3 worldUp_n;
 
 	float pitch = 0.f;
 	float yaw = -90.f;

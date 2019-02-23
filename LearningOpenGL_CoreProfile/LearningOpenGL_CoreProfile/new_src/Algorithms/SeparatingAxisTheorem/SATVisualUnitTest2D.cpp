@@ -162,16 +162,26 @@ namespace
 		if (input.isKeyDown(window, GLFW_KEY_A))
 		{
 			if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
-				transformTarget->rotationDeg.z += -rotationSpeed * deltaTime;
+			{
+				glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), glm::vec3(0, 0, 1)) * transformTarget->rotQuat;
+				transformTarget->rotQuat = newRotation;
+			}
 			else
+			{
 				movementInput += vec3(-1, 0, 0);
+			}
 		}
 		if (input.isKeyDown(window, GLFW_KEY_D))
 		{
 			if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
-				transformTarget->rotationDeg.z += rotationSpeed * deltaTime;
+			{
+				glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), glm::vec3(0, 0, 1)) * transformTarget->rotQuat;
+				transformTarget->rotQuat = newRotation;
+			}
 			else
+			{
 				movementInput += vec3(1, 0, 0);
+			}
 		}
 		//probably should use epsilon comparison for when opposite buttons held, but this should cover compares against initialization
 		if (movementInput != vec3(0.0f))
@@ -308,7 +318,7 @@ namespace
 					triCollision,
 					vec3(0, -moveSpeed, 0),
 					triTransform,
-					SAT::ColumnBasedTransform{ {0, 120.0f, 0 },{0,0,0},{triTransform.scale} },
+					SAT::ColumnBasedTransform{ {0, 120.0f, 0 },{},{triTransform.scale} },
 					[](SAT::ApplyVelocityFrameAgent& thisAgent) {
 						glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
 						return origin.y > 0;
@@ -317,7 +327,7 @@ namespace
 
 			//make copies and just change out appropriate fields
 			auto triAgent_CardinalUp = std::make_shared< SAT::ApplyVelocityFrameAgent >(*triAgent_CardinalDown);
-			triAgent_CardinalUp->SetStartTransform(SAT::ColumnBasedTransform{ {0, -120, 0 },{0,0,0},{triTransform.scale} } );
+			triAgent_CardinalUp->SetStartTransform(SAT::ColumnBasedTransform{ {0, -120, 0 },{},{triTransform.scale} } );
 			triAgent_CardinalUp->SetNewVelocity(vec3(0, moveSpeed, 0));
 			triAgent_CardinalUp->SetCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
 				glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
@@ -326,7 +336,7 @@ namespace
 
 			//make copies and just change out appropriate fields
 			auto triAgent_CardinalLeft = std::make_shared< SAT::ApplyVelocityFrameAgent >(*triAgent_CardinalDown);
-			triAgent_CardinalLeft->SetStartTransform(SAT::ColumnBasedTransform{ {120, 0, 0 },{0,0,0},{triTransform.scale} });
+			triAgent_CardinalLeft->SetStartTransform(SAT::ColumnBasedTransform{ {120, 0, 0 },{},{triTransform.scale} });
 			triAgent_CardinalLeft->SetNewVelocity(vec3(-moveSpeed, 0, 0));
 			triAgent_CardinalLeft->SetCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
 				glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
@@ -335,7 +345,7 @@ namespace
 
 			//make copies and just change out appropriate fields
 			auto triAgent_CardinalRight = std::make_shared< SAT::ApplyVelocityFrameAgent >(*triAgent_CardinalDown);
-			triAgent_CardinalRight->SetStartTransform(SAT::ColumnBasedTransform{ {-120, 0, 0 },{0,0,0},{triTransform.scale} });
+			triAgent_CardinalRight->SetStartTransform(SAT::ColumnBasedTransform{ {-120, 0, 0 },{},{triTransform.scale} });
 			triAgent_CardinalRight->SetNewVelocity(vec3(moveSpeed, 0, 0));
 			triAgent_CardinalRight->SetCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
 				glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
@@ -379,7 +389,7 @@ namespace
 					triCollision,
 					vec3(20*-2.364, 20*-2.364, 0),
 					triTransform,
-					SAT::ColumnBasedTransform{ {49.1155, 97.8502, 0 },{0,0,0},{triTransform.scale} },
+					SAT::ColumnBasedTransform{ {49.1155, 97.8502, 0 },{},{triTransform.scale} },
 					[](SAT::ApplyVelocityFrameAgent& thisAgent) {
 						//test that origin is above the x axis
 						glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
@@ -395,11 +405,12 @@ namespace
 		auto UnitTest_WithinFakeMtvTest = std::make_shared< SAT::ApplyVelocityTest >();
 			auto KF_WithinMtvTest = std::make_shared< SAT::ApplyVelocityKeyFrame>(0.5f /*secs*/);
 			auto boxAgent = std::make_shared< SAT::ApplyVelocityFrameAgent >(*Box_CornerCollisionAgent);
+			glm::quat rotZ45 = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
 			auto triAgent = std::make_shared< SAT::ApplyVelocityFrameAgent >(
 					triCollision,
 					vec3(40, -40, 0),
 					triTransform,
-					SAT::ColumnBasedTransform{ {-39.1155, 120.8502, 0 },{0,0,45},{triTransform.scale} },
+					SAT::ColumnBasedTransform{ {-39.1155, 120.8502, 0 }, rotZ45 ,{triTransform.scale} },
 					[](SAT::ApplyVelocityFrameAgent& thisAgent) { return true; }
 			);
 			triAgent->SetCustomTickFailFunc(

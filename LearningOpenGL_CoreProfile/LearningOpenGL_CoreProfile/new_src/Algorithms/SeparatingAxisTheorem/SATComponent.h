@@ -161,7 +161,7 @@ private:
 
 class SATCubeShape : public SATShape
 {
-private:
+public: /*statics defining geometry of cube shape*/
 	static const std::vector<glm::vec4> shapePnts;
 	static const std::vector<EdgePointIndices> edgePntIndices;
 	static const std::vector<FacePointIndices> facePntIndices;

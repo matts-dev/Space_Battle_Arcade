@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <iostream>
 #include <memory>
+#include <gtx/quaternion.hpp>
 
 namespace SAT
 {
@@ -18,21 +19,34 @@ namespace SAT
 	struct ColumnBasedTransform
 	{
 		glm::vec3 position = { 0, 0, 0 };
-		glm::vec3 rotationDeg = { 0, 0, 0 };
+		glm::quat rotQuat; //identity quaternion; see conversion function if you're unfamiliar with quaternions
 		glm::vec3 scale = { 1, 1, 1 };
 
 		glm::mat4 getModelMatrix()
 		{
 			glm::mat4 model(1.0f);
 			model = glm::translate(model, position);
-			model = glm::rotate(model, glm::radians(rotationDeg.x), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::rotate(model, glm::radians(rotationDeg.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			model = glm::rotate(model, glm::radians(rotationDeg.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			model = model * glm::toMat4(rotQuat);
 			model = glm::scale(model, scale);
 			return model;
 		}
 	};
 
+	/* quaternion conversion function */
+	static glm::quat convertVecOfRotationsToQuat(glm::vec3 rotationsDegrees)
+	{
+		using glm::vec3; using glm::quat;
+		vec3 rotRadians = glm::radians(rotationsDegrees);
+
+		//angleAxis just rotates the quaternion around the given axis
+		quat qx = glm::angleAxis(rotRadians.x, vec3(1, 0, 0));
+		quat qy = glm::angleAxis(rotRadians.y, vec3(0, 1, 0));
+		quat qz = glm::angleAxis(rotRadians.z, vec3(0, 0, 1));
+
+		//quaternions are multipled in order like matrixs; this is column so matrices(or quaterions) on right are applied first
+		//this would have same affect as applying transforms like so: matX * (matY * (matZ * point))
+		return qx * qy *qz;
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  Unit Test Base Classes:

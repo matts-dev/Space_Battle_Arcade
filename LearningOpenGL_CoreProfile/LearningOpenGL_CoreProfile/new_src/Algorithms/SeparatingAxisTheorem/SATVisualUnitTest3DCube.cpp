@@ -4,46 +4,98 @@
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
 #include <string>
+#include<cmath>
+
 #include "../../GettingStarted/Camera/CameraFPS.h"
 #include "../../../InputTracker.h"
 #include "../../nu_utils.h"
 #include "../../../Shader.h"
 #include "SATComponent.h"
 #include "SATUnitTestUtils.h"
+#include <gtx/quaternion.hpp>
 
 namespace
 {
 	using SAT::ColumnBasedTransform;
 
-	CameraFPS camera(45.0f, -90.f, 0.f);
-
-	float lastFrameTime = 0.f;
-	float deltaTime = 0.0f;
-
-	const char* Dim2VertShaderSrc = R"(
+	const char* litObjectShaderVertSrc = R"(
 				#version 330 core
-				layout (location = 0) in vec2 position;				
+				layout (location = 0) in vec3 position;			
+				layout (location = 1) in vec3 normal;	
+				
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				out vec3 fragNormal;
+				out vec3 fragPosition;
+
+				void main(){
+					gl_Position = projection * view * model * vec4(position, 1);
+					fragPosition = vec3(model * vec4(position, 1));
+
+					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
+					fragNormal = mat3(transpose(inverse(model))) * normal;
+				}
+			)";
+	const char* litObjectShaderFragSrc = R"(
+				#version 330 core
+				out vec4 fragmentColor;
+
+				uniform vec3 lightColor;
+				uniform vec3 objectColor;
+				uniform vec3 lightPosition;
+				uniform vec3 cameraPosition;
+
+				in vec3 fragNormal;
+				in vec3 fragPosition;
+
+				/* uniforms can have initial value in GLSL 1.20 and up */
+				uniform float ambientStrength = 0.1f; 
+				uniform vec3 objColor = vec3(1,1,1);
+
+				void main(){
+					vec3 ambientLight = ambientStrength * lightColor;					
+
+					vec3 toLight = normalize(lightPosition - fragPosition);
+					vec3 normal = normalize(fragNormal);									//interpolation of different normalize will cause loss of unit length
+					vec3 diffuseLight = max(dot(toLight, fragNormal), 0) * lightColor;
+
+					float specularStrength = 0.5f;
+					vec3 toView = normalize(cameraPosition - fragPosition);
+					vec3 toReflection = reflect(-toView, normal);							//reflect expects vector from light position (tutorial didn't normalize this vector)
+					float specularAmount = pow(max(dot(toReflection, toLight), 0), 32);
+					vec3 specularLight = specularStrength * lightColor * specularAmount;
+
+					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * objectColor;
+					
+					fragmentColor = vec4(lightContribution, 1.0f);
+				}
+			)";
+	const char* lightLocationShaderVertSrc = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
 				
 				uniform mat4 model;
 				uniform mat4 view;
 				uniform mat4 projection;
 
 				void main(){
-					vec4 pos = vec4(position, 0, 1);
-
-					gl_Position = projection * view * model * pos;
+					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
-	const char* Dim2FragShaderSrc = R"(
+	const char* lightLocationShaderFragSrc = R"(
 				#version 330 core
 				out vec4 fragmentColor;
-				uniform vec3 color = vec3(1.f,1.f,1.f);
+
+				uniform vec3 lightColor;
+				
 				void main(){
-					fragmentColor = vec4(color, 1.f);
+					fragmentColor = vec4(lightColor, 1.f);
 				}
 			)";
 
-	const char* Dim3DebugSShaderVertSrc = R"(
+	const char* Dim3DebugShaderVertSrc = R"(
 				#version 330 core
 				layout (location = 0) in vec4 position;				
 				
@@ -55,7 +107,7 @@ namespace
 					gl_Position = projection * view * model * position;
 				}
 			)";
-	const char* Dim3DebugSShaderFragSrc = R"(
+	const char* Dim3DebugShaderFragSrc = R"(
 				#version 330 core
 				out vec4 fragmentColor;
 				uniform vec3 color = vec3(1.f,1.f,1.f);
@@ -63,6 +115,10 @@ namespace
 					fragmentColor = vec4(color, 1.f);
 				}
 			)";
+	void printVec3(glm::vec3 v)
+	{
+		std::cout << "[" << v.x << ", " << v.y << ", " << v.z << "]";
+	}
 
 	void drawDebugLine(
 		const glm::vec3& pntA, const glm::vec3& pntB, const glm::vec3& color,
@@ -70,7 +126,7 @@ namespace
 	)
 	{
 		/* This method is extremely slow and non-performant; use only for debugging purposes */
-		static Shader shader(Dim3DebugSShaderVertSrc, Dim3DebugSShaderFragSrc, false);
+		static Shader shader(Dim3DebugShaderVertSrc, Dim3DebugShaderFragSrc, false);
 
 		shader.use();
 		shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
@@ -98,202 +154,168 @@ namespace
 		glDeleteBuffers(1, &tmpVBO);
 	}
 
-	ColumnBasedTransform boxTransform;
-	ColumnBasedTransform triTransform;
-	ColumnBasedTransform* transformTarget = &triTransform;
-	float moveSpeed = 200;
-	float rotationSpeed = 45.0f;
-	glm::vec3 cachedVelocity;
-	bool bEnableCollision = true;
-	bool bBlockCollisionFailures = false;
-	bool bTickUnitTests = false;
-	SATShape2D* gBoxCollision = nullptr;
-	SATShape2D* gTriCollision = nullptr;
-	std::shared_ptr<SAT::TestSuite> UnitTests;
-
-	void printVec3(glm::vec3 v)
+	class ISATDemo
 	{
-		std::cout << "[" << v.x << ", " << v.y << ", " << v.z << "]";
-	}
+	public:
+		ISATDemo(int width, int height) {}
+		virtual void tickGameLoop(GLFWwindow* window) = 0;
+		virtual void handleModuleFocused(GLFWwindow* window) = 0;
+	};
 
-	void processInput(GLFWwindow* window)
+	class CubeDemo final : public ISATDemo
 	{
-		using glm::vec3; using glm::vec4;
-		static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
-		input.updateState(window);
+		//Cached Window Data
+		int height;
+		int width;
+		float lastFrameTime = 0.f;
+		float deltaTime = 0.0f;
 
-		if (input.isKeyJustPressed(window, GLFW_KEY_ESCAPE))
+		//OpenGL data
+		GLuint cubeVAO, cubeVBO;
+
+		//Shape Data
+		ColumnBasedTransform redCubeTransform;
+		ColumnBasedTransform blueCubeTransform;
+		const ColumnBasedTransform defaultBlueCubeTransform = { { 0,0,0 }, {}, { 1,1,1 } };
+		const ColumnBasedTransform defaultRedCubeTransform = { { 5,0,5 }, {}, { 1,1,1 } };
+		const glm::vec3 blueCubeColor{ 0, 0, 1 };
+		const glm::vec3 redCubeColor{ 1, 0, 0 };
+		SATCubeShape blueCubeCollision;
+		SATCubeShape redCubeCollision;
+
+		//State
+		CameraFPS camera{ 45.0f, -90.f, 0.f };
+		ColumnBasedTransform lightTransform;
+		glm::vec3 lightColor{ 1.0f, 1.0f, 1.0f };
+		Shader objShader{ litObjectShaderVertSrc , litObjectShaderFragSrc, false };
+		Shader lampShader{ lightLocationShaderVertSrc, lightLocationShaderFragSrc, false };
+
+		//Modifiable State
+		ColumnBasedTransform* transformTarget = &redCubeTransform;
+		float moveSpeed = 3;
+		float rotationSpeed = 45.0f;
+		bool bEnableCollision = true;
+		bool bBlockCollisionFailures = false;
+		bool bTickUnitTests = false;
+		bool bUseCameraAxesForObjectMovement = true;
+		bool bEnableAxisOffset = false;
+		glm::vec3 axisOffset{ 0, 0.005f, 0 };
+		glm::vec3 cachedVelocity;
+
+		//UnitTests
+		std::shared_ptr<SAT::TestSuite> UnitTests;
+
+
+	public:
+		CubeDemo(int width, int height)
+			: ISATDemo(width, height)
 		{
-			glfwSetWindowShouldClose(window, true);
-		}
-		if (input.isKeyJustPressed(window, GLFW_KEY_T))
-		{
-			transformTarget = transformTarget == &triTransform ? &boxTransform : &triTransform;
-		}
-		if (input.isKeyJustPressed(window, GLFW_KEY_P))
-		{
+			using glm::vec2;
+			using glm::vec3;
+			using glm::mat4;
+
+			camera.setPosition(0.0f, 0.0f, 3.0f);
+			this->width = width;
+			this->height = height;
+
+			camera.setPosition(-7.29687f, 3.22111f, 5.0681f);
+			camera.setYaw(-22.65f);
+			camera.setPitch(-15.15f);
+
+			/////////////////////////////////////////////////////////////////////
+			// OpenGL/Collision Object Creation
+			/////////////////////////////////////////////////////////////////////
 			
+			//unit create cube (that matches the size of the collision cube)
+			float vertices[] = {
+				//x     y       z      _____normal_xyz___
+				-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+				0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+				0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+				0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+				-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+				-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+				-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+				0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+				0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+				0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+				-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+				-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+				-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+				-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+				-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+				-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+				-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+				-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+				0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+				0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+				0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+				0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+				0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+				0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+				-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+				0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+				0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+				0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+				-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+				-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+				-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+				0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+				0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+				0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+				-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+				-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+			};
+			glGenVertexArrays(1, &cubeVAO);
+			glBindVertexArray(cubeVAO);
+
+			glGenBuffers(1, &cubeVBO);
+			glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0));
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+			glEnableVertexAttribArray(1);
+			glBindVertexArray(0); 
+
+			redCubeTransform = defaultRedCubeTransform;
+			blueCubeTransform = defaultBlueCubeTransform;
+
+			lightTransform.position = glm::vec3(5, 3, 0);
+			lightTransform.scale = glm::vec3(0.1f);
+
+			/////////////////////////////////////////////////////////////////////
+			// Unit Test Creation
+			/////////////////////////////////////////////////////////////////////
+
+			UnitTests = std::make_shared<SAT::TestSuite>();
+
+			// Unit Test testing 4 cardinal 2d directions
 		}
-		if (input.isKeyJustPressed(window, GLFW_KEY_U))
+
+		~CubeDemo()
 		{
-			bTickUnitTests = !bTickUnitTests;
-			if (bTickUnitTests)
-			{
-				UnitTests->restartAllTests();
-				UnitTests->start();
-			}
+			glDeleteVertexArrays(1, &cubeVAO);
+			glDeleteBuffers(1, &cubeVBO);
 		}
 
-		// -------- MOVEMENT -----------------
-		bool bUpdateMovement = false;
-		vec3 movementInput = vec3(0.0f);
-		vec3 cachedTargetPos = transformTarget->position;
-		if (input.isKeyDown(window, GLFW_KEY_W))
+		virtual void handleModuleFocused(GLFWwindow* window)
 		{
-			movementInput += vec3(0, 1, 0);
-		}
-		if (input.isKeyDown(window, GLFW_KEY_S))
-		{
-			movementInput += vec3(0, -1, 0);
-		}
-		if (input.isKeyDown(window, GLFW_KEY_A))
-		{
-			if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
-				transformTarget->rotationDeg.z += -rotationSpeed * deltaTime;
-			else
-				movementInput += vec3(-1, 0, 0);
-		}
-		if (input.isKeyDown(window, GLFW_KEY_D))
-		{
-			if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
-				transformTarget->rotationDeg.z += rotationSpeed * deltaTime;
-			else
-				movementInput += vec3(1, 0, 0);
-		}
-		//probably should use epsilon comparison for when opposite buttons held, but this should cover compares against initialization
-		if (movementInput != vec3(0.0f))
-		{
-			movementInput = glm::normalize(movementInput);
-			cachedVelocity = deltaTime * moveSpeed * movementInput;
-			transformTarget->position += cachedVelocity;
-		}
-		if (bBlockCollisionFailures)
-		{
-			if (SATShape::CollisionTest(*gTriCollision, *gBoxCollision))
-			{
-				//undo the move
-				transformTarget->position = cachedTargetPos;
-			}
-		}
-		// -------- UNIT TEST ---------
-		if (input.isKeyJustPressed(window, GLFW_KEY_UP))
-		{
-		}
-		else if (input.isKeyJustPressed(window, GLFW_KEY_DOWN))
-		{
-			UnitTests->restartCurrentTest();
-		}
-		else if (input.isKeyJustPressed(window, GLFW_KEY_LEFT))
-		{
-			UnitTests->previousTest();
-		}
-		else if (input.isKeyJustPressed(window, GLFW_KEY_RIGHT))
-		{
-			UnitTests->nextTest();
+			camera.exclusiveGLFWCallbackRegister(window);
 		}
 
-
-		camera.handleInput(window, deltaTime);
-	}
-
-
-	void true_main()
-	{
-		using glm::vec2;
-		using glm::vec3;
-		using glm::mat4;
-
-		camera.setPosition(0.0f, 0.0f, 3.0f);
-		int width = 1200;
-		int height = 800;
-
-		GLFWwindow* window = init_window(width, height);
-
-		glViewport(0, 0, width, height);
-		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
-		camera.exclusiveGLFWCallbackRegister(window);
-
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-		/////////////////////////////////////////////////////////////////////
-		// Object Creation
-		/////////////////////////////////////////////////////////////////////
-
-		//rectangle
-		std::vector<vec2> boxPnts = { vec2(0.5f, 0.5f), vec2(-0.5f, 0.5f), vec2(-0.5f, -0.5f), vec2(0.5f, -0.5f) };
-		GLuint box2dVAO, box2dVBO, box2dEAO;
-		glGenVertexArrays(1, &box2dVAO);
-		glBindVertexArray(box2dVAO);
-		float box2d_verts[] = {
-			boxPnts[0].x, boxPnts[0].y, //0.5f, 0.5f,
-			boxPnts[1].x, boxPnts[1].y, //-0.5f, 0.5f,
-			boxPnts[2].x, boxPnts[2].y, //-0.5f, -0.5f,
-			boxPnts[3].x, boxPnts[3].y, //0.5f, -0.5f
-		};
-		glGenBuffers(1, &box2dVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, box2dVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(box2d_verts), box2d_verts, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
-		GLuint box2d_idxs[] = {
-			0,1,2,
-			2,3,0
-		};
-		glGenBuffers(1, &box2dEAO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, box2dEAO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(box2d_idxs), box2d_idxs, GL_STATIC_DRAW);
-		glBindVertexArray(0); //unbind VAO so no further state is saved
-		boxTransform = { vec3(0, 0, 0), vec3(0,0,0), vec3(100, 100, 100) };
-		SATShape2D boxCollision{ SATShape2D::ConstructHelper(boxPnts) };
-
-		//triangle
-		std::vector<vec2> triPnts = { vec2(0.0f, 0.5f), vec2(-0.5f, -0.5f), vec2(0.5f, -0.5f) };
-		GLuint tri2dVAO, tri2dVBO;
-		glGenVertexArrays(1, &tri2dVAO);
-		glBindVertexArray(tri2dVAO);
-		float tri2d_verts[] = {
-			triPnts[0].x, triPnts[0].y,
-			triPnts[1].x, triPnts[1].y,
-			triPnts[2].x, triPnts[2].y
-		};
-		glGenBuffers(1, &tri2dVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, tri2dVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(tri2d_verts), tri2d_verts, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
-		glBindVertexArray(0); //unbind VAO so no further state is saved
-		triTransform = { vec3(-width / 4, -height / 4, 0), vec3(0,0,0), vec3(100, 100, 100) };
-		SATShape2D triCollision{ SATShape2D::ConstructHelper(triPnts) };
-
-		gBoxCollision = &boxCollision;
-		gTriCollision = &triCollision;
-
-		Shader shader2d(Dim2VertShaderSrc, Dim2FragShaderSrc, false);
-
-		/////////////////////////////////////////////////////////////////////
-		// Unit Test Creation
-		/////////////////////////////////////////////////////////////////////
-
-		UnitTests = std::make_shared<SAT::TestSuite>();
-
-		// Unit Test testing 4 cardinal 2d directions
-
-
-		/////////////////////////////////////////////////////////////////////
-		// Game Loop
-		/////////////////////////////////////////////////////////////////////
-		while (!glfwWindowShouldClose(window))
+		virtual void tickGameLoop(GLFWwindow* window)
 		{
+			using glm::vec2;
+			using glm::vec3;
+			using glm::mat4;
+
+
 			float currentTime = static_cast<float>(glfwGetTime());
 			deltaTime = currentTime - lastFrameTime;
 			lastFrameTime = currentTime;
@@ -301,93 +323,115 @@ namespace
 			processInput(window);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glEnable(GL_DEPTH_TEST);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			const vec3 boxColor(0, 0, 1);
-			const vec3 triColor(1, 0, 0);
-
 			//collision should be adjusted and complete before we attempt to render anything
-			triCollision.updateTransform(triTransform.getModelMatrix());
-			boxCollision.updateTransform(boxTransform.getModelMatrix());
-			if (bEnableCollision && !UnitTests->isRunning())
-			{
-				glm::vec4 mtv;
-				if (SATShape::CollisionTest(triCollision, boxCollision, mtv))
-				{
-					std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(triTransform.position); std::cout << std::endl;
-					triTransform.position += vec3(mtv);
-					triCollision.updateTransform(triTransform.getModelMatrix());
-				}
-				else
-				{
-					if (cachedVelocity != vec3(0.0f))
-					{
-						std::cout << "\t\t\t"; std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(triTransform.position); std::cout << std::endl;
-						cachedVelocity = vec3(0.0f);
-					}
-				}
-			}
-			else if (bTickUnitTests)
-			{
-				UnitTests->tick(deltaTime);
-			}
-
-			mat4 view = glm::lookAt(vec3(0, 0, 5.0f), vec3(0, 0, 0), vec3(0, 1.0f, 0));
-			mat4 projection = glm::ortho(-(float)width / 2.0f, (float)width / 2.0f, -(float)height / 2.0f, (float)height / 2.0f, 0.1f, 100.0f);
-			shader2d.use();
-			shader2d.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-			shader2d.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			{ //draw box
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = boxTransform.getModelMatrix();
-				shader2d.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				shader2d.setUniform3f("color", boxColor);
-				glBindVertexArray(box2dVAO);
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, box2dEAO);
-				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-			}
-			{// draw triangle
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = triTransform.getModelMatrix();
-				shader2d.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				shader2d.setUniform3f("color", triColor);
-				glBindVertexArray(tri2dVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 3);
-			}
+			blueCubeCollision.updateTransform(blueCubeTransform.getModelMatrix());
+			redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
+			//if (bEnableCollision && !UnitTests->isRunning())
+			//{
+			//	glm::vec4 mtv;
+			//	if (SATShape::CollisionTest(triCollision, boxCollision, mtv))
+			//	{
+			//		std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(triTransform.position); std::cout << std::endl;
+			//		triTransform.position += vec3(mtv);
+			//		triCollision.updateTransform(triTransform.getModelMatrix());
+			//	}
+			//	else
+			//	{
+			//		if (cachedVelocity != vec3(0.0f))
+			//		{
+			//			std::cout << "\t\t\t"; std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(triTransform.position); std::cout << std::endl;
+			//			cachedVelocity = vec3(0.0f);
+			//		}
+			//	}
+			//}
+			//else if (bTickUnitTests)
+			//{
+			//	UnitTests->tick(deltaTime);
+			//}
 
 			//draw collision axes
-			std::vector<glm::vec3> boxAxes, triAxes;
-			boxCollision.appendFaceAxes(boxAxes);
-			triCollision.appendFaceAxes(triAxes);
 			constexpr float axisSizeScale = 1000.0f;
+			const glm::vec3 edgeEdgeColor(0.2f, 0.2f, 0.2f);
+			std::vector<glm::vec3> blueFaceAxes, redFaceAxes, edgeEdgeAxes;
+			blueCubeCollision.appendFaceAxes(blueFaceAxes);
+			redCubeCollision.appendFaceAxes(redFaceAxes);
+			SATShape::appendEdgeXEdgeAxes(blueCubeCollision, redCubeCollision, edgeEdgeAxes);
 
 			//intentionally draw axes before projections on axes
-			for (const glm::vec3& axis : boxAxes)
+			//glDisable(GL_DEPTH_TEST);
+			mat4 view = camera.getView();
+			mat4 projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(width) / height, 0.1f, 100.0f);
+			vec3 axisDisplace = bEnableAxisOffset ? axisOffset : vec3(0.0f);
+			for (const glm::vec3& axis : blueFaceAxes)
 			{
-				drawDebugLine(vec3(0.0f), axis * axisSizeScale, vec3(boxColor / 2.0f), mat4(1.0f), view, projection);
-				drawDebugLine(vec3(0.0f), -axis * axisSizeScale, vec3(boxColor / 2.0f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace, (axis) * axisSizeScale + axisDisplace, vec3(blueCubeColor * 0.25f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace, -(axis) * axisSizeScale + axisDisplace, vec3(blueCubeColor * 0.25f), mat4(1.0f), view, projection);
 			}
-			for (const glm::vec3& axis : triAxes)
+			for (const glm::vec3& axis : redFaceAxes)
 			{
-				drawDebugLine(vec3(0.0f), axis * axisSizeScale, vec3(triColor / 2.0f), mat4(1.0f), view, projection);
-				drawDebugLine(vec3(0.0f), -axis * axisSizeScale, vec3(triColor / 2.0f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace * 2.0f, axis * axisSizeScale + axisDisplace * 2.0f, vec3(redCubeColor * 0.25f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace * 2.0f, -axis * axisSizeScale + axisDisplace * 2.0f, vec3(redCubeColor * 0.25f), mat4(1.0f), view, projection);
 			}
-			std::vector<glm::vec3> allAxes = boxAxes;
-			allAxes.insert(allAxes.end(), triAxes.begin(), triAxes.end());
+			for (const glm::vec3& axis : edgeEdgeAxes)
+			{
+				drawDebugLine(vec3(0.0f), axis * axisSizeScale, vec3(edgeEdgeColor / 2.0f), mat4(1.0f), view, projection);
+				drawDebugLine(vec3(0.0f), -axis * axisSizeScale, vec3(edgeEdgeColor / 2.0f), mat4(1.0f), view, projection);
+			}
+			glDepthFunc(GL_ALWAYS); //always show highlights
+			std::vector<glm::vec3> allAxes = blueFaceAxes;
+			allAxes.insert(allAxes.end(), redFaceAxes.begin(), redFaceAxes.end());
+			allAxes.insert(allAxes.end(), edgeEdgeAxes.begin(), edgeEdgeAxes.end());
 			for (const glm::vec3& axis : allAxes)
 			{
-				SAT::ProjectionRange projection1 = boxCollision.projectToAxis(axis);
+				SAT::ProjectionRange projection1 = blueCubeCollision.projectToAxis(axis);
 				vec3 pnt1A = axis * projection1.min;
 				vec3 pnt1B = axis * projection1.max;
 
-				SAT::ProjectionRange projection2 = triCollision.projectToAxis(axis);
+				SAT::ProjectionRange projection2 = redCubeCollision.projectToAxis(axis);
 				vec3 pnt2A = axis * projection2.min;
 				vec3 pnt2B = axis * projection2.max;
 
 				bool bDisjoint = projection1.max < projection2.min || projection2.max < projection1.min;
-				vec3 overlapColor = boxColor + triColor;
-				drawDebugLine(pnt1A, pnt1B, bDisjoint ? boxColor * 0.75f : overlapColor, mat4(1.0f), view, projection);
-				drawDebugLine(pnt2A, pnt2B, bDisjoint ? triColor * 0.75f : overlapColor, mat4(1.0f), view, projection);
+				vec3 overlapColor = redCubeColor + blueCubeColor;
+				drawDebugLine(pnt1A, pnt1B, bDisjoint ? blueCubeColor : overlapColor, mat4(1.0f), view, projection);
+				drawDebugLine(pnt2A, pnt2B, bDisjoint ? redCubeColor : overlapColor, mat4(1.0f), view, projection);
+			}
+			glDepthFunc(GL_LESS); //default depth func
+
+			glEnable(GL_DEPTH_TEST);
+			glBindVertexArray(cubeVAO);
+			{//render light
+				mat4 model = lightTransform.getModelMatrix();
+				lampShader.use();
+				lampShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				lampShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
+				lampShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+				lampShader.setUniform3f("lightColor", lightColor);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			objShader.use();
+			objShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+			objShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			objShader.setUniform3f("lightPosition", lightTransform.position);
+			objShader.setUniform3f("lightColor", lightColor);
+			objShader.setUniform3f("cameraPosition", camera.getPosition());
+			
+			{ //render red cube
+				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
+				mat4 model = redCubeTransform.getModelMatrix();
+				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				objShader.setUniform3f("objectColor", redCubeColor);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			{// render blue cube
+				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
+				mat4 model = blueCubeTransform.getModelMatrix();
+				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				objShader.setUniform3f("objectColor", blueCubeColor);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
 
@@ -395,11 +439,331 @@ namespace
 			glfwPollEvents();
 
 		}
+	
+	private:
 
-		glDeleteVertexArrays(1, &box2dVAO);
-		glDeleteBuffers(1, &box2dVBO);
-		glDeleteVertexArrays(1, &tri2dVAO);
-		glDeleteBuffers(1, &tri2dVBO);
+		inline bool isZeroVector(const glm::vec3& testVec)
+		{
+			constexpr float EPSILON = 0.001f;
+			return glm::length2(testVec) < EPSILON * EPSILON;
+		}
+
+		void processInput(GLFWwindow* window)
+		{
+			static int initializeOneTimePrintMsg = []() -> int {
+				std::cout << "Hold ALT to move objects with WASD-EQ" << std::endl
+					<< " Hold ALT + CONTROL to rotate objects with WASD-EQ" << std::endl
+					<< " Press T to toggle which the object is moved " << std::endl
+					<< " Press V to toggle locking translations(and rotations) to camera (easier movements) " << std::endl
+					<< " Press M to toggle slightly displacing axes so that parallel axes are visible simultaneously " << std::endl
+					<< " Press P to print debug information" << std::endl
+					<< " Press R to reset object positions to default." << std::endl
+					<< " " << std::endl
+					<< " " << std::endl
+					<< " " << std::endl
+					<< " " << std::endl
+					//vec3 capture1_D, capture2_G, capture3_F, capture4_r, capture5_m, capture6_Gl, capture7_Gv, capture8_albedo, capture9_normal;
+					<< std::endl;
+				return 0;
+			}();
+
+
+			using glm::vec3; using glm::vec4;
+			static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
+			input.updateState(window);
+
+			if (input.isKeyJustPressed(window, GLFW_KEY_ESCAPE))
+			{
+				glfwSetWindowShouldClose(window, true);
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_T))
+			{
+				transformTarget = transformTarget == &blueCubeTransform ? &redCubeTransform : &blueCubeTransform;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_V))
+			{
+				bUseCameraAxesForObjectMovement = !bUseCameraAxesForObjectMovement;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_M))
+			{
+				bEnableAxisOffset = !bEnableAxisOffset;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_R))
+			{
+				redCubeTransform = defaultRedCubeTransform;
+				blueCubeTransform = defaultBlueCubeTransform;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_P))
+			{
+				using std::cout; using std::endl;
+				cout << "camera position: ";  printVec3(camera.getPosition()); cout << " yaw:" << camera.getYaw() << " pitch: " << camera.getPitch() << endl;
+				cout << "camera front:"; printVec3(camera.getFront()); cout << " right:"; printVec3(camera.getRight()); cout << " up:"; printVec3(camera.getUp()); cout << endl;
+				auto printXform = [](ColumnBasedTransform& transform) {
+					glm::vec3 rotQuat{ transform.rotQuat.x, transform.rotQuat.y, transform.rotQuat.z };
+					cout << "pos:";  printVec3(transform.position); cout << " rotation:"; printVec3(rotQuat); cout << "w" <<transform.rotQuat.w <<" scale:"; printVec3(transform.scale); cout << endl;
+				};
+				cout << "red object =>"; printXform(redCubeTransform);
+				cout << "blue object =>"; printXform(blueCubeTransform);
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_U))
+			{
+				bTickUnitTests = !bTickUnitTests;
+				if (bTickUnitTests)
+				{
+					UnitTests->restartAllTests();
+					UnitTests->start();
+				}
+			}
+			// -------- MOVEMENT -----------------
+			if (!(input.isKeyDown(window, GLFW_KEY_LEFT_ALT) || input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT)))
+			{
+				camera.handleInput(window, deltaTime);
+			}
+			else
+			{
+				bool bUpdateMovement = false;
+				vec3 movementInput = vec3(0.0f);
+				vec3 cachedTargetPos = transformTarget->position;
+
+				/////////////// W /////////////// 
+				if (input.isKeyDown(window, GLFW_KEY_W))
+				{
+					if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), camera.getRight()) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+						else
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), vec3(1,0,0)) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+					}
+					else
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							movementInput += camera.getFront();
+						}
+						else
+						{
+							movementInput += vec3(0, 0, -1);
+						}
+					}
+				}
+				/////////////// S /////////////// 
+				if (input.isKeyDown(window, GLFW_KEY_S))
+				{
+					if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), camera.getRight()) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+						else
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), vec3(1,0,0)) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+					}
+					else
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							movementInput += -camera.getFront();
+						}
+						else
+						{
+							movementInput += vec3(0, 0, 1);
+						}
+					}
+				}
+				/////////////// Q /////////////// 
+				if (input.isKeyDown(window, GLFW_KEY_Q))
+				{
+					if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), -camera.getFront()) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+						else
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), vec3(0, 0, 1)) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+					}
+					else
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							movementInput += -camera.getUp();
+						}
+						else
+						{
+							movementInput += vec3(0, -1, 0);
+						}
+					}
+				}
+				/////////////// E /////////////// 
+				if (input.isKeyDown(window, GLFW_KEY_E))
+				{
+					if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), -camera.getFront()) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+						else
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), vec3(0, 0, 1)) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+					} 
+					else
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							movementInput += camera.getUp();
+						}
+						else
+						{
+							movementInput += vec3(0, 1, 0);
+						}
+					}
+				}
+				/////////////// A /////////////// 
+				if (input.isKeyDown(window, GLFW_KEY_A))
+				{
+					if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							vec3 toTarget = transformTarget->position - camera.getPosition();
+							vec3 adjustedUp = glm::normalize(glm::cross(camera.getRight(), glm::normalize(toTarget)));
+							glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), adjustedUp) * transformTarget->rotQuat;
+							//glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), camera.getUp()) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+						else
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(-rotationSpeed * deltaTime), glm::vec3(0,0,1)) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+					}
+					else
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							movementInput += -camera.getRight();
+						}
+						else
+						{
+							movementInput += vec3(-1, 0, 0);
+						}
+					}
+				}
+				/////////////// D /////////////// 
+				if (input.isKeyDown(window, GLFW_KEY_D))
+				{
+					if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL) || input.isKeyDown(window, GLFW_KEY_RIGHT_CONTROL))
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							vec3 toTarget = transformTarget->position - camera.getPosition();
+							vec3 adjustedUp = glm::normalize(glm::cross(camera.getRight(), glm::normalize(toTarget)));
+							glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), adjustedUp) * transformTarget->rotQuat;
+							//glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), camera.getUp()) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+						else
+						{
+							glm::quat newRotation = glm::angleAxis(glm::radians(rotationSpeed * deltaTime), glm::vec3(0, 0, 1)) * transformTarget->rotQuat;
+							transformTarget->rotQuat = newRotation;
+						}
+					}
+					else
+					{
+						if (bUseCameraAxesForObjectMovement)
+						{
+							movementInput += camera.getRight();
+						}
+						else
+						{
+							movementInput += vec3(1, 0, 0);
+						}
+					}
+				}
+				//probably should use epsilon comparison for when opposite buttons held, but this should cover compares against initialization
+				if (movementInput != vec3(0.0f))
+				{
+					movementInput = glm::normalize(movementInput);
+					cachedVelocity = deltaTime * moveSpeed * movementInput;
+					transformTarget->position += cachedVelocity;
+				}
+				if (bBlockCollisionFailures)
+				{
+					//if (SATShape::CollisionTest(*gTriCollision, *gBoxCollision))
+					//{
+					//	//undo the move
+					//	transformTarget->position = cachedTargetPos;
+					//}
+				}
+			}
+
+			// -------- UNIT TEST ---------
+			if (input.isKeyJustPressed(window, GLFW_KEY_UP))
+			{
+			}
+			else if (input.isKeyJustPressed(window, GLFW_KEY_DOWN))
+			{
+				UnitTests->restartCurrentTest();
+			}
+			else if (input.isKeyJustPressed(window, GLFW_KEY_LEFT))
+			{
+				UnitTests->previousTest();
+			}
+			else if (input.isKeyJustPressed(window, GLFW_KEY_RIGHT))
+			{
+				UnitTests->nextTest();
+			}
+
+		}
+
+
+	};
+
+	void true_main()
+	{
+		using glm::vec2;
+		using glm::vec3;
+		using glm::mat4;
+
+		int width = 1200;
+		int height = 800;
+		
+		GLFWwindow* window = init_window(width, height);
+
+		glViewport(0, 0, width, height);
+		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+		CubeDemo cubeDemo(width, height);
+		cubeDemo.handleModuleFocused(window);
+
+		/////////////////////////////////////////////////////////////////////
+		// Game Loop
+		/////////////////////////////////////////////////////////////////////
+		while (!glfwWindowShouldClose(window))
+		{
+			cubeDemo.tickGameLoop(window);
+		}
+
 		glfwTerminate();
 	}
 }

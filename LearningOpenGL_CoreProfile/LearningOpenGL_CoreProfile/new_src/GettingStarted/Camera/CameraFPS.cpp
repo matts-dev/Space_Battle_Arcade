@@ -54,7 +54,7 @@ void CameraFPS::exclusiveGLFWCallbackRegister(GLFWwindow* window)
 
 
 CameraFPS::CameraFPS(float inFOV, float inYaw, float inPitch) :
-	worldUp(0.f, 1.f, 0.f),
+	worldUp_n(0.f, 1.f, 0.f),
 	FOV(inFOV),
 	yaw(inYaw),
 	pitch(inPitch)
@@ -71,7 +71,7 @@ CameraFPS::~CameraFPS()
 	}
 }
 
-glm::mat4 CameraFPS::getView()
+glm::mat4 CameraFPS::getView() const
 {
 	//this creates a view matrix from two matrices.
 	//the first matrix (ie the matrix on the right which gets applied first) is just translating points by the opposite of the camera's position.
@@ -84,8 +84,8 @@ glm::mat4 CameraFPS::getView()
 	//		Since we're saying that the camera's axes align with our NDC axes, we get coordinates in terms x y z that are ready for clipping and projection to NDC 
 	//So, ultimately the lookAt matrix shifts points based on camera's position, then projects them onto the camera's axes -- which are aligned with OpenGL's axes 
 
-	glm::vec3 cameraAxisW = glm::normalize(cameraPosition - (cameraFront + cameraPosition)); //points towards camera; camera looks down its -z axis (ie down its -w axis)
-	glm::vec3 cameraAxisU = glm::normalize(glm::cross(worldUp, cameraAxisW)); //this is the right axis (ie x-axis)
+	glm::vec3 cameraAxisW = glm::normalize(cameraPosition - (cameraFront_n + cameraPosition)); //points towards camera; camera looks down its -z axis (ie down its -w axis)
+	glm::vec3 cameraAxisU = glm::normalize(glm::cross(worldUp_n, cameraAxisW)); //this is the right axis (ie x-axis)
 	glm::vec3 cameraAxisV = glm::normalize(glm::cross(cameraAxisW, cameraAxisU));
 	//make each row in the matrix a camera's basis vector; glm is column-major
 	glm::mat4 cameraBasisProjection;
@@ -156,22 +156,22 @@ void CameraFPS::handleInput(GLFWwindow* window, float deltaTime)
 {
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		cameraPosition -= cameraFront * cameraSpeed * deltaTime;
+		cameraPosition -= cameraFront_n * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		cameraPosition += cameraFront * cameraSpeed * deltaTime;
+		cameraPosition += cameraFront_n * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		//the w basis vector is the -cameraFront
-		glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp, -cameraFront));
+		glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
 		cameraPosition += cameraRight * cameraSpeed * deltaTime;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
 		//the w basis vector is the -cameraFront
-		glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp, -cameraFront));
+		glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
 		cameraPosition -= cameraRight * cameraSpeed * deltaTime;
 	}
 }
@@ -183,9 +183,34 @@ void CameraFPS::setPosition(float x, float y, float z)
 	cameraPosition.z = z;
 }
 
+void CameraFPS::setYaw(float inYaw)
+{
+	yaw = inYaw;
+	calculateEulerAngles();
+}
+
+void CameraFPS::setPitch(float inPitch)
+{
+	pitch = inPitch;
+	calculateEulerAngles();
+}
+
 void CameraFPS::setSpeed(float speed)
 {
 	cameraSpeed = speed;
+}
+
+const glm::vec3 CameraFPS::getRight() const
+{
+	glm::vec3 cameraRight_n = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
+	return cameraRight_n;
+}
+
+const glm::vec3 CameraFPS::getUp() const
+{
+	glm::vec3 cameraRight_n = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
+	glm::vec3 cameraUp_n = glm::normalize(glm::cross(-cameraFront_n, cameraRight_n));
+	return cameraUp_n;
 }
 
 void CameraFPS::calculateEulerAngles()
@@ -194,6 +219,6 @@ void CameraFPS::calculateEulerAngles()
 	camDir.y = sin(glm::radians(pitch));
 	camDir.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
 	camDir.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-	camDir = glm::normalize(camDir); //perhaps unnecessary
-	cameraFront = camDir;
+	camDir = glm::normalize(camDir); //make sure this is normalized for when user polls front
+	cameraFront_n = camDir;
 }
