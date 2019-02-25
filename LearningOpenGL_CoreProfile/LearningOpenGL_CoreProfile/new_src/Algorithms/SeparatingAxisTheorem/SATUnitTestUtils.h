@@ -166,13 +166,13 @@ namespace SAT
 		virtual void tick(float deltaTimeSecs) override;
 		virtual void initializeKeyFrameSetup() override;
 
-		void SetCustomCompleteTestFunc(bool(*inCustomCompleteFunc)(ApplyVelocityFrameAgent&)) {	customCompleteFunc = inCustomCompleteFunc; }
-		void SetCustomTickFailFunc(bool(*inCustomTickFailCheck)(ApplyVelocityFrameAgent&)) { CustomTickFailCheck = inCustomTickFailCheck; }
-		void SetStartTransform(const ColumnBasedTransform& newStartTransform) { startTransform = newStartTransform; }
-		void SetNewVelocity(glm::vec3 newVelocity) { velocity = newVelocity; }
+		void setCustomCompleteTestFunc(bool(*inCustomCompleteFunc)(ApplyVelocityFrameAgent&)) {	customCompleteFunc = inCustomCompleteFunc; }
+		void setCustomTickFailFunc(bool(*inCustomTickFailCheck)(ApplyVelocityFrameAgent&)) { CustomTickFailCheck = inCustomTickFailCheck; }
+		void setStartTransform(const ColumnBasedTransform& newStartTransform) { startTransform = newStartTransform; }
+		void setNewVelocity(glm::vec3 newVelocity) { velocity = newVelocity; }
 
-		const ColumnBasedTransform& GetTransform() { return localTransform; }
-		const ColumnBasedTransform& GetStartTransform() { return startTransform; }
+		const ColumnBasedTransform& getTransform() { return localTransform; }
+		const ColumnBasedTransform& getStartTransform() { return startTransform; }
 
 		void markFailedTickTest() { bTickFailed = true; }
 

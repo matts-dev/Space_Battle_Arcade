@@ -13,6 +13,8 @@
 #include "SATComponent.h"
 #include "SATUnitTestUtils.h"
 #include <gtx/quaternion.hpp>
+#include <tuple>
+#include <array>
 
 namespace
 {
@@ -195,7 +197,7 @@ namespace
 		float moveSpeed = 3;
 		float rotationSpeed = 45.0f;
 		bool bEnableCollision = true;
-		bool bBlockCollisionFailures = false;
+		bool bBlockCollisionFailures = true;
 		bool bTickUnitTests = false;
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
@@ -295,7 +297,215 @@ namespace
 
 			UnitTests = std::make_shared<SAT::TestSuite>();
 
-			// Unit Test testing 4 cardinal 2d directions
+			//Found bug with alignment so that going from top to bottom can cause zfighting Test 
+			auto UnitTest_DownZFighting = std::make_shared< SAT::ApplyVelocityTest>();
+				auto KF_DownZFighting = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto blueAgent_DownZFight = std::make_shared<SAT::ApplyVelocityFrameAgent>(
+					blueCubeCollision,
+					vec3(0, 0, 0),
+					blueCubeTransform,
+					blueCubeTransform,
+					[](SAT::ApplyVelocityFrameAgent&) {return true; }
+				);
+				auto redAgent_DownZFight = std::make_shared< SAT::ApplyVelocityFrameAgent >
+					(
+						redCubeCollision,
+						vec3(0, -moveSpeed, 0),
+						redCubeTransform,
+						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {}, {1,1,1} },
+						[](SAT::ApplyVelocityFrameAgent& thisAgent) {
+					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+						//correct position [-0.0203712, 1.00515, -0.0666917
+						return origin.y >= 1.00;
+					}
+				);
+				KF_DownZFighting->AddKeyFrameAgent(blueAgent_DownZFight);
+				KF_DownZFighting->AddKeyFrameAgent(redAgent_DownZFight);
+				UnitTest_DownZFighting->AddKeyFrame(KF_DownZFighting);
+			UnitTests->AddTest(UnitTest_DownZFighting);
+			
+			auto UnitTest_ScaledAngledPuncture = std::make_shared< SAT::ApplyVelocityTest>();
+				auto KF_DownAngledPuncture = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto blueAgent_AngledPuncture = std::make_shared<SAT::ApplyVelocityFrameAgent>(
+					blueCubeCollision,
+					vec3(0, 0, 0),
+					blueCubeTransform,
+					blueCubeTransform,
+					[](SAT::ApplyVelocityFrameAgent&) {return true; }
+				);
+				auto redAgent_AngledPuncture = std::make_shared< SAT::ApplyVelocityFrameAgent >
+					(
+						redCubeCollision,
+						vec3(0, -moveSpeed, 0),
+						redCubeTransform,
+						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {glm::angleAxis(glm::radians(33.0f), glm::normalize(glm::vec3(1.0f,1.0f,0.0f)))}, {0.5f,0.5f,0.5f} },
+						[](SAT::ApplyVelocityFrameAgent& thisAgent) 
+						{
+							glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+							return origin.y >= 0.850825;
+						}
+				);
+				//adding this function to help pinpoint a breakpoint when the obejct punctures
+				redAgent_AngledPuncture->setCustomTickFailFunc(
+					[](SAT::ApplyVelocityFrameAgent& thisAgent) {
+						if (thisAgent.getTransform().position.y < 1.0)
+						{
+							return false; //don't fail test on tick yet
+						}
+						return false;
+					}
+				);
+				KF_DownAngledPuncture->AddKeyFrameAgent(blueAgent_AngledPuncture);
+				KF_DownAngledPuncture->AddKeyFrameAgent(redAgent_AngledPuncture);
+				UnitTest_ScaledAngledPuncture->AddKeyFrame(KF_DownAngledPuncture);
+			UnitTests->AddTest(UnitTest_ScaledAngledPuncture);
+
+			auto UnitTest_ScaledBigAngledPuncture = std::make_shared< SAT::ApplyVelocityTest>();
+			auto KF_DownBigAngledPuncture = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+			auto blueAgent_BigAngledPuncture = std::make_shared<SAT::ApplyVelocityFrameAgent>(
+				blueCubeCollision,
+				vec3(0, 0, 0),
+				blueCubeTransform,
+				blueCubeTransform,
+				[](SAT::ApplyVelocityFrameAgent&) {return true; }
+			);
+			auto redAgent_BigAngledPuncture = std::make_shared< SAT::ApplyVelocityFrameAgent >
+				(
+					redCubeCollision,
+					vec3(0, -moveSpeed, 0),
+					redCubeTransform,
+					SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {glm::angleAxis(glm::radians(33.0f), glm::normalize(glm::vec3(1.0f,1.0f,0.0f)))}, {1.5f,1.5f,1.5f} },
+					[](SAT::ApplyVelocityFrameAgent& thisAgent)
+			{
+				glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+				//puncture position: pos:[0, 0.834968, 0]; 
+				return origin.y >= 0.850825;
+			}
+			);
+			//adding this function to help pinpoint a breakpoint when the obejct punctures
+			redAgent_BigAngledPuncture->setCustomTickFailFunc(
+				[](SAT::ApplyVelocityFrameAgent& thisAgent) {
+				if (thisAgent.getTransform().position.y < 1.0)
+				{
+					return false; //don't fail test on tick yet
+				}
+				return false;
+			}
+			);
+			KF_DownBigAngledPuncture->AddKeyFrameAgent(blueAgent_BigAngledPuncture);
+			KF_DownBigAngledPuncture->AddKeyFrameAgent(redAgent_BigAngledPuncture);
+			UnitTest_ScaledBigAngledPuncture->AddKeyFrame(KF_DownBigAngledPuncture);
+			UnitTests->AddTest(UnitTest_ScaledBigAngledPuncture);
+
+			/*               tuple< rotation, scale    >*/
+			std::vector<std::tuple<glm::quat, glm::vec3>> transformVariants = {
+								/*rotation       scale   */
+				std::make_tuple(glm::quat(), vec3(1,1,1)),
+				std::make_tuple(glm::quat(), vec3(2,2,2)),
+				std::make_tuple(glm::quat(), vec3(0.5f,0.5f,0.5f)),
+				std::make_tuple(glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0f, 1.0f, 0.0f))) , vec3(1,1,1) ),
+				std::make_tuple(glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0f, 1.0f, 0.0f))), vec3(0.5f,0.5f,0.5f)),
+				std::make_tuple(glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0f, 1.0f, 0.0f))), vec3(2,2,2))
+			};
+			constexpr uint32_t rotIdx = 0, scaleIdx = 1;
+				
+			// Unit Test testing 4 cardinal directions
+			for (const auto& tpl : transformVariants)
+			{
+				auto UnitTest_CardinalDirections = std::make_shared< SAT::ApplyVelocityTest>();
+				auto KF_CardinalDown = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto KF_CardinalUp = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto KF_CardinalLeft = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto KF_CardinalRight = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto KF_CardinalPosZ = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto KF_CardinalNegZ = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
+				auto blueAgent_Cardinal = std::make_shared<SAT::ApplyVelocityFrameAgent>(
+					blueCubeCollision,
+					vec3(0, 0, 0),
+					blueCubeTransform,
+					blueCubeTransform,
+					[](SAT::ApplyVelocityFrameAgent&) {return true; }
+				);
+				auto redAgent_CardinalDown = std::make_shared< SAT::ApplyVelocityFrameAgent >
+					(
+						redCubeCollision,
+						vec3(0, -moveSpeed, 0),
+						redCubeTransform,
+						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) },
+						[](SAT::ApplyVelocityFrameAgent& thisAgent) {
+							glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+							return origin.y > 0;
+						}
+				);
+
+				//make copies and just change out appropriate fields
+				auto redAgent_CardinalUp = std::make_shared< SAT::ApplyVelocityFrameAgent >(*redAgent_CardinalDown);
+				redAgent_CardinalUp->setStartTransform(SAT::ColumnBasedTransform{ {0, -3, 0 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) });
+				redAgent_CardinalUp->setNewVelocity(vec3(0, moveSpeed, 0));
+				redAgent_CardinalUp->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+					return origin.y < 0;
+				});
+
+				//make copies and just change out appropriate fields
+				auto redAgent_CardinalLeft = std::make_shared< SAT::ApplyVelocityFrameAgent >(*redAgent_CardinalDown);
+				redAgent_CardinalLeft->setStartTransform(SAT::ColumnBasedTransform{ {3, 0, 0 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) });
+				redAgent_CardinalLeft->setNewVelocity(vec3(-moveSpeed, 0, 0));
+				redAgent_CardinalLeft->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+					return origin.x > 0;
+				});
+
+				//make copies and just change out appropriate fields
+				auto redAgent_CardinalRight = std::make_shared< SAT::ApplyVelocityFrameAgent >(*redAgent_CardinalDown);
+				redAgent_CardinalRight->setStartTransform(SAT::ColumnBasedTransform{ {-3, 0, 0 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) });
+				redAgent_CardinalRight->setNewVelocity(vec3(moveSpeed, 0, 0));
+				redAgent_CardinalRight->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+					return origin.x < 0;
+				});
+
+				auto redAgent_CardinalPosZ = std::make_shared< SAT::ApplyVelocityFrameAgent >(*redAgent_CardinalDown);
+				redAgent_CardinalPosZ->setStartTransform(SAT::ColumnBasedTransform{ {0, 0, -3 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) });
+				redAgent_CardinalPosZ->setNewVelocity(vec3(0, 0, moveSpeed));
+				redAgent_CardinalPosZ->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+					return origin.z < 0;
+				});
+				auto redAgent_CardinalNegZ = std::make_shared< SAT::ApplyVelocityFrameAgent >(*redAgent_CardinalDown);
+				redAgent_CardinalNegZ->setStartTransform(SAT::ColumnBasedTransform{ {0, 0, 3 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) });
+				redAgent_CardinalNegZ->setNewVelocity(vec3(0, 0, -moveSpeed));
+				redAgent_CardinalNegZ->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
+					return origin.z > 0;
+				});
+
+				KF_CardinalDown->AddKeyFrameAgent(blueAgent_Cardinal);
+				KF_CardinalDown->AddKeyFrameAgent(redAgent_CardinalDown);
+				UnitTest_CardinalDirections->AddKeyFrame(KF_CardinalDown);
+
+				KF_CardinalLeft->AddKeyFrameAgent(redAgent_CardinalLeft);
+				KF_CardinalLeft->AddKeyFrameAgent(blueAgent_Cardinal);
+				UnitTest_CardinalDirections->AddKeyFrame(KF_CardinalLeft);
+
+				KF_CardinalUp->AddKeyFrameAgent(redAgent_CardinalUp);
+				KF_CardinalUp->AddKeyFrameAgent(blueAgent_Cardinal);
+				UnitTest_CardinalDirections->AddKeyFrame(KF_CardinalUp);
+
+				KF_CardinalRight->AddKeyFrameAgent(redAgent_CardinalRight);
+				KF_CardinalRight->AddKeyFrameAgent(blueAgent_Cardinal);
+				UnitTest_CardinalDirections->AddKeyFrame(KF_CardinalRight);
+
+				KF_CardinalPosZ->AddKeyFrameAgent(redAgent_CardinalPosZ);
+				KF_CardinalPosZ->AddKeyFrameAgent(blueAgent_Cardinal);
+				UnitTest_CardinalDirections->AddKeyFrame(KF_CardinalPosZ);
+
+				KF_CardinalNegZ->AddKeyFrameAgent(redAgent_CardinalNegZ);
+				KF_CardinalNegZ->AddKeyFrameAgent(blueAgent_Cardinal);
+				UnitTest_CardinalDirections->AddKeyFrame(KF_CardinalNegZ);
+				UnitTests->AddTest(UnitTest_CardinalDirections);
+			}
+
 		}
 
 		~CubeDemo()
@@ -329,28 +539,29 @@ namespace
 			//collision should be adjusted and complete before we attempt to render anything
 			blueCubeCollision.updateTransform(blueCubeTransform.getModelMatrix());
 			redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
-			//if (bEnableCollision && !UnitTests->isRunning())
-			//{
-			//	glm::vec4 mtv;
-			//	if (SATShape::CollisionTest(triCollision, boxCollision, mtv))
-			//	{
-			//		std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(triTransform.position); std::cout << std::endl;
-			//		triTransform.position += vec3(mtv);
-			//		triCollision.updateTransform(triTransform.getModelMatrix());
-			//	}
-			//	else
-			//	{
-			//		if (cachedVelocity != vec3(0.0f))
-			//		{
-			//			std::cout << "\t\t\t"; std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(triTransform.position); std::cout << std::endl;
-			//			cachedVelocity = vec3(0.0f);
-			//		}
-			//	}
-			//}
-			//else if (bTickUnitTests)
-			//{
-			//	UnitTests->tick(deltaTime);
-			//}
+
+			if (bEnableCollision && !UnitTests->isRunning())
+			{
+				glm::vec4 mtv;
+				if (SATShape::CollisionTest(redCubeCollision, blueCubeCollision, mtv))
+				{
+					std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(redCubeTransform.position); std::cout << std::endl;
+					redCubeTransform.position += vec3(mtv);
+					redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
+				}
+				else
+				{
+					if (cachedVelocity != vec3(0.0f))
+					{
+						std::cout << "\t\t\t"; std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(redCubeTransform.position); std::cout << std::endl;
+						cachedVelocity = vec3(0.0f);
+					}
+				}
+			}
+			else if (bTickUnitTests)
+			{
+				UnitTests->tick(deltaTime);
+			}
 
 			//draw collision axes
 			constexpr float axisSizeScale = 1000.0f;
@@ -458,9 +669,9 @@ namespace
 					<< " Press M to toggle slightly displacing axes so that parallel axes are visible simultaneously " << std::endl
 					<< " Press P to print debug information" << std::endl
 					<< " Press R to reset object positions to default." << std::endl
-					<< " " << std::endl
-					<< " " << std::endl
-					<< " " << std::endl
+					<< " Press C to toggle collision detection" << std::endl
+					<< " Press 9/0 to decrease/increase scale" << std::endl
+					<< " Press U to start unit tests; press left/right to skip through unit tests" << std::endl
 					<< " " << std::endl
 					//vec3 capture1_D, capture2_G, capture3_F, capture4_r, capture5_m, capture6_Gl, capture7_Gv, capture8_albedo, capture9_normal;
 					<< std::endl;
@@ -493,6 +704,28 @@ namespace
 				redCubeTransform = defaultRedCubeTransform;
 				blueCubeTransform = defaultBlueCubeTransform;
 			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_C))
+			{
+				bEnableCollision = !bEnableCollision;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_C))
+			{
+				bEnableCollision = !bEnableCollision;
+			}
+			const glm::vec3 scaleSpeedPerSec(1, 1, 1);
+			if (input.isKeyDown(window, GLFW_KEY_9))
+			{
+				vec3 delta = -scaleSpeedPerSec * deltaTime;
+				transformTarget->scale += delta;
+				redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
+				blueCubeCollision.updateTransform(blueCubeTransform.getModelMatrix());
+			}
+			if (input.isKeyDown(window, GLFW_KEY_0))
+			{
+				transformTarget->scale += scaleSpeedPerSec * deltaTime;
+				redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
+				blueCubeCollision.updateTransform(blueCubeTransform.getModelMatrix());
+			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_P))
 			{
 				using std::cout; using std::endl;
@@ -502,7 +735,7 @@ namespace
 					glm::vec3 rotQuat{ transform.rotQuat.x, transform.rotQuat.y, transform.rotQuat.z };
 					cout << "pos:";  printVec3(transform.position); cout << " rotation:"; printVec3(rotQuat); cout << "w" <<transform.rotQuat.w <<" scale:"; printVec3(transform.scale); cout << endl;
 				};
-				cout << "red object =>"; printXform(redCubeTransform);
+				cout << "red objecpt =>"; printXform(redCubeTransform);
 				cout << "blue object =>"; printXform(blueCubeTransform);
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_U))
@@ -545,11 +778,11 @@ namespace
 					{
 						if (bUseCameraAxesForObjectMovement)
 						{
-							movementInput += camera.getFront();
+							movementInput += camera.getUp();
 						}
 						else
 						{
-							movementInput += vec3(0, 0, -1);
+							movementInput += vec3(0, 1, 0);
 						}
 					}
 				}
@@ -573,11 +806,11 @@ namespace
 					{
 						if (bUseCameraAxesForObjectMovement)
 						{
-							movementInput += -camera.getFront();
+							movementInput += -camera.getUp();
 						}
 						else
 						{
-							movementInput += vec3(0, 0, 1);
+							movementInput += vec3(0, -1, 0);
 						}
 					}
 				}
@@ -601,11 +834,11 @@ namespace
 					{
 						if (bUseCameraAxesForObjectMovement)
 						{
-							movementInput += -camera.getUp();
+							movementInput += -camera.getFront();
 						}
 						else
 						{
-							movementInput += vec3(0, -1, 0);
+							movementInput += vec3(0, 0, 1);
 						}
 					}
 				}
@@ -629,11 +862,11 @@ namespace
 					{
 						if (bUseCameraAxesForObjectMovement)
 						{
-							movementInput += camera.getUp();
+							movementInput += camera.getFront();
 						}
 						else
 						{
-							movementInput += vec3(0, 1, 0);
+							movementInput += vec3(0, 0, -1);
 						}
 					}
 				}
@@ -708,12 +941,19 @@ namespace
 				}
 				if (bBlockCollisionFailures)
 				{
-					//if (SATShape::CollisionTest(*gTriCollision, *gBoxCollision))
-					//{
-					//	//undo the move
-					//	transformTarget->position = cachedTargetPos;
-					//}
+					vec4 mtv;
+					if (SATShape::CollisionTest(redCubeCollision, blueCubeCollision, mtv))
+					{
+						//undo the move
+						transformTarget->position = cachedTargetPos;
+						//redCubeTransform.position += vec3(mtv);
+					}
 				}
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_N))
+			{
+				std::cout << "debug force collision test" << std::endl;
+				SATShape::CollisionTest(redCubeCollision, blueCubeCollision);
 			}
 
 			// -------- UNIT TEST ---------

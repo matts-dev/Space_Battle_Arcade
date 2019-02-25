@@ -327,27 +327,27 @@ namespace
 
 			//make copies and just change out appropriate fields
 			auto triAgent_CardinalUp = std::make_shared< SAT::ApplyVelocityFrameAgent >(*triAgent_CardinalDown);
-			triAgent_CardinalUp->SetStartTransform(SAT::ColumnBasedTransform{ {0, -120, 0 },{},{triTransform.scale} } );
-			triAgent_CardinalUp->SetNewVelocity(vec3(0, moveSpeed, 0));
-			triAgent_CardinalUp->SetCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+			triAgent_CardinalUp->setStartTransform(SAT::ColumnBasedTransform{ {0, -120, 0 },{},{triTransform.scale} } );
+			triAgent_CardinalUp->setNewVelocity(vec3(0, moveSpeed, 0));
+			triAgent_CardinalUp->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
 				glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
 				return origin.y < 0;
 			});
 
 			//make copies and just change out appropriate fields
 			auto triAgent_CardinalLeft = std::make_shared< SAT::ApplyVelocityFrameAgent >(*triAgent_CardinalDown);
-			triAgent_CardinalLeft->SetStartTransform(SAT::ColumnBasedTransform{ {120, 0, 0 },{},{triTransform.scale} });
-			triAgent_CardinalLeft->SetNewVelocity(vec3(-moveSpeed, 0, 0));
-			triAgent_CardinalLeft->SetCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+			triAgent_CardinalLeft->setStartTransform(SAT::ColumnBasedTransform{ {120, 0, 0 },{},{triTransform.scale} });
+			triAgent_CardinalLeft->setNewVelocity(vec3(-moveSpeed, 0, 0));
+			triAgent_CardinalLeft->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
 				glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
 				return origin.x > 0;
 			});
 
 			//make copies and just change out appropriate fields
 			auto triAgent_CardinalRight = std::make_shared< SAT::ApplyVelocityFrameAgent >(*triAgent_CardinalDown);
-			triAgent_CardinalRight->SetStartTransform(SAT::ColumnBasedTransform{ {-120, 0, 0 },{},{triTransform.scale} });
-			triAgent_CardinalRight->SetNewVelocity(vec3(moveSpeed, 0, 0));
-			triAgent_CardinalRight->SetCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
+			triAgent_CardinalRight->setStartTransform(SAT::ColumnBasedTransform{ {-120, 0, 0 },{},{triTransform.scale} });
+			triAgent_CardinalRight->setNewVelocity(vec3(moveSpeed, 0, 0));
+			triAgent_CardinalRight->setCustomCompleteTestFunc([](SAT::ApplyVelocityFrameAgent& thisAgent) {
 				glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
 				return origin.x < 0;
 			});
@@ -413,10 +413,10 @@ namespace
 					SAT::ColumnBasedTransform{ {-39.1155, 120.8502, 0 }, rotZ45 ,{triTransform.scale} },
 					[](SAT::ApplyVelocityFrameAgent& thisAgent) { return true; }
 			);
-			triAgent->SetCustomTickFailFunc(
+			triAgent->setCustomTickFailFunc(
 				[](SAT::ApplyVelocityFrameAgent& thisAgent) { 
-					float startY = thisAgent.GetStartTransform().position.y;
-					float currY = thisAgent.GetTransform().position.y;
+					float startY = thisAgent.getStartTransform().position.y;
+					float currY = thisAgent.getTransform().position.y;
 					if (startY - currY > 3.0f)
 					{
 						thisAgent.markFailedTickTest();

@@ -97,20 +97,20 @@ void SAT::TestSuite::tick(float deltaTime)
 		if (!currentTest->failed)
 		{
 			std::cout << "PASSED TEST" << std::endl;
+			if (currentTestIdx != UnitTests.size() - 1)
+			{
+				nextTest();
+				currentTest = getCurrentTest();
+			}
+			else
+			{
+				std::cout << "tests complete" << std::endl;
+				runTests = false;
+			}
 		}
 		else
 		{
 			std::cerr << "FAILED TEST" << std::endl;
-		}
-		
-		if (currentTestIdx != UnitTests.size() - 1)
-		{
-			nextTest();
-			currentTest = getCurrentTest();
-		}
-		else 
-		{
-			std::cout << "tests complete" << std::endl;
 			runTests = false;
 		}
 	}
@@ -192,12 +192,12 @@ void SAT::ApplyVelocityFrameAgent::tick(float deltaTimeSecs)
 		return;
 	}
 
+	//do move then check collision
+	localTransform.position += velocity * deltaTimeSecs;
+	shape.updateTransform(localTransform.getModelMatrix());
+
 	for (sp<KeyFrameAgent>& agentBase : GetAllKeyFrameAgents())
 	{
-		//do move then check collision
-		localTransform.position += velocity * deltaTimeSecs;
-		shape.updateTransform(localTransform.getModelMatrix());
-
 		if (agentBase.get() != this)
 		{
 			//don't worry about overhead of std::dynamic_pointer_cast; we're not going to hold a new shared pointer

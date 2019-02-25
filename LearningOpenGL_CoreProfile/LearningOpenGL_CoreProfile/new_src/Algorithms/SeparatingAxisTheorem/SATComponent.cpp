@@ -135,7 +135,10 @@ void SATShape::appendEdgeXEdgeAxes(const SATShape& moving, const SATShape& stati
 			vec3 statEdge = stationaryEdgeRef.pntA - stationaryEdgeRef.pntB;
 			//direction of cross product doesn't matter; projections will be consistent
 			vec3 axis = glm::normalize(cross(movEdge, statEdge));
-			normalizedAxes.push_back(axis);
+			if (!isnan(axis.x) && !isnan(axis.y) && !isnan(axis.z))
+			{
+				normalizedAxes.push_back(axis);
+			}
 		}
 	}
 }
@@ -194,26 +197,42 @@ void SATShape::overrideLocalOrigin(glm::vec4 newLocalOriginPoint)
 	{
 		const SAT::ProjectionRange& BiggerObject = movInside ? stationaryProj : movingProj;
 		const SAT::ProjectionRange& InsideObject = movInside ? movingProj : stationaryProj;
-
-		float rightDist = BiggerObject.max - InsideObject.max;
-		float leftDist = BiggerObject.min - InsideObject.min;
+		
+		//determine which direction to slide smaller object out of bigger object (think of this as creating vectors in 1d)
+		//check which distance is less to travel; this may need abs(), but I think it can be mathematically shown 
+		//that the max diff is always positive and the min diff is always negative. There are 3 case for each
+		// case 1: values straddle 0			{--0--}		| mins: neg - pos			= neg	|maxs: pos - neg			= pos
+		// case 2: values are on negative side  {----} 0	| mins: big_neg - small_neg = neg	|maxs: small_neg - big_neg	= pos
+		// case 3: values are on positive side  0 {----}	| mins: small - large		= neg	|maxs: big_pos - small_pos	= pos
+		//saving cos of abs() by not using it.
+		float rightDist = BiggerObject.max - InsideObject.max;		//always a positive, (see above table)
+		float leftDist = -(BiggerObject.min - InsideObject.min);	//always a negative number (see above table)
 
 		//MTV is in direction of shorter distance; but include full size of inner object
 		//  (-|----|------)			
 		//  <--
+		glm::vec3 mtv(0.0f);
 		if (rightDist > leftDist) //move left (negative)
 		{
-			return unitAxis * -(leftDist + (InsideObject.max -InsideObject.min));
+			mtv = unitAxis * -(leftDist + (InsideObject.max -InsideObject.min));
 		}
 		else if (rightDist < leftDist) //move right (positive)
 		{
-			return unitAxis * (rightDist + (InsideObject.max - InsideObject.min));
+			mtv = unitAxis * (rightDist + (InsideObject.max - InsideObject.min));
+			
 		}
 		else //two are perfectly aligned; move full distance
 		{
 			//arbitrary direction since perfect alignment; both choices valid; must move full size
-			return (BiggerObject.max - BiggerObject.min) * unitAxis;
+			mtv = (BiggerObject.max - BiggerObject.min) * unitAxis;
 		}
+
+		//In cases moveable object has moved to now surround the stationary object, we will return the mtv for the stationary object
+		//we can correct this by inverting the mtv.
+		// |---------------(---)---|
+		//					------->	//mtv from calculated above
+		//					<------     //mtv inverted so the movable |--| object is moved and not the stationary object
+		return movInside ? mtv : -mtv;
 	}
 	else if(movOnLeft)
 	{
