@@ -64,8 +64,8 @@ namespace SAT
 	class KeyFrameAgent
 	{
 	public: //funcs
-		KeyFrameAgent(SATShape& shape) : shape(shape) {}
-		const SATShape& getShape() { return shape; }
+		KeyFrameAgent(Shape& shape) : shape(shape) {}
+		const Shape& getShape() { return shape; }
 		const bool failedTick() { return bTickFailed; }
 
 		//called when keyframe is complete, returns true if in passing position for keyframe test
@@ -74,7 +74,7 @@ namespace SAT
 		virtual void initializeKeyFrameSetup() {}
 
 	protected: //vars
-		SATShape& shape;
+		Shape& shape;
 
 	protected: //funcs
 		std::vector<std::shared_ptr<KeyFrameAgent>>& GetAllKeyFrameAgents();
@@ -148,7 +148,7 @@ namespace SAT
 	struct ApplyVelocityFrameAgent : public KeyFrameAgent
 	{
 		ApplyVelocityFrameAgent(
-			SATShape& shape,
+			Shape& shape,
 			glm::vec3 velocity,
 			ColumnBasedTransform& localTransform,
 			ColumnBasedTransform startTransform,

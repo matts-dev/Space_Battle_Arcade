@@ -107,8 +107,8 @@ namespace
 	bool bEnableCollision = true;
 	bool bBlockCollisionFailures = false;
 	bool bTickUnitTests = false;
-	SATShape2D* gBoxCollision = nullptr;
-	SATShape2D* gTriCollision = nullptr;
+	SAT::Shape2D* gBoxCollision = nullptr;
+	SAT::Shape2D* gTriCollision = nullptr;
 	std::shared_ptr<SAT::TestSuite> UnitTests;
 
 	void printVec3(glm::vec3 v)
@@ -192,7 +192,7 @@ namespace
 		}
 		if (bBlockCollisionFailures)
 		{
-			if (SATShape::CollisionTest(*gTriCollision, *gBoxCollision))
+			if (SAT::Shape::CollisionTest(*gTriCollision, *gBoxCollision))
 			{
 				//undo the move
 				transformTarget->position = cachedTargetPos;
@@ -268,7 +268,7 @@ namespace
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(box2d_idxs), box2d_idxs, GL_STATIC_DRAW);
 		glBindVertexArray(0); //unbind VAO so no further state is saved
 		boxTransform = { vec3(0, 0, 0), vec3(0,0,0), vec3(100, 100, 100) };
-		SATShape2D boxCollision{ SATShape2D::ConstructHelper(boxPnts) };
+		SAT::Shape2D boxCollision{ SAT::Shape2D::ConstructHelper(boxPnts) };
 
 		//triangle
 		std::vector<vec2> triPnts = { vec2(0.0f, 0.5f), vec2(-0.5f, -0.5f), vec2(0.5f, -0.5f) };
@@ -287,7 +287,7 @@ namespace
 		glEnableVertexAttribArray(0);
 		glBindVertexArray(0); //unbind VAO so no further state is saved
 		triTransform = { vec3(-width / 4, -height / 4, 0), vec3(0,0,0), vec3(100, 100, 100) };
-		SATShape2D triCollision{ SATShape2D::ConstructHelper(triPnts) };
+		SAT::Shape2D triCollision{ SAT::Shape2D::ConstructHelper(triPnts) };
 
 		gBoxCollision = &boxCollision;
 		gTriCollision = &triCollision;
@@ -454,7 +454,7 @@ namespace
 			if (bEnableCollision && !UnitTests->isRunning())
 			{
 				glm::vec4 mtv;
-				if (SATShape::CollisionTest(triCollision, boxCollision, mtv))
+				if (SAT::Shape::CollisionTest(triCollision, boxCollision, mtv))
 				{
 					std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(triTransform.position); std::cout << std::endl;
 					triTransform.position += vec3(mtv);

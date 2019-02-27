@@ -206,7 +206,7 @@ void SAT::ApplyVelocityFrameAgent::tick(float deltaTimeSecs)
 				glm::vec4 mtv;
 
 				//only good for testing 2 object collisions as MTV may slide object into another
-				if (SATShape::CollisionTest(shape, agent->shape, mtv))
+				if (Shape::CollisionTest(shape, agent->shape, mtv))
 				{
 					localTransform.position += glm::vec3(mtv);
 					shape.updateTransform(localTransform.getModelMatrix());

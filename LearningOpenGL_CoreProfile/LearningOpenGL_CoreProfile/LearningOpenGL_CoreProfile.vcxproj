@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATRenderDebugUtils.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATUnitTestUtils.h" />
     <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.h" />
     <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.h" />
@@ -82,9 +83,11 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATRenderDebugUtils.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATUnitTestUtils.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest2D.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DCube.cpp" />
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DPolyCapsule.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.cpp" />

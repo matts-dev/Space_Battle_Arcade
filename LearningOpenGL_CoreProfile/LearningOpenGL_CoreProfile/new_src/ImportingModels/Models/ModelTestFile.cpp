@@ -405,7 +405,8 @@ namespace
 		};
 
 //------------------------------------------------------------------------------------------------------------------
-		Model centerModel("Models/TestModels/XW/xwing.obj");
+		//Model centerModel("Models/TestModels/XW/xwing.obj");
+		Model centerModel("Models/collision/polygon_capsule.obj");
 
 		//test models
 		Transform XwingTransform = { glm::vec3(-5,0,-5), glm::vec3(0,45.0f,0), glm::vec3(0.33f,0.33f,0.33f) };
