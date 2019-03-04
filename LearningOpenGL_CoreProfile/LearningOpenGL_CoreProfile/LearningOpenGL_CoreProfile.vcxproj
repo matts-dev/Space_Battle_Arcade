@@ -88,6 +88,7 @@
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest2D.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DCube.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DPolyCapsule.cpp" />
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeTestWithPoly.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.cpp" />

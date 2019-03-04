@@ -875,6 +875,9 @@
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DPolyCapsule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeTestWithPoly.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />

@@ -300,22 +300,22 @@ namespace SAT
 
 	/*static*/ const std::vector<glm::vec4> PolygonCapsuleShape::shapePnts =
 	{
-		//left tip (-y)
+		//bottom tip (-y)
 		/*0*/glm::vec4(0, -1.5f, 0, 1),
 
-		//left hand ring (-y)
+		//bottom side ring (-y)
 		/*1*/glm::vec4(1, -0.5f, 0, 1),		//median point
 		/*2*/glm::vec4(0, -0.5f, 1, 1),		//top point
 		/*3*/glm::vec4(-1,-0.5f, 0, 1),		//median point
 		/*4*/glm::vec4(0, -0.5f, -1, 1),	//bottom point
 
-		//right hand ring (+y)
+		//stop side ring (+y)
 		/*5*/glm::vec4(1,  0.5f, 0, 1),		//median point
 		/*6*/glm::vec4(0,  0.5f, 1, 1),		//top point
 		/*7*/glm::vec4(-1, 0.5f, 0, 1),		//median point
 		/*8*/glm::vec4(0,  0.5f, -1, 1),	//bottom point
 
-		//right tip (+y)
+		//top tip (+y)
 		/*9*/glm::vec4(0, 1.5f, 0, 1)
 	};
 
@@ -423,4 +423,85 @@ namespace SAT
 
 	}
 
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+	DynamicTriangleMeshShape::DynamicTriangleMeshShape(const TriangleProcessor& PreprocessedTriangles)
+		:Shape(PreprocessedTriangles.points, PreprocessedTriangles.edgeIndices, PreprocessedTriangles.faceIndices)
+	{
+	}
+
+	DynamicTriangleMeshShape::TriangleProcessor::TriangleProcessor(const std::vector<TriangleCCW>& triangles, float considerDotsSameIfWithin)
+	{
+		using glm::cross; using glm::normalize; using glm::vec3; using glm::vec4; using glm::dot;
+
+		//used to reduce the number of std::vector space reserved, since symmetric objects will hopefully have redundant edges/faces
+		const size_t mirrorRedundancyHeuristic = 2;
+
+		std::vector<vec3> uniqueFaceNormals;
+		uniqueFaceNormals.reserve(triangles.size());
+
+		std::vector<vec3> uniqueEdges;
+		uniqueEdges.reserve(triangles.size() / mirrorRedundancyHeuristic); //just a guess heuristic to prevent early buffer resizes
+
+		points.reserve(triangles.size() * 3);
+		faceIndices.reserve(triangles.size() / mirrorRedundancyHeuristic);
+		edgeIndices.reserve((3 * triangles.size()) / mirrorRedundancyHeuristic);
+
+		for (const TriangleCCW& tri : triangles)
+		{
+			points.push_back(tri.pntA);
+			points.push_back(tri.pntB);
+			points.push_back(tri.pntC);
+			size_t aIdx = points.size() - 3;
+			size_t bIdx = points.size() - 2;
+			size_t cIdx = points.size() - 1;
+
+			float vecsSameIfGreaterOrEqualThanThis = 1.0f - considerDotsSameIfWithin;
+
+			//Test if face has unique normal; if so we need to use it as an axis of separation
+			vec3 faceNormal = normalize(cross(vec3(tri.pntC - tri.pntB), vec3(tri.pntA - tri.pntB)));
+			bool faceIsUnique = true;
+			for (vec3 prevNormal : uniqueFaceNormals)
+			{
+				//we take absolute value because both sign directions of separating axis yield same result
+				float relatedness = glm::abs(dot(prevNormal, faceNormal));
+				if (relatedness >= vecsSameIfGreaterOrEqualThanThis)
+				{
+					faceIsUnique = false;
+					break;
+				}
+			}
+			if (faceIsUnique)
+			{
+				uniqueFaceNormals.push_back(faceNormal);
+				EdgePointIndices edge1{ cIdx, bIdx};
+				EdgePointIndices edge2{ aIdx, bIdx };
+				faceIndices.push_back(FacePointIndices{ EdgePointIndices{ cIdx, bIdx}, EdgePointIndices{ aIdx, bIdx } });
+			}
+
+			//test if edges are unique
+			vec3 edgeCB_n = normalize(tri.pntC - tri.pntB); 
+			vec3 edgeAB_n = normalize(tri.pntA - tri.pntB);
+			vec3 edgeCA_n = normalize(tri.pntC - tri.pntA);
+
+			//repeated code to optimize for single loop
+			bool CBUnique, ABUnique, CAUnique;
+			CBUnique = ABUnique = CAUnique = true;
+			for (const vec3& prevEdge_n : uniqueEdges)
+			{
+				//if non unique, update, else passthrough previous value
+				CBUnique = glm::abs(dot(prevEdge_n, edgeCB_n)) >= vecsSameIfGreaterOrEqualThanThis ? false : CBUnique;
+				ABUnique = glm::abs(dot(prevEdge_n, edgeAB_n)) >= vecsSameIfGreaterOrEqualThanThis ? false : ABUnique;
+				CAUnique = glm::abs(dot(prevEdge_n, edgeCA_n)) >= vecsSameIfGreaterOrEqualThanThis ? false : CAUnique;
+
+				//early end loop if all edges have been accounted for already
+				if (!CAUnique && !ABUnique && !CAUnique){ break;}
+			}
+			//add new valid edges to shape
+			if (CBUnique) { uniqueEdges.push_back(edgeCB_n); edgeIndices.emplace_back(EdgePointIndices{ cIdx, bIdx }); }
+			if (ABUnique) { uniqueEdges.push_back(edgeAB_n); edgeIndices.emplace_back(EdgePointIndices{ aIdx, bIdx });}
+			if (CAUnique) { uniqueEdges.push_back(edgeCA_n); edgeIndices.emplace_back(EdgePointIndices{ cIdx, aIdx });}
+		}
+	}
 }

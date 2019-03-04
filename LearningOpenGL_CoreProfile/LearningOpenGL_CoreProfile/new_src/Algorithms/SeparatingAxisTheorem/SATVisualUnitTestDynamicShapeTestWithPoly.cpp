@@ -15,6 +15,7 @@
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
+#include "SATRenderDebugUtils.h"
 
 namespace
 {
@@ -164,7 +165,7 @@ namespace
 		virtual void handleModuleFocused(GLFWwindow* window) = 0;
 	};
 
-	class CubeDemo final : public ISATDemo
+	class DynamicCapsuleDemo final : public ISATDemo
 	{
 		//Cached Window Data
 		int height;
@@ -173,17 +174,18 @@ namespace
 		float deltaTime = 0.0f;
 
 		//OpenGL data
-		GLuint cubeVAO, cubeVBO;
+		GLuint cubeVAO, cubeVBO, capsuleVAO, capsuleVBO;
+		std::size_t capsuleVertSize = 0;
 
 		//Shape Data
-		ColumnBasedTransform redCubeTransform;
-		ColumnBasedTransform blueCubeTransform;
-		const ColumnBasedTransform defaultBlueCubeTransform = { { 0,0,0 }, {}, { 1,1,1 } };
-		const ColumnBasedTransform defaultRedCubeTransform = { { 5,0,5 }, {}, { 1,1,1 } };
-		const glm::vec3 blueCubeColor{ 0, 0, 1 };
-		const glm::vec3 redCubeColor{ 1, 0, 0 };
-		SAT::CubeShape blueCubeCollision;
-		SAT::CubeShape redCubeCollision;
+		ColumnBasedTransform redCapsuleTransform;
+		ColumnBasedTransform blueCapsuleTransform;
+		const ColumnBasedTransform defaultBlueCapsuleTransform = { { 0,0,0 }, {}, { 1,1,1 } };
+		const ColumnBasedTransform defaultRedCapsuleTransform = { { 5,0,5 }, {}, { 1,1,1 } };
+		const glm::vec3 blueCapsuleColor{ 0, 0, 1 };
+		const glm::vec3 redCapsuleColor{ 1, 0, 0 };
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> blueCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> redCollision;
 
 		//State
 		CameraFPS camera{ 45.0f, -90.f, 0.f };
@@ -191,9 +193,10 @@ namespace
 		glm::vec3 lightColor{ 1.0f, 1.0f, 1.0f };
 		Shader objShader{ litObjectShaderVertSrc , litObjectShaderFragSrc, false };
 		Shader lampShader{ lightLocationShaderVertSrc, lightLocationShaderFragSrc, false };
+		Shader debugShapeShader{ Dim3DebugShaderVertSrc, Dim3DebugShaderFragSrc, false };
 
 		//Modifiable State
-		ColumnBasedTransform* transformTarget = &redCubeTransform;
+		ColumnBasedTransform* transformTarget = &redCapsuleTransform;
 		float moveSpeed = 3;
 		float rotationSpeed = 45.0f;
 		bool bEnableCollision = true;
@@ -201,15 +204,15 @@ namespace
 		bool bTickUnitTests = false;
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
+		bool bDrawDebugSATInfo = true;
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
 		//UnitTests
 		std::shared_ptr<SAT::TestSuite> UnitTests;
 
-
 	public:
-		CubeDemo(int width, int height)
+		DynamicCapsuleDemo(int width, int height)
 			: ISATDemo(width, height)
 		{
 			using glm::vec2;
@@ -227,9 +230,9 @@ namespace
 			/////////////////////////////////////////////////////////////////////
 			// OpenGL/Collision Object Creation
 			/////////////////////////////////////////////////////////////////////
-			
-			//unit create cube (that matches the size of the collision cube)
-			float vertices[] = {
+
+			//unit create cube for light
+			float cubeVertices[] = {
 				//x     y       z      _____normal_xyz___
 				-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 				0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -278,15 +281,129 @@ namespace
 
 			glGenBuffers(1, &cubeVBO);
 			glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0));
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 			glEnableVertexAttribArray(1);
-			glBindVertexArray(0); 
+			glBindVertexArray(0);
 
-			redCubeTransform = defaultRedCubeTransform;
-			blueCubeTransform = defaultBlueCubeTransform;
+			float capsuleVertices[] = {
+				//positions                 normals
+
+				//bottom cone face with x and z
+				0.0f, -1.5f, 0.0f,		0.57735f,-0.57735f,0.57735f,//0.0f, -1.0f, 0.0f,
+				1.0f, -0.5f, 0.0f,		0.57735f,-0.57735f,0.57735f,//1.0f, 0.0f, 0.0f,
+				0.0f, -0.5f, 1.0f,		0.57735f,-0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+
+				//bottom cone face with z and -x
+				0.0f, -1.5f, 0.0f,		-0.57735f,-0.57735f,0.57735f,//0.0f, -1.0f, 0.0f,
+				0.0f, -0.5f, 1.0f,		-0.57735f,-0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+				-1.0f, -0.5f, 0.0f,		-0.57735f,-0.57735f,0.57735f,//-1.0f, 0.0f, 0.0f,
+
+				//bottom cone with face -x and -z
+				0.0f, -1.5f, 0.0f,		-0.57735f,-0.57735f,-0.57735f,//0.0f, -1.0f, 0.0f,
+				-1.0f, -0.5f, 0.0f,		-0.57735f,-0.57735f,-0.57735f,//-1.0f, 0.0f, 0.0f,
+				0.0f, -0.5f, -1.0f,		-0.57735f,-0.57735f,-0.57735f,//0.0f, 0.0f, -1.0f,
+
+				//bottom cone with face -z and x
+				0.0f, -1.5f, 0.0f,		0.57735f,-0.57735f, -0.57735f,//0.0f, -1.0f, 0.0f,
+				0.0f, -0.5f, -1.0f,		0.57735f,-0.57735f, -0.57735f,//0.0f, 0.0f, -1.0f,
+				1.0f, -0.5f, 0.0f,		0.57735f,-0.57735f, -0.57735f,//1.0f, 0.0f, 0.0f,
+
+
+
+
+
+				//side faces in x and z 
+				1.0f, -0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+				0.0f,  0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				0.0f, -0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				//----				 							   
+				1.0f, -0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+				1.0f, 0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+				0.0f,  0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+
+				//side faces in z and -x
+				0.0f, -0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				0.0f, 0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+				//----										  
+				0.0f, -0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+				-1.0f, -0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+
+				//side faces in -x and -z
+				0.0f, -0.5f, -1.0f,		-0.707107f, -0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				-1.0f, -0.5f, 0.0f,		-0.707107f, -0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, -0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+				//----											   
+				0.0f, -0.5f, -1.0f,		-0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+				0.0f, 0.5f, -1.0f,		-0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+
+				//side faces in -z and x
+				0.0f,  -0.5f, -1.0f,	0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				0.0f,  0.5f, -1.0f,		0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				1.0f, 0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f,
+				//----										   
+				0.0f,  -0.5f, -1.0f,	0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				1.0f, 0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f,
+				1.0f, -0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f, 
+
+
+
+				//top cone face with z and x
+				0.0f, 1.5f, 0.0f,		0.57735f,0.57735f,0.57735f,//0.0f, 1.0f, 0.0f,
+				0.0f, 0.5f, 1.0f,		0.57735f,0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+				1.0f, 0.5f, 0.0f,		0.57735f,0.57735f,0.57735f,//1.0f, 0.0f, 0.0f,
+
+				//top cone face with -x and z
+				0.0f, 1.5f, 0.0f,		-0.57735f,0.57735f,0.57735f,//0.0f, 1.0f, 0.0f,
+				-1.0f, 0.5f, 0.0f,		-0.57735f,0.57735f,0.57735f,//-1.0f, 0.0f, 0.0f,
+				0.0f, 0.5f, 1.0f,		-0.57735f,0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+
+				//top cone with face -z and -x
+				0.0f, 1.5f, 0.0f,		-0.57735f,0.57735f,-0.57735f,//0.0f, 1.0f, 0.0f,
+				0.0f, 0.5f, -1.0f,		-0.57735f,0.57735f,-0.57735f,//0.0f, 0.0f, -1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.57735f,0.57735f,-0.57735f,//-1.0f, 0.0f, 0.0f,
+
+				//top cone with face x and -z 
+				0.0f, 1.5f, 0.0f,		0.57735f,0.57735f,-0.57735f,//0.0f, 1.0f, 0.0f,
+				1.0f, 0.5f, 0.0f,		0.57735f,0.57735f,-0.57735f,//1.0f, 0.0f, 0.0f,
+				0.0f, 0.5f, -1.0f,		0.57735f,0.57735f,-0.57735f//0.0f, 0.0f, -1.0f
+			};
+			capsuleVertSize = sizeof(capsuleVertices);
+			glGenVertexArrays(1, &capsuleVAO);
+			glBindVertexArray(capsuleVAO);
+
+			glGenBuffers(1, &capsuleVBO);
+			glBindBuffer(GL_ARRAY_BUFFER, capsuleVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(capsuleVertices), capsuleVertices, GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0));
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+			glEnableVertexAttribArray(1);
+			glBindVertexArray(0);
+
+			redCapsuleTransform = defaultRedCapsuleTransform;
+			blueCapsuleTransform = defaultBlueCapsuleTransform;
+
+			//process triangles into input for SAT dynamic triangle processor
+			using TriangleCCW = SAT::DynamicTriangleMeshShape::TriangleProcessor::TriangleCCW;
+			std::vector<TriangleCCW> dynamicTriangles;
+			for (size_t triIdx = 0; triIdx < sizeof(capsuleVertices) / sizeof(float); triIdx += (6 * 3))
+			{
+				TriangleCCW tri;
+				tri.pntA = glm::vec4(capsuleVertices[triIdx], capsuleVertices[triIdx+1], capsuleVertices[triIdx+2], 1.0f);
+				tri.pntB = glm::vec4(capsuleVertices[triIdx + 6], capsuleVertices[triIdx + 1 + 6], capsuleVertices[triIdx + 2 + 6], 1.0f);
+				tri.pntC = glm::vec4(capsuleVertices[triIdx + 12], capsuleVertices[triIdx + 1 + 12], capsuleVertices[triIdx + 2 + 12], 1.0f);
+				dynamicTriangles.push_back(tri);
+			}
+			float treatDotProductSameDeltaThreshold = 0.001f;
+			SAT::DynamicTriangleMeshShape::TriangleProcessor triProcessor{ dynamicTriangles, treatDotProductSameDeltaThreshold };
+			redCollision = std::make_shared< SAT::DynamicTriangleMeshShape >(triProcessor);
+			blueCollision = std::make_shared< SAT::DynamicTriangleMeshShape >(triProcessor);
 
 			lightTransform.position = glm::vec3(5, 3, 0);
 			lightTransform.scale = glm::vec3(0.1f);
@@ -301,17 +418,17 @@ namespace
 			auto UnitTest_DownZFighting = std::make_shared< SAT::ApplyVelocityTest>();
 				auto KF_DownZFighting = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto blueAgent_DownZFight = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-					blueCubeCollision,
+					*blueCollision,
 					vec3(0, 0, 0),
-					blueCubeTransform,
-					blueCubeTransform,
+					blueCapsuleTransform,
+					blueCapsuleTransform,
 					[](SAT::ApplyVelocityFrameAgent&) {return true; }
 				);
 				auto redAgent_DownZFight = std::make_shared< SAT::ApplyVelocityFrameAgent >
 					(
-						redCubeCollision,
+						*redCollision,
 						vec3(0, -moveSpeed, 0),
-						redCubeTransform,
+						redCapsuleTransform,
 						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {}, {1,1,1} },
 						[](SAT::ApplyVelocityFrameAgent& thisAgent) {
 					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
@@ -327,17 +444,17 @@ namespace
 			auto UnitTest_ScaledAngledPuncture = std::make_shared< SAT::ApplyVelocityTest>();
 				auto KF_DownAngledPuncture = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto blueAgent_AngledPuncture = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-					blueCubeCollision,
+					*blueCollision,
 					vec3(0, 0, 0),
-					blueCubeTransform,
-					blueCubeTransform,
+					blueCapsuleTransform,
+					blueCapsuleTransform,
 					[](SAT::ApplyVelocityFrameAgent&) {return true; }
 				);
 				auto redAgent_AngledPuncture = std::make_shared< SAT::ApplyVelocityFrameAgent >
 					(
-						redCubeCollision,
+						*redCollision,
 						vec3(0, -moveSpeed, 0),
-						redCubeTransform,
+						redCapsuleTransform,
 						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {glm::angleAxis(glm::radians(33.0f), glm::normalize(glm::vec3(1.0f,1.0f,0.0f)))}, {0.5f,0.5f,0.5f} },
 						[](SAT::ApplyVelocityFrameAgent& thisAgent) 
 						{
@@ -363,17 +480,17 @@ namespace
 			auto UnitTest_ScaledBigAngledPuncture = std::make_shared< SAT::ApplyVelocityTest>();
 			auto KF_DownBigAngledPuncture = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 			auto blueAgent_BigAngledPuncture = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-				blueCubeCollision,
+				*blueCollision,
 				vec3(0, 0, 0),
-				blueCubeTransform,
-				blueCubeTransform,
+				blueCapsuleTransform,
+				blueCapsuleTransform,
 				[](SAT::ApplyVelocityFrameAgent&) {return true; }
 			);
 			auto redAgent_BigAngledPuncture = std::make_shared< SAT::ApplyVelocityFrameAgent >
 				(
-					redCubeCollision,
+					*redCollision,
 					vec3(0, -moveSpeed, 0),
-					redCubeTransform,
+					redCapsuleTransform,
 					SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {glm::angleAxis(glm::radians(33.0f), glm::normalize(glm::vec3(1.0f,1.0f,0.0f)))}, {1.5f,1.5f,1.5f} },
 					[](SAT::ApplyVelocityFrameAgent& thisAgent)
 			{
@@ -420,17 +537,17 @@ namespace
 				auto KF_CardinalPosZ = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto KF_CardinalNegZ = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto blueAgent_Cardinal = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-					blueCubeCollision,
+					*blueCollision,
 					vec3(0, 0, 0),
-					blueCubeTransform,
-					blueCubeTransform,
+					blueCapsuleTransform,
+					blueCapsuleTransform,
 					[](SAT::ApplyVelocityFrameAgent&) {return true; }
 				);
 				auto redAgent_CardinalDown = std::make_shared< SAT::ApplyVelocityFrameAgent >
 					(
-						redCubeCollision,
+						*redCollision,
 						vec3(0, -moveSpeed, 0),
-						redCubeTransform,
+						redCapsuleTransform,
 						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) },
 						[](SAT::ApplyVelocityFrameAgent& thisAgent) {
 							glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
@@ -508,10 +625,12 @@ namespace
 
 		}
 
-		~CubeDemo()
+		~DynamicCapsuleDemo()
 		{
 			glDeleteVertexArrays(1, &cubeVAO);
 			glDeleteBuffers(1, &cubeVBO);
+			glDeleteVertexArrays(1, &capsuleVAO);
+			glDeleteBuffers(1, &capsuleVBO);
 		}
 
 		virtual void handleModuleFocused(GLFWwindow* window)
@@ -537,23 +656,23 @@ namespace
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			//collision should be adjusted and complete before we attempt to render anything
-			blueCubeCollision.updateTransform(blueCubeTransform.getModelMatrix());
-			redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
+			blueCollision->updateTransform(blueCapsuleTransform.getModelMatrix());
+			redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
 
 			if (bEnableCollision && !UnitTests->isRunning())
 			{
 				glm::vec4 mtv;
-				if (SAT::Shape::CollisionTest(redCubeCollision, blueCubeCollision, mtv))
+				if (SAT::Shape::CollisionTest(*redCollision, *blueCollision, mtv))
 				{
-					std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(redCubeTransform.position); std::cout << std::endl;
-					redCubeTransform.position += vec3(mtv);
-					redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
+					std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(redCapsuleTransform.position); std::cout << std::endl;
+					redCapsuleTransform.position += vec3(mtv);
+					redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
 				}
 				else
 				{
 					if (cachedVelocity != vec3(0.0f))
 					{
-						std::cout << "\t\t\t"; std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(redCubeTransform.position); std::cout << std::endl;
+						std::cout << "\t\t\t"; std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(redCapsuleTransform.position); std::cout << std::endl;
 						cachedVelocity = vec3(0.0f);
 					}
 				}
@@ -567,9 +686,9 @@ namespace
 			constexpr float axisSizeScale = 1000.0f;
 			const glm::vec3 edgeEdgeColor(0.2f, 0.2f, 0.2f);
 			std::vector<glm::vec3> blueFaceAxes, redFaceAxes, edgeEdgeAxes;
-			blueCubeCollision.appendFaceAxes(blueFaceAxes);
-			redCubeCollision.appendFaceAxes(redFaceAxes);
-			SAT::Shape::appendEdgeXEdgeAxes(blueCubeCollision, redCubeCollision, edgeEdgeAxes);
+			blueCollision->appendFaceAxes(blueFaceAxes);
+			redCollision->appendFaceAxes(redFaceAxes);
+			SAT::Shape::appendEdgeXEdgeAxes(*blueCollision, *redCollision, edgeEdgeAxes);
 
 			//intentionally draw axes before projections on axes
 			//glDisable(GL_DEPTH_TEST);
@@ -578,13 +697,13 @@ namespace
 			vec3 axisDisplace = bEnableAxisOffset ? axisOffset : vec3(0.0f);
 			for (const glm::vec3& axis : blueFaceAxes)
 			{
-				drawDebugLine(axisDisplace, (axis) * axisSizeScale + axisDisplace, vec3(blueCubeColor * 0.25f), mat4(1.0f), view, projection);
-				drawDebugLine(axisDisplace, -(axis) * axisSizeScale + axisDisplace, vec3(blueCubeColor * 0.25f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace, (axis) * axisSizeScale + axisDisplace, vec3(blueCapsuleColor * 0.25f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace, -(axis) * axisSizeScale + axisDisplace, vec3(blueCapsuleColor * 0.25f), mat4(1.0f), view, projection);
 			}
 			for (const glm::vec3& axis : redFaceAxes)
 			{
-				drawDebugLine(axisDisplace * 2.0f, axis * axisSizeScale + axisDisplace * 2.0f, vec3(redCubeColor * 0.25f), mat4(1.0f), view, projection);
-				drawDebugLine(axisDisplace * 2.0f, -axis * axisSizeScale + axisDisplace * 2.0f, vec3(redCubeColor * 0.25f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace * 2.0f, axis * axisSizeScale + axisDisplace * 2.0f, vec3(redCapsuleColor * 0.25f), mat4(1.0f), view, projection);
+				drawDebugLine(axisDisplace * 2.0f, -axis * axisSizeScale + axisDisplace * 2.0f, vec3(redCapsuleColor * 0.25f), mat4(1.0f), view, projection);
 			}
 			for (const glm::vec3& axis : edgeEdgeAxes)
 			{
@@ -597,18 +716,18 @@ namespace
 			allAxes.insert(allAxes.end(), edgeEdgeAxes.begin(), edgeEdgeAxes.end());
 			for (const glm::vec3& axis : allAxes)
 			{
-				SAT::ProjectionRange projection1 = blueCubeCollision.projectToAxis(axis);
+				SAT::ProjectionRange projection1 = blueCollision->projectToAxis(axis);
 				vec3 pnt1A = axis * projection1.min;
 				vec3 pnt1B = axis * projection1.max;
 
-				SAT::ProjectionRange projection2 = redCubeCollision.projectToAxis(axis);
+				SAT::ProjectionRange projection2 = redCollision->projectToAxis(axis);
 				vec3 pnt2A = axis * projection2.min;
 				vec3 pnt2B = axis * projection2.max;
 
 				bool bDisjoint = projection1.max < projection2.min || projection2.max < projection1.min;
-				vec3 overlapColor = redCubeColor + blueCubeColor;
-				drawDebugLine(pnt1A, pnt1B, bDisjoint ? blueCubeColor : overlapColor, mat4(1.0f), view, projection);
-				drawDebugLine(pnt2A, pnt2B, bDisjoint ? redCubeColor : overlapColor, mat4(1.0f), view, projection);
+				vec3 overlapColor = redCapsuleColor + blueCapsuleColor;
+				drawDebugLine(pnt1A, pnt1B, bDisjoint ? blueCapsuleColor : overlapColor, mat4(1.0f), view, projection);
+				drawDebugLine(pnt2A, pnt2B, bDisjoint ? redCapsuleColor : overlapColor, mat4(1.0f), view, projection);
 			}
 			glDepthFunc(GL_LESS); //default depth func
 
@@ -630,19 +749,32 @@ namespace
 			objShader.setUniform3f("lightColor", lightColor);
 			objShader.setUniform3f("cameraPosition", camera.getPosition());
 			
-			{ //render red cube
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = redCubeTransform.getModelMatrix();
-				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				objShader.setUniform3f("objectColor", redCubeColor);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+			float pointSize = 8.0f;
+
+			if (bDrawDebugSATInfo)
+			{
+				SAT::drawDebugCollisionShape(debugShapeShader, *redCollision, redCapsuleColor, pointSize, true, true, view, projection);
+				SAT::drawDebugCollisionShape(debugShapeShader, *blueCollision, blueCapsuleColor,pointSize, true, true, view, projection);
+
 			}
-			{// render blue cube
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = blueCubeTransform.getModelMatrix();
-				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				objShader.setUniform3f("objectColor", blueCubeColor);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+			else
+			{
+				glBindVertexArray(capsuleVAO);
+				GLuint numCapsuleVerts = capsuleVertSize / (sizeof(float) * 6);
+				{ //render red cube
+					//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
+					mat4 model = redCapsuleTransform.getModelMatrix();
+					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					objShader.setUniform3f("objectColor", redCapsuleColor);
+					glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
+				}
+				{// render blue cube
+					//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
+					mat4 model = blueCapsuleTransform.getModelMatrix();
+					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					objShader.setUniform3f("objectColor", blueCapsuleColor);
+					glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
+				}
 			}
 
 
@@ -678,7 +810,6 @@ namespace
 				return 0;
 			}();
 
-
 			using glm::vec3; using glm::vec4;
 			static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
 			input.updateState(window);
@@ -689,11 +820,15 @@ namespace
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_T))
 			{
-				transformTarget = transformTarget == &blueCubeTransform ? &redCubeTransform : &blueCubeTransform;
+				transformTarget = transformTarget == &blueCapsuleTransform ? &redCapsuleTransform : &blueCapsuleTransform;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_V))
 			{
 				bUseCameraAxesForObjectMovement = !bUseCameraAxesForObjectMovement;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_F))
+			{
+				bDrawDebugSATInfo = !bDrawDebugSATInfo;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_M))
 			{
@@ -701,8 +836,8 @@ namespace
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_R))
 			{
-				redCubeTransform = defaultRedCubeTransform;
-				blueCubeTransform = defaultBlueCubeTransform;
+				redCapsuleTransform = defaultRedCapsuleTransform;
+				blueCapsuleTransform = defaultBlueCapsuleTransform;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_C))
 			{
@@ -717,14 +852,14 @@ namespace
 			{
 				vec3 delta = -scaleSpeedPerSec * deltaTime;
 				transformTarget->scale += delta;
-				redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
-				blueCubeCollision.updateTransform(blueCubeTransform.getModelMatrix());
+				redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
+				redCollision->updateTransform(blueCapsuleTransform.getModelMatrix());
 			}
 			if (input.isKeyDown(window, GLFW_KEY_0))
 			{
 				transformTarget->scale += scaleSpeedPerSec * deltaTime;
-				redCubeCollision.updateTransform(redCubeTransform.getModelMatrix());
-				blueCubeCollision.updateTransform(blueCubeTransform.getModelMatrix());
+				redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
+				redCollision->updateTransform(blueCapsuleTransform.getModelMatrix());
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_P))
 			{
@@ -735,8 +870,8 @@ namespace
 					glm::vec3 rotQuat{ transform.rotQuat.x, transform.rotQuat.y, transform.rotQuat.z };
 					cout << "pos:";  printVec3(transform.position); cout << " rotation:"; printVec3(rotQuat); cout << "w" <<transform.rotQuat.w <<" scale:"; printVec3(transform.scale); cout << endl;
 				};
-				cout << "red objecpt =>"; printXform(redCubeTransform);
-				cout << "blue object =>"; printXform(blueCubeTransform);
+				cout << "red objecpt =>"; printXform(redCapsuleTransform);
+				cout << "blue object =>"; printXform(blueCapsuleTransform);
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_U))
 			{
@@ -946,7 +1081,7 @@ namespace
 				if (bBlockCollisionFailures)
 				{
 					vec4 mtv;
-					if (SAT::Shape::CollisionTest(redCubeCollision, blueCubeCollision, mtv))
+					if (SAT::Shape::CollisionTest(*redCollision, *blueCollision, mtv))
 					{
 						//undo the move
 						transformTarget->position = cachedTargetPos;
@@ -957,7 +1092,7 @@ namespace
 			if (input.isKeyJustPressed(window, GLFW_KEY_N))
 			{
 				std::cout << "debug force collision test" << std::endl;
-				SAT::Shape::CollisionTest(redCubeCollision, blueCubeCollision);
+				SAT::Shape::CollisionTest(*redCollision, *blueCollision);
 			}
 
 			// -------- UNIT TEST ---------
@@ -997,22 +1132,22 @@ namespace
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		CubeDemo cubeDemo(width, height);
-		cubeDemo.handleModuleFocused(window);
+		DynamicCapsuleDemo dynCapsuleDemo(width, height);
+		dynCapsuleDemo.handleModuleFocused(window);
 
 		/////////////////////////////////////////////////////////////////////
 		// Game Loop
 		/////////////////////////////////////////////////////////////////////
 		while (!glfwWindowShouldClose(window))
 		{
-			cubeDemo.tickGameLoop(window);
+			dynCapsuleDemo.tickGameLoop(window);
 		}
 
 		glfwTerminate();
 	}
 }
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}

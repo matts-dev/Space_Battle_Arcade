@@ -38,7 +38,7 @@ namespace
 					fragPosition = vec3(model * vec4(position, 1));
 
 					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					fragNormal = mat3(transpose(inverse(model))) * normal;
+					fragNormal = normalize(mat3(transpose(inverse(model))) * normal);
 				}
 			)";
 	const char* litObjectShaderFragSrc = R"(
@@ -204,6 +204,7 @@ namespace
 		bool bTickUnitTests = false;
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
+		bool bDrawDebugSATInfo = false;
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
@@ -291,86 +292,86 @@ namespace
 				//positions                 normals
 
 				//bottom cone face with x and z
-				0.0f, -1.5f, 0.0f,		0.0f, -1.0f, 0.0f,
-				1.0f, -0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
-				0.0f, -0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
+				0.0f, -1.5f, 0.0f,		0.57735f,-0.57735f,0.57735f,//0.0f, -1.0f, 0.0f,
+				1.0f, -0.5f, 0.0f,		0.57735f,-0.57735f,0.57735f,//1.0f, 0.0f, 0.0f,
+				0.0f, -0.5f, 1.0f,		0.57735f,-0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
 
 				//bottom cone face with z and -x
-				0.0f, -1.5f, 0.0f,		0.0f, -1.0f, 0.0f,
-				0.0f, -0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
-				-1.0f, -0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
+				0.0f, -1.5f, 0.0f,		-0.57735f,-0.57735f,0.57735f,//0.0f, -1.0f, 0.0f,
+				0.0f, -0.5f, 1.0f,		-0.57735f,-0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+				-1.0f, -0.5f, 0.0f,		-0.57735f,-0.57735f,0.57735f,//-1.0f, 0.0f, 0.0f,
 
 				//bottom cone with face -x and -z
-				0.0f, -1.5f, 0.0f,		0.0f, -1.0f, 0.0f,
-				-1.0f, -0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
-				0.0f, -0.5f, -1.0f,		0.0f, 0.0f, -1.0f,
+				0.0f, -1.5f, 0.0f,		-0.57735f,-0.57735f,-0.57735f,//0.0f, -1.0f, 0.0f,
+				-1.0f, -0.5f, 0.0f,		-0.57735f,-0.57735f,-0.57735f,//-1.0f, 0.0f, 0.0f,
+				0.0f, -0.5f, -1.0f,		-0.57735f,-0.57735f,-0.57735f,//0.0f, 0.0f, -1.0f,
 
 				//bottom cone with face -z and x
-				0.0f, -1.5f, 0.0f,		0.0f, -1.0f, 0.0f,
-				0.0f, -0.5f, -1.0f,		0.0f, 0.0f, -1.0f,
-				1.0f, -0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
+				0.0f, -1.5f, 0.0f,		0.57735f,-0.57735f, -0.57735f,//0.0f, -1.0f, 0.0f,
+				0.0f, -0.5f, -1.0f,		0.57735f,-0.57735f, -0.57735f,//0.0f, 0.0f, -1.0f,
+				1.0f, -0.5f, 0.0f,		0.57735f,-0.57735f, -0.57735f,//1.0f, 0.0f, 0.0f,
 
 
 
 
 
 				//side faces in x and z 
-				1.0f, -0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
-				0.0f,  0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
-				0.0f, -0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
-				//----
-				1.0f, -0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
-				1.0f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
-				0.0f,  0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
+				1.0f, -0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+				0.0f,  0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				0.0f, -0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				//----				 							   
+				1.0f, -0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+				1.0f, 0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+				0.0f,  0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
 
 				//side faces in z and -x
-				0.0f, -0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
-				0.0f, 0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
-				-1.0f, 0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
-				//----
-				0.0f, -0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
-				-1.0f, 0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
-				-1.0f, -0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
+				0.0f, -0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				0.0f, 0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+				//----										  
+				0.0f, -0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+				-1.0f, -0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
 
 				//side faces in -x and -z
-				0.0f, -0.5f, -1.0f,		0.0f, 0.0f, -1.0f,
-				-1.0f, -0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
-				-1.0f, 0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
-				//----
-				0.0f, -0.5f, -1.0f,		0.0f, 0.0f, -1.0f,
-				-1.0f, 0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
-				0.0f, 0.5f, -1.0f,		0.0f, 0.0f, -1.0f,
+				0.0f, -0.5f, -1.0f,		-0.707107f, -0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				-1.0f, -0.5f, 0.0f,		-0.707107f, -0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, -0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+				//----											   
+				0.0f, -0.5f, -1.0f,		-0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+				0.0f, 0.5f, -1.0f,		-0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
 
 				//side faces in -z and x
-				0.0f,  -0.5f, -1.0f,	0.0f, 0.0f, -1.0f,
-				0.0f,  0.5f, -1.0f,		0.0f, 0.0f, -1.0f,
-				1.0f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
-				//----
-				0.0f,  -0.5f, -1.0f,	0.0f, 0.0f, -1.0f,
-				1.0f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
-				1.0f, -0.5f, 0.0f,		1.0f, 0.0f, 0.0f, 
+				0.0f,  -0.5f, -1.0f,	0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				0.0f,  0.5f, -1.0f,		0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				1.0f, 0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f,
+				//----										   
+				0.0f,  -0.5f, -1.0f,	0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+				1.0f, 0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f,
+				1.0f, -0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f, 
 
 
 
 				//top cone face with z and x
-				0.0f, 1.5f, 0.0f,		0.0f, 1.0f, 0.0f,
-				0.0f, 0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
-				1.0f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
+				0.0f, 1.5f, 0.0f,		0.57735f,0.57735f,0.57735f,//0.0f, 1.0f, 0.0f,
+				0.0f, 0.5f, 1.0f,		0.57735f,0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+				1.0f, 0.5f, 0.0f,		0.57735f,0.57735f,0.57735f,//1.0f, 0.0f, 0.0f,
 
 				//top cone face with -x and z
-				0.0f, 1.5f, 0.0f,		0.0f, 1.0f, 0.0f,
-				-1.0f, 0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
-				0.0f, 0.5f, 1.0f,		0.0f, 0.0f, 1.0f,
+				0.0f, 1.5f, 0.0f,		-0.57735f,0.57735f,0.57735f,//0.0f, 1.0f, 0.0f,
+				-1.0f, 0.5f, 0.0f,		-0.57735f,0.57735f,0.57735f,//-1.0f, 0.0f, 0.0f,
+				0.0f, 0.5f, 1.0f,		-0.57735f,0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
 
 				//top cone with face -z and -x
-				0.0f, 1.5f, 0.0f,		0.0f, 1.0f, 0.0f,
-				0.0f, 0.5f, -1.0f,		0.0f, 0.0f, -1.0f,
-				-1.0f, 0.5f, 0.0f,		-1.0f, 0.0f, 0.0f,
+				0.0f, 1.5f, 0.0f,		-0.57735f,0.57735f,-0.57735f,//0.0f, 1.0f, 0.0f,
+				0.0f, 0.5f, -1.0f,		-0.57735f,0.57735f,-0.57735f,//0.0f, 0.0f, -1.0f,
+				-1.0f, 0.5f, 0.0f,		-0.57735f,0.57735f,-0.57735f,//-1.0f, 0.0f, 0.0f,
 
 				//top cone with face x and -z 
-				0.0f, 1.5f, 0.0f,		0.0f, 1.0f, 0.0f,
-				1.0f, 0.5f, 0.0f,		1.0f, 0.0f, 0.0f,
-				0.0f, 0.5f, -1.0f,		0.0f, 0.0f, -1.0f
+				0.0f, 1.5f, 0.0f,		0.57735f,0.57735f,-0.57735f,//0.0f, 1.0f, 0.0f,
+				1.0f, 0.5f, 0.0f,		0.57735f,0.57735f,-0.57735f,//1.0f, 0.0f, 0.0f,
+				0.0f, 0.5f, -1.0f,		0.57735f,0.57735f,-0.57735f//0.0f, 0.0f, -1.0f
 			};
 			capsuleVertSize = sizeof(capsuleVertices);
 			glGenVertexArrays(1, &capsuleVAO);
@@ -733,25 +734,31 @@ namespace
 			objShader.setUniform3f("cameraPosition", camera.getPosition());
 			
 			float pointSize = 8.0f;
-			//SAT::drawDebugCollisionShape(debugShapeShader, redCapsuleCollision, redCapsuleColor, pointSize, true, true, view, projection);
-			//SAT::drawDebugCollisionShape(debugShapeShader, blueCapsuleCollision, blueCapsuleColor,pointSize, true, true, view, projection);
-			glBindVertexArray(capsuleVAO);
-			GLuint numCapsuleVerts = capsuleVertSize / (sizeof(float) * 6);
-			{ //render red cube
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = redCapsuleTransform.getModelMatrix();
-				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				objShader.setUniform3f("objectColor", redCapsuleColor);
-				glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
-			}
-			{// render blue cube
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = blueCapsuleTransform.getModelMatrix();
-				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				objShader.setUniform3f("objectColor", blueCapsuleColor);
-				glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
-			}
 
+			if (bDrawDebugSATInfo)
+			{
+				SAT::drawDebugCollisionShape(debugShapeShader, redCapsuleCollision, redCapsuleColor, pointSize, true, true, view, projection);
+				SAT::drawDebugCollisionShape(debugShapeShader, blueCapsuleCollision, blueCapsuleColor,pointSize, true, true, view, projection);
+			}
+			else
+			{
+				glBindVertexArray(capsuleVAO);
+				GLuint numCapsuleVerts = capsuleVertSize / (sizeof(float) * 6);
+				{ //render red cube
+					//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
+					mat4 model = redCapsuleTransform.getModelMatrix();
+					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					objShader.setUniform3f("objectColor", redCapsuleColor);
+					glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
+				}
+				{// render blue cube
+					//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
+					mat4 model = blueCapsuleTransform.getModelMatrix();
+					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					objShader.setUniform3f("objectColor", blueCapsuleColor);
+					glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
+				}
+			}
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -815,9 +822,9 @@ namespace
 			{
 				bEnableCollision = !bEnableCollision;
 			}
-			if (input.isKeyJustPressed(window, GLFW_KEY_C))
+			if (input.isKeyJustPressed(window, GLFW_KEY_F))
 			{
-				bEnableCollision = !bEnableCollision;
+				bDrawDebugSATInfo = !bDrawDebugSATInfo;
 			}
 			const glm::vec3 scaleSpeedPerSec(1, 1, 1);
 			if (input.isKeyDown(window, GLFW_KEY_9))
@@ -852,6 +859,10 @@ namespace
 				{
 					UnitTests->restartAllTests();
 					UnitTests->start();
+				}
+				else
+				{
+					UnitTests->stop();
 				}
 			}
 			// -------- MOVEMENT -----------------
@@ -1115,7 +1126,7 @@ namespace
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}

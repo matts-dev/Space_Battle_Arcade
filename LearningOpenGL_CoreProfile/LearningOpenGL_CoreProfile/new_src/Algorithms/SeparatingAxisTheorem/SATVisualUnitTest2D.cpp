@@ -145,6 +145,10 @@ namespace
 				UnitTests->restartAllTests();
 				UnitTests->start();
 			}
+			else
+			{
+				UnitTests->stop();
+			}
 		}
 
 		// -------- MOVEMENT -----------------

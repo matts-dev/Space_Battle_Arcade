@@ -162,6 +162,8 @@ namespace SAT
 	private:
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////////
+
 	class CubeShape : public Shape
 	{
 	public: /*statics defining geometry of cube shape*/
@@ -175,6 +177,8 @@ namespace SAT
 	private:
 
 	};
+
+	/////////////////////////////////////////////////////////////////////////////////////
 
 	class PolygonCapsuleShape : public Shape
 	{
@@ -193,6 +197,38 @@ namespace SAT
 
 	public:
 		PolygonCapsuleShape();
+
+	private:
+
+	};
+
+
+	/////////////////////////////////////////////////////////////////////////////////////
+
+	class DynamicTriangleMeshShape : public Shape
+	{
+	public:
+		class TriangleProcessor
+		{
+		public:
+			struct TriangleCCW
+			{
+				//points in local space
+				glm::vec4 pntA;
+				glm::vec4 pntB;
+				glm::vec4 pntC;
+			};
+			TriangleProcessor(const std::vector<TriangleCCW>& triangles, float considerDotsSameIfWithin);
+		private:
+			friend DynamicTriangleMeshShape;
+			std::vector<glm::vec4> points;
+			std::vector<EdgePointIndices> edgeIndices;
+			std::vector<FacePointIndices> faceIndices;
+		};
+
+
+	public:
+		DynamicTriangleMeshShape(const TriangleProcessor& PreprocessedTriangles);
 
 	private:
 
