@@ -15,6 +15,7 @@
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
+#include "SATDemoInterface.h"
 
 namespace
 {
@@ -65,7 +66,7 @@ namespace
 
 					float specularStrength = 0.5f;
 					vec3 toView = normalize(cameraPosition - fragPosition);
-					vec3 toReflection = reflect(-toView, normal);							//reflect expects vector from light position (tutorial didn't normalize this vector)
+					vec3 toReflection = reflect(-toView, normal);							//reflect expects vector from light position
 					float specularAmount = pow(max(dot(toReflection, toLight), 0), 32);
 					vec3 specularLight = specularStrength * lightColor * specularAmount;
 
@@ -156,13 +157,13 @@ namespace
 		glDeleteBuffers(1, &tmpVBO);
 	}
 
-	class ISATDemo
-	{
-	public:
-		ISATDemo(int width, int height) {}
-		virtual void tickGameLoop(GLFWwindow* window) = 0;
-		virtual void handleModuleFocused(GLFWwindow* window) = 0;
-	};
+	//class ISATDemo
+	//{
+	//public:
+	//	ISATDemo(int width, int height) {}
+	//	virtual void tickGameLoop(GLFWwindow* window) = 0;
+	//	virtual void handleModuleFocused(GLFWwindow* window) = 0;
+	//};
 
 	class CubeDemo final : public ISATDemo
 	{
@@ -1010,6 +1011,11 @@ namespace
 
 		glfwTerminate();
 	}
+}
+
+std::shared_ptr<ISATDemo> factory_CubeShape(int width, int height)
+{
+	return std::make_shared<CubeDemo>(width, height);
 }
 
 //int main()

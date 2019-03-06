@@ -111,6 +111,15 @@
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATRenderDebugUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATLoadedMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATDemoInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -876,6 +885,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeTestWithPoly.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeFromModelFiles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATLoadedMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\AllDemos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

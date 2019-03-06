@@ -16,6 +16,7 @@
 #include <tuple>
 #include <array>
 #include "SATRenderDebugUtils.h"
+#include "SATDemoInterface.h"
 
 namespace
 {
@@ -157,13 +158,13 @@ namespace
 		glDeleteBuffers(1, &tmpVBO);
 	}
 
-	class ISATDemo
-	{
-	public:
-		ISATDemo(int width, int height) {}
-		virtual void tickGameLoop(GLFWwindow* window) = 0;
-		virtual void handleModuleFocused(GLFWwindow* window) = 0;
-	};
+	//class ISATDemo
+	//{
+	//public:
+	//	ISATDemo(int width, int height) {}
+	//	virtual void tickGameLoop(GLFWwindow* window) = 0;
+	//	virtual void handleModuleFocused(GLFWwindow* window) = 0;
+	//};
 
 	class DynamicCapsuleDemo final : public ISATDemo
 	{
@@ -1147,7 +1148,12 @@ namespace
 	}
 }
 
-int main()
+std::shared_ptr<ISATDemo> factory_DynamicGeneratedPolyDemo(int width, int height)
 {
-	true_main();
+	return std::make_shared<DynamicCapsuleDemo>(width, height);
 }
+
+//int main()
+//{
+//	true_main();
+//}

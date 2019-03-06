@@ -16,13 +16,14 @@
 #include <tuple>
 #include <array>
 #include "SATRenderDebugUtils.h"
+#include "ModelLoader/SATModel.h"
 #include "SATDemoInterface.h"
 
 namespace
 {
 	using SAT::ColumnBasedTransform;
 
-	const char* litObjectShaderVertSrc = R"(
+	const char* const litObjectShaderVertSrc = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;			
 				layout (location = 1) in vec3 normal;	
@@ -42,21 +43,19 @@ namespace
 					fragNormal = normalize(mat3(transpose(inverse(model))) * normal);
 				}
 			)";
-	const char* litObjectShaderFragSrc = R"(
+	const char* const litObjectShaderFragSrc = R"(
 				#version 330 core
+
+				in vec3 fragNormal;
+				in vec3 fragPosition;
+
 				out vec4 fragmentColor;
 
 				uniform vec3 lightColor;
 				uniform vec3 objectColor;
 				uniform vec3 lightPosition;
 				uniform vec3 cameraPosition;
-
-				in vec3 fragNormal;
-				in vec3 fragPosition;
-
-				/* uniforms can have initial value in GLSL 1.20 and up */
 				uniform float ambientStrength = 0.1f; 
-				uniform vec3 objColor = vec3(1,1,1);
 
 				void main(){
 					vec3 ambientLight = ambientStrength * lightColor;					
@@ -76,7 +75,66 @@ namespace
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}
 			)";
-	const char* lightLocationShaderVertSrc = R"(
+
+	const char* const litModelShaderVertSrc = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;			
+				layout (location = 1) in vec3 normal;	
+				layout (location = 2) in vec2 textureCoordinates;
+
+				out vec3 fragNormal;
+				out vec3 fragPosition;
+				out vec2 interpTextCoords;
+				
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
+
+				void main(){
+					gl_Position = projection * view * model * vec4(position, 1);
+					fragPosition = vec3(model * vec4(position, 1));
+
+					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
+					fragNormal = normalize(mat3(transpose(inverse(model))) * normal);
+				}
+			)";
+
+	const char* const litModelShaderFragSrc = R"(
+				#version 330 core
+
+				in vec3 fragNormal;
+				in vec3 fragPosition;
+				in vec2 interpTextCoords;
+
+				out vec4 fragmentColor;
+				
+				uniform vec3 lightColor;
+				uniform vec3 objectColor = vec3(1.0f, 1.0f, 1.0f);
+				uniform vec3 lightPosition;
+				uniform vec3 cameraPosition;
+				uniform float ambientStrength = 0.1f; 
+
+				void main(){
+					vec3 ambientLight = ambientStrength * lightColor;					
+
+					vec3 toLight = normalize(lightPosition - fragPosition);
+					vec3 normal = normalize(fragNormal);									//interpolation of different normalize will cause loss of unit length
+					vec3 diffuseLight = max(dot(toLight, fragNormal), 0) * lightColor;
+
+					float specularStrength = 0.5f;
+					vec3 toView = normalize(cameraPosition - fragPosition);
+					vec3 toReflection = reflect(-toView, normal);							//reflect expects vector from light position
+					float specularAmount = pow(max(dot(toReflection, toLight), 0), 32);
+					vec3 specularLight = specularStrength * lightColor * specularAmount;
+
+					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * objectColor;
+					
+					fragmentColor = vec4(lightContribution, 1.0f);
+				}
+
+			)";
+
+	const char* const lightLocationShaderVertSrc = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
 				
@@ -88,7 +146,8 @@ namespace
 					gl_Position = projection * view * model * vec4(position, 1);
 				}
 			)";
-	const char* lightLocationShaderFragSrc = R"(
+
+	const char* const lightLocationShaderFragSrc = R"(
 				#version 330 core
 				out vec4 fragmentColor;
 
@@ -99,7 +158,7 @@ namespace
 				}
 			)";
 
-	const char* Dim3DebugShaderVertSrc = R"(
+	const char* const Dim3DebugShaderVertSrc = R"(
 				#version 330 core
 				layout (location = 0) in vec4 position;				
 				
@@ -111,7 +170,7 @@ namespace
 					gl_Position = projection * view * model * position;
 				}
 			)";
-	const char* Dim3DebugShaderFragSrc = R"(
+	const char* const Dim3DebugShaderFragSrc = R"(
 				#version 330 core
 				out vec4 fragmentColor;
 				uniform vec3 color = vec3(1.f,1.f,1.f);
@@ -166,7 +225,7 @@ namespace
 	//	virtual void handleModuleFocused(GLFWwindow* window) = 0;
 	//};
 
-	class CapsuleDemo final : public ISATDemo
+	class DynamicModelDemo final : public ISATDemo
 	{
 		//Cached Window Data
 		int height;
@@ -185,18 +244,38 @@ namespace
 		const ColumnBasedTransform defaultRedCapsuleTransform = { { 5,0,5 }, {}, { 1,1,1 } };
 		const glm::vec3 blueCapsuleColor{ 0, 0, 1 };
 		const glm::vec3 redCapsuleColor{ 1, 0, 0 };
-		SAT::PolygonCapsuleShape blueCapsuleCollision;
-		SAT::PolygonCapsuleShape redCapsuleCollision;
+
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> blueCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> redCollision;
+
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> blueCockpitCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> bluePyramidCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> blueUVSphereCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> blueIcosphereCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> redCockpitCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> redPyramidCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> redUVSphereCollision;
+		std::shared_ptr<SAT::DynamicTriangleMeshShape> redIcosphereCollision;
+
+		std::shared_ptr<SAT::Model> blueModel;
+		std::shared_ptr<SAT::Model> redModel;
+		std::shared_ptr<SAT::Model> icosphereModel;
+		std::shared_ptr<SAT::Model> cockpitModel;
+		std::shared_ptr<SAT::Model> pyramidModel;
+		std::shared_ptr<SAT::Model> uvsphereModel;
+
 
 		//State
 		CameraFPS camera{ 45.0f, -90.f, 0.f };
 		ColumnBasedTransform lightTransform;
 		glm::vec3 lightColor{ 1.0f, 1.0f, 1.0f };
 		Shader objShader{ litObjectShaderVertSrc , litObjectShaderFragSrc, false };
+		Shader modelShader{ litModelShaderVertSrc , litModelShaderFragSrc, false };
 		Shader lampShader{ lightLocationShaderVertSrc, lightLocationShaderFragSrc, false };
 		Shader debugShapeShader{ Dim3DebugShaderVertSrc, Dim3DebugShaderFragSrc, false };
 
 		//Modifiable State
+		bool bRedActiveMovement = true;
 		ColumnBasedTransform* transformTarget = &redCapsuleTransform;
 		float moveSpeed = 3;
 		float rotationSpeed = 45.0f;
@@ -205,7 +284,7 @@ namespace
 		bool bTickUnitTests = false;
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
-		bool bDrawDebugSATInfo = false;
+		bool bDrawDebugSATInfo = true;
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
@@ -213,7 +292,39 @@ namespace
 		std::shared_ptr<SAT::TestSuite> UnitTests;
 
 	public:
-		CapsuleDemo(int width, int height)
+		SAT::DynamicTriangleMeshShape::TriangleProcessor meshToProcessedTriangles(const SAT::Model& model)
+		{
+			using TriangleCCW = SAT::DynamicTriangleMeshShape::TriangleProcessor::TriangleCCW;
+			//this would probably be better done in the model class, but I want the demo to be contained
+			//to mostly a single file. The idea will be the same regardless of the implementation of a 
+			//model class, so I am writing this function here in hopes that the reader will be able
+			//to apply this to their own model class
+			const SAT::LoadedMesh& mesh = model.getMeshes()[0]; //just assume collision models only have a single mesh
+
+			const std::vector<SAT::Vertex>& vertices = mesh.getVertices();
+			const std::vector<unsigned int>& indices = mesh.getIndices();
+
+			std::vector<TriangleCCW> dynamicTriangles;
+
+			//loop a triangle at a time
+			assert(indices.size() % 3 == 0); //ensure loop will not go out of bounds
+			for (unsigned int idx = 0; idx < indices.size(); idx += 3)
+			{
+				TriangleCCW tri;
+				tri.pntA = glm::vec4(vertices[indices[idx]].position, 1.0f);
+				tri.pntB = glm::vec4(vertices[indices[idx + 1]].position, 1.0f);
+				tri.pntC = glm::vec4(vertices[indices[idx + 2]].position, 1.0f);
+				dynamicTriangles.push_back(tri);
+			}
+
+			float treatDotProductSameDeltaThreshold = 0.001f;
+			SAT::DynamicTriangleMeshShape::TriangleProcessor triProcessor{ dynamicTriangles, treatDotProductSameDeltaThreshold };
+
+			return triProcessor;
+			//return std::make_shared< SAT::DynamicTriangleMeshShape >(triProcessor);
+		}
+
+		DynamicModelDemo(int width, int height)
 			: ISATDemo(width, height)
 		{
 			using glm::vec2;
@@ -390,6 +501,50 @@ namespace
 			redCapsuleTransform = defaultRedCapsuleTransform;
 			blueCapsuleTransform = defaultBlueCapsuleTransform;
 
+			//process triangles into input for SAT dynamic triangle processor
+			using TriangleCCW = SAT::DynamicTriangleMeshShape::TriangleProcessor::TriangleCCW;
+			using TriangleProcessor = SAT::DynamicTriangleMeshShape::TriangleProcessor;
+			std::vector<TriangleCCW> dynamicTriangles;
+			for (size_t triIdx = 0; triIdx < sizeof(capsuleVertices) / sizeof(float); triIdx += (6 * 3))
+			{
+				TriangleCCW tri;
+				tri.pntA = glm::vec4(capsuleVertices[triIdx], capsuleVertices[triIdx+1], capsuleVertices[triIdx+2], 1.0f);
+				tri.pntB = glm::vec4(capsuleVertices[triIdx + 6], capsuleVertices[triIdx + 1 + 6], capsuleVertices[triIdx + 2 + 6], 1.0f);
+				tri.pntC = glm::vec4(capsuleVertices[triIdx + 12], capsuleVertices[triIdx + 1 + 12], capsuleVertices[triIdx + 2 + 12], 1.0f);
+				dynamicTriangles.push_back(tri);
+			}
+			float treatDotProductSameDeltaThreshold = 0.001f;
+			SAT::DynamicTriangleMeshShape::TriangleProcessor triProcessor{ dynamicTriangles, treatDotProductSameDeltaThreshold };
+			redCollision = std::make_shared< SAT::DynamicTriangleMeshShape >(triProcessor);
+			blueCollision = std::make_shared< SAT::DynamicTriangleMeshShape >(triProcessor);
+
+			pyramidModel = std::make_shared<SAT::Model>("Models/collision/pyramid_x.obj");
+			icosphereModel = std::make_shared<SAT::Model>("Models/collision/icosphere.obj");
+			cockpitModel = std::make_shared<SAT::Model>("Models/collision/cockpitshape.obj");
+			uvsphereModel = std::make_shared<SAT::Model>("Models/collision/uvsphere.obj");
+
+			TriangleProcessor pyramidTriangles = meshToProcessedTriangles(*pyramidModel);
+			TriangleProcessor icosphereTriangles = meshToProcessedTriangles(*icosphereModel);
+			TriangleProcessor cockpitTriangles = meshToProcessedTriangles(*cockpitModel);
+			TriangleProcessor uvsphereTriangles = meshToProcessedTriangles(*uvsphereModel);
+
+			redPyramidCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(pyramidTriangles);
+			bluePyramidCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(pyramidTriangles);
+
+			redIcosphereCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(icosphereTriangles);
+			blueIcosphereCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(icosphereTriangles);
+
+			redCockpitCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(cockpitTriangles);
+			blueCockpitCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(cockpitTriangles);
+
+			redUVSphereCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(uvsphereTriangles);
+			blueUVSphereCollision = std::make_shared<SAT::DynamicTriangleMeshShape>(uvsphereTriangles);
+
+			blueModel = pyramidModel;
+			redModel = pyramidModel;
+			redCollision = redPyramidCollision;
+			blueCollision = bluePyramidCollision;
+
 			lightTransform.position = glm::vec3(5, 3, 0);
 			lightTransform.scale = glm::vec3(0.1f);
 
@@ -403,7 +558,7 @@ namespace
 			auto UnitTest_DownZFighting = std::make_shared< SAT::ApplyVelocityTest>();
 				auto KF_DownZFighting = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto blueAgent_DownZFight = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-					blueCapsuleCollision,
+					*blueCollision,
 					vec3(0, 0, 0),
 					blueCapsuleTransform,
 					blueCapsuleTransform,
@@ -411,7 +566,7 @@ namespace
 				);
 				auto redAgent_DownZFight = std::make_shared< SAT::ApplyVelocityFrameAgent >
 					(
-						redCapsuleCollision,
+						*redCollision,
 						vec3(0, -moveSpeed, 0),
 						redCapsuleTransform,
 						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {}, {1,1,1} },
@@ -429,7 +584,7 @@ namespace
 			auto UnitTest_ScaledAngledPuncture = std::make_shared< SAT::ApplyVelocityTest>();
 				auto KF_DownAngledPuncture = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto blueAgent_AngledPuncture = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-					blueCapsuleCollision,
+					*blueCollision,
 					vec3(0, 0, 0),
 					blueCapsuleTransform,
 					blueCapsuleTransform,
@@ -437,7 +592,7 @@ namespace
 				);
 				auto redAgent_AngledPuncture = std::make_shared< SAT::ApplyVelocityFrameAgent >
 					(
-						redCapsuleCollision,
+						*redCollision,
 						vec3(0, -moveSpeed, 0),
 						redCapsuleTransform,
 						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {glm::angleAxis(glm::radians(33.0f), glm::normalize(glm::vec3(1.0f,1.0f,0.0f)))}, {0.5f,0.5f,0.5f} },
@@ -465,7 +620,7 @@ namespace
 			auto UnitTest_ScaledBigAngledPuncture = std::make_shared< SAT::ApplyVelocityTest>();
 			auto KF_DownBigAngledPuncture = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 			auto blueAgent_BigAngledPuncture = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-				blueCapsuleCollision,
+				*blueCollision,
 				vec3(0, 0, 0),
 				blueCapsuleTransform,
 				blueCapsuleTransform,
@@ -473,7 +628,7 @@ namespace
 			);
 			auto redAgent_BigAngledPuncture = std::make_shared< SAT::ApplyVelocityFrameAgent >
 				(
-					redCapsuleCollision,
+					*redCollision,
 					vec3(0, -moveSpeed, 0),
 					redCapsuleTransform,
 					SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {glm::angleAxis(glm::radians(33.0f), glm::normalize(glm::vec3(1.0f,1.0f,0.0f)))}, {1.5f,1.5f,1.5f} },
@@ -522,7 +677,7 @@ namespace
 				auto KF_CardinalPosZ = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto KF_CardinalNegZ = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
 				auto blueAgent_Cardinal = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-					blueCapsuleCollision,
+					*blueCollision,
 					vec3(0, 0, 0),
 					blueCapsuleTransform,
 					blueCapsuleTransform,
@@ -530,7 +685,7 @@ namespace
 				);
 				auto redAgent_CardinalDown = std::make_shared< SAT::ApplyVelocityFrameAgent >
 					(
-						redCapsuleCollision,
+						*redCollision,
 						vec3(0, -moveSpeed, 0),
 						redCapsuleTransform,
 						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, std::get<rotIdx>(tpl), std::get<scaleIdx>(tpl) },
@@ -610,7 +765,7 @@ namespace
 
 		}
 
-		~CapsuleDemo()
+		~DynamicModelDemo()
 		{
 			glDeleteVertexArrays(1, &cubeVAO);
 			glDeleteBuffers(1, &cubeVBO);
@@ -641,17 +796,17 @@ namespace
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			//collision should be adjusted and complete before we attempt to render anything
-			blueCapsuleCollision.updateTransform(blueCapsuleTransform.getModelMatrix());
-			redCapsuleCollision.updateTransform(redCapsuleTransform.getModelMatrix());
+			blueCollision->updateTransform(blueCapsuleTransform.getModelMatrix());
+			redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
 
 			if (bEnableCollision && !UnitTests->isRunning())
 			{
 				glm::vec4 mtv;
-				if (SAT::Shape::CollisionTest(redCapsuleCollision, blueCapsuleCollision, mtv))
+				if (SAT::Shape::CollisionTest(*redCollision, *blueCollision, mtv))
 				{
 					std::cout << "MTV: "; printVec3(mtv); std::cout << "\tvel: "; printVec3(cachedVelocity); std::cout << "\tpos:"; printVec3(redCapsuleTransform.position); std::cout << std::endl;
 					redCapsuleTransform.position += vec3(mtv);
-					redCapsuleCollision.updateTransform(redCapsuleTransform.getModelMatrix());
+					redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
 				}
 				else
 				{
@@ -671,9 +826,9 @@ namespace
 			constexpr float axisSizeScale = 1000.0f;
 			const glm::vec3 edgeEdgeColor(0.2f, 0.2f, 0.2f);
 			std::vector<glm::vec3> blueFaceAxes, redFaceAxes, edgeEdgeAxes;
-			blueCapsuleCollision.appendFaceAxes(blueFaceAxes);
-			redCapsuleCollision.appendFaceAxes(redFaceAxes);
-			SAT::Shape::appendEdgeXEdgeAxes(blueCapsuleCollision, redCapsuleCollision, edgeEdgeAxes);
+			blueCollision->appendFaceAxes(blueFaceAxes);
+			redCollision->appendFaceAxes(redFaceAxes);
+			SAT::Shape::appendEdgeXEdgeAxes(*blueCollision, *redCollision, edgeEdgeAxes);
 
 			//intentionally draw axes before projections on axes
 			//glDisable(GL_DEPTH_TEST);
@@ -701,11 +856,11 @@ namespace
 			allAxes.insert(allAxes.end(), edgeEdgeAxes.begin(), edgeEdgeAxes.end());
 			for (const glm::vec3& axis : allAxes)
 			{
-				SAT::ProjectionRange projection1 = blueCapsuleCollision.projectToAxis(axis);
+				SAT::ProjectionRange projection1 = blueCollision->projectToAxis(axis);
 				vec3 pnt1A = axis * projection1.min;
 				vec3 pnt1B = axis * projection1.max;
 
-				SAT::ProjectionRange projection2 = redCapsuleCollision.projectToAxis(axis);
+				SAT::ProjectionRange projection2 = redCollision->projectToAxis(axis);
 				vec3 pnt2A = axis * projection2.min;
 				vec3 pnt2B = axis * projection2.max;
 
@@ -733,33 +888,41 @@ namespace
 			objShader.setUniform3f("lightPosition", lightTransform.position);
 			objShader.setUniform3f("lightColor", lightColor);
 			objShader.setUniform3f("cameraPosition", camera.getPosition());
+
+			modelShader.use();
+			modelShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+			modelShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+			modelShader.setUniform3f("lightPosition", lightTransform.position);
+			modelShader.setUniform3f("lightColor", lightColor);
+			modelShader.setUniform3f("cameraPosition", camera.getPosition());
 			
 			float pointSize = 8.0f;
 
 			if (bDrawDebugSATInfo)
 			{
-				SAT::drawDebugCollisionShape(debugShapeShader, redCapsuleCollision, redCapsuleColor, pointSize, true, true, view, projection);
-				SAT::drawDebugCollisionShape(debugShapeShader, blueCapsuleCollision, blueCapsuleColor,pointSize, true, true, view, projection);
+				SAT::drawDebugCollisionShape(debugShapeShader, *redCollision, redCapsuleColor, pointSize, true, true, view, projection);
+				SAT::drawDebugCollisionShape(debugShapeShader, *blueCollision, blueCapsuleColor,pointSize, true, true, view, projection);
 			}
 			else
 			{
 				glBindVertexArray(capsuleVAO);
 				GLuint numCapsuleVerts = capsuleVertSize / (sizeof(float) * 6);
-				{ //render red cube
+				{ //render red
 					//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
 					mat4 model = redCapsuleTransform.getModelMatrix();
-					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-					objShader.setUniform3f("objectColor", redCapsuleColor);
-					glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
+					modelShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					modelShader.setUniform3f("objectColor", redCapsuleColor);
+					redModel->draw(modelShader);
 				}
-				{// render blue cube
+				{// render blue
 					//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
 					mat4 model = blueCapsuleTransform.getModelMatrix();
-					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-					objShader.setUniform3f("objectColor", blueCapsuleColor);
-					glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
+					modelShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					modelShader.setUniform3f("objectColor", blueCapsuleColor);
+					blueModel->draw(modelShader);
 				}
 			}
+
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -786,13 +949,12 @@ namespace
 					<< " Press R to reset object positions to default." << std::endl
 					<< " Press C to toggle collision detection" << std::endl
 					<< " Press 9/0 to decrease/increase scale" << std::endl
-					<< " Press U to start unit tests; press left/right to skip through unit tests" << std::endl
+					<< " 1-4 to change the target shape" << std::endl
 					<< " " << std::endl
 					//vec3 capture1_D, capture2_G, capture3_F, capture4_r, capture5_m, capture6_Gl, capture7_Gv, capture8_albedo, capture9_normal;
 					<< std::endl;
 				return 0;
 			}();
-
 
 			using glm::vec3; using glm::vec4;
 			static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
@@ -804,15 +966,72 @@ namespace
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_T))
 			{
-				transformTarget = transformTarget == &blueCapsuleTransform ? &redCapsuleTransform : &blueCapsuleTransform;
+				bRedActiveMovement = !bRedActiveMovement;
+				transformTarget = bRedActiveMovement ? &redCapsuleTransform : &blueCapsuleTransform;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_V))
 			{
 				bUseCameraAxesForObjectMovement = !bUseCameraAxesForObjectMovement;
 			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_F))
+			{
+				bDrawDebugSATInfo = !bDrawDebugSATInfo;
+			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_M))
 			{
 				bEnableAxisOffset = !bEnableAxisOffset;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_1))
+			{
+				if (bRedActiveMovement)
+				{
+					redModel = pyramidModel;
+					redCollision = redPyramidCollision;
+				}
+				else
+				{
+					blueModel = pyramidModel;
+					blueCollision = bluePyramidCollision;
+				}
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_2))
+			{
+				if (bRedActiveMovement)
+				{
+					redModel = icosphereModel;
+					redCollision = redIcosphereCollision;
+				}
+				else
+				{
+					blueModel = icosphereModel;
+					blueCollision = blueIcosphereCollision;
+				}
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_3))
+			{
+				if (bRedActiveMovement)
+				{
+					redModel = cockpitModel;
+					redCollision = redCockpitCollision;
+				}
+				else
+				{
+					blueModel = cockpitModel;
+					blueCollision = blueCockpitCollision;
+				}
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_4))
+			{
+				if (bRedActiveMovement)
+				{
+					redModel = uvsphereModel;
+					redCollision = redUVSphereCollision;
+				}
+				else
+				{
+					blueModel = uvsphereModel;
+					blueCollision = blueUVSphereCollision;
+				}
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_R))
 			{
@@ -823,23 +1042,23 @@ namespace
 			{
 				bEnableCollision = !bEnableCollision;
 			}
-			if (input.isKeyJustPressed(window, GLFW_KEY_F))
+			if (input.isKeyJustPressed(window, GLFW_KEY_C))
 			{
-				bDrawDebugSATInfo = !bDrawDebugSATInfo;
+				bEnableCollision = !bEnableCollision;
 			}
 			const glm::vec3 scaleSpeedPerSec(1, 1, 1);
 			if (input.isKeyDown(window, GLFW_KEY_9))
 			{
 				vec3 delta = -scaleSpeedPerSec * deltaTime;
 				transformTarget->scale += delta;
-				redCapsuleCollision.updateTransform(redCapsuleTransform.getModelMatrix());
-				blueCapsuleCollision.updateTransform(blueCapsuleTransform.getModelMatrix());
+				redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
+				redCollision->updateTransform(blueCapsuleTransform.getModelMatrix());
 			}
 			if (input.isKeyDown(window, GLFW_KEY_0))
 			{
 				transformTarget->scale += scaleSpeedPerSec * deltaTime;
-				redCapsuleCollision.updateTransform(redCapsuleTransform.getModelMatrix());
-				blueCapsuleCollision.updateTransform(blueCapsuleTransform.getModelMatrix());
+				redCollision->updateTransform(redCapsuleTransform.getModelMatrix());
+				redCollision->updateTransform(blueCapsuleTransform.getModelMatrix());
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_P))
 			{
@@ -858,6 +1077,11 @@ namespace
 				bTickUnitTests = !bTickUnitTests;
 				if (bTickUnitTests)
 				{
+					redModel = pyramidModel;
+					redCollision = redPyramidCollision;
+					blueModel = pyramidModel;
+					blueCollision = bluePyramidCollision;
+
 					UnitTests->restartAllTests();
 					UnitTests->start();
 				}
@@ -1061,7 +1285,7 @@ namespace
 				if (bBlockCollisionFailures)
 				{
 					vec4 mtv;
-					if (SAT::Shape::CollisionTest(redCapsuleCollision, blueCapsuleCollision, mtv))
+					if (SAT::Shape::CollisionTest(*redCollision, *blueCollision, mtv))
 					{
 						//undo the move
 						transformTarget->position = cachedTargetPos;
@@ -1072,7 +1296,7 @@ namespace
 			if (input.isKeyJustPressed(window, GLFW_KEY_N))
 			{
 				std::cout << "debug force collision test" << std::endl;
-				SAT::Shape::CollisionTest(redCapsuleCollision, blueCapsuleCollision);
+				SAT::Shape::CollisionTest(*redCollision, *blueCollision);
 			}
 
 			// -------- UNIT TEST ---------
@@ -1112,26 +1336,28 @@ namespace
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		CapsuleDemo capsuleDemo(width, height);
-		capsuleDemo.handleModuleFocused(window);
+		DynamicModelDemo dynCapsuleDemo(width, height);
+		dynCapsuleDemo.handleModuleFocused(window);
 
 		/////////////////////////////////////////////////////////////////////
 		// Game Loop
 		/////////////////////////////////////////////////////////////////////
 		while (!glfwWindowShouldClose(window))
 		{
-			capsuleDemo.tickGameLoop(window);
+			dynCapsuleDemo.tickGameLoop(window);
 		}
 
 		glfwTerminate();
 	}
+
+
 }
 
-std::shared_ptr<ISATDemo> factory_CapsuleShape(int width, int height)
+//outside anonymous namespace so linker can find this function
+std::shared_ptr<ISATDemo> factory_ModelDemo(int width, int height)
 {
-	return std::make_shared<CapsuleDemo>(width, height);
+	return std::make_shared<DynamicModelDemo>(width, height);
 }
-
 
 //int main()
 //{
