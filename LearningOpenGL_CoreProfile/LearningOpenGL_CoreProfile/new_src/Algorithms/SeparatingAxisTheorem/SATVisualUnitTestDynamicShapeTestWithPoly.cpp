@@ -414,33 +414,6 @@ namespace
 			/////////////////////////////////////////////////////////////////////
 
 			UnitTests = std::make_shared<SAT::TestSuite>();
-
-			//Found bug with alignment so that going from top to bottom can cause zfighting Test 
-			auto UnitTest_DownZFighting = std::make_shared< SAT::ApplyVelocityTest>();
-				auto KF_DownZFighting = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
-				auto blueAgent_DownZFight = std::make_shared<SAT::ApplyVelocityFrameAgent>(
-					*blueCollision,
-					vec3(0, 0, 0),
-					blueCapsuleTransform,
-					blueCapsuleTransform,
-					[](SAT::ApplyVelocityFrameAgent&) {return true; }
-				);
-				auto redAgent_DownZFight = std::make_shared< SAT::ApplyVelocityFrameAgent >
-					(
-						*redCollision,
-						vec3(0, -moveSpeed, 0),
-						redCapsuleTransform,
-						SAT::ColumnBasedTransform{ {0, 3.0f, 0 }, {}, {1,1,1} },
-						[](SAT::ApplyVelocityFrameAgent& thisAgent) {
-					glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
-						//correct position [-0.0203712, 1.00515, -0.0666917
-						return origin.y >= 1.00;
-					}
-				);
-				KF_DownZFighting->AddKeyFrameAgent(blueAgent_DownZFight);
-				KF_DownZFighting->AddKeyFrameAgent(redAgent_DownZFight);
-				UnitTest_DownZFighting->AddKeyFrame(KF_DownZFighting);
-			UnitTests->AddTest(UnitTest_DownZFighting);
 			
 			auto UnitTest_ScaledAngledPuncture = std::make_shared< SAT::ApplyVelocityTest>();
 				auto KF_DownAngledPuncture = std::make_shared<SAT::ApplyVelocityKeyFrame>(1.0f /*secs*/);
@@ -777,11 +750,6 @@ namespace
 					glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
 				}
 			}
-
-
-			glfwSwapBuffers(window);
-			glfwPollEvents();
-
 		}
 	
 	private:
@@ -1142,6 +1110,9 @@ namespace
 		while (!glfwWindowShouldClose(window))
 		{
 			dynCapsuleDemo.tickGameLoop(window);
+
+			glfwSwapBuffers(window);
+			glfwPollEvents();
 		}
 
 		glfwTerminate();

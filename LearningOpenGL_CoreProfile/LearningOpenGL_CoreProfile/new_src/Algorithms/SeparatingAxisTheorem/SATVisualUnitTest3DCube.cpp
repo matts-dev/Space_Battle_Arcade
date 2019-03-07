@@ -343,7 +343,15 @@ namespace
 						[](SAT::ApplyVelocityFrameAgent& thisAgent) 
 						{
 							glm::vec4 origin = thisAgent.getShape().getTransformedOrigin();
-							return origin.y >= 0.850825;
+							bool passed = origin.y >= 0.850525f;
+							if (!passed)
+							{
+								std::cout << "failing special puncture test, the value used in this test was chosen based on some debug information and may not be 100% reliable" << std::endl;
+								std::cout << "Since you failed this 'angled puncture test', inspect that the red cube is actually going through the blue cube, because the value" << std::endl;
+								std::cout << "used for what the y's origin should be for this test may be too restrictive and give false-fails." << std::endl;
+							}
+
+							return passed;
 						}
 				);
 				//adding this function to help pinpoint a breakpoint when the obejct punctures
@@ -645,11 +653,6 @@ namespace
 				objShader.setUniform3f("objectColor", blueCubeColor);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
-
-
-			glfwSwapBuffers(window);
-			glfwPollEvents();
-
 		}
 	
 	private:
@@ -1007,6 +1010,8 @@ namespace
 		while (!glfwWindowShouldClose(window))
 		{
 			cubeDemo.tickGameLoop(window);
+			glfwSwapBuffers(window);
+			glfwPollEvents();
 		}
 
 		glfwTerminate();

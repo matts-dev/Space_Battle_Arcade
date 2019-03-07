@@ -23,8 +23,7 @@ std::shared_ptr<ISATDemo> factory_ModelDemo(int width, int height);
 std::shared_ptr<ISATDemo> factory_DynamicGeneratedPolyDemo(int width, int height);
 std::shared_ptr<ISATDemo> factory_CapsuleShape(int width, int height);
 std::shared_ptr<ISATDemo> factory_CubeShape(int width, int height);
-
-
+std::shared_ptr<ISATDemo> factory_Demo2D(int width, int height);
 
 namespace
 {
@@ -43,16 +42,19 @@ namespace
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+		std::shared_ptr<ISATDemo> sat2DDemo = factory_Demo2D(width, height);
 		std::shared_ptr<ISATDemo> cubeShapeDemo = factory_CubeShape(width, height);
 		std::shared_ptr<ISATDemo> capsuleShapeDemo = factory_CapsuleShape(width, height);
 		std::shared_ptr<ISATDemo> dynCapsuleDemo = factory_DynamicGeneratedPolyDemo(width, height);
 		std::shared_ptr<ISATDemo> modelDemo = factory_ModelDemo(width, height);
-		std::vector<std::shared_ptr<ISATDemo>> demos = { cubeShapeDemo, capsuleShapeDemo, dynCapsuleDemo, modelDemo };
+		std::vector<std::shared_ptr<ISATDemo>> demos = { sat2DDemo, cubeShapeDemo, capsuleShapeDemo, dynCapsuleDemo, modelDemo };
 
-		std::shared_ptr<ISATDemo> activeDemo = modelDemo;
+		std::shared_ptr<ISATDemo> activeDemo = sat2DDemo;
 		activeDemo->handleModuleFocused(window);
 
 		InputTracker input;
+
+		std::cout << "To switch between Demos, hold left control and press the number keys (not numpad) \n\n\n"  << std::endl;
 
 		/////////////////////////////////////////////////////////////////////
 		// Game Loop
@@ -67,6 +69,7 @@ namespace
 					if (input.isKeyJustPressed(window, key))
 					{
 						unsigned int idx = key - GLFW_KEY_0;
+						idx -= 1; //convert to 0 based
 						idx = idx >= demos.size() ? demos.size() - 1 : idx;
 						
 						activeDemo = demos[idx];
@@ -77,6 +80,9 @@ namespace
 			}
 
 			activeDemo->tickGameLoop(window);
+
+			glfwSwapBuffers(window);
+			glfwPollEvents();
 		}
 
 		glfwTerminate();
