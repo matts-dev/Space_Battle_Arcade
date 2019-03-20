@@ -120,6 +120,12 @@
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATDemoInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -899,6 +905,18 @@
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\AllDemos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\DELETE_LinkerTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
@@ -933,5 +951,8 @@
     <None Include="BasicVertexShader.glsl" />
     <None Include="FrameBufferFrag.glsl" />
     <None Include="SingleColorFrag.glsl" />
+    <None Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

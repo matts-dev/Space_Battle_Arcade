@@ -25,6 +25,8 @@
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATDemoInterface.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATRenderDebugUtils.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATUnitTestUtils.h" />
+    <ClInclude Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.h" />
+    <ClInclude Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.h" />
     <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.h" />
     <ClInclude Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.h" />
     <ClInclude Include="new_src\ImportingModels\Models\Model.h" />
@@ -96,6 +98,10 @@
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DPolyCapsule.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeFromModelFiles.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeTestWithPoly.cpp" />
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\DELETE_LinkerTest.cpp" />
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.cpp" />
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.cpp" />
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.cpp" />
@@ -348,6 +354,7 @@
     <None Include="BasicFragShader.glsl" />
     <None Include="BasicVertexShader.glsl" />
     <None Include="FrameBufferFrag.glsl" />
+    <None Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.inl" />
     <None Include="SingleColorFrag.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
