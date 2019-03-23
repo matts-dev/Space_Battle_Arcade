@@ -31,13 +31,15 @@ namespace SH
 
 	void drawDebugLines(Shader& shader,
 		const glm::vec3& color, const std::vector<glm::vec4>& linesToDraw,
-		const glm::mat4& model, const glm::mat4& view, const glm::mat4 projection
+		const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection
 		);
 
+	void drawCells(std::vector<glm::ivec3>& cells, const glm::vec4& gridCellSize, const glm::vec3& color, Shader& debugShader,
+		const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection);
 
 	template<typename T>
 	void drawAABBGrid(const SH::SpatialHashGrid<T>& spatialHash, const glm::vec3& gridColor, Shader& debugGridShader,
-		const glm::mat4& model, const glm::mat4& view, const glm::mat4 projection)
+		const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection)
 	{
 		static std::vector<glm::vec4> linesToDraw;
 		linesToDraw.reserve(1000);

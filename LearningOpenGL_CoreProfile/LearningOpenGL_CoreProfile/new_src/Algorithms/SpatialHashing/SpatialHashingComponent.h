@@ -1,17 +1,22 @@
 #pragma once
 
+#define LOG_LIFETIME_ERRORS 1
+
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
+#include <iterator>
 #include <list>
 #include <memory>
 #include <vector>
 #include <cmath>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
+#include <iostream>
 
 namespace SH
 {
@@ -50,6 +55,24 @@ namespace SH
 		RemoveMoves(RemoveMoves&& move) = delete;
 		RemoveMoves& operator=(RemoveMoves&& move) = delete;
 	};
+
+	/*
+		Benchmarks
+		
+		Use single threaded boost shared pointers instead of std shared pointers to avoid atomic reference count increments
+			results: not tested
+
+		Reduce code duplication by creating inline iterate function that accepts lambda to apply to each cell
+			-requires scenario where single object uses multiple cells
+			results: not tested
+		
+		Acceleration structure within lookup functions to prevent adding duplicates
+			-requires scenario where single object uses multiple cells
+			results: not tested
+		
+	*/
+
+
 
 	//things I would like to support:
 	// *make it easy for an object to have multiple grid locations
@@ -105,10 +128,10 @@ namespace SH
 	template<typename T>
 	struct GridNode
 	{
-		const T& element;
+		T& element;
 
 		//provided to help shared pointer construction
-		GridNode(const T& inElement) : element(inElement) {}
+		GridNode(T& inElement) : element(inElement) {}
 	};
 
 	/**
@@ -124,11 +147,20 @@ namespace SH
 		const Range<int> yGridCells;
 		const Range<int> zGridCells;
 		SpatialHashGrid<T>& owningGrid;
+		bool gridValid = true;
 
 		~HashEntry() 
 		{
-			//this requires that the owning spatial hash have a lifetime greater than any hash entries
-			owningGrid.remove(*this);
+			if (gridValid)
+			{
+				owningGrid.remove(*this);
+			}
+#ifdef LOG_LIFETIME_ERRORS
+			else
+			{
+				std::cerr << "Hash Entry outlived spatial hash; this is probably " << std::endl;
+			}
+#endif // LOG_LIFETIME_ERRORS
 		}
 		
 	private:
@@ -279,6 +311,19 @@ namespace SH
 		}
 		~SpatialHashGrid()
 		{
+			//proper usage means that the spatial hash always outlives its entries
+			//but for a simple API, this isn't enforced. The cost is a slow dtor operation of the spatial hash
+			if (validEntries.size() > 0) //O(1)
+			{
+#ifdef LOG_LIFETIME_ERRORS
+				std::cerr << "WARNING: spatial hash was outlived by its entries; this is likely a design issue" << std::endl;
+				std::cerr << "walking distance " << std::distance(validEntries.begin(), validEntries.end())  << " to invalidate entries" << std::endl;
+#endif // LOG_LIFETIME_ERRORS
+				for (HashEntry<T>* entry : validEntries)
+				{
+					entry->gridValid = false;
+				}
+			}
 		}
 
 		/** 
@@ -287,7 +332,7 @@ namespace SH
 		*
 		* unique_ptr holds an RAII object that will manage cleanup from the spatial hash.
 		*/
-		std::unique_ptr<HashEntry<T>> insert(const T& obj, const std::array<glm::vec4, 8>& localSpaceOBB)
+		std::unique_ptr<HashEntry<T>> insert(T& obj, const std::array<glm::vec4, 8>& localSpaceOBB)
 		{
 			//__project points onto grid cell axes__
 			Range<float> xProjRange, yProjRange,zProjRange;
@@ -313,8 +358,9 @@ namespace SH
 
 			// __calculate cells overlapped in each grid axis__
 			//                |                |                |
-			//        D       |           C    |    A           |       B
+			//        D       |       C        |        A       |       B
 			// <----(-3)----(-2)----(-1)-----(0.0)-----(1)-----(2)-----(3)----->
+			//                |                |                |
 			//                |                |                |
 			// A = 0.5, B = 3, C = -0.5, D = -3
 			// cell size = 2.0
@@ -351,7 +397,7 @@ namespace SH
 
 			//the following doesn't use std::make_unique due to complexities around friending
 			//std::make_unique since the constructor is private; it is far simpler to do it this way
-			std::unique_ptr<HashEntry<T>> hashResult = std::unique_ptr<HashEntry<T>>( 
+			std::unique_ptr<HashEntry<T>> hashEntry = std::unique_ptr<HashEntry<T>>( 
 				new HashEntry<T>(gridNode, xCellIndices, yCellIndices, zCellIndices,*this)
 			);
 
@@ -367,11 +413,93 @@ namespace SH
 				}
 			}
 
-			//return managed node
-			return std::move(hashResult);
+			validEntries.insert(hashEntry.get());
+			return std::move(hashEntry);
 		}
 
-		bool remove(const HashEntry<T>& toRemove)
+		void lookupNodesInCells(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<SH::GridNode<T>>>& outNodes, bool filterOutSource = true)
+		{
+			//TODO user lookup cells function to reduce code duplication?
+			using UMMIter = typename decltype(hashMap)::iterator;
+
+			std::unordered_set<GridNode<T>*> previouslyAdded; //dtor is O(n) for unique insertions
+
+			for (int cellX = cellSource.xGridCells.min; cellX <= cellSource.xGridCells.max; ++cellX)
+			{
+				for (int cellY = cellSource.yGridCells.min; cellY <= cellSource.yGridCells.max; ++cellY)
+				{
+					for (int cellZ = cellSource.zGridCells.min; cellZ <= cellSource.zGridCells.max; ++cellZ)
+					{
+						glm::ivec3 hashLocation(cellX, cellY, cellZ);
+						size_t hashVal = hash(hashLocation);
+						std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
+
+						//look over bucket of cells (ideally this will be a small number)
+						for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
+						{
+							std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
+
+							//make sure we're not dealing with a cell that is hash collision 
+							if (cell->location == hashLocation)
+							{
+								for (std::shared_ptr <GridNode<T>>& node : cell->nodeBucket)
+								{
+									bool bFilterFail = filterOutSource && (&node->element == &cellSource.insertedNode->element);
+
+									//make sure this node hasn't already been found and that self-filter didn't fail
+									if (previouslyAdded.find(node.get()) == previouslyAdded.end() && !bFilterFail)
+									{
+										previouslyAdded.insert(node.get());
+										outNodes.push_back(node);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		//inline void lookupCellsForEntry(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells) const
+		//{
+		//	lookupCellsForEntry_Internal(cellSource, outCells);
+		//}
+
+		//TODO: this should return const refs to hash cells if it is going to be in the public API
+		//TODO: update this either use a macro for cell iteration or have a inline helper function that returns list of cells for hash and use that in other functions to avoid code duplication
+		inline void lookupCellsForEntry(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<SH::HashCell<T>>>& outCells)
+		{
+			using UMMIter = typename decltype(hashMap)::iterator;
+
+			for (int cellX = cellSource.xGridCells.min; cellX <= cellSource.xGridCells.max; ++cellX)
+			{
+				for (int cellY = cellSource.yGridCells.min; cellY <= cellSource.yGridCells.max; ++cellY)
+				{
+					for (int cellZ = cellSource.zGridCells.min; cellZ <= cellSource.zGridCells.max; ++cellZ)
+					{
+						glm::ivec3 hashLocation(cellX, cellY, cellZ);
+						size_t hashVal = hash(hashLocation);
+						std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
+
+						//look over bucket of cells (ideally this will be a small number)
+						for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
+						{
+							std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
+
+							//make sure we're not dealing with a cell that is hash collision 
+							if (cell->location == hashLocation)
+							{
+								outCells.push_back(cell);
+							}
+						}
+					}
+				}
+			}
+		}
+
+	private:
+		friend HashEntry<T>::~HashEntry();
+		bool remove(HashEntry<T>& toRemove)
 		{
 			const Range<int>& xCellIndices = toRemove.xGridCells;
 			const Range<int>& yCellIndices = toRemove.yGridCells;
@@ -388,6 +516,11 @@ namespace SH
 					}
 				}
 			}
+
+			auto iter = validEntries.find(&toRemove);
+			assert(iter != validEntries.end());
+			validEntries.erase(iter);
+			
 			return allRemoved;
 		}
 
@@ -397,6 +530,13 @@ namespace SH
 	private:
 		/** Hashmap with buckets for collisions */
 		std::unordered_multimap<size_t, std::shared_ptr<HashCell<T>>> hashMap;
+		/** 
+		 * Valid hash entries for invalidation if spatial hash is destroyed before the entries are released. Ideally this shouldn't happen, but in order to provide the simplest interface the behavior is allowed.
+		 * The HashEntries need to be unique pointers so that proper resource clean up occurs; having entries as unique pointers means that we cannot have this use smart pointer to the entries
+		 * While this is a probably an anti-pattern, the construction of HashEntries extremly tightly coupled to the spatial hash; client usage ineractions with entries is so restricted that this usage is okay. 
+		 * TODO revise this comment
+		 */
+		std::unordered_set<HashEntry<T>*> validEntries;
 		RecyclePool<HashCell<T>> recyclePool;
 	};
 

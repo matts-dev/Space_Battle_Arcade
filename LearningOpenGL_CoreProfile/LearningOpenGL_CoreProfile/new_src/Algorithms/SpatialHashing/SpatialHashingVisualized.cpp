@@ -15,6 +15,7 @@
 #include <array>
 #include "SpatialHashingComponent.h"
 #include "SHDebugUtils.h"
+#include <functional>
 
 namespace
 {
@@ -237,9 +238,12 @@ namespace
 		//in real applications, do properly encapsulate this stuff! I merely don't want the reader
 		//to have to jump around the source file to see what is happening. 
 		ColumnBasedTransform& transform;
-		std::unique_ptr<SH::HashEntry<GameEntity>> SpatialHashEntry;
+		std::unique_ptr<SH::HashEntry<GameEntity>> spatialHashEntry;
 	};
 
+	////////////////////////////////////////////////////////////////////////////////////////////
+	// class used to hold state of demo
+	////////////////////////////////////////////////////////////////////////////////////////////
 	class VisualizeSpatialHash final : public IOpenGLDemo
 	{
 		//Cached Window Data
@@ -371,13 +375,13 @@ namespace
 			////////////////////////////////////////////////////////////
 			// initialization state
 			////////////////////////////////////////////////////////////
+			redEntity.spatialHashEntry = spatialHash.insert(redEntity, redEntity.getOBB());
+			blueEntity.spatialHashEntry = spatialHash.insert(blueEntity, blueEntity.getOBB());
 
 			{ //scoped unique_ptr
-				auto obb = redEntity.getOBB();
-				redEntity.SpatialHashEntry = spatialHash.insert(redEntity, obb);
-				//std::unique_ptr<SH::HashedObject<GameEntity>> hashEntry = spatialHash.insert(redEntity, obb);
-				
-
+				//quick test that RAII is working
+				//also testing that same-item hash removes don't clear other entries for same item
+				std::unique_ptr<SH::HashEntry<GameEntity>> RAIITest = spatialHash.insert(redEntity, redEntity.getOBB());
 			}
 		}
 
@@ -402,6 +406,10 @@ namespace
 
 			processInput(window);
 
+			//update spatial hashes since objects may have moved
+			redEntity.spatialHashEntry = spatialHash.insert(redEntity, redEntity.getOBB());
+			blueEntity.spatialHashEntry = spatialHash.insert(blueEntity, blueEntity.getOBB());
+
 			mat4 view = camera.getView();
 			mat4 projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(width) / height, 0.1f, 100.0f);
 
@@ -412,6 +420,81 @@ namespace
 			if (bRenderHashGrid)
 			{
 				SH::drawAABBGrid<GameEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
+
+				glDepthFunc(GL_ALWAYS);
+				////test drawing mechanics
+				//std::vector<glm::ivec3> cells = {
+				//	//{1, 1, 1},
+				//	//{-1,-1, -1},
+				//	{0,0,0}
+				//};
+				//SH::drawCells(cells, spatialHash.gridCellSize, glm::vec3(1, 0, 0), debugGridShader, glm::mat4(1.0f), view, projection);
+
+				//draw result of hash lookup to test hashing behavior, rather than directly use cells on the HashEntry object
+				std::vector<std::shared_ptr<SH::GridNode<GameEntity>>> itemsInCells;
+				spatialHash.lookupNodesInCells(*redEntity.spatialHashEntry, itemsInCells);
+
+				//----------------------------------------------------------------------------------
+				auto comparisonClosure = [](const glm::ivec3& a, const glm::ivec3& b) { 
+					//set equal iff !(a < b) && !(b < a)
+					
+					//strict weak ordering for x
+					if (a.x < b.x) return true;
+					if (b.x < a.x) return false;
+
+					//a.x == b.x
+					if (a.y < b.y) return true;
+					if (b.y < a.y) return false;
+
+					//a.y == b.y
+					if (a.z < b.z) return true;
+					if (b.z < a.z) return false;
+					
+					//signals equivalence
+					return false;
+				};
+				std::set<glm::vec3, std::function<bool (const glm::ivec3&, const glm::ivec3& ) >> redCellLocations(comparisonClosure);
+				std::vector<std::shared_ptr<SH::HashCell<GameEntity>>> redCells;
+				spatialHash.lookupCellsForEntry(*redEntity.spatialHashEntry, redCells);
+				for (std::shared_ptr<SH::HashCell<GameEntity>>& cell : redCells)
+				{
+					redCellLocations.insert(cell->location);
+				}
+
+				std::set<glm::vec3, std::function<bool(const glm::ivec3&, const glm::ivec3&) >> blueCellLocations(comparisonClosure);
+				std::vector<std::shared_ptr<SH::HashCell<GameEntity>>> blueCells;
+				spatialHash.lookupCellsForEntry(*blueEntity.spatialHashEntry, blueCells);
+				for (std::shared_ptr<SH::HashCell<GameEntity>>& cell : blueCells)
+				{
+					blueCellLocations.insert( cell->location);
+				}
+
+				std::vector<glm::ivec3> redCellLocationsVec;
+				std::vector<glm::ivec3> blueCellLocationsVec;
+				std::vector<glm::ivec3> overlapCellLocationsVec;
+				for (const glm::vec3& redLoc : redCellLocations)
+				{
+					//cell overlap, mark it as a different color
+					auto blueElementIter = blueCellLocations.find(redLoc);
+					if (blueElementIter != blueCellLocations.end())
+					{
+						blueCellLocations.erase(blueElementIter);
+						overlapCellLocationsVec.push_back(redLoc);
+					}
+					else
+					{
+						redCellLocationsVec.push_back(redLoc);
+					}
+				}
+				for (const glm::vec3& blueLoc : blueCellLocations)
+				{
+					blueCellLocationsVec.push_back(blueLoc);
+				}
+				SH::drawCells(redCellLocationsVec, spatialHash.gridCellSize, glm::vec3(1, 0, 0), debugGridShader, glm::mat4(1.0f), view, projection);
+				SH::drawCells(blueCellLocationsVec, spatialHash.gridCellSize, glm::vec3(0, 0, 1), debugGridShader, glm::mat4(1.0f), view, projection);
+				SH::drawCells(overlapCellLocationsVec, spatialHash.gridCellSize, glm::vec3(1, 0, 1), debugGridShader, glm::mat4(1.0f), view, projection);
+
+				glDepthFunc(GL_LESS);
 			}
 
 			glBindVertexArray(cubeVAO);
