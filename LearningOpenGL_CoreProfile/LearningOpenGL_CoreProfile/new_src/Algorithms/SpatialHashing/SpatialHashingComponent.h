@@ -184,9 +184,28 @@ namespace SH
 		std::list<std::shared_ptr<GridNode<T>>> nodeBucket;
 	};
 
+
+
 	template<typename T>
 	class SpatialHashGrid : public RemoveCopies, public RemoveMoves
 	{
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Helper macros for guaranteed inlining and removing code duplication
+///////////////////////////////////////////////////////////////////////////////////////
+#define BEGIN_FOR_EVERY_CELL(xCellIndices, yCellIndices, zCellIndices) \
+for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
+{\
+	for (int cellY = yCellIndices.min; cellY < yCellIndices.max; ++cellY)\
+	{\
+		for (int cellZ = zCellIndices.min; cellZ < zCellIndices.max; ++cellZ)\
+		{
+
+#define END_FOR_EVERY_CELL \
+		}\
+	}\
+}\
+///////////////////////////////////////////////////////////////////////////////////////
 	private:
 
 		inline size_t hash(glm::ivec3 location)
@@ -305,9 +324,10 @@ namespace SH
 		}
 
 	public:
-		SpatialHashGrid(const glm::vec4& inGridCellSize) //TODO drop to vec3 if 4th component not actually used
+		SpatialHashGrid(const glm::vec4& inGridCellSize, std::size_t estimatedNumCells = 10000) //TODO drop to vec3 if 4th component not actually used
 			: gridCellSize(inGridCellSize)
 		{
+			hashMap.reserve(estimatedNumCells);
 		}
 		~SpatialHashGrid()
 		{
@@ -402,16 +422,19 @@ namespace SH
 			);
 
 			//__for cell in every range, add node to spatial hash__
-			for (int cellX = xCellIndices.min; cellX <= xCellIndices.max; ++cellX)
-			{
-				for (int cellY = yCellIndices.min; cellY <= yCellIndices.max; ++cellY)
-				{
-					for (int cellZ = zCellIndices.min; cellZ <= zCellIndices.max; ++cellZ)
-					{
-						hashInsert(gridNode, { cellX, cellY, cellZ } );
-					}
-				}
-			}
+			//for (int cellX = xCellIndices.min; cellX <= xCellIndices.max; ++cellX)
+			//{
+			//	for (int cellY = yCellIndices.min; cellY <= yCellIndices.max; ++cellY)
+			//	{
+			//		for (int cellZ = zCellIndices.min; cellZ <= zCellIndices.max; ++cellZ)
+			//		{
+			//			hashInsert(gridNode, { cellX, cellY, cellZ } );
+			//		}
+			//	}
+			//}
+			BEGIN_FOR_EVERY_CELL(xCellIndices, yCellIndices, zCellIndices)
+			hashInsert(gridNode, { cellX, cellY, cellZ });
+			END_FOR_EVERY_CELL
 
 			validEntries.insert(hashEntry.get());
 			return std::move(hashEntry);
@@ -424,19 +447,22 @@ namespace SH
 
 			std::unordered_set<GridNode<T>*> previouslyAdded; //dtor is O(n) for unique insertions
 
-			for (int cellX = cellSource.xGridCells.min; cellX <= cellSource.xGridCells.max; ++cellX)
-			{
-				for (int cellY = cellSource.yGridCells.min; cellY <= cellSource.yGridCells.max; ++cellY)
-				{
-					for (int cellZ = cellSource.zGridCells.min; cellZ <= cellSource.zGridCells.max; ++cellZ)
-					{
+			//for (int cellX = cellSource.xGridCells.min; cellX <= cellSource.xGridCells.max; ++cellX)
+			//{
+			//	for (int cellY = cellSource.yGridCells.min; cellY <= cellSource.yGridCells.max; ++cellY)
+			//	{
+			//		for (int cellZ = cellSource.zGridCells.min; cellZ <= cellSource.zGridCells.max; ++cellZ)
+			//		{
+			BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
 						glm::ivec3 hashLocation(cellX, cellY, cellZ);
 						size_t hashVal = hash(hashLocation);
 						std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
+						int cellsForHash = 0;
 
 						//look over bucket of cells (ideally this will be a small number)
 						for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
 						{
+							cellsForHash++;
 							std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
 
 							//make sure we're not dealing with a cell that is hash collision 
@@ -455,9 +481,10 @@ namespace SH
 								}
 							}
 						}
-					}
-				}
-			}
+			END_FOR_EVERY_CELL
+			//		}
+			//	}
+			//}
 		}
 
 		//inline void lookupCellsForEntry(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells) const
@@ -471,12 +498,13 @@ namespace SH
 		{
 			using UMMIter = typename decltype(hashMap)::iterator;
 
-			for (int cellX = cellSource.xGridCells.min; cellX <= cellSource.xGridCells.max; ++cellX)
-			{
-				for (int cellY = cellSource.yGridCells.min; cellY <= cellSource.yGridCells.max; ++cellY)
-				{
-					for (int cellZ = cellSource.zGridCells.min; cellZ <= cellSource.zGridCells.max; ++cellZ)
-					{
+			//for (int cellX = cellSource.xGridCells.min; cellX <= cellSource.xGridCells.max; ++cellX)
+			//{
+			//	for (int cellY = cellSource.yGridCells.min; cellY <= cellSource.yGridCells.max; ++cellY)
+			//	{
+			//		for (int cellZ = cellSource.zGridCells.min; cellZ <= cellSource.zGridCells.max; ++cellZ)
+			//		{
+			BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
 						glm::ivec3 hashLocation(cellX, cellY, cellZ);
 						size_t hashVal = hash(hashLocation);
 						std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
@@ -492,9 +520,15 @@ namespace SH
 								outCells.push_back(cell);
 							}
 						}
-					}
-				}
-			}
+			END_FOR_EVERY_CELL
+			//		}
+			//	}
+			//}
+		}
+
+		void logDebugInformation()
+		{
+			std::cout << "bucket count:" << hashMap.bucket_count() << std::endl;
 		}
 
 	private:
@@ -506,16 +540,18 @@ namespace SH
 			const Range<int>& zCellIndices = toRemove.zGridCells;
 
 			bool allRemoved = true;
-			for (int cellX = xCellIndices.min; cellX <= xCellIndices.max; ++cellX)
-			{
-				for (int cellY = yCellIndices.min; cellY <= yCellIndices.max; ++cellY)
-				{
-					for (int cellZ = zCellIndices.min; cellZ <= zCellIndices.max; ++cellZ)
-					{
+			//for (int cellX = xCellIndices.min; cellX <= xCellIndices.max; ++cellX)
+			//{
+			//	for (int cellY = yCellIndices.min; cellY <= yCellIndices.max; ++cellY)
+			//	{
+			//		for (int cellZ = zCellIndices.min; cellZ <= zCellIndices.max; ++cellZ)
+			//		{
+			BEGIN_FOR_EVERY_CELL(xCellIndices, yCellIndices, zCellIndices)
 						allRemoved &= hashRemove(toRemove.insertedNode, { cellX, cellY, cellZ });
-					}
-				}
-			}
+			END_FOR_EVERY_CELL
+			//		}
+			//	}
+			//}
 
 			auto iter = validEntries.find(&toRemove);
 			assert(iter != validEntries.end());

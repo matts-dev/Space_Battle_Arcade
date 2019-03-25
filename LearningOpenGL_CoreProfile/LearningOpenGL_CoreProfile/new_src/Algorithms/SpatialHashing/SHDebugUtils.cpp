@@ -33,7 +33,6 @@ void SH::drawCells(std::vector<glm::ivec3>& cells, const glm::vec4& gridCellSize
 	std::vector<glm::vec4> linesToDraw;
 	for (glm::ivec3& cell : cells)
 	{
-		//would be nice to have component-wise operations but glm doesn't have component wise operator > 
 		float startX = (cell.x * gridCellSize.x);
 		float startY = (cell.y * gridCellSize.y);
 		float startZ = (cell.z * gridCellSize.z);
@@ -43,21 +42,21 @@ void SH::drawCells(std::vector<glm::ivec3>& cells, const glm::vec4& gridCellSize
 		float endZ = startZ + gridCellSize.z;
 
 		//zero corrections
-		if (cell.x == 0)
-		{
-			startX = gridCellSize.x;
-			endX = -gridCellSize.x;
-		}
-		if (cell.y == 0)
-		{
-			startY = gridCellSize.y;
-			endY = -gridCellSize.y;
-		}
-		if (cell.z == 0)
-		{
-			startZ = gridCellSize.z;
-			endZ = -gridCellSize.z;
-		}
+		//if (cell.x == 0)
+		//{
+		//	startX = gridCellSize.x;
+		//	endX = -gridCellSize.x;
+		//}
+		//if (cell.y == 0)
+		//{
+		//	startY = gridCellSize.y;
+		//	endY = -gridCellSize.y;
+		//}
+		//if (cell.z == 0)
+		//{
+		//	startZ = gridCellSize.z;
+		//	endZ = -gridCellSize.z;
+		//}
 
 		linesToDraw.push_back({ startX, startY, startZ, 1.0f });
 		linesToDraw.push_back({ startX, startY, endZ, 1.0f });

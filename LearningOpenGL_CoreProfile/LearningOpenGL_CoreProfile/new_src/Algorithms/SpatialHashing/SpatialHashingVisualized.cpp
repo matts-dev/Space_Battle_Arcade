@@ -433,6 +433,10 @@ namespace
 				//draw result of hash lookup to test hashing behavior, rather than directly use cells on the HashEntry object
 				std::vector<std::shared_ptr<SH::GridNode<GameEntity>>> itemsInCells;
 				spatialHash.lookupNodesInCells(*redEntity.spatialHashEntry, itemsInCells);
+				if (itemsInCells.size() > 1)
+				{
+					std::cerr << "detecting more than 1 entry in red cubes calls! there are only 2 objects in this demo" << std::endl;
+				}
 
 				//----------------------------------------------------------------------------------
 				auto comparisonClosure = [](const glm::ivec3& a, const glm::ivec3& b) { 
@@ -495,6 +499,7 @@ namespace
 				SH::drawCells(overlapCellLocationsVec, spatialHash.gridCellSize, glm::vec3(1, 0, 1), debugGridShader, glm::mat4(1.0f), view, projection);
 
 				glDepthFunc(GL_LESS);
+				//------------------------------------------------------
 			}
 
 			glBindVertexArray(cubeVAO);
@@ -546,14 +551,10 @@ namespace
 					<< " Hold ALT + CONTROL to rotate objects with WASD-EQ" << std::endl
 					<< " Press T to toggle which the object is moved " << std::endl
 					<< " Press V to toggle locking translations(and rotations) to camera (easier movements) " << std::endl
-					<< " Press M to toggle slightly displacing axes so that parallel axes are visible simultaneously " << std::endl
 					<< " Press P to print debug information" << std::endl
 					<< " Press R to reset object positions to default." << std::endl
-					<< " Press C to toggle collision detection" << std::endl
 					<< " Press 9/0 to decrease/increase scale" << std::endl
-					<< " Press U to start unit tests; press left/right to skip through unit tests" << std::endl
 					<< " " << std::endl
-					//vec3 capture1_D, capture2_G, capture3_F, capture4_r, capture5_m, capture6_Gl, capture7_Gv, capture8_albedo, capture9_normal;
 					<< std::endl;
 				return 0;
 			}();
@@ -611,8 +612,10 @@ namespace
 					glm::vec3 rotQuat{ transform.rotQuat.x, transform.rotQuat.y, transform.rotQuat.z };
 					cout << "pos:";  printVec3(transform.position); cout << " rotation:"; printVec3(rotQuat); cout << "w" << transform.rotQuat.w << " scale:"; printVec3(transform.scale); cout << endl;
 				};
-				cout << "red objecpt =>"; printXform(redCubeTransform);
+				cout << "red object =>"; printXform(redCubeTransform);
 				cout << "blue object =>"; printXform(blueCubeTransform);
+
+				spatialHash.logDebugInformation();
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_U))
 			{
@@ -623,6 +626,12 @@ namespace
 				else
 				{
 				}
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_L))
+			{
+				//profiler entry point
+				int profiler_helper= 5;
+				++profiler_helper;
 			}
 			// -------- MOVEMENT -----------------
 			if (!(input.isKeyDown(window, GLFW_KEY_LEFT_ALT) || input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT)))
