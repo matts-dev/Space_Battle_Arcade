@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include <memory>
 #include <iostream>
+#include <cstdint>
 
 namespace SH
 {
@@ -208,20 +209,20 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 ///////////////////////////////////////////////////////////////////////////////////////
 	private:
 
-		inline size_t hash(glm::ivec3 location)
+		inline uint64_t hash(glm::ivec3 location)
 		{
-			size_t x = static_cast<size_t>(location.x);
-			size_t y = static_cast<size_t>(location.y);
-			size_t z = static_cast<size_t>(location.z);
+			uint32_t x = static_cast<uint32_t>(location.x);
+			uint32_t y = static_cast<uint32_t>(location.y);
+			uint32_t z = static_cast<uint32_t>(location.z);
 
 			//pack all values into a single long before hash; this is adhoc bitwise operations that seems non-destructive
-			size_t bitvec = x;
-			bitvec <<= 32;
+			uint64_t bitvec = x;
+			bitvec = bitvec << 32ul;
 			bitvec |= y;
-			bitvec ^= (z << 16);
+			bitvec ^= (z << 16ul);
 
 			//hash
-			size_t hash = std::hash<size_t>{}(bitvec);
+			uint64_t hash = std::hash<uint64_t>{}(bitvec);
 
 			return hash;
 		}
@@ -230,10 +231,11 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 		{
 			using UMMIter = typename decltype(hashMap)::iterator;
 
-			size_t hashVal = hash(hashLocation);
+			uint64_t hashVal = hash(hashLocation);
 
 			std::shared_ptr<HashCell<T>> targetCell = nullptr;
 
+			int debug_bucketsForHash = 0;
 			//walk over bucket to find correct cell
 			std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal);
 			UMMIter& start = bucketRange.first;
@@ -241,6 +243,8 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			for (UMMIter bucketIter = start; bucketIter != end; ++bucketIter)
 			{
 				std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
+				++debug_bucketsForHash;
+				uint64_t debug_cellHash = hash(cell->location);
 				if (cell->location == hashLocation)
 				{
 					targetCell = cell;
@@ -250,7 +254,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			 
 			if (!targetCell)
 			{
-				std::shared_ptr<HashCell<T>> cell = recyclePool.requestObject();
+				std::shared_ptr<HashCell<T>> cell = recyclePool.requestObject(); //TODO this may not be necessary because of the way HashCell DTOR works -- but might can recycle grid nodes?
 				//configure cell
 				cell->location = hashLocation;
 				cell->nodeBucket.clear();
@@ -269,7 +273,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			using UMMIter = typename decltype(hashMap)::iterator;
 			bool bFoundRemove;
 
-			size_t hashVal = hash(hashLocation);
+			uint64_t hashVal = hash(hashLocation);
 			std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal);
 			UMMIter& start = bucketRange.first;
 			UMMIter& end = bucketRange.second;
@@ -428,13 +432,12 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			//	{
 			//		for (int cellZ = zCellIndices.min; cellZ <= zCellIndices.max; ++cellZ)
 			//		{
-			//			hashInsert(gridNode, { cellX, cellY, cellZ } );
+					BEGIN_FOR_EVERY_CELL(xCellIndices, yCellIndices, zCellIndices)
+					hashInsert(gridNode, { cellX, cellY, cellZ });
+					END_FOR_EVERY_CELL
 			//		}
 			//	}
 			//}
-			BEGIN_FOR_EVERY_CELL(xCellIndices, yCellIndices, zCellIndices)
-			hashInsert(gridNode, { cellX, cellY, cellZ });
-			END_FOR_EVERY_CELL
 
 			validEntries.insert(hashEntry.get());
 			return std::move(hashEntry);
@@ -455,14 +458,14 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			//		{
 			BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
 						glm::ivec3 hashLocation(cellX, cellY, cellZ);
-						size_t hashVal = hash(hashLocation);
+						uint64_t hashVal = hash(hashLocation);
 						std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
-						int cellsForHash = 0;
+						int debug_bucketsForHash = 0;
 
 						//look over bucket of cells (ideally this will be a small number)
 						for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
 						{
-							cellsForHash++;
+							++debug_bucketsForHash;
 							std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
 
 							//make sure we're not dealing with a cell that is hash collision 
@@ -506,7 +509,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			//		{
 			BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
 						glm::ivec3 hashLocation(cellX, cellY, cellZ);
-						size_t hashVal = hash(hashLocation);
+						uint64_t hashVal = hash(hashLocation);
 						std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
 
 						//look over bucket of cells (ideally this will be a small number)
@@ -565,7 +568,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 
 	private:
 		/** Hashmap with buckets for collisions */
-		std::unordered_multimap<size_t, std::shared_ptr<HashCell<T>>> hashMap;
+		std::unordered_multimap<uint64_t, std::shared_ptr<HashCell<T>>> hashMap;
 		/** 
 		 * Valid hash entries for invalidation if spatial hash is destroyed before the entries are released. Ideally this shouldn't happen, but in order to provide the simplest interface the behavior is allowed.
 		 * The HashEntries need to be unique pointers so that proper resource clean up occurs; having entries as unique pointers means that we cannot have this use smart pointer to the entries

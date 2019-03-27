@@ -126,6 +126,288 @@
     <ClInclude Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\detail\atomic_count.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\detail\lightweight_mutex.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\detail\lightweight_thread.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\detail\quick_allocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_gcc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_gcc_x86.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_nt.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_pt.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_solaris.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_spin.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_std_atomic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_sync.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\atomic_count_win32.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\lightweight_mutex.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\local_counted_base.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\local_sp_deleter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\lwm_nop.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\lwm_pthreads.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\lwm_win32_cs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\operator_bool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\quick_allocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\shared_count.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_convertible.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_acc_ia64.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_aix.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_clang.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_cw_ppc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_cw_x86.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_gcc_ia64.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_gcc_mips.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_gcc_ppc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_gcc_sparc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_gcc_x86.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_nt.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_pt.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_snc_ps3.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_solaris.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_spin.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_std_atomic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_sync.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_vacpp_ppc.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_base_w32.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_counted_impl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_disable_deprecated.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_forward.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_has_sync.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_interlocked.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_noexcept.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\sp_nullptr_t.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock_gcc_arm.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock_nt.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock_pool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock_pt.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock_std_atomic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock_sync.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\spinlock_w32.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\detail\yield_k.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\allocate_local_shared_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\allocate_shared_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\atomic_shared_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\bad_weak_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\enable_shared_from_raw.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\enable_shared_from_this.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\intrusive_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\intrusive_ref_counter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\local_shared_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\make_local_shared.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\make_local_shared_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\make_local_shared_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\make_shared.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\make_shared_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\make_shared_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\make_unique.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\owner_less.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\scoped_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\scoped_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\shared_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\shared_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\weak_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\enable_shared_from_this.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\intrusive_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\make_shared.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\make_unique.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\pointer_cast.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\pointer_to_other.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\scoped_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\scoped_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\shared_array.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\shared_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\weak_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">

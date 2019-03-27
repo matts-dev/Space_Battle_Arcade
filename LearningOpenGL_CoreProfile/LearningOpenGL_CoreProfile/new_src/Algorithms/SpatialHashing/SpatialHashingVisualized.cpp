@@ -283,6 +283,7 @@ namespace
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
 		bool bRenderHashGrid = true;
+		bool bRenderOccupiedCells = true;
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
@@ -494,9 +495,12 @@ namespace
 				{
 					blueCellLocationsVec.push_back(blueLoc);
 				}
-				SH::drawCells(redCellLocationsVec, spatialHash.gridCellSize, glm::vec3(1, 0, 0), debugGridShader, glm::mat4(1.0f), view, projection);
-				SH::drawCells(blueCellLocationsVec, spatialHash.gridCellSize, glm::vec3(0, 0, 1), debugGridShader, glm::mat4(1.0f), view, projection);
-				SH::drawCells(overlapCellLocationsVec, spatialHash.gridCellSize, glm::vec3(1, 0, 1), debugGridShader, glm::mat4(1.0f), view, projection);
+				if(bRenderOccupiedCells)
+				{
+					SH::drawCells(redCellLocationsVec, spatialHash.gridCellSize, glm::vec3(1, 0, 0), debugGridShader, glm::mat4(1.0f), view, projection);
+					SH::drawCells(blueCellLocationsVec, spatialHash.gridCellSize, glm::vec3(0, 0, 1), debugGridShader, glm::mat4(1.0f), view, projection);
+					SH::drawCells(overlapCellLocationsVec, spatialHash.gridCellSize, glm::vec3(1, 0, 1), debugGridShader, glm::mat4(1.0f), view, projection);
+				}
 
 				glDepthFunc(GL_LESS);
 				//------------------------------------------------------
@@ -579,6 +583,11 @@ namespace
 			if (input.isKeyJustPressed(window, GLFW_KEY_M))
 			{
 				bEnableAxisOffset = !bEnableAxisOffset;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_H))
+			{
+				bRenderHashGrid = !bRenderHashGrid;
+				bRenderOccupiedCells= !bRenderOccupiedCells;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_R))
 			{
