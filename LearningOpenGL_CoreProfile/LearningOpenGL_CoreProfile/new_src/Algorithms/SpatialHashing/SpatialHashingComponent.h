@@ -585,4 +585,3 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 
 
 
-#include "SpatialHashingComponent.inl"

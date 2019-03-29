@@ -193,10 +193,10 @@ namespace
 	// need to be pre-calculated at start up and then have transform applied to the OBB, 
 	// rather than applying the transform to the AABB directly. 
 	////////////////////////////////////////////////////////////////////////////////////////////
-	struct SquareEntity : public GameEntity
+	struct CubeEntity_Ref : public GameEntity
 	{
 	public:
-		SquareEntity(ColumnBasedTransform& inTransform)
+		CubeEntity_Ref(ColumnBasedTransform& inTransform)
 			: transform(inTransform)
 		{
 		}
@@ -262,8 +262,8 @@ namespace
 		const ColumnBasedTransform defaultRedCubeTransform = { { 5,0,5 }, {}, { 1,1,1 } };
 		const glm::vec3 blueCubeColor{ 0, 0, 1 };
 		const glm::vec3 redCubeColor{ 1, 0, 0 };
-		SquareEntity redEntity{redCubeTransform};
-		SquareEntity blueEntity{blueCubeTransform};
+		CubeEntity_Ref redEntity{redCubeTransform};
+		CubeEntity_Ref blueEntity{blueCubeTransform};
 
 		//State
 		CameraFPS camera{ 45.0f, -90.f, 0.f };

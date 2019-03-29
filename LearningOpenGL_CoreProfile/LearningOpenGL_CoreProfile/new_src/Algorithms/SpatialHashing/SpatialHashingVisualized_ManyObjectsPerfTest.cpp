@@ -15,6 +15,9 @@
 #include <array>
 #include "SpatialHashingComponent.h"
 #include "SHDebugUtils.h"
+#include <functional>
+#include <cstdint>
+#include <random>
 
 namespace
 {
@@ -179,11 +182,73 @@ namespace
 		virtual void handleModuleFocused(GLFWwindow* window) = 0;
 	};
 
+	/** Represents a top level object*/
 	class GameEntity
 	{
 
 	};
 
+	////////////////////////////////////////////////////////////////////////////////////////////
+	// In this demo, the axis aligned bounding box (AABB) is the same as the shape itself.
+	// So, just transforming the points the shape's transform will be appropriate to figure out
+	// its oriented bounding box (OBB). In real applications with non-cube shapes, the OBB will
+	// need to be pre-calculated at start up and then have transform applied to the OBB, 
+	// rather than applying the transform to the AABB directly. 
+	////////////////////////////////////////////////////////////////////////////////////////////
+	struct CubeEntity : public GameEntity
+	{
+	public:
+		CubeEntity(ColumnBasedTransform& inTransform)
+			: transform(inTransform)
+		{
+		}
+
+		/** see class note above about direct transforming of AABB */
+		std::array<glm::vec4, 8> getOBB()
+		{
+			glm::mat4 xform = transform.getModelMatrix();
+			std::array<glm::vec4, 8> OBB =
+			{
+				xform * AABB[0],
+				xform * AABB[1],
+				xform * AABB[2],
+				xform * AABB[3],
+				xform * AABB[4],
+				xform * AABB[5],
+				xform * AABB[6],
+				xform * AABB[7]
+			};
+			return OBB;
+		}
+
+		/** axis aligned bounding box(AABB) will be oriented bounding box(OBB) when transformed */
+		const std::array<glm::vec4, 8> AABB =
+		{
+			glm::vec4(-0.5f, -0.5f, -0.5f,	1.0f),
+			glm::vec4(-0.5f, -0.5f, 0.5f,	1.0f),
+			glm::vec4(-0.5f, 0.5f, -0.5f,	1.0f),
+			glm::vec4(-0.5f, 0.5f, 0.5f,	1.0f),
+			glm::vec4(0.5f, -0.5f, -0.5f,	1.0f),
+			glm::vec4(0.5f, -0.5f, 0.5f,	1.0f),
+			glm::vec4(0.5f, 0.5f, -0.5f,	1.0f),
+			glm::vec4(0.5f, 0.5f, 0.5f,     1.0f),
+		};
+
+	public: 
+		//these are public for having a of simple demo and logic being code below 
+		//rather than having a proper class set up with manipulating member functions
+		//in real applications, do properly encapsulate this stuff! I merely don't want the reader
+		//to have to jump around the source file to see what is happening. 
+		ColumnBasedTransform transform;
+		glm::vec3 velocity;
+		glm::vec3 color;
+		glm::vec3 gravityPnt;
+		std::unique_ptr<SH::HashEntry<GameEntity>> spatialHashEntry;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////
+	// class used to hold state of demo
+	////////////////////////////////////////////////////////////////////////////////////////////
 	class VisualizeSpatialHash final : public IOpenGLDemo
 	{
 		//Cached Window Data
@@ -196,23 +261,29 @@ namespace
 		GLuint cubeVAO, cubeVBO;
 
 		//Shape Data
-		ColumnBasedTransform redCubeTransform;
-		ColumnBasedTransform blueCubeTransform;
-		const ColumnBasedTransform defaultBlueCubeTransform = { { 0,0,0 }, {}, { 1,1,1 } };
-		const ColumnBasedTransform defaultRedCubeTransform = { { 5,0,5 }, {}, { 1,1,1 } };
-		const glm::vec3 blueCubeColor{ 0, 0, 1 };
-		const glm::vec3 redCubeColor{ 1, 0, 0 };
+		uint32_t numStartCubes = 100;
+		std::vector<CubeEntity> cubes;
+		//std::vector<glm::vec3> gravityPoints = {
+		//	glm::vec3(100, 0, 0),
+		//	glm::vec3(-100,0,-100),
+		//	glm::vec3(-100,0,100),
+		//	glm::vec3(0,0,100),
+		//	glm::vec3(0,0,-100),
+		//};
+
+		std::mt19937 rng_eng;
+		float gravityDapeningFactor = 0.001f;
 
 		//State
 		CameraFPS camera{ 45.0f, -90.f, 0.f };
 		ColumnBasedTransform lightTransform;
+		std::shared_ptr<ColumnBasedTransform> transformTarget;
 		glm::vec3 lightColor{ 1.0f, 1.0f, 1.0f };
 		Shader objShader{ litObjectShaderVertSrc , litObjectShaderFragSrc, false };
 		Shader lampShader{ lightLocationShaderVertSrc, lightLocationShaderFragSrc, false };
 		Shader debugGridShader{ SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false };
 
 		//Modifiable State
-		ColumnBasedTransform* transformTarget = &redCubeTransform;
 		float moveSpeed = 3;
 		float rotationSpeed = 45.0f;
 		bool bEnableCollision = true;
@@ -220,11 +291,12 @@ namespace
 		bool bTickUnitTests = false;
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
-		bool bRenderHashGrid = true;
+		bool bRenderHashGrid = false;
+		bool bRenderOccupiedCells = true;
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
-		SH::SpatialHashGrid<GameEntity> spatialHash{ glm::vec4{1,1,1,1} };
+		SH::SpatialHashGrid<GameEntity> spatialHash{ glm::vec4{2,2,2,1} };
 
 
 	public:
@@ -242,6 +314,9 @@ namespace
 			camera.setPosition(-7.29687f, 3.22111f, 5.0681f);
 			camera.setYaw(-22.65f);
 			camera.setPitch(-15.15f);
+
+			//for now, just have a dummy object because this demo may at one point want to manipulate some object
+			transformTarget = std::make_shared<ColumnBasedTransform>();
 
 			/////////////////////////////////////////////////////////////////////
 			// OpenGL/Collision Object Creation
@@ -304,13 +379,56 @@ namespace
 			glEnableVertexAttribArray(1);
 			glBindVertexArray(0);
 
-			redCubeTransform = defaultRedCubeTransform;
-			blueCubeTransform = defaultBlueCubeTransform;
-
 			lightTransform.position = glm::vec3(5, 3, 0);
 			lightTransform.scale = glm::vec3(0.1f);
 
+			////////////////////////////////////////////////////////////
+			// initialization state
+			////////////////////////////////////////////////////////////
+			std::random_device rng;
+			std::seed_seq seed{ rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng() };
+			rng_eng = std::mt19937(seed);
+			//std::uniform_int_distribution<std::mt19937::result_type> start_dist(-10, 10);
+			std::uniform_real_distribution<float> startDist(-50.f, 50.f); //[a, b)
+			std::uniform_real_distribution<float> gravityDist(-25.f, 25.f); //[a, b)
+			std::uniform_real_distribution<float> distSpeed(0, 3); //[a, b)
+			std::uniform_int_distribution<int> colorEnabled(0, 1); //[a,b]
+			for (uint32_t cubeIdx = 0; cubeIdx < numStartCubes; ++cubeIdx)
+			{
+				glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
 
+				//give it a point to attract to
+				glm::vec3 gravityPnt(gravityDist(rng_eng), gravityDist(rng_eng), gravityDist(rng_eng));
+
+				//give it some initial velocity
+				glm::vec3 startVelocity(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
+				startVelocity = startVelocity == glm::vec3(0.f) ? glm::vec3(1, 0, 0) : startVelocity;
+				startVelocity = glm::normalize(startVelocity);
+				float speed = glm::abs(distSpeed(rng_eng)) + 1.0f;
+				startVelocity *= speed;
+
+				//ad-hoc random color
+				glm::vec3 startColor(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng)); //start_dist is fine, will normalize
+				startColor.x = (bool)colorEnabled(rng_eng) ? startColor.x : 0.0f;
+				startColor.y = (bool)colorEnabled(rng_eng) ? startColor.y : 0.0f;
+				startColor.z = (bool)colorEnabled(rng_eng) ? startColor.z : 0.0f;
+				if (startColor.x < 0.1f && startColor.y< 0.1f && startColor.z < 0.1f)
+				{
+					startColor = glm::vec3(startDist(rng_eng), startDist(rng_eng), 1.f);
+				}
+				startColor = glm::normalize(glm::abs(startColor));
+				
+				
+				ColumnBasedTransform newTransform;
+				newTransform.position = startPos;
+
+				cubes.push_back(newTransform);
+				CubeEntity& newCube = cubes[cubes.size() - 1];
+				newCube.color = startColor;
+				newCube.velocity = startVelocity;
+				newCube.gravityPnt = gravityPnt;
+				newCube.spatialHashEntry = spatialHash.insert(newCube, newCube.getOBB());
+			}
 		}
 
 		~VisualizeSpatialHash()
@@ -334,8 +452,25 @@ namespace
 
 			processInput(window);
 
+			for (CubeEntity& cube : cubes)
+			{
+				cube.transform.position += cube.velocity * deltaTime;
+				cube.spatialHashEntry = spatialHash.insert(cube, cube.getOBB());
+
+				//adhoc gravitate towards points
+				//glm::vec3 vecToCenter = (glm::vec3(0, 0, 0) - cube.transform.position);
+				//cube.velocity += gravityDapeningFactor * vecToCenter;
+				//for (glm::vec3& gravityPnt : gravityPoints)
+				//{
+				//	glm::vec3 vecToPnt = (gravityPnt - cube.transform.position);
+				//	cube.velocity += gravityDapeningFactor * vecToPnt;
+				//}				
+				glm::vec3 vecToGravity = (cube.gravityPnt - cube.transform.position);
+				cube.velocity += gravityDapeningFactor * vecToGravity;
+			}
+
 			mat4 view = camera.getView();
-			mat4 projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(width) / height, 0.1f, 100.0f);
+			mat4 projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(width) / height, 0.1f, 300.0f);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glEnable(GL_DEPTH_TEST);
@@ -344,72 +479,25 @@ namespace
 			if (bRenderHashGrid)
 			{
 				SH::drawAABBGrid<GameEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
-				//static std::vector<glm::vec4> linesToDraw;
-				//linesToDraw.reserve(1000);
-				//linesToDraw.clear();
-				//glm::vec4 startCorner(glm::vec3(-10.f), 1.0f);
-				//glm::vec4 endCorner(glm::vec3(-startCorner), 1.0f);
+			}
 
-				////xy sweep
-				//float lastLineExtra = 0.1f;
-				//glm::vec4 xSweep = startCorner;
-				//while (xSweep.x < endCorner.x + lastLineExtra)
-				//{
-				//	glm::vec4 ySweep = xSweep;
-				//	while (ySweep.y < endCorner.y + lastLineExtra)
-				//	{
-				//		glm::vec4 startPnt = ySweep;
-				//		glm::vec4 endPnt = ySweep;
-				//		endPnt.z *= -1;
-				//		
-				//		linesToDraw.push_back(startPnt);
-				//		linesToDraw.push_back(endPnt);
-				//		ySweep.y += spatialHash.gridCellSize.y;
-				//	}
-				//	xSweep.x += spatialHash.gridCellSize.x;
-				//}
-
-				////xz sweep
-				//xSweep = startCorner;
-				//while (xSweep.x < endCorner.x + lastLineExtra)
-				//{
-				//	glm::vec4 zSweep = xSweep;
-				//	while (zSweep.z < endCorner.z + lastLineExtra)
-				//	{
-				//		glm::vec4 startPnt = zSweep;
-				//		glm::vec4 endPnt = zSweep;
-				//		endPnt.y *= -1;
-
-				//		linesToDraw.push_back(startPnt);
-				//		linesToDraw.push_back(endPnt);
-				//		zSweep.z += spatialHash.gridCellSize.z;
-				//	}
-				//	xSweep.x += spatialHash.gridCellSize.x;
-				//}
-
-				////todo: zy sweep
-				//glm::vec4 zSweep = startCorner;
-				//while (zSweep.z < endCorner.z + lastLineExtra)
-				//{
-				//	glm::vec4 ySweep = zSweep;
-				//	while (ySweep.y < endCorner.y + lastLineExtra)
-				//	{
-				//		glm::vec4 startPnt = ySweep;
-				//		glm::vec4 endPnt = ySweep;
-				//		endPnt.x *= -1;
-
-				//		linesToDraw.push_back(startPnt);
-				//		linesToDraw.push_back(endPnt);
-				//		ySweep.y += spatialHash.gridCellSize.y;
-				//	}
-				//	zSweep.z += spatialHash.gridCellSize.z;
-				//}
-
-				//glm::vec3 gridColor(0.2f);
-				//
-				//SH::drawDebugLines(debugGridShader, gridColor, linesToDraw, 
-				//	glm::mat4(1.0f), view, projection
-				//);
+			if(bRenderOccupiedCells)
+			{
+				glDepthFunc(GL_ALWAYS);
+				for (CubeEntity& cube : cubes)
+				{
+					//this is going to be slow
+					std::vector<std::shared_ptr<SH::HashCell<GameEntity>>> cells;
+					spatialHash.lookupCellsForEntry(*cube.spatialHashEntry, cells);
+					std::vector<glm::ivec3> cellLocs;
+					cellLocs.reserve(cells.size());
+					for (const std::shared_ptr<SH::HashCell<GameEntity>>& cell : cells)
+					{
+						cellLocs.push_back(cell->location);
+					}
+					SH::drawCells(cellLocs, spatialHash.gridCellSize, cube.color, debugGridShader, glm::mat4(1.0f), view, projection);
+				}
+				glDepthFunc(GL_LESS);
 			}
 
 			glBindVertexArray(cubeVAO);
@@ -430,18 +518,12 @@ namespace
 			objShader.setUniform3f("lightColor", lightColor);
 			objShader.setUniform3f("cameraPosition", camera.getPosition());
 
-			{ //render red cube
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = redCubeTransform.getModelMatrix();
+			//render cubes
+			for (CubeEntity& cube : cubes)
+			{
+				mat4 model = cube.transform.getModelMatrix();
 				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				objShader.setUniform3f("objectColor", redCubeColor);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-			{// render blue cube
-				//resist temptation to update collision transform here, collision should be separated from rendering (for mtv corrections)
-				mat4 model = blueCubeTransform.getModelMatrix();
-				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				objShader.setUniform3f("objectColor", blueCubeColor);
+				objShader.setUniform3f("objectColor", cube.color);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 		}
@@ -461,14 +543,10 @@ namespace
 					<< " Hold ALT + CONTROL to rotate objects with WASD-EQ" << std::endl
 					<< " Press T to toggle which the object is moved " << std::endl
 					<< " Press V to toggle locking translations(and rotations) to camera (easier movements) " << std::endl
-					<< " Press M to toggle slightly displacing axes so that parallel axes are visible simultaneously " << std::endl
 					<< " Press P to print debug information" << std::endl
 					<< " Press R to reset object positions to default." << std::endl
-					<< " Press C to toggle collision detection" << std::endl
 					<< " Press 9/0 to decrease/increase scale" << std::endl
-					<< " Press U to start unit tests; press left/right to skip through unit tests" << std::endl
 					<< " " << std::endl
-					//vec3 capture1_D, capture2_G, capture3_F, capture4_r, capture5_m, capture6_Gl, capture7_Gv, capture8_albedo, capture9_normal;
 					<< std::endl;
 				return 0;
 			}();
@@ -484,7 +562,6 @@ namespace
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_T))
 			{
-				transformTarget = transformTarget == &blueCubeTransform ? &redCubeTransform : &blueCubeTransform;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_V))
 			{
@@ -494,18 +571,18 @@ namespace
 			{
 				bEnableAxisOffset = !bEnableAxisOffset;
 			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_H))
+			{
+				bRenderHashGrid = !bRenderHashGrid;
+				bRenderOccupiedCells= !bRenderOccupiedCells;
+			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_R))
 			{
-				redCubeTransform = defaultRedCubeTransform;
-				blueCubeTransform = defaultBlueCubeTransform;
+				bRenderHashGrid = !bRenderHashGrid;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_C))
 			{
-				bEnableCollision = !bEnableCollision;
-			}
-			if (input.isKeyJustPressed(window, GLFW_KEY_C))
-			{
-				bEnableCollision = !bEnableCollision;
+				bRenderOccupiedCells = !bRenderOccupiedCells;
 			}
 			const glm::vec3 scaleSpeedPerSec(1, 1, 1);
 			if (input.isKeyDown(window, GLFW_KEY_9))
@@ -526,8 +603,8 @@ namespace
 					glm::vec3 rotQuat{ transform.rotQuat.x, transform.rotQuat.y, transform.rotQuat.z };
 					cout << "pos:";  printVec3(transform.position); cout << " rotation:"; printVec3(rotQuat); cout << "w" << transform.rotQuat.w << " scale:"; printVec3(transform.scale); cout << endl;
 				};
-				cout << "red objecpt =>"; printXform(redCubeTransform);
-				cout << "blue object =>"; printXform(blueCubeTransform);
+
+				spatialHash.logDebugInformation();
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_U))
 			{
@@ -538,6 +615,12 @@ namespace
 				else
 				{
 				}
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_L))
+			{
+				//profiler entry point
+				int profiler_helper= 5;
+				++profiler_helper;
 			}
 			// -------- MOVEMENT -----------------
 			if (!(input.isKeyDown(window, GLFW_KEY_LEFT_ALT) || input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT)))
@@ -785,7 +868,7 @@ namespace
 		glfwTerminate();
 	}
 }
-//
+
 //int main()
 //{
 //	true_main();

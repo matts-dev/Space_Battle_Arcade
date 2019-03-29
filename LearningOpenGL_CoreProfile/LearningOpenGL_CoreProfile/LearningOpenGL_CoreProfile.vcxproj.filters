@@ -1196,7 +1196,7 @@
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Algorithms\SpatialHashing\DELETE_LinkerTest.cpp">
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized_ManyObjectsPerfTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1233,8 +1233,5 @@
     <None Include="BasicVertexShader.glsl" />
     <None Include="FrameBufferFrag.glsl" />
     <None Include="SingleColorFrag.glsl" />
-    <None Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.inl">
-      <Filter>Header Files</Filter>
-    </None>
   </ItemGroup>
 </Project>
