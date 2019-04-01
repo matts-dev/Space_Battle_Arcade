@@ -128,6 +128,7 @@
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h" />
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h" />
     <ClInclude Include="new_src\Utilities\CubeTexturedMesh.h" />
+    <ClInclude Include="new_src\Utilities\FrameRateDisplay.h" />
     <ClInclude Include="new_src\Utilities\Lighting\ConeLight.h" />
     <ClInclude Include="new_src\Utilities\Lighting\DirectionalLight.h" />
     <ClInclude Include="InputTracker.h" />
@@ -144,6 +145,7 @@
     <ClInclude Include="new_src\Utilities\Mesh.h" />
     <ClInclude Include="new_src\Utilities\SphereMeshTextured.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATComponent.h" />
+    <ClInclude Include="new_src\Utilities\Transform.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="new_src\Utilities\SphereMesh.h" />
     <ClInclude Include="new_src\Utilities\SimpleCubeMesh.h" />
@@ -193,7 +195,6 @@
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeFromModelFiles.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeTestWithPoly.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.cpp" />
-    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized_ManyObjectsPerfTest.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp" />
@@ -324,6 +325,7 @@
     <ClCompile Include="new_src\Tests\glm_matrix_data_row_vs_column.cpp" />
     <ClCompile Include="new_src\Tests\glm_vs_aimatrix4x4.cpp" />
     <ClCompile Include="new_src\Utilities\CubeTexturedMesh.cpp" />
+    <ClCompile Include="new_src\Utilities\FrameRateDisplay.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\ConeLight.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\DirectionalLight.cpp" />
     <ClCompile Include="InputTracker.cpp" />

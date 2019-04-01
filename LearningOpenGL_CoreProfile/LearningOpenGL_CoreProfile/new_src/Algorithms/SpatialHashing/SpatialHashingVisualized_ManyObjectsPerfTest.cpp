@@ -19,6 +19,8 @@
 #include <cstdint>
 #include <random>
 
+#include "../../Utilities/FrameRateDisplay.h"
+
 namespace
 {
 	const char* litObjectShaderVertSrc = R"(
@@ -260,8 +262,10 @@ namespace
 		//OpenGL data
 		GLuint cubeVAO, cubeVBO;
 
-		//Shape Data
-		uint32_t numStartCubes = 100;
+		//Shape Data (NOTE: release mode will be needed for numbers above 100)
+		uint32_t numStartCubes = 1000;
+		//uint32_t numStartCubes = 10000;
+		//uint32_t numStartCubes = 50000; //NOTE: disable rendering cubes and grids (hold O and C)
 		std::vector<CubeEntity> cubes;
 		//std::vector<glm::vec3> gravityPoints = {
 		//	glm::vec3(100, 0, 0),
@@ -282,6 +286,7 @@ namespace
 		Shader objShader{ litObjectShaderVertSrc , litObjectShaderFragSrc, false };
 		Shader lampShader{ lightLocationShaderVertSrc, lightLocationShaderFragSrc, false };
 		Shader debugGridShader{ SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false };
+		Shader fpsShader{ Utility::DigitalClockShader_Vertex, Utility::DigitalClockShader_Fragment, false };
 
 		//Modifiable State
 		float moveSpeed = 3;
@@ -293,11 +298,16 @@ namespace
 		bool bEnableAxisOffset = false;
 		bool bRenderHashGrid = false;
 		bool bRenderOccupiedCells = true;
+		bool bRenderCubes = true;
+		bool bUseSpatialHash = true;
+		bool bUserOptimizedUpdate = false;
+
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
-		SH::SpatialHashGrid<GameEntity> spatialHash{ glm::vec4{2,2,2,1} };
+		SH::SpatialHashGrid<GameEntity> spatialHash{ glm::vec4{4,4,4,1} };
 
+		Utility::FrameRateDisplay fpsDisplay;
 
 	public:
 		VisualizeSpatialHash(int width, int height)
@@ -427,7 +437,10 @@ namespace
 				newCube.color = startColor;
 				newCube.velocity = startVelocity;
 				newCube.gravityPnt = gravityPnt;
-				newCube.spatialHashEntry = spatialHash.insert(newCube, newCube.getOBB());
+				if (bUseSpatialHash)
+				{
+					newCube.spatialHashEntry = spatialHash.insert(newCube, newCube.getOBB());
+				}
 			}
 		}
 
@@ -450,12 +463,24 @@ namespace
 			deltaTime = currentTime - lastFrameTime;
 			lastFrameTime = currentTime;
 
+			fpsDisplay.tick();
+
 			processInput(window);
 
 			for (CubeEntity& cube : cubes)
 			{
 				cube.transform.position += cube.velocity * deltaTime;
-				cube.spatialHashEntry = spatialHash.insert(cube, cube.getOBB());
+				if (bUseSpatialHash)
+				{
+					if (bUserOptimizedUpdate)
+					{
+						spatialHash.updateEntry(cube.spatialHashEntry, cube.getOBB());
+					}
+					else
+					{
+						cube.spatialHashEntry = spatialHash.insert(cube, cube.getOBB());
+					}
+				}
 
 				//adhoc gravitate towards points
 				//glm::vec3 vecToCenter = (glm::vec3(0, 0, 0) - cube.transform.position);
@@ -487,11 +512,12 @@ namespace
 				for (CubeEntity& cube : cubes)
 				{
 					//this is going to be slow
-					std::vector<std::shared_ptr<SH::HashCell<GameEntity>>> cells;
+					std::vector<std::shared_ptr<const SH::HashCell<GameEntity>>> cells;
+					
 					spatialHash.lookupCellsForEntry(*cube.spatialHashEntry, cells);
 					std::vector<glm::ivec3> cellLocs;
 					cellLocs.reserve(cells.size());
-					for (const std::shared_ptr<SH::HashCell<GameEntity>>& cell : cells)
+					for (const std::shared_ptr<const SH::HashCell<GameEntity>>& cell : cells)
 					{
 						cellLocs.push_back(cell->location);
 					}
@@ -519,13 +545,19 @@ namespace
 			objShader.setUniform3f("cameraPosition", camera.getPosition());
 
 			//render cubes
-			for (CubeEntity& cube : cubes)
+			if (bRenderCubes)
 			{
-				mat4 model = cube.transform.getModelMatrix();
-				objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				objShader.setUniform3f("objectColor", cube.color);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+				for (CubeEntity& cube : cubes)
+				{
+					mat4 model = cube.transform.getModelMatrix();
+					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					objShader.setUniform3f("objectColor", cube.color);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				}
 			}
+
+
+			fpsDisplay.render({ width, height }, fpsShader.getId());
 		}
 
 	private:
@@ -539,14 +571,15 @@ namespace
 		void processInput(GLFWwindow* window)
 		{
 			static int initializeOneTimePrintMsg = []() -> int {
-				std::cout << "Hold ALT to move objects with WASD-EQ" << std::endl
-					<< " Hold ALT + CONTROL to rotate objects with WASD-EQ" << std::endl
-					<< " Press T to toggle which the object is moved " << std::endl
-					<< " Press V to toggle locking translations(and rotations) to camera (easier movements) " << std::endl
+				std::cout 
 					<< " Press P to print debug information" << std::endl
-					<< " Press R to reset object positions to default." << std::endl
+					<< " Press X to toggle spatial hash usage." << std::endl
 					<< " Press 9/0 to decrease/increase scale" << std::endl
-					<< " " << std::endl
+					<< " U to toggle efficent 'update' function instead of always re-inserting" << std::endl
+					<< " X to toggle usage of spatial hashing " << std::endl
+					<< " O to toggle rendering of cubes" << std::endl
+					<< " C to toggle rendering spatial hash cells (necessary with large numbers of cubes)" << std::endl
+					<< " see code for other toggles (function processInput)" << std::endl
 					<< std::endl;
 				return 0;
 			}();
@@ -576,6 +609,10 @@ namespace
 				bRenderHashGrid = !bRenderHashGrid;
 				bRenderOccupiedCells= !bRenderOccupiedCells;
 			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_X))
+			{
+				bUseSpatialHash = !bUseSpatialHash;
+			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_R))
 			{
 				bRenderHashGrid = !bRenderHashGrid;
@@ -583,6 +620,14 @@ namespace
 			if (input.isKeyJustPressed(window, GLFW_KEY_C))
 			{
 				bRenderOccupiedCells = !bRenderOccupiedCells;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_O))
+			{
+				bRenderCubes = !bRenderCubes;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_U))
+			{
+				bUserOptimizedUpdate = !bUserOptimizedUpdate;
 			}
 			const glm::vec3 scaleSpeedPerSec(1, 1, 1);
 			if (input.isKeyDown(window, GLFW_KEY_9))
@@ -605,16 +650,6 @@ namespace
 				};
 
 				spatialHash.logDebugInformation();
-			}
-			if (input.isKeyJustPressed(window, GLFW_KEY_U))
-			{
-				bTickUnitTests = !bTickUnitTests;
-				if (bTickUnitTests)
-				{
-				}
-				else
-				{
-				}
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_L))
 			{
@@ -869,7 +904,7 @@ namespace
 	}
 }
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}

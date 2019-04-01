@@ -3,7 +3,7 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
-#include "..\..\..\Shader.h"
+#include "../../../Shader.h"
 #include "SpatialHashingComponent.h"
 
 namespace SH
@@ -34,7 +34,7 @@ namespace SH
 		const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection
 		);
 
-	void drawCells(std::vector<glm::ivec3>& cells, const glm::vec4& gridCellSize, const glm::vec3& color, Shader& debugShader,
+	void drawCells(std::vector<glm::ivec3>& cells, const glm::vec3& gridCellSize, const glm::vec3& color, Shader& debugShader,
 		const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection);
 
 	template<typename T>

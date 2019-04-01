@@ -26,7 +26,7 @@ void SH::drawDebugLines(Shader& shader, const glm::vec3& color, const std::vecto
 	glDeleteBuffers(1, &tmpVBO);
 }
 
-void SH::drawCells(std::vector<glm::ivec3>& cells, const glm::vec4& gridCellSize, const glm::vec3& color, Shader& debugShader, const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection)
+void SH::drawCells(std::vector<glm::ivec3>& cells, const glm::vec3& gridCellSize, const glm::vec3& color, Shader& debugShader, const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection)
 {
 	if (cells.size() == 0) return;
 
@@ -40,23 +40,6 @@ void SH::drawCells(std::vector<glm::ivec3>& cells, const glm::vec4& gridCellSize
 		float endX = startX + gridCellSize.x;
 		float endY = startY + gridCellSize.y;
 		float endZ = startZ + gridCellSize.z;
-
-		//zero corrections
-		//if (cell.x == 0)
-		//{
-		//	startX = gridCellSize.x;
-		//	endX = -gridCellSize.x;
-		//}
-		//if (cell.y == 0)
-		//{
-		//	startY = gridCellSize.y;
-		//	endY = -gridCellSize.y;
-		//}
-		//if (cell.z == 0)
-		//{
-		//	startZ = gridCellSize.z;
-		//	endZ = -gridCellSize.z;
-		//}
 
 		linesToDraw.push_back({ startX, startY, startZ, 1.0f });
 		linesToDraw.push_back({ startX, startY, endZ, 1.0f });

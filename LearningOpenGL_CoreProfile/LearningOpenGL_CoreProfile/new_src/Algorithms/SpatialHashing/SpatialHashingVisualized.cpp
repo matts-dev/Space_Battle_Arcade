@@ -459,17 +459,17 @@ namespace
 					return false;
 				};
 				std::set<glm::vec3, std::function<bool (const glm::ivec3&, const glm::ivec3& ) >> redCellLocations(comparisonClosure);
-				std::vector<std::shared_ptr<SH::HashCell<GameEntity>>> redCells;
+				std::vector<std::shared_ptr<const SH::HashCell<GameEntity>>> redCells;
 				spatialHash.lookupCellsForEntry(*redEntity.spatialHashEntry, redCells);
-				for (std::shared_ptr<SH::HashCell<GameEntity>>& cell : redCells)
+				for (std::shared_ptr<const SH::HashCell<GameEntity>>& cell : redCells)
 				{
 					redCellLocations.insert(cell->location);
 				}
 
 				std::set<glm::vec3, std::function<bool(const glm::ivec3&, const glm::ivec3&) >> blueCellLocations(comparisonClosure);
-				std::vector<std::shared_ptr<SH::HashCell<GameEntity>>> blueCells;
+				std::vector<std::shared_ptr<const SH::HashCell<GameEntity>>> blueCells;
 				spatialHash.lookupCellsForEntry(*blueEntity.spatialHashEntry, blueCells);
-				for (std::shared_ptr<SH::HashCell<GameEntity>>& cell : blueCells)
+				for (std::shared_ptr<const SH::HashCell<GameEntity>>& cell : blueCells)
 				{
 					blueCellLocations.insert( cell->location);
 				}
@@ -889,7 +889,7 @@ namespace
 	}
 }
 
-int main()
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}

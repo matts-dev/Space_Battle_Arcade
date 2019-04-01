@@ -408,6 +408,12 @@
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\weak_ptr.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Utilities\FrameRateDisplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Utilities\Transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1190,13 +1196,13 @@
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingComponent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized_ManyObjectsPerfTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Utilities\FrameRateDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
