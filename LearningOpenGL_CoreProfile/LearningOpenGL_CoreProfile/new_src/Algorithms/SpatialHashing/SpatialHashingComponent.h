@@ -671,78 +671,78 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 		std::unordered_set<GridNode<T>*> nodesFoundThisCall; //dtor is O(n) for unique insertions
 
 		BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
-			glm::ivec3 hashLocation(cellX, cellY, cellZ);
-		uint64_t hashVal = hash(hashLocation);
+				glm::ivec3 hashLocation(cellX, cellY, cellZ);
+				uint64_t hashVal = hash(hashLocation);
 
 #if HASH_MAP_UNORDERED_MULTIMAP
-		std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
-		int debug_bucketsForHash = 0;
+				std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
+				int debug_bucketsForHash = 0;
 
-		//look over bucket of cells (ideally this will be a small number)
-		for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
-		{
-			++debug_bucketsForHash;
-			std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
-
-			//make sure we're not dealing with a cell that is hash collision 
-			if (cell->location == hashLocation)
-			{
-				for (std::shared_ptr <GridNode<T>>& node : cell->nodeBucket)
+				//look over bucket of cells (ideally this will be a small number)
+				for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
 				{
-					bool bFilterFail = filterOutSource && (&node->element == &cellSource.insertedNode->element);
+					++debug_bucketsForHash;
+					std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
 
-					//make sure this node hasn't already been found and that self-filter didn't fail
-					if (nodesFoundThisCall.find(node.get()) == nodesFoundThisCall.end() && !bFilterFail)
+					//make sure we're not dealing with a cell that is hash collision 
+					if (cell->location == hashLocation)
 					{
-						nodesFoundThisCall.insert(node.get());
-						outNodes.push_back(node);
-					}
-				}
-			}
-		}
-#elif HASH_MAP_UNORDERED_SET
-		const auto& bucketIter = hashMap.find(hashVal); //gets start_end iter pair
-		if (bucketIter != hashMap.end())
-		{
-			std::list<std::shared_ptr<HashCell<T>>>& bucket = bucketIter->second;
-			for (std::shared_ptr<HashCell<T>>& cell : bucket)
-			{
-				//make sure we're not dealing with a cell that is hash collision 
-				if (cell->location == hashLocation)
-				{
-					for (std::shared_ptr <GridNode<T>>& node : cell->nodeBucket)
-					{
-						bool bFilterFail = filterOutSource && (&node->element == &cellSource.insertedNode->element);
-
-						//make sure this node hasn't already been found and that self-filter didn't fail
-						if (nodesFoundThisCall.find(node.get()) == nodesFoundThisCall.end() && !bFilterFail)
+						for (std::shared_ptr <GridNode<T>>& node : cell->nodeBucket)
 						{
-							nodesFoundThisCall.insert(node.get());
-							outNodes.push_back(node);
+							bool bFilterFail = filterOutSource && (&node->element == &cellSource.insertedNode->element);
+
+							//make sure this node hasn't already been found and that self-filter didn't fail
+							if (nodesFoundThisCall.find(node.get()) == nodesFoundThisCall.end() && !bFilterFail)
+							{
+								nodesFoundThisCall.insert(node.get());
+								outNodes.push_back(node);
+							}
 						}
 					}
 				}
-			}
-		}
-#elif HASH_MAP_MANUAL_HASH_ARRAY
-		auto& bucket = hashMap[hashVal % hashMap.size()];
-		for (std::shared_ptr<HashCell<T>>& cell : bucket)
-		{
-			if (cell->location == hashLocation)
-			{
-				for (std::shared_ptr <GridNode<T>>& node : cell->nodeBucket)
+#elif HASH_MAP_UNORDERED_SET
+				const auto& bucketIter = hashMap.find(hashVal); //gets start_end iter pair
+				if (bucketIter != hashMap.end())
 				{
-					bool bFilterFail = filterOutSource && (&node->element == &cellSource.insertedNode->element);
-
-					//make sure this node hasn't already been found and that self-filter didn't fail
-					if (nodesFoundThisCall.find(node.get()) == nodesFoundThisCall.end() && !bFilterFail)
+					std::list<std::shared_ptr<HashCell<T>>>& bucket = bucketIter->second;
+					for (std::shared_ptr<HashCell<T>>& cell : bucket)
 					{
-						nodesFoundThisCall.insert(node.get());
-						outNodes.push_back(node);
+						//make sure we're not dealing with a cell that is hash collision 
+						if (cell->location == hashLocation)
+						{
+							for (std::shared_ptr <GridNode<T>>& node : cell->nodeBucket)
+							{
+								bool bFilterFail = filterOutSource && (&node->element == &cellSource.insertedNode->element);
+
+								//make sure this node hasn't already been found and that self-filter didn't fail
+								if (nodesFoundThisCall.find(node.get()) == nodesFoundThisCall.end() && !bFilterFail)
+								{
+									nodesFoundThisCall.insert(node.get());
+									outNodes.push_back(node);
+								}
+							}
+						}
 					}
 				}
-			}
-		}
+#elif HASH_MAP_MANUAL_HASH_ARRAY
+				auto& bucket = hashMap[hashVal % hashMap.size()];
+				for (std::shared_ptr<HashCell<T>>& cell : bucket)
+				{
+					if (cell->location == hashLocation)
+					{
+						for (std::shared_ptr <GridNode<T>>& node : cell->nodeBucket)
+						{
+							bool bFilterFail = filterOutSource && (&node->element == &cellSource.insertedNode->element);
+
+							//make sure this node hasn't already been found and that self-filter didn't fail
+							if (nodesFoundThisCall.find(node.get()) == nodesFoundThisCall.end() && !bFilterFail)
+							{
+								nodesFoundThisCall.insert(node.get());
+								outNodes.push_back(node);
+							}
+						}
+					}
+				}
 #endif
 
 		END_FOR_EVERY_CELL

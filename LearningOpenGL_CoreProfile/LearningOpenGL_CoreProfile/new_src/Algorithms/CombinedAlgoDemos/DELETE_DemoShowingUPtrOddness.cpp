@@ -13,15 +13,17 @@
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
-#include "SpatialHashingComponent.h"
-#include "SHDebugUtils.h"
+#include "../SpatialHashing/SpatialHashingComponent.h"
+#include "../SpatialHashing/SHDebugUtils.h"
 #include <functional>
 #include <cstdint>
 #include <random>
 
 #include "../../Utilities/FrameRateDisplay.h"
+#include "../SeparatingAxisTheorem/SATComponent.h"
+#include <memory>
 
-namespace
+namespace A419
 {
 	const char* litObjectShaderVertSrc = R"(
 				#version 330 core
@@ -184,10 +186,24 @@ namespace
 		virtual void handleModuleFocused(GLFWwindow* window) = 0;
 	};
 
-	/** Represents a top level object*/
-	class GameEntity
+	/** Represents a top level object; simple struct for demo purposes*/
+	struct CollisionEntity
 	{
+	public:
+		explicit CollisionEntity(std::unique_ptr< SAT::Shape>&& managedShape, const ColumnBasedTransform& inTransform)
+			: myShape(std::move(managedShape)), transform(inTransform)
+		{
+			if (!myShape)
+			{
+				std::cerr << "FAILURE: Game Entity created without a shape; aborting" << std::endl;
+				exit(-1);
+			}
+		}
 
+		//shape on this level prevents dynamic casts
+		std::unique_ptr< SAT::Shape> myShape;
+		ColumnBasedTransform transform;
+		glm::vec3 velocity;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,12 +213,13 @@ namespace
 	// need to be pre-calculated at start up and then have transform applied to the OBB, 
 	// rather than applying the transform to the AABB directly. 
 	////////////////////////////////////////////////////////////////////////////////////////////
-	struct CubeEntity : public GameEntity
+	struct D_CollisionCubeEntity : public CollisionEntity
 	{
 	public:
-		CubeEntity(ColumnBasedTransform& inTransform)
-			: transform(inTransform)
+		D_CollisionCubeEntity(const ColumnBasedTransform& inTransform)
+			: CollisionEntity(std::make_unique<SAT::CubeShape>(), inTransform)
 		{
+			myShape->updateTransform(transform.getModelMatrix());
 		}
 
 		/** see class note above about direct transforming of AABB */
@@ -236,22 +253,20 @@ namespace
 			glm::vec4(0.5f, 0.5f, 0.5f,     1.0f),
 		};
 
-	public: 
+	public:
 		//these are public for having a of simple demo and logic being code below 
 		//rather than having a proper class set up with manipulating member functions
 		//in real applications, do properly encapsulate this stuff! I merely don't want the reader
 		//to have to jump around the source file to see what is happening. 
-		ColumnBasedTransform transform;
-		glm::vec3 velocity;
 		glm::vec3 color;
 		glm::vec3 gravityPnt;
-		std::unique_ptr<SH::HashEntry<GameEntity>> spatialHashEntry;
+		std::unique_ptr<SH::HashEntry<CollisionEntity>> spatialHashEntry;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 	// class used to hold state of demo
 	////////////////////////////////////////////////////////////////////////////////////////////
-	class VisualizeSpatialHash final : public IOpenGLDemo
+	class UniquePtrOddnessDemo final : public IOpenGLDemo
 	{
 		//Cached Window Data
 		int height;
@@ -263,10 +278,11 @@ namespace
 		GLuint cubeVAO, cubeVBO;
 
 		//Shape Data (NOTE: release mode will be needed for numbers above 100)
-		uint32_t numStartCubes = 1500;
+		uint32_t numStartCubes = 1000;
 		//uint32_t numStartCubes = 10000;
-		//uint32_t numStartCubes = 50000; //NOTE: disable rendering cubes and grids (hold O and C)
-		std::vector<CubeEntity> cubes;
+		//uint32_t numStartCubes = 50000; //NOTE: disable rendering D_cubes and grids (hold O and C)
+		//std::vector<D_CollisionCubeEntity> D_cubes; //move ctors clear out unique ptrs to shape
+		std::vector<D_CollisionCubeEntity> D_cubes;
 		//std::vector<glm::vec3> gravityPoints = {
 		//	glm::vec3(100, 0, 0),
 		//	glm::vec3(-100,0,-100),
@@ -291,26 +307,26 @@ namespace
 		//Modifiable State
 		float moveSpeed = 3;
 		float rotationSpeed = 45.0f;
-		bool bEnableCollision = true;
+		bool bEnableCollision = false;
 		bool bBlockCollisionFailures = true;
 		bool bTickUnitTests = false;
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
 		bool bRenderHashGrid = false;
-		bool bRenderOccupiedCells = true;
+		bool bRenderOccupiedCells = false;
 		bool bRenderCubes = true;
 		bool bUseSpatialHash = true;
-		bool bUserOptimizedUpdate = false;
+		bool bUserOptimizedUpdate = true;
 
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
-		SH::SpatialHashGrid<GameEntity> spatialHash{ glm::vec4{4,4,4,1} };
+		SH::SpatialHashGrid<CollisionEntity> spatialHash{ glm::vec4{4,4,4,1} };
 
 		Utility::FrameRateDisplay fpsDisplay;
 
 	public:
-		VisualizeSpatialHash(int width, int height)
+		UniquePtrOddnessDemo(int width, int height)
 			: IOpenGLDemo(width, height)
 		{
 			using glm::vec2;
@@ -403,6 +419,7 @@ namespace
 			std::uniform_real_distribution<float> gravityDist(-25.f, 25.f); //[a, b)
 			std::uniform_real_distribution<float> distSpeed(0, 3); //[a, b)
 			std::uniform_int_distribution<int> colorEnabled(0, 1); //[a,b]
+			//D_cubes.reserve(numStartCubes);
 			for (uint32_t cubeIdx = 0; cubeIdx < numStartCubes; ++cubeIdx)
 			{
 				glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
@@ -422,18 +439,19 @@ namespace
 				startColor.x = (bool)colorEnabled(rng_eng) ? startColor.x : 0.0f;
 				startColor.y = (bool)colorEnabled(rng_eng) ? startColor.y : 0.0f;
 				startColor.z = (bool)colorEnabled(rng_eng) ? startColor.z : 0.0f;
-				if (startColor.x < 0.1f && startColor.y< 0.1f && startColor.z < 0.1f)
+				if (startColor.x < 0.1f && startColor.y < 0.1f && startColor.z < 0.1f)
 				{
 					startColor = glm::vec3(startDist(rng_eng), startDist(rng_eng), 1.f);
 				}
 				startColor = glm::normalize(glm::abs(startColor));
-				
-				
+
+
 				ColumnBasedTransform newTransform;
 				newTransform.position = startPos;
 
-				cubes.push_back(newTransform);
-				CubeEntity& newCube = cubes[cubes.size() - 1];
+				//D_cubes.push_back(newTransform);//seems to overwrite previous memory in a non-defined move ctor
+				D_cubes.push_back(D_CollisionCubeEntity{ newTransform });
+ 				D_CollisionCubeEntity& newCube = D_cubes[D_cubes.size() - 1];
 				newCube.color = startColor;
 				newCube.velocity = startVelocity;
 				newCube.gravityPnt = gravityPnt;
@@ -442,9 +460,21 @@ namespace
 					newCube.spatialHashEntry = spatialHash.insert(newCube, newCube.getOBB());
 				}
 			}
+
+			
+			D_CollisionCubeEntity testMove(lightTransform);
+			testMove.spatialHashEntry = spatialHash.insert(testMove, testMove.getOBB());
+			D_CollisionCubeEntity moved(std::move(testMove));
+			std::cout << "test move done, break here" << std::endl;
+
+			std::vector<D_CollisionCubeEntity> TestMoveVector;
+			TestMoveVector.push_back(lightTransform);
+			TestMoveVector[0].spatialHashEntry = spatialHash.insert(TestMoveVector[0], TestMoveVector[0].getOBB());
+			TestMoveVector.push_back(lightTransform);
+			std::cout << "test vector move done, break here" << std::endl;
 		}
 
-		~VisualizeSpatialHash()
+		~UniquePtrOddnessDemo()
 		{
 			glDeleteVertexArrays(1, &cubeVAO);
 			glDeleteBuffers(1, &cubeVBO);
@@ -467,7 +497,10 @@ namespace
 
 			processInput(window);
 
-			for (CubeEntity& cube : cubes)
+			std::vector<std::shared_ptr<SH::GridNode<CollisionEntity>>> overlapingNodes;
+			overlapingNodes.reserve(10);
+
+			for (D_CollisionCubeEntity& cube : D_cubes)
 			{
 				cube.transform.position += cube.velocity * deltaTime;
 				if (bUseSpatialHash)
@@ -479,6 +512,40 @@ namespace
 					else
 					{
 						cube.spatialHashEntry = spatialHash.insert(cube, cube.getOBB());
+					}
+
+
+					//this collision test is over-simplified. It just does a single collision pass. 
+					//a more clever collision pass would probably take into account further collisions
+					//with objects already tested if a collision occurs.
+					if (bEnableCollision)
+					{
+						overlapingNodes.clear();
+						spatialHash.lookupNodesInCells(*cube.spatialHashEntry, overlapingNodes);
+						for (std::shared_ptr<SH::GridNode<CollisionEntity>>& node : overlapingNodes)
+						{
+							//don't do self collisions
+							if (&node->element != &cube)
+							{
+								glm::vec4 mtv;
+								if (SAT::Shape::CollisionTest(*cube.myShape, *node->element.myShape, mtv))
+								{
+									//correct collision
+									cube.transform.position += glm::vec3(mtv);
+									spatialHash.updateEntry(cube.spatialHashEntry, cube.getOBB()); //update spatial hash after collision
+
+									//below is totally a adhoc physics lol
+
+									//impact velocity to the moving cube 
+									float cubeSpeed = glm::length(cube.velocity);
+									glm::vec4 mtv_n = glm::normalize(mtv);
+									cube.velocity = mtv_n * cubeSpeed;
+
+									//impact have velocity to the object we collided 
+									node->element.velocity += 0.5f * cube.velocity;
+								}
+							}
+						}
 					}
 				}
 
@@ -503,21 +570,21 @@ namespace
 
 			if (bRenderHashGrid)
 			{
-				SH::drawAABBGrid<GameEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
+				SH::drawAABBGrid<CollisionEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
 			}
 
-			if(bRenderOccupiedCells)
+			if (bRenderOccupiedCells)
 			{
 				glDepthFunc(GL_ALWAYS);
-				for (CubeEntity& cube : cubes)
+				for (D_CollisionCubeEntity& cube : D_cubes)
 				{
 					//this is going to be slow
-					std::vector<std::shared_ptr<const SH::HashCell<GameEntity>>> cells;
-					
+					std::vector<std::shared_ptr<const SH::HashCell<CollisionEntity>>> cells;
+
 					spatialHash.lookupCellsForEntry(*cube.spatialHashEntry, cells);
 					std::vector<glm::ivec3> cellLocs;
 					cellLocs.reserve(cells.size());
-					for (const std::shared_ptr<const SH::HashCell<GameEntity>>& cell : cells)
+					for (const std::shared_ptr<const SH::HashCell<CollisionEntity>>& cell : cells)
 					{
 						cellLocs.push_back(cell->location);
 					}
@@ -544,10 +611,10 @@ namespace
 			objShader.setUniform3f("lightColor", lightColor);
 			objShader.setUniform3f("cameraPosition", camera.getPosition());
 
-			//render cubes
+			//render D_cubes
 			if (bRenderCubes)
 			{
-				for (CubeEntity& cube : cubes)
+				for (D_CollisionCubeEntity& cube : D_cubes)
 				{
 					mat4 model = cube.transform.getModelMatrix();
 					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
@@ -571,14 +638,15 @@ namespace
 		void processInput(GLFWwindow* window)
 		{
 			static int initializeOneTimePrintMsg = []() -> int {
-				std::cout 
+				std::cout
 					<< " Press P to print debug information" << std::endl
 					<< " Press X to toggle spatial hash usage." << std::endl
 					<< " Press 9/0 to decrease/increase scale" << std::endl
 					<< " U to toggle efficent 'update' function instead of always re-inserting" << std::endl
 					<< " X to toggle usage of spatial hashing " << std::endl
-					<< " O to toggle rendering of cubes" << std::endl
-					<< " C to toggle rendering spatial hash cells (necessary with large numbers of cubes)" << std::endl
+					<< " O to toggle rendering of D_cubes" << std::endl
+					<< " C to toggle rendering spatial hash cells (necessary with large numbers of D_cubes)" << std::endl
+					<< " F to toggle collision" << std::endl
 					<< " see code for other toggles (function processInput)" << std::endl
 					<< std::endl;
 				return 0;
@@ -604,10 +672,14 @@ namespace
 			{
 				bEnableAxisOffset = !bEnableAxisOffset;
 			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_F))
+			{
+				bEnableCollision = !bEnableCollision;
+			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_H))
 			{
 				bRenderHashGrid = !bRenderHashGrid;
-				bRenderOccupiedCells= !bRenderOccupiedCells;
+				bRenderOccupiedCells = !bRenderOccupiedCells;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_X))
 			{
@@ -654,7 +726,7 @@ namespace
 			if (input.isKeyJustPressed(window, GLFW_KEY_L))
 			{
 				//profiler entry point
-				int profiler_helper= 5;
+				int profiler_helper = 5;
 				++profiler_helper;
 			}
 			// -------- MOVEMENT -----------------
@@ -887,7 +959,7 @@ namespace
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		VisualizeSpatialHash demo(width, height);
+		UniquePtrOddnessDemo demo(width, height);
 		demo.handleModuleFocused(window);
 
 		/////////////////////////////////////////////////////////////////////
@@ -906,5 +978,5 @@ namespace
 
 //int main()
 //{
-//	true_main();
+//	A419::true_main();
 //}

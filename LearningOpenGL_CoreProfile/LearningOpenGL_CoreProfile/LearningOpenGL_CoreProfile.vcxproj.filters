@@ -1205,6 +1205,12 @@
     <ClCompile Include="new_src\Utilities\FrameRateDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\Algorithms\CombinedAlgoDemos\SpatialHashingAndSAT_CollidingCubes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\CombinedAlgoDemos\DELETE_DemoShowingUPtrOddness.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />

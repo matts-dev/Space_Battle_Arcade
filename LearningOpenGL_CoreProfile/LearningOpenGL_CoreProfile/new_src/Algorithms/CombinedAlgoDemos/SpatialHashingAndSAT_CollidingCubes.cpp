@@ -13,13 +13,15 @@
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
-#include "SpatialHashingComponent.h"
-#include "SHDebugUtils.h"
+#include "../SpatialHashing/SpatialHashingComponent.h"
+#include "../SpatialHashing/SHDebugUtils.h"
 #include <functional>
 #include <cstdint>
 #include <random>
 
 #include "../../Utilities/FrameRateDisplay.h"
+#include "../SeparatingAxisTheorem/SATComponent.h"
+#include <memory>
 
 namespace
 {
@@ -184,10 +186,24 @@ namespace
 		virtual void handleModuleFocused(GLFWwindow* window) = 0;
 	};
 
-	/** Represents a top level object*/
-	class GameEntity
+	/** Represents a top level object; simple struct for demo purposes*/
+	struct CollisionEntity
 	{
+	public:
+		explicit CollisionEntity(std::unique_ptr< SAT::Shape>&& managedShape, const ColumnBasedTransform& inTransform)
+			: myShape(std::move(managedShape)), transform(inTransform)
+		{
+			if (!myShape)
+			{
+				std::cerr << "FAILURE: Game Entity created without a shape; aborting" << std::endl;
+				exit(-1);
+			}
+		}
 
+		//shape on this level prevents dynamic casts
+		std::unique_ptr< SAT::Shape> myShape;
+		ColumnBasedTransform transform;
+		glm::vec3 velocity;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,12 +213,13 @@ namespace
 	// need to be pre-calculated at start up and then have transform applied to the OBB, 
 	// rather than applying the transform to the AABB directly. 
 	////////////////////////////////////////////////////////////////////////////////////////////
-	struct CubeEntity : public GameEntity
+	struct CollisionCubeEntity : public CollisionEntity
 	{
 	public:
-		CubeEntity(ColumnBasedTransform& inTransform)
-			: transform(inTransform)
+		CollisionCubeEntity(const ColumnBasedTransform& inTransform)
+			: CollisionEntity(std::make_unique<SAT::CubeShape>(), inTransform)
 		{
+			myShape->updateTransform(transform.getModelMatrix());
 		}
 
 		/** see class note above about direct transforming of AABB */
@@ -236,16 +253,14 @@ namespace
 			glm::vec4(0.5f, 0.5f, 0.5f,     1.0f),
 		};
 
-	public: 
+	public:
 		//these are public for having a of simple demo and logic being code below 
 		//rather than having a proper class set up with manipulating member functions
 		//in real applications, do properly encapsulate this stuff! I merely don't want the reader
 		//to have to jump around the source file to see what is happening. 
-		ColumnBasedTransform transform;
-		glm::vec3 velocity;
 		glm::vec3 color;
 		glm::vec3 gravityPnt;
-		std::unique_ptr<SH::HashEntry<GameEntity>> spatialHashEntry;
+		std::unique_ptr<SH::HashEntry<CollisionEntity>> spatialHashEntry;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -258,15 +273,17 @@ namespace
 		int width;
 		float lastFrameTime = 0.f;
 		float deltaTime = 0.0f;
+		float undialatedTime = 0.0f;
 
 		//OpenGL data
 		GLuint cubeVAO, cubeVBO;
 
 		//Shape Data (NOTE: release mode will be needed for numbers above 100)
-		uint32_t numStartCubes = 1500;
+		uint32_t numStartCubes = 500;
 		//uint32_t numStartCubes = 10000;
 		//uint32_t numStartCubes = 50000; //NOTE: disable rendering cubes and grids (hold O and C)
-		std::vector<CubeEntity> cubes;
+		//std::vector<CollisionCubeEntity> cubes; //move ctors clear out unique ptrs to shape
+		std::vector<std::shared_ptr< CollisionCubeEntity > > cubes;
 		//std::vector<glm::vec3> gravityPoints = {
 		//	glm::vec3(100, 0, 0),
 		//	glm::vec3(-100,0,-100),
@@ -297,15 +314,17 @@ namespace
 		bool bUseCameraAxesForObjectMovement = true;
 		bool bEnableAxisOffset = false;
 		bool bRenderHashGrid = false;
-		bool bRenderOccupiedCells = true;
+		bool bRenderOccupiedCells = false;
 		bool bRenderCubes = true;
 		bool bUseSpatialHash = true;
-		bool bUserOptimizedUpdate = false;
+		bool bUserOptimizedUpdate = true;
+		bool bReverseTime = false;
+		float timeDialationFactor = 1.0f;
 
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
-		SH::SpatialHashGrid<GameEntity> spatialHash{ glm::vec4{4,4,4,1} };
+		SH::SpatialHashGrid<CollisionEntity> spatialHash{ glm::vec4{1,1,1,1} };
 
 		Utility::FrameRateDisplay fpsDisplay;
 
@@ -396,16 +415,18 @@ namespace
 			// initialization state
 			////////////////////////////////////////////////////////////
 			std::random_device rng;
-			std::seed_seq seed{ rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng() };
+			//std::seed_seq seed{ rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng() };
+			std::seed_seq seed{ 28 }; //seed 28 at num cubes 500 shows example of clipping after a few seconds with a red cube going from bottom right towards the left (with green cube going right at about 6 secs)
 			rng_eng = std::mt19937(seed);
 			//std::uniform_int_distribution<std::mt19937::result_type> start_dist(-10, 10);
 			std::uniform_real_distribution<float> startDist(-50.f, 50.f); //[a, b)
+			std::uniform_real_distribution<float> startHeightDist(-5.f, 5.f); //[a, b)
 			std::uniform_real_distribution<float> gravityDist(-25.f, 25.f); //[a, b)
 			std::uniform_real_distribution<float> distSpeed(0, 3); //[a, b)
 			std::uniform_int_distribution<int> colorEnabled(0, 1); //[a,b]
 			for (uint32_t cubeIdx = 0; cubeIdx < numStartCubes; ++cubeIdx)
 			{
-				glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
+				glm::vec3 startPos(startDist(rng_eng), startHeightDist(rng_eng), startDist(rng_eng));
 
 				//give it a point to attract to
 				glm::vec3 gravityPnt(gravityDist(rng_eng), gravityDist(rng_eng), gravityDist(rng_eng));
@@ -422,18 +443,19 @@ namespace
 				startColor.x = (bool)colorEnabled(rng_eng) ? startColor.x : 0.0f;
 				startColor.y = (bool)colorEnabled(rng_eng) ? startColor.y : 0.0f;
 				startColor.z = (bool)colorEnabled(rng_eng) ? startColor.z : 0.0f;
-				if (startColor.x < 0.1f && startColor.y< 0.1f && startColor.z < 0.1f)
+				if (startColor.x < 0.1f && startColor.y < 0.1f && startColor.z < 0.1f)
 				{
 					startColor = glm::vec3(startDist(rng_eng), startDist(rng_eng), 1.f);
 				}
 				startColor = glm::normalize(glm::abs(startColor));
-				
-				
+
+
 				ColumnBasedTransform newTransform;
 				newTransform.position = startPos;
 
-				cubes.push_back(newTransform);
-				CubeEntity& newCube = cubes[cubes.size() - 1];
+				//cubes.push_back(newTransform);//seems to overwrite previous memory in a non-defined move ctor
+				cubes.push_back(std::make_shared<CollisionCubeEntity>(newTransform ));
+				CollisionCubeEntity& newCube = *cubes[cubes.size() - 1];
 				newCube.color = startColor;
 				newCube.velocity = startVelocity;
 				newCube.gravityPnt = gravityPnt;
@@ -462,13 +484,20 @@ namespace
 			float currentTime = static_cast<float>(glfwGetTime());
 			deltaTime = currentTime - lastFrameTime;
 			lastFrameTime = currentTime;
+			undialatedTime = deltaTime;
+			deltaTime *= timeDialationFactor;
+			deltaTime *= bReverseTime ? -1.0f : 1.0f;
 
 			fpsDisplay.tick();
 
 			processInput(window);
 
-			for (CubeEntity& cube : cubes)
+			std::vector<std::shared_ptr<SH::GridNode<CollisionEntity>>> overlapingNodes;
+			overlapingNodes.reserve(10);
+
+			for (std::shared_ptr<CollisionCubeEntity>& cubePtr : cubes)
 			{
+				CollisionCubeEntity& cube = *cubePtr;
 				cube.transform.position += cube.velocity * deltaTime;
 				if (bUseSpatialHash)
 				{
@@ -479,6 +508,40 @@ namespace
 					else
 					{
 						cube.spatialHashEntry = spatialHash.insert(cube, cube.getOBB());
+					}
+
+
+					//this collision test is over-simplified. It just does a single collision pass. 
+					//a more clever collision pass would probably take into account further collisions
+					//with objects already tested if a collision occurs.
+					if (bEnableCollision)
+					{
+						overlapingNodes.clear();
+						spatialHash.lookupNodesInCells(*cube.spatialHashEntry, overlapingNodes);
+						for (std::shared_ptr<SH::GridNode<CollisionEntity>>& node : overlapingNodes)
+						{
+							//don't do self collisions
+							if (&node->element != &cube)
+							{
+								glm::vec4 mtv;
+								if (SAT::Shape::CollisionTest(*cube.myShape, *node->element.myShape, mtv))
+								{
+									//correct collision
+									cube.transform.position += glm::vec3(mtv);
+									spatialHash.updateEntry(cube.spatialHashEntry, cube.getOBB()); //update spatial hash after collision
+
+									//below is totally a adhoc physics lol
+
+									//impact velocity to the moving cube 
+									float cubeSpeed = glm::length(cube.velocity);
+									glm::vec4 mtv_n = glm::normalize(mtv);
+									cube.velocity = mtv_n * cubeSpeed;
+								
+									//impact have velocity to the object we collided 
+									node->element.velocity += 0.5f * -cube.velocity;
+								}
+							}
+						}
 					}
 				}
 
@@ -503,21 +566,23 @@ namespace
 
 			if (bRenderHashGrid)
 			{
-				SH::drawAABBGrid<GameEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
+				SH::drawAABBGrid<CollisionEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
 			}
 
-			if(bRenderOccupiedCells)
+			if (bRenderOccupiedCells)
 			{
 				glDepthFunc(GL_ALWAYS);
-				for (CubeEntity& cube : cubes)
+				for (std::shared_ptr<CollisionCubeEntity>& cubePtr : cubes)
 				{
+					CollisionCubeEntity& cube = *cubePtr;
+
 					//this is going to be slow
-					std::vector<std::shared_ptr<const SH::HashCell<GameEntity>>> cells;
-					
+					std::vector<std::shared_ptr<const SH::HashCell<CollisionEntity>>> cells;
+
 					spatialHash.lookupCellsForEntry(*cube.spatialHashEntry, cells);
 					std::vector<glm::ivec3> cellLocs;
 					cellLocs.reserve(cells.size());
-					for (const std::shared_ptr<const SH::HashCell<GameEntity>>& cell : cells)
+					for (const std::shared_ptr<const SH::HashCell<CollisionEntity>>& cell : cells)
 					{
 						cellLocs.push_back(cell->location);
 					}
@@ -547,11 +612,11 @@ namespace
 			//render cubes
 			if (bRenderCubes)
 			{
-				for (CubeEntity& cube : cubes)
+				for (std::shared_ptr<CollisionCubeEntity>& cube : cubes)
 				{
-					mat4 model = cube.transform.getModelMatrix();
+					mat4 model = cube->transform.getModelMatrix();
 					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-					objShader.setUniform3f("objectColor", cube.color);
+					objShader.setUniform3f("objectColor", cube->color);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
 				}
 			}
@@ -571,7 +636,7 @@ namespace
 		void processInput(GLFWwindow* window)
 		{
 			static int initializeOneTimePrintMsg = []() -> int {
-				std::cout 
+				std::cout
 					<< " Press P to print debug information" << std::endl
 					<< " Press X to toggle spatial hash usage." << std::endl
 					<< " Press 9/0 to decrease/increase scale" << std::endl
@@ -579,6 +644,7 @@ namespace
 					<< " X to toggle usage of spatial hashing " << std::endl
 					<< " O to toggle rendering of cubes" << std::endl
 					<< " C to toggle rendering spatial hash cells (necessary with large numbers of cubes)" << std::endl
+					<< " F to toggle collision" << std::endl
 					<< " see code for other toggles (function processInput)" << std::endl
 					<< std::endl;
 				return 0;
@@ -604,10 +670,18 @@ namespace
 			{
 				bEnableAxisOffset = !bEnableAxisOffset;
 			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_F))
+			{
+				bEnableCollision = !bEnableCollision;
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_K))
+			{
+				bReverseTime = !bReverseTime;
+			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_H))
 			{
 				bRenderHashGrid = !bRenderHashGrid;
-				bRenderOccupiedCells= !bRenderOccupiedCells;
+				bRenderOccupiedCells = !bRenderOccupiedCells;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_X))
 			{
@@ -654,13 +728,25 @@ namespace
 			if (input.isKeyJustPressed(window, GLFW_KEY_L))
 			{
 				//profiler entry point
-				int profiler_helper= 5;
+				int profiler_helper = 5;
 				++profiler_helper;
 			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_J))
+			{
+				if (input.isKeyDown(window, GLFW_KEY_LEFT_CONTROL))
+				{
+					timeDialationFactor = timeDialationFactor * 10.0f;
+				}
+				else
+				{
+					timeDialationFactor = timeDialationFactor / 10.0f;
+				}
+			}
+			
 			// -------- MOVEMENT -----------------
 			if (!(input.isKeyDown(window, GLFW_KEY_LEFT_ALT) || input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT)))
 			{
-				camera.handleInput(window, deltaTime);
+				camera.handleInput(window, undialatedTime);
 			}
 			else
 			{
@@ -904,7 +990,7 @@ namespace
 	}
 }
 
-//int main()
-//{
-//	true_main();
-//}
+int main()
+{
+	true_main();
+}

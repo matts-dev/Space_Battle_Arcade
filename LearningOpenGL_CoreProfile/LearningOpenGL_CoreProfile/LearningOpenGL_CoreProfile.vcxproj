@@ -184,6 +184,7 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="new_src\Algorithms\CombinedAlgoDemos\SpatialHashingAndSAT_CollidingCubes.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\AllDemos.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATLoadedMesh.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATModel.cpp" />
@@ -194,6 +195,7 @@
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTest3DPolyCapsule.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeFromModelFiles.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\SATVisualUnitTestDynamicShapeTestWithPoly.cpp" />
+    <ClCompile Include="new_src\Algorithms\CombinedAlgoDemos\DELETE_DemoShowingUPtrOddness.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized_ManyObjectsPerfTest.cpp" />
