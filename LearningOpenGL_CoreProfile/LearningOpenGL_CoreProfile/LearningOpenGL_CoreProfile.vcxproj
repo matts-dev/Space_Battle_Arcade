@@ -114,6 +114,7 @@
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\shared_ptr.hpp" />
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\weak_ptr.hpp" />
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\weak_ptr.hpp" />
+    <ClInclude Include="new_src\Algorithms\ObjectPicker\ObjectPicker.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATLoadedMesh.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATModel.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\SATDemoInterface.h" />
@@ -185,6 +186,7 @@
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="new_src\Algorithms\CombinedAlgoDemos\SpatialHashingAndSAT_CollidingCubes.cpp" />
+    <ClCompile Include="new_src\Algorithms\ObjectPicker\ObjectPickerTest.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\AllDemos.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATLoadedMesh.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATModel.cpp" />

@@ -14,7 +14,7 @@ namespace
 
 	void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 	{
-		if (glfwCallbackHandler)
+		if (glfwCallbackHandler && !glfwCallbackHandler->isInCursorMode())
 		{
 			glfwCallbackHandler->mouseMoved(xpos, ypos);
 		}
@@ -30,7 +30,7 @@ namespace
 
 	void scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 	{
-		if (glfwCallbackHandler)
+		if (glfwCallbackHandler && !glfwCallbackHandler->isInCursorMode())
 		{
 			glfwCallbackHandler->mouseWheelUpdate(xOffset, yOffset);
 		}
@@ -183,6 +183,11 @@ void CameraFPS::setPosition(float x, float y, float z)
 	cameraPosition.z = z;
 }
 
+void CameraFPS::setPosition(glm::vec3 newPos)
+{
+	cameraPosition = newPos;
+}
+
 void CameraFPS::setYaw(float inYaw)
 {
 	yaw = inYaw;
@@ -211,6 +216,16 @@ const glm::vec3 CameraFPS::getUp() const
 	glm::vec3 cameraRight_n = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
 	glm::vec3 cameraUp_n = glm::normalize(glm::cross(-cameraFront_n, cameraRight_n));
 	return cameraUp_n;
+}
+
+void CameraFPS::setCursorMode(bool inCursorMode)
+{
+	cursorMode = inCursorMode;
+	if (!cursorMode)
+	{
+		//don't gitter camera
+		refocused = true;
+	}
 }
 
 void CameraFPS::calculateEulerAngles()

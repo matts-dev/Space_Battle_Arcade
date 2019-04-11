@@ -28,6 +28,7 @@ public:
 
 	//setters and getters
 	void setPosition(float x, float y, float z);
+	void setPosition(glm::vec3 newPos);
 	void setYaw(float inYaw);
 	void setPitch(float inPitch);
 	void setSpeed(float speed);
@@ -39,6 +40,8 @@ public:
 	float getFOV() const { return FOV; }
 	float getYaw() const { return yaw; }
 	float getPitch() const { return pitch; }
+	void setCursorMode(bool inCursorMode);
+	bool isInCursorMode() { return cursorMode; }
 
 private: //helper fields
 	double lastX;
@@ -57,5 +60,5 @@ private:
 
 	float mouseSensitivity = 0.05f;
 	float cameraSpeed = 2.5f;
-	
+	bool cursorMode = false;
 };

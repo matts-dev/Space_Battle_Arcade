@@ -414,6 +414,9 @@
     <ClInclude Include="new_src\Utilities\Transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Algorithms\ObjectPicker\ObjectPicker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1209,6 +1212,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Algorithms\CombinedAlgoDemos\DELETE_DemoShowingUPtrOddness.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Algorithms\ObjectPicker\ObjectPickerTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

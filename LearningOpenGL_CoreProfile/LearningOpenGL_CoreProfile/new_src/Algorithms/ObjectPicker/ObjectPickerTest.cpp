@@ -22,7 +22,7 @@
 #include "../../Utilities/FrameRateDisplay.h"
 #include "../SeparatingAxisTheorem/SATComponent.h"
 #include <memory>
-#include "../ObjectPicker/ObjectPicker.h"
+#include "ObjectPicker.h"
 
 namespace
 {
@@ -188,10 +188,10 @@ namespace
 	};
 
 	/** Represents a top level object; simple struct for demo purposes*/
-	struct CollisionEntity
+	struct PickerCollisionEntity
 	{
 	public:
-		explicit CollisionEntity(std::unique_ptr< SAT::Shape>&& managedShape, const ColumnBasedTransform& inTransform)
+		explicit PickerCollisionEntity(std::unique_ptr< SAT::Shape>&& managedShape, const ColumnBasedTransform& inTransform)
 			: myShape(std::move(managedShape)), transform(inTransform)
 		{
 			if (!myShape)
@@ -214,11 +214,11 @@ namespace
 	// need to be pre-calculated at start up and then have transform applied to the OBB, 
 	// rather than applying the transform to the AABB directly. 
 	////////////////////////////////////////////////////////////////////////////////////////////
-	struct CollisionCubeEntity : public CollisionEntity
+	struct PickerCubeEntity : public PickerCollisionEntity
 	{
 	public:
-		CollisionCubeEntity(const ColumnBasedTransform& inTransform)
-			: CollisionEntity(std::make_unique<SAT::CubeShape>(), inTransform)
+		PickerCubeEntity(const ColumnBasedTransform& inTransform)
+			: PickerCollisionEntity(std::make_unique<SAT::CubeShape>(), inTransform)
 		{
 			myShape->updateTransform(transform.getModelMatrix());
 		}
@@ -261,13 +261,13 @@ namespace
 		//to have to jump around the source file to see what is happening. 
 		glm::vec3 color;
 		glm::vec3 gravityPnt;
-		std::unique_ptr<SH::HashEntry<CollisionEntity>> spatialHashEntry;
+		std::unique_ptr<SH::HashEntry<PickerCollisionEntity>> spatialHashEntry;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 	// class used to hold state of demo
 	////////////////////////////////////////////////////////////////////////////////////////////
-	class VisualizeSpatialHash final : public IOpenGLDemo
+	class TestPicker final : public IOpenGLDemo
 	{
 		//Cached Window Data
 		int height;
@@ -280,13 +280,11 @@ namespace
 		GLuint cubeVAO, cubeVBO;
 
 		//Shape Data (NOTE: release mode will be needed for numbers above 100)
-		uint32_t numStartCubes = 100;
-		//uint32_t numStartCubes = 500;
-		//uint32_t numStartCubes = 3500;
+		uint32_t numStartCubes = 1;
 		//uint32_t numStartCubes = 10000;
 		//uint32_t numStartCubes = 50000; //NOTE: disable rendering cubes and grids (hold O and C)
-		//std::vector<CollisionCubeEntity> cubes; //move ctors clear out unique ptrs to shape
-		std::vector<std::shared_ptr< CollisionCubeEntity > > cubes;
+		//std::vector<PickerCubeEntity> cubes; //move ctors clear out unique ptrs to shape
+		std::vector<std::shared_ptr< PickerCubeEntity > > cubes;
 		//std::vector<glm::vec3> gravityPoints = {
 		//	glm::vec3(100, 0, 0),
 		//	glm::vec3(-100,0,-100),
@@ -303,16 +301,16 @@ namespace
 		ColumnBasedTransform lightTransform;
 		std::shared_ptr<ColumnBasedTransform> transformTarget;
 		glm::vec3 lightColor{ 1.0f, 1.0f, 1.0f };
+		Pik::Ray DrawRay;
 		Shader objShader{ litObjectShaderVertSrc , litObjectShaderFragSrc, false };
 		Shader lampShader{ lightLocationShaderVertSrc, lightLocationShaderFragSrc, false };
 		Shader debugGridShader{ SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false };
 		Shader fpsShader{ Utility::DigitalClockShader_Vertex, Utility::DigitalClockShader_Fragment, false };
-		Pik::Ray DrawRay;
 
 		//Modifiable State
 		float moveSpeed = 3;
 		float rotationSpeed = 45.0f;
-		bool bEnableCollision = true;
+		bool bEnableCollision = false;
 		bool bBlockCollisionFailures = true;
 		bool bTickUnitTests = false;
 		bool bUseCameraAxesForObjectMovement = true;
@@ -321,22 +319,22 @@ namespace
 		bool bRenderOccupiedCells = false;
 		bool bRenderCubes = true;
 		bool bCursorMode = false;
-		bool bUseSpatialHash = true;
+		bool bUseSpatialHash = false;
 		bool bUserOptimizedUpdate = true;
 		bool bReverseTime = false;
 		float timeDialationFactor = 1.0f;
 		int targetIdx = -1;
-
 		glm::vec3 axisOffset{ 0, 0.005f, 0 };
 		glm::vec3 cachedVelocity;
 
-		SH::SpatialHashGrid<CollisionEntity> spatialHash{ glm::vec4{1,1,1,1} };
+		SH::SpatialHashGrid<PickerCollisionEntity> spatialHash{ glm::vec4{1,1,1,1} };
 
 		Utility::FrameRateDisplay fpsDisplay;
+
 		std::vector<Pik::Triangle> triangles;
 
 	public:
-		VisualizeSpatialHash(int width, int height)
+		TestPicker(int width, int height)
 			: IOpenGLDemo(width, height)
 		{
 			using glm::vec2;
@@ -421,12 +419,11 @@ namespace
 			{
 				size_t triOffset = numElementsInVert * vertIdx;
 				Pik::Triangle tri;
-				tri.pntA = glm::vec4(vertices[triOffset + 0],							vertices[triOffset + 1],						vertices[triOffset + 2],						1);
+				tri.pntA = glm::vec4(vertices[triOffset + 0],					vertices[triOffset + 1],				vertices[triOffset + 2],				1);
 				tri.pntB = glm::vec4(vertices[triOffset + 0 + numElementsInVert],		vertices[triOffset + 1+numElementsInVert],		vertices[triOffset + 2+numElementsInVert],		1);
 				tri.pntC = glm::vec4(vertices[triOffset + 0 + numElementsInVert*2],		vertices[triOffset + 1+numElementsInVert*2],	vertices[triOffset + 2+numElementsInVert*2],	1);
 				triangles.push_back(tri);
 			}
-			DrawRay.start = vec3(1000000.0f); //start off far away so camera doesn't see ray
 
 			lightTransform.position = glm::vec3(5, 3, 0);
 			lightTransform.scale = glm::vec3(0.1f);
@@ -439,7 +436,7 @@ namespace
 			std::seed_seq seed{ 28 }; //seed 28 at num cubes 500 shows example of clipping after a few seconds with a red cube going from bottom right towards the left (with green cube going right at about 6 secs)
 			rng_eng = std::mt19937(seed);
 			//std::uniform_int_distribution<std::mt19937::result_type> start_dist(-10, 10);
-			std::uniform_real_distribution<float> startDist(-50.f, 50.f); //[a, b)
+			std::uniform_real_distribution<float> startDist(-5.f, 5.f); //[a, b)
 			std::uniform_real_distribution<float> startHeightDist(-5.f, 5.f); //[a, b)
 			std::uniform_real_distribution<float> gravityDist(-25.f, 25.f); //[a, b)
 			std::uniform_real_distribution<float> distSpeed(0, 3); //[a, b)
@@ -474,8 +471,8 @@ namespace
 				newTransform.position = startPos;
 
 				//cubes.push_back(newTransform);//seems to overwrite previous memory in a non-defined move ctor
-				cubes.push_back(std::make_shared<CollisionCubeEntity>(newTransform ));
-				CollisionCubeEntity& newCube = *cubes[cubes.size() - 1];
+				cubes.push_back(std::make_shared<PickerCubeEntity>(newTransform ));
+				PickerCubeEntity& newCube = *cubes[cubes.size() - 1];
 				newCube.color = startColor;
 				newCube.velocity = startVelocity;
 				newCube.gravityPnt = gravityPnt;
@@ -486,7 +483,7 @@ namespace
 			}
 		}
 
-		~VisualizeSpatialHash()
+		~TestPicker()
 		{
 			glDeleteVertexArrays(1, &cubeVAO);
 			glDeleteBuffers(1, &cubeVBO);
@@ -512,15 +509,13 @@ namespace
 
 			processInput(window);
 
-			std::vector<std::shared_ptr<SH::GridNode<CollisionEntity>>> overlapingNodes;
+			std::vector<std::shared_ptr<SH::GridNode<PickerCollisionEntity>>> overlapingNodes;
 			overlapingNodes.reserve(10);
 
-			int cubeDebugIdx = 0;
-			for (std::shared_ptr<CollisionCubeEntity>& cubePtr : cubes)
+			for (std::shared_ptr<PickerCubeEntity>& cubePtr : cubes)
 			{
-				CollisionCubeEntity& cube = *cubePtr;
+				PickerCubeEntity& cube = *cubePtr;
 				cube.transform.position += cube.velocity * deltaTime;
-				cube.myShape->updateTransform(cube.transform.getModelMatrix());
 				if (bUseSpatialHash)
 				{
 					if (bUserOptimizedUpdate)
@@ -538,16 +533,9 @@ namespace
 					//with objects already tested if a collision occurs.
 					if (bEnableCollision)
 					{
-						bool DEBUG_sometingToModify = false;
-						if (cubeDebugIdx == 476)//debug_break; conditional breakpoints are very slow in this context
-						{
-							//DEBUG_sometingToModify = true;
-							int x = 5;
-						}
 						overlapingNodes.clear();
 						spatialHash.lookupNodesInCells(*cube.spatialHashEntry, overlapingNodes);
-						
-						for (std::shared_ptr<SH::GridNode<CollisionEntity>>& node : overlapingNodes)
+						for (std::shared_ptr<SH::GridNode<PickerCollisionEntity>>& node : overlapingNodes)
 						{
 							//don't do self collisions
 							if (&node->element != &cube)
@@ -557,7 +545,6 @@ namespace
 								{
 									//correct collision
 									cube.transform.position += glm::vec3(mtv);
-									cube.myShape->updateTransform(cube.transform.getModelMatrix());
 									spatialHash.updateEntry(cube.spatialHashEntry, cube.getOBB()); //update spatial hash after collision
 
 									//below is totally a adhoc physics lol
@@ -585,12 +572,11 @@ namespace
 				//}				
 				glm::vec3 vecToGravity = (cube.gravityPnt - cube.transform.position);
 				cube.velocity += gravityDapeningFactor * vecToGravity;
-
-				++cubeDebugIdx;
 			}
 
 			mat4 view = camera.getView();
-			mat4 projection = glm::perspective(glm::radians(camera.getFOV()), static_cast<float>(width) / height, 0.1f, 300.0f);
+			float aspectRatio = static_cast<float>(width) / height;
+			mat4 projection = glm::perspective(glm::radians(camera.getFOV()), aspectRatio, 0.1f, 300.0f);
 
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glEnable(GL_DEPTH_TEST);
@@ -598,25 +584,25 @@ namespace
 
 			if (bRenderHashGrid)
 			{
-				SH::drawAABBGrid<CollisionEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
+				SH::drawAABBGrid<PickerCollisionEntity>(spatialHash, glm::vec3(0.2f), debugGridShader, glm::mat4(1.0f), view, projection);
 			}
 
-			drawDebugLine(DrawRay.start, DrawRay.start + DrawRay.dir * DrawRay.T, glm::vec3(1, 1, 0), glm::mat4(1.0f), view, projection);
+			drawDebugLine(DrawRay.start, DrawRay.start + DrawRay.dir * DrawRay.T, glm::vec3(1,1,0), glm::mat4(1.0f), view, projection);
 
 			if (bRenderOccupiedCells)
 			{
 				glDepthFunc(GL_ALWAYS);
-				for (std::shared_ptr<CollisionCubeEntity>& cubePtr : cubes)
+				for (std::shared_ptr<PickerCubeEntity>& cubePtr : cubes)
 				{
-					CollisionCubeEntity& cube = *cubePtr;
+					PickerCubeEntity& cube = *cubePtr;
 
 					//this is going to be slow
-					std::vector<std::shared_ptr<const SH::HashCell<CollisionEntity>>> cells;
+					std::vector<std::shared_ptr<const SH::HashCell<PickerCollisionEntity>>> cells;
 
 					spatialHash.lookupCellsForEntry(*cube.spatialHashEntry, cells);
 					std::vector<glm::ivec3> cellLocs;
 					cellLocs.reserve(cells.size());
-					for (const std::shared_ptr<const SH::HashCell<CollisionEntity>>& cell : cells)
+					for (const std::shared_ptr<const SH::HashCell<PickerCollisionEntity>>& cell : cells)
 					{
 						cellLocs.push_back(cell->location);
 					}
@@ -647,7 +633,7 @@ namespace
 			if (bRenderCubes)
 			{
 				int idx = 0;
-				for (std::shared_ptr<CollisionCubeEntity>& cube : cubes)
+				for (std::shared_ptr<PickerCubeEntity>& cube : cubes)
 				{
 					mat4 model = cube->transform.getModelMatrix();
 					objShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
@@ -681,14 +667,11 @@ namespace
 					<< " O to toggle rendering of cubes" << std::endl
 					<< " C to toggle rendering spatial hash cells (necessary with large numbers of cubes)" << std::endl
 					<< " F to toggle collision" << std::endl
-					<< " T to toggle cursor mode" << std::endl
-					<< " press Y (when in cursor mode) to shoot a ray and select an object" << std::endl
 					<< " see code for other toggles (function processInput)" << std::endl
 					<< std::endl;
 				return 0;
 			}();
-			static float accumulatedTime = 0.0f;
-			accumulatedTime += deltaTime;
+
 
 			using glm::vec3; using glm::vec4;
 			static InputTracker input; //using static vars in polling function may be a bad idea since cpp11 guarantees access is atomic -- I should bench this
@@ -697,6 +680,19 @@ namespace
 			if (input.isKeyJustPressed(window, GLFW_KEY_ESCAPE))
 			{
 				glfwSetWindowShouldClose(window, true);
+			}
+			if (input.isKeyJustPressed(window, GLFW_KEY_T))
+			{
+				bCursorMode = !bCursorMode;
+				camera.setCursorMode(bCursorMode);
+				if (bCursorMode)
+				{
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				}
+				else
+				{
+					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				}
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_V))
 			{
@@ -729,23 +725,6 @@ namespace
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_C))
 			{
-				bRenderOccupiedCells = !bRenderOccupiedCells;
-			}
-			if (input.isKeyJustPressed(window, GLFW_KEY_T))
-			{
-				bCursorMode = !bCursorMode;
-				camera.setCursorMode(bCursorMode);
-				if (bCursorMode)
-				{
-					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				}
-				else
-				{
-					glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				}
-			}
-			if (input.isKeyJustPressed(window, GLFW_KEY_Y))
-			{
 				int screenWidth = 0, screenHeight = 0;
 				glfwGetWindowSize(window, &screenWidth, &screenHeight);
 
@@ -767,7 +746,7 @@ namespace
 
 				IntersectRay.T = std::numeric_limits<float>::infinity();
 				int idx = 0, collisionIdx = -1;
-				for (std::shared_ptr< CollisionCubeEntity >& cubePtr : cubes)
+				for (std::shared_ptr< PickerCubeEntity >& cubePtr : cubes)
 				{
 					glm::mat4 model = cubePtr->transform.getModelMatrix();
 
@@ -785,10 +764,9 @@ namespace
 							collisionIdx = idx;
 						}
 					}
-					idx++;
+					idx++; 
 				}
 				targetIdx = collisionIdx;
-				std::cout << "TARGET INDEX: " << targetIdx << "\t TIME:"<< accumulatedTime << std::endl;
 			}
 			if (input.isKeyJustPressed(window, GLFW_KEY_O))
 			{
@@ -1068,7 +1046,7 @@ namespace
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		VisualizeSpatialHash demo(width, height);
+		TestPicker demo(width, height);
 		demo.handleModuleFocused(window);
 
 		/////////////////////////////////////////////////////////////////////
@@ -1085,7 +1063,7 @@ namespace
 	}
 }
 
-int main()	
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}
