@@ -159,7 +159,8 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     GLint last_program; glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
     GLint last_texture; glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 #ifdef GL_SAMPLER_BINDING
-    GLint last_sampler; glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
+	//Intel graphics doesn't seem to support this even with claimed opengl 4.3 support
+    //GLint last_sampler; glGetIntegerv(GL_SAMPLER_BINDING, &last_sampler);
 #endif
     GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
 #ifndef IMGUI_IMPL_OPENGL_ES2
@@ -216,7 +217,8 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     glUniform1i(g_AttribLocationTex, 0);
     glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
 #ifdef GL_SAMPLER_BINDING
-    glBindSampler(0, 0); // We use combined texture/sampler state. Applications using GL 3.3 may set that otherwise.
+	//Intel graphics doesn't seem to support this even with claimed opengl 4.3 support
+    //glBindSampler(0, 0); // We use combined texture/sampler state. Applications using GL 3.3 may set that otherwise.
 #endif
 
 #ifndef IMGUI_IMPL_OPENGL_ES2
@@ -291,7 +293,8 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     glUseProgram(last_program);
     glBindTexture(GL_TEXTURE_2D, last_texture);
 #ifdef GL_SAMPLER_BINDING
-    glBindSampler(0, last_sampler);
+	//Intel graphics doesn't seem to support this even with claimed opengl 4.3 support
+    //glBindSampler(0, last_sampler);
 #endif
     glActiveTexture(last_active_texture);
 #ifndef IMGUI_IMPL_OPENGL_ES2
