@@ -280,9 +280,9 @@ namespace
 		GLuint cubeVAO, cubeVBO;
 
 		//Shape Data (NOTE: release mode will be needed for numbers above 100)
-		uint32_t numStartCubes = 100;
+		//uint32_t numStartCubes = 100;
 		//uint32_t numStartCubes = 500;
-		//uint32_t numStartCubes = 3500;
+		uint32_t numStartCubes = 3500;
 		//uint32_t numStartCubes = 10000;
 		//uint32_t numStartCubes = 50000; //NOTE: disable rendering cubes and grids (hold O and C)
 		//std::vector<CollisionCubeEntity> cubes; //move ctors clear out unique ptrs to shape
@@ -1085,7 +1085,7 @@ namespace
 	}
 }
 
-int main()	
-{
-	true_main();
-}
+//int main()
+//{
+//	true_main();
+//}

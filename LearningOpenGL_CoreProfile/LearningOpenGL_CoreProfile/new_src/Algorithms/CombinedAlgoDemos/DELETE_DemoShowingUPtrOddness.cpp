@@ -461,7 +461,10 @@ namespace A419
 				}
 			}
 
-			
+			//below shows the error:
+			//spatial hash has a reference to the D_CollisionCubeEntity
+			//when we move the entity, the reference in SpatialHashEntry
+			//now points to the wrong object!
 			D_CollisionCubeEntity testMove(lightTransform);
 			testMove.spatialHashEntry = spatialHash.insert(testMove, testMove.getOBB());
 			D_CollisionCubeEntity moved(std::move(testMove));

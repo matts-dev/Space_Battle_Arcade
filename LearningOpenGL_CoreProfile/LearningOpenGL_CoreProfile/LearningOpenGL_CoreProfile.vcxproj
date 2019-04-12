@@ -114,6 +114,14 @@
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\shared_ptr.hpp" />
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\smart_ptr\weak_ptr.hpp" />
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\weak_ptr.hpp" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imconfig.h" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imgui.h" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imgui_impl_glfw.h" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imgui_impl_opengl3.h" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imgui_internal.h" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imstb_rectpack.h" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imstb_textedit.h" />
+    <ClInclude Include="Libraries\imgui.1.69.gl\imstb_truetype.h" />
     <ClInclude Include="new_src\Algorithms\ObjectPicker\ObjectPicker.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATLoadedMesh.h" />
     <ClInclude Include="new_src\Algorithms\SeparatingAxisTheorem\ModelLoader\SATModel.h" />
@@ -185,6 +193,13 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Libraries\imgui.1.69.gl\EXAMPLE.cpp" />
+    <ClCompile Include="Libraries\imgui.1.69.gl\imgui.cpp" />
+    <ClCompile Include="Libraries\imgui.1.69.gl\imgui_demo.cpp" />
+    <ClCompile Include="Libraries\imgui.1.69.gl\imgui_draw.cpp" />
+    <ClCompile Include="Libraries\imgui.1.69.gl\imgui_impl_glfw.cpp" />
+    <ClCompile Include="Libraries\imgui.1.69.gl\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="Libraries\imgui.1.69.gl\imgui_widgets.cpp" />
     <ClCompile Include="new_src\Algorithms\CombinedAlgoDemos\SpatialHashingAndSAT_CollidingCubes.cpp" />
     <ClCompile Include="new_src\Algorithms\ObjectPicker\ObjectPickerTest.cpp" />
     <ClCompile Include="new_src\Algorithms\SeparatingAxisTheorem\AllDemos.cpp" />
@@ -529,6 +544,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>IMGUI_IMPL_OPENGL_LOADER_GLAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -553,6 +569,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>IMGUI_IMPL_OPENGL_LOADER_GLAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
