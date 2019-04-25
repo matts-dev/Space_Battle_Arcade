@@ -8,8 +8,6 @@
 class InputTracker final
 {
 public:
-	InputTracker();
-	~InputTracker();
 
 	bool isKeyJustPressed(GLFWwindow* window, int key);
 	bool isKeyDown(GLFWwindow* window, int key);

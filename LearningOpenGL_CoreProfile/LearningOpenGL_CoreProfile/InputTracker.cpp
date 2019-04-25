@@ -1,16 +1,5 @@
 #include "InputTracker.h"
 
-
-
-InputTracker::InputTracker()
-{
-}
-
-
-InputTracker::~InputTracker()
-{
-}
-
 bool InputTracker::isKeyJustPressed(GLFWwindow* window, int key)
 {
 	if (!window)

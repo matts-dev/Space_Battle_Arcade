@@ -36,7 +36,8 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-int main(int, char**)
+namespace {
+int true_main()
 {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
@@ -193,3 +194,11 @@ int main(int, char**)
 
     return 0;
 }
+
+}
+
+
+//int main(int, char**)
+//{
+//	return true_main();
+//}
