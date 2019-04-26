@@ -10,17 +10,118 @@
 
 #include "OpenGLHelpers.h"
 
+#define MAP_GLFWWINDOW_TO_WINDOWOBJ
+
 static bool gladLoaded = false;
 
 namespace SA
 {
+
+
+	/** 
+		Simple concept to pimple, but all windows share this implementation 
+		The goal is to hide the interface between the C api and the exposed C++ interface
+		this class should not be useable outside of the this translation unit!
+	*/
+	class WindowStaticsImplementation
+	{
+	public:
+
+		inline Window& findWindow(GLFWwindow* window)
+		{
+#ifdef MAP_GLFWWINDOW_TO_WINDOWOBJ
+			auto winIter = windowMap.find(window);
+			if (winIter != windowMap.end())
+			{
+				Window* winObj = winIter->second;
+				return *winObj;
+			}
+#else 
+			NOT_IMPLEMENTED;
+#endif
+			//fall through to return nothing if no window found
+			throw std::runtime_error("FATAL: no window matching window from callback");
+		}
+
+		/** This is a raw pointer so it can be passed form Window's constructor */
+		inline void trackWindow(GLFWwindow* rawWindow, Window* windowObj)
+		{
+#ifdef MAP_GLFWWINDOW_TO_WINDOWOBJ
+			windowMap.insert({ rawWindow, windowObj });
+			bindWindowCallbacks(rawWindow);
+#else
+			NOT_IMPLEMENTED;
+#endif
+		}
+
+		inline void stopTrackingWindow(GLFWwindow* rawWindow)
+		{
+#ifdef MAP_GLFWWINDOW_TO_WINDOWOBJ
+			windowMap.erase(rawWindow);
+#else
+			NOT_IMPLEMENTED;
+#endif
+		}
+	private:
+		void bindWindowCallbacks(GLFWwindow* window);
+
+	private:
+#ifdef MAP_GLFWWINDOW_TO_WINDOWOBJ
+		std::unordered_map<GLFWwindow*, Window*> windowMap;
+#else 
+		std::vector<Window*> windows;
+#endif
+
+	public:
+		uint32_t getWindowInstances() { 
+#ifdef MAP_GLFWWINDOW_TO_WINDOWOBJ
+			return static_cast<uint32_t>(windowMap.size());
+#else
+			NOT_IMPLEMENTED;
+#endif
+		};
+	};
+	static WindowStaticsImplementation windowStatics;
+
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// C CALLBACK MANAGEMENT
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	static void c_callback_CursorPos(GLFWwindow* window, double xpos, double ypos)
+	{
+		Window& windowObj = windowStatics.findWindow(window);
+		windowObj.cursorPosEvent.broadcast(xpos, ypos);
+	}
+
+	static void c_callback_CursorEnter(GLFWwindow* window, int enter)
+	{
+		Window& windowObj = windowStatics.findWindow(window);
+		windowObj.mouseLeftEvent.broadcast(enter);
+	}
+
+	static void c_callback_Scroll(GLFWwindow* window, double xOffset, double yOffset)
+	{
+		Window& windowObj = windowStatics.findWindow(window);
+		windowObj.scrollCallback.broadcast(xOffset, yOffset);
+	}
+
+
+	///this must come after callbacks for proper definition order, otherwise forward declarations are going to be needed
+	void WindowStaticsImplementation::bindWindowCallbacks(GLFWwindow* window)
+	{
+		//unbinding I believe is done implicitly by GLFW destroy window
+		glfwSetCursorPosCallback(window, &c_callback_CursorPos);
+		glfwSetCursorEnterCallback(window, &c_callback_CursorEnter);
+		glfwSetScrollCallback(window, &c_callback_Scroll);
+	}
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//STATIC GLFW MANAGEMENT
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	uint32_t Window::windowInstances = 0;
 	void Window::startUp()
 	{
-		if (windowInstances == 0)
+		if (windowStatics.getWindowInstances() == 0)
 		{
 			glfwInit();
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -29,28 +130,11 @@ namespace SA
 			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		}
 	}
-	void Window::shutDown()
+	void Window::tryShutDown()
 	{
-		if (windowInstances == 0)
+		if (windowStatics.getWindowInstances() == 0)
 		{
 			glfwTerminate();
-		}
-	}
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// C CALLBACK MANAGEMENT
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	std::unordered_map<GLFWwindow*, Window*> Window::windowMap;
-
-	void Window::_cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
-	{
-		//for small number of windows, it is probably faster to walk over a vector to find associated object
-		auto winIter = windowMap.find(window);
-		if (winIter != windowMap.end())
-		{
-			Window* winObj = winIter->second;
-			//winObj->CursorPosCallback(xpos, ypos);
-
 		}
 	}
 
@@ -58,12 +142,11 @@ namespace SA
 	// Window Instances
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	Window::Window(int width, int height)
+	Window::Window(uint32_t width, uint32_t height)
 	{
 		startUp();
-		++windowInstances;
 
-		window = glfwCreateWindow(width, height, "OpenGL Window", nullptr, nullptr);
+		window = glfwCreateWindow((int)width, (int)height, "OpenGL Window", nullptr, nullptr);
 		if (!window)
 		{
 			glfwTerminate();
@@ -86,22 +169,25 @@ namespace SA
 			}
 		}
 
-		glfwSetCursorPosCallback(window, &Window::_cursorPosCallback);
-		windowMap.insert({ window, this });
+		windowStatics.trackWindow(window, this);
 
 	}
 
 	Window::~Window()
 	{
-		windowMap.erase(window);
+		windowStatics.stopTrackingWindow(window);
 		glfwDestroyWindow(window);
-		windowInstances--;
-		shutDown();
+		tryShutDown();
 	}
 
 	void Window::markWindowForClose(bool bClose)
 	{
 		glfwSetWindowShouldClose(window, bClose);
+	}
+
+	bool Window::shouldClose()
+	{
+		return glfwWindowShouldClose(window);
 	}
 
 	void Window::setViewportToWindowSize()

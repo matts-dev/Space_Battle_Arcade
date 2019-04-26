@@ -5,6 +5,7 @@
 #include "..\..\Tools\DataStructures\MultiDelegate.h"
 #include<memory>
 #include <functional>
+#include <string>
 
 
 namespace
@@ -51,15 +52,80 @@ namespace
 		void childUpdate(double xpos, double ypos) { std::cout << "this " << this << " CHILD callback" << xpos << " " << ypos << std::endl; }
 	};
 
+	class UserTypeToPass
+	{
+	public:
+		std::string value = "default";
+
+		void RLValueType() & { std::cout << "LVALUE" << std::endl; }
+		void RLValueType() && { std::cout << "rvalue" << std::endl; }
+	};
+
 	class CallbackTester : public SA::GameEntity
 	{
 	public:
 		MultiDelegate<const int, float&, const bool&> complexPrimitivesCopy;
 		void handleComplexPrim(const int cint, float& floatref, const bool& crefb)
 		{
-			std::cout << "ci:" <<cint << " f:" << floatref << " rval bool: " << crefb << std::endl;
+			std::cout << "ci:" << cint << " f:" << floatref << " rval bool: " << crefb << std::endl;
 			floatref += 1.0f;
- 		}
+		}
+
+		void handleUserType(const UserTypeToPass cCopy, UserTypeToPass& ref, const UserTypeToPass& cRef)
+		{
+			std::cout << cCopy.value << std::endl;
+			std::cout << ref.value << std::endl;
+			std::cout << cRef.value << std::endl;
+
+			//change ref between broadcasts
+			ref.value += std::string("+");
+		}
+
+		void handleRLValueTest(UserTypeToPass& lvalue, UserTypeToPass&& rvalue)
+		{
+			lvalue.RLValueType();
+			std::move(rvalue).RLValueType(); //this will always report rvalue; real test is to pass rvalues to this function
+		}
+
+		//self removals
+		sp<MultiDelegate<>> sharedNoArgDelegate = nullptr;
+		void HandleRemoveWeakDuringBroadcast()
+		{
+			std::cout << "removing WEAK self within callback!" << std::endl;
+			sharedNoArgDelegate->removeWeak(sp_this(), &CallbackTester::HandleRemoveWeakDuringBroadcast);
+		}
+		void HandleRemoveStrongDuringBroadcast()
+		{
+			std::cout << "removing WEAK self within callback!" << std::endl;
+			sharedNoArgDelegate->removeStrong(sp_this(), &CallbackTester::HandleRemoveStrongDuringBroadcast);
+		}
+
+		//test additions during broadcast
+		sp<MultiDelegate<>> addDelegate = nullptr;
+		void HandleAddDuringBroadcast()
+		{
+			addDelegate->addStrongObj(sp_this(), &CallbackTester::AddedCallback);
+			addDelegate->addWeakObj(sp_this(), &CallbackTester::AddedCallback);
+		}
+
+		void AddedCallback()
+		{
+			//call back used in add while broadcast testing
+			std::cout << "successfully added" << std::endl;
+		}
+
+
+		MultiDelegate<double, double> passDelegate;
+		void HandlePassedDelegateCallback(double x, double y)
+		{
+			std::cout << "registered to a passed delegate callback: " << x << " " << y << std::endl;;
+		}
+
+		void HandleDelegatePassed(MultiDelegate<double, double>& passedDelegate)
+		{
+			std::cout << "passed delegate!" << std::endl;;
+			passedDelegate.addWeakObj(sp_this(), &CallbackTester::HandlePassedDelegateCallback);
+		}
 
 	};
 
@@ -134,36 +200,88 @@ namespace
 		oversubDelegate.broadcast(11.0, 11.0); //no subscriptions should be present
 
 		/// Test copying delegates (NOT CURRENTLY SUPPORTED)
-		std::cout << std::endl << std::endl;
+		/// Test copying during broadcast (probably requires an internal delegate for update)? (NOT CURRENTLY SUPPORTED)
 
+
+		/// test Lvalue/const ref bindings
+		std::cout << std::endl << std::endl;
 		MultiDelegate<const int, float&, const bool&> complexPrimitives;
 		sp<CallbackTester> cbTester = new_sp<CallbackTester>();
 		complexPrimitives.addWeakObj(cbTester, &CallbackTester::handleComplexPrim);
 		complexPrimitives.addStrongObj(cbTester, &CallbackTester::handleComplexPrim);
-		//cbTester->complexPrimitivesCopy = complexPrimitives;
+		int xi = 5;
+		float yfloat = 3.0f;
+		complexPrimitives.broadcast(xi, yfloat, /*intention rvalue*/ false);
+		complexPrimitives.removeAll(cbTester);
 
-		//int xi = 5;
-		//const int cxi = 10;
-		//float yfloat = 3.0f;
-		//complexPrimitives.broadcast(xi, yfloat, /*intention rvalue*/ false);
-		//complexPrimitives.removeAll(cbTester);
+		///Test passing user types
+		MultiDelegate<const UserTypeToPass, UserTypeToPass&, const UserTypeToPass&> UserTypeDelegate;
+		UserTypeDelegate.addWeakObj(cbTester, &CallbackTester::handleUserType);
 
-		////test copy broadcast after removal
-		//cbTester->complexPrimitivesCopy.broadcast(cxi, yfloat, true);
-		/// Test copying during broadcast (probably requires an internal delegate for update)? (NOT CURRENTLY SUPPORTED)
+		UserTypeToPass obj1;
+		UserTypeToPass obj2;
+		obj2.value = "obj2";
+		UserTypeToPass obj3;
+		obj3.value = "3 3 3";
+		UserTypeDelegate.broadcast(obj1, obj2, obj3);
+		UserTypeDelegate.broadcast(obj1, obj2, obj3);
+		UserTypeDelegate.removeAll(cbTester);
+
+		///Test RValue
+		MultiDelegate<UserTypeToPass&, UserTypeToPass&&> lvalue_rvalue_delegate;
+		lvalue_rvalue_delegate.addWeakObj(cbTester, &CallbackTester::handleRLValueTest);
+		lvalue_rvalue_delegate.broadcast(obj1, UserTypeToPass{});
+
+		///Test no argument delegate
+		MultiDelegate<> NoArgs;
+		NoArgs.broadcast();
 
 		/// Test removal during broadcast
+		sp<MultiDelegate<>> sharedNoArgDelegate = new_sp<MultiDelegate<>>();
+		sharedNoArgDelegate->broadcast();
+
+		cbTester->sharedNoArgDelegate = sharedNoArgDelegate;
+
+		//test weak variant
+		sharedNoArgDelegate->addWeakObj(cbTester, &CallbackTester::HandleRemoveWeakDuringBroadcast);
+		sharedNoArgDelegate->broadcast(); //this should hit delegate, and it should remove itself
+		sharedNoArgDelegate->broadcast(); //this should not have a callback, cbTest should have removed itself 
+
+		sharedNoArgDelegate->addStrongObj(cbTester, &CallbackTester::HandleRemoveWeakDuringBroadcast);
+		sharedNoArgDelegate->broadcast(); //this should hit delegate, and it should remove itself
+		sharedNoArgDelegate->broadcast(); //this should not have a callback, cbTest should have removed itself 
+
 
 		/// Test add during broadcast
+		sp<MultiDelegate<>> addDelegate = new_sp<MultiDelegate<>>();
+		addDelegate->broadcast();
+		cbTester->addDelegate = addDelegate;
+		addDelegate->addWeakObj(cbTester, &CallbackTester::HandleAddDuringBroadcast);
+		addDelegate->broadcast(); //by design, should not report the added delegates
 
-		/// test Lvalue ref bindings
-		/// test RValue ref bindings
-		/// test const values
-		/// const delegates
-		/// test delegate causing removal of delegate binding while broadcasting
-		/// Test strong bindings
+		//remove the delegate that actually adds additional now that we've added them
+		addDelegate->removeWeak(cbTester, &CallbackTester::HandleAddDuringBroadcast);
+		addDelegate->broadcast(); //this should now call 2 callbacks, one for strong add and weak add
+
+
+		/// Test broadcasting a/the delegate 
+		MultiDelegate<double, double> passDelegate;
+		MultiDelegate<MultiDelegate<double, double>&> delegatePasser;
+		delegatePasser.addWeakObj(cbTester, &CallbackTester::HandleDelegatePassed);
+		delegatePasser.broadcast(passDelegate);
+		passDelegate.broadcast(123.0, 321.0);
+
+
 		/// Test Weak Bindings Scope Clearing
 		/// Test removing stale delegates 
+		std::cout << std::endl << std::endl << std::endl;
+		MultiDelegate<double, double> posUpdater;
+		{
+			sp<WeakTracker> scopedMT = new_sp<WeakTracker>();
+			posUpdater.addWeakObj(scopedMT, &WeakTracker::posUpdated);
+			posUpdater.broadcast(777.0, 777.0); // should broadcast once
+		}
+		posUpdater.broadcast(888.0, 888.0);
 
 
 		//testing usage of std::bind; I don't think this will let me get entire delegate behavior within a single stack frame
@@ -177,7 +295,7 @@ namespace
 	}
 }
 
-int main()
-{
-	return trueMain();
-}
+//int main()
+//{
+//	return trueMain();
+//}

@@ -11,6 +11,7 @@
 #include <iterator>
 #include <assert.h>
 #include <vector>
+#include <functional>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Dev Notes:
@@ -48,6 +49,8 @@ template<typename... Args>
 struct Subscriber
 {
 	bool bMarkedForDelete = false;
+
+	//void changing the return type from void, that way this can be used as the return type for return val delegates
 	virtual void invoke(Args&&... args) = 0;
 };
 
@@ -90,6 +93,8 @@ struct StrongSubscriber : public StrongAgnosticSubscriber<Args...>
 
 	virtual void invoke(Args&&... args) override
 	{
+		//MODIFICATION NOTE: preserve that repeatedly "step into" when debugging quickly gets to callbacks and not other functions
+
 		//static cast is safe because game entity is a required base class
 		//collapsing above code into one line for faster debugging
 		((*std::static_pointer_cast<T>(this->strongObj)).*boundFunc)(std::forward<Args>(args)...);
@@ -117,6 +122,9 @@ struct WeakAgnosticSubscriber : public Subscriber<Args...>
 	//and use polymorphism mechanisms to invoke on different types
 	wp<SA::GameEntity> weakObj;
 
+	/** Intentionally not using delegate system to avoid recusrive complexities*/
+	std::function<void()> notifyStaleSubscriber;
+
 	WeakAgnosticSubscriber(const sp<SA::GameEntity>& obj) : weakObj(obj) {}
 };
 
@@ -133,6 +141,8 @@ struct WeakSubscriber : public WeakAgnosticSubscriber<Args...>
 
 	virtual void invoke(Args&&... args) override
 	{
+		//MODIFICATION NOTE: preserve that repeatedly "step into" when debugging quickly gets to callbacks and not other functions
+
 		//lock and cast object to appropriate type for member function invoking.
 		if (sp<T> obj = std::static_pointer_cast<T>(this->weakObj.lock()))
 		{
@@ -140,7 +150,9 @@ struct WeakSubscriber : public WeakAgnosticSubscriber<Args...>
 		}
 		else
 		{
-			throw std::runtime_error("removal of stale subscribers not yet implemented");
+			//avoiding using return type of invoke to indicate failure because this will likely
+			//be the exact same pattern for return type delegates
+			this->notifyStaleSubscriber();
 		}
 	}
 };
@@ -154,11 +166,14 @@ struct WeakSubscriber : public WeakAgnosticSubscriber<Args...>
 	Multidelegate is built for single threaded usage.
 */
 template<typename... Args>
-class MultiDelegate
+class MultiDelegate /*intentionally not a game entity; perhaps it should be but then all stack allocated versions will need to be updated*/
 {
 public:
 	void broadcast(Args... args)
 	{
+		//NOTE WHEN CHANGING: preserve that repeatedly "step into" when debugging quickly gets to callbacks and not other functions
+		//Debugging delegates in other systems is extremely annoying, doing the above makes it a lot less annoying :)
+
 		broadcasting = true;
 		for (const auto& key_value_pair : strongSubscribers)	//std::map has O(n) walk
 		{
@@ -187,6 +202,9 @@ public:
 
 		//store the concrete type (T) into a type (WeakSubscriber) that hides (WeakAgnosticSubscriber) the concrete template type for storage
 		sp<WeakAgnosticSubscriber<Args...>> subscriber = new_sp<WeakSubscriber<T, Args...>>(obj, fptr);
+
+		//a new lambda will need to be set if delegate copying behavior is ever supported; or an array of lambdas if shared subscribers
+		subscriber->notifyStaleSubscriber = [this]() { this->bDetecftedStaleWeakSubscriber = true; };
 
 		//add must consider if broadcasting is happening
 		if (!broadcasting)
@@ -331,8 +349,7 @@ public:
 			}
 		}
 	}
-
-
+	
 	void completeQueuedOperations()
 	{
 		//must not be broadcasting when this is called, otherwise we can get in an infinite loop on adds
@@ -344,12 +361,26 @@ public:
 			removeAll(entity);
 		}
 
-		// handle pending removals
 		for (StrongIter iter : pendingStrongRemoves)
 		{
 			strongSubscribers.erase(iter);
 		}
 		pendingStrongRemoves.clear();
+
+		//must come before pending weak removes
+		if (bDetecftedStaleWeakSubscriber)
+		{
+			//O(n) walk over std::map
+			std::vector<WeakIter> toRemove;
+			for (WeakIter iter = weakSubscribers.begin(); iter != weakSubscribers.end(); ++iter)
+			{
+				sp<WeakAgnosticSubscriber<Args...>> subscriber = iter->second;
+				if (subscriber->weakObj.expired())
+				{
+					pendingWeakRemoves.push_back(iter);
+				}
+			}
+		}
 
 		for (WeakIter iter : pendingWeakRemoves)
 		{
@@ -357,7 +388,7 @@ public:
 		}
 		pendingWeakRemoves.clear();
 
-		//handle pending adds
+
 		for (sp<StrongAgnosticSubscriber<Args...>>& newStrongSub : pendingStrongAdds)
 		{
 			SA::GameEntity* objAddress = newStrongSub->strongObj.get();
@@ -375,9 +406,19 @@ public:
 		pendingWeakAdds.clear();
 	}
 
+	std::size_t numStrong() { return strongSubscribers.size(); }
+	std::size_t numWeak() { return weakSubscribers.size(); }
+
 public:
 	MultiDelegate() = default;
 
+	////////////////////////////////////////////
+	// Reasons not to support copyable delegates:
+	// *it allows for easy accidental errors where passing delegates not by reference, but by value, can go unnoticed
+	// *it makes testing delegates simpler for changing
+	// *smart pointer delegates 
+	// *a factory function for copying can be created to avoid accidental copies
+	///////////////////////////////////////////
 #ifdef MULTIDELEGATE_SUPPORT_COPY_CTORS
 	MultiDelegate(const MultiDelegate<Args...>& copy){
 		//when copying, intentionally do not copy state of broadcasting or pending adds/removes
@@ -385,6 +426,7 @@ public:
 		//to have special consideration. I am considering deleting copy entirely for simpler API
 		this->strongSubscribers = copy.strongSubscribers;
 		this->weakSubscribers = copy.weakSubscribers;
+		throw std::runtime_error("copying stale weak delegate binding not yet implemented");
 #ifndef SUPPRESS_BROADCAST_COPY_WARNINGS
 		if (copy.broadcasting){
 			std::cerr << "Copied Delegate while broadcasting, this may cause hard to detect bugs! See special member functions of multidelegate to supress this warning" << std::endl;
@@ -395,6 +437,7 @@ public:
 		//copying while broadcasting does not account for queued actions (adds/removes/etc). See copy ctor 
 		this->strongSubscribers = copy.strongSubscribers;
 		this->weakSubscribers = copy.weakSubscribers;
+		throw std::runtime_error("copying stale weak delegate binding not yet implemented");
 #ifndef SUPPRESS_BROADCAST_COPY_WARNINGS
 		if (copy.broadcasting){
 			std::cerr << "Copied Delegate while broadcasting, this may cause hard to detect bugs! See special member functions of multidelegate to supress this warning" << std::endl;
@@ -433,4 +476,7 @@ private: //these are explicitly ordered for appearance in debugger!
 	std::vector< sp<WeakAgnosticSubscriber<Args...>> > pendingWeakAdds;
 
 	std::vector<sp<SA::GameEntity>> QueuedRemoveAlls;
+
+	bool bDetecftedStaleWeakSubscriber = false;
 };
+

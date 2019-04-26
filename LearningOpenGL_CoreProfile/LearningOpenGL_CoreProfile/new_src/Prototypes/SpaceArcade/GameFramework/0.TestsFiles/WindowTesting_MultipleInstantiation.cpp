@@ -7,9 +7,9 @@ namespace
 {
 	int trueMain()
 	{
-		up<SA::Window> window_1 = new_up<SA::Window>(100, 50);
-		up<SA::Window> window_2 = new_up<SA::Window>(200, 100);
-		up<SA::Window> window_3 = new_up<SA::Window>(300, 200);
+		sp<SA::Window> window_1 = new_sp<SA::Window>(100, 50);
+		sp<SA::Window> window_2 = new_sp<SA::Window>(200, 100);
+		sp<SA::Window> window_3 = new_sp<SA::Window>(300, 200);
 
 		glfwSetWindowPos(window_1->get(), 10, 100);
 		glfwSetWindowPos(window_2->get(), 500, 250);
@@ -75,7 +75,7 @@ namespace
 
 
 		//test creating window after shutdown
-		window_1 = new_up<SA::Window>(50, 50);
+		window_1 = new_sp<SA::Window>(50, 50);
 		while (window_1)
 		{
 			if (window_1 && !glfwWindowShouldClose(window_1->get()))
