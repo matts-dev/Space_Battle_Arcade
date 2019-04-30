@@ -8,11 +8,13 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
+#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+
 class Texture2D;
 
 namespace SA
 {
-	class Shader
+	class Shader : public RemoveCopies, public RemoveMoves
 	{
 	private:
 		void constructorSharedInitialization(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths = true);
@@ -21,11 +23,6 @@ namespace SA
 		explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths = true);
 		explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths = true);
 		virtual ~Shader();
-
-		Shader(const Shader&) = delete;
-		Shader(const Shader&&) = delete;
-		Shader& operator=(const Shader&) = delete;
-		Shader& operator=(const Shader&&) = delete;
 
 		bool createFailed() { return failed; }
 

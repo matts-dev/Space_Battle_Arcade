@@ -35,6 +35,7 @@ namespace SA
 		inline GLFWwindow* get() { return window; }
 		void markWindowForClose(bool bClose);
 		bool shouldClose();
+		float getAspect();
 
 	private:
 		void setViewportToWindowSize();

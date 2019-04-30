@@ -7,6 +7,7 @@
 #include "SAShader.h"
 
 #include "../Tools/SAUtilities.h"
+#include "OpenGLHelpers.h"
 
 
 namespace SA
@@ -33,15 +34,15 @@ namespace SA
 		{
 #if RAII_SHADER_SWITCH
 			//Cache previous shader and restore it after update; NOTE: I've read that the get* can cause performance hits in multi-threaded opengl drivers: https://www.opengl.org/discussion_boards/showthread.php/177044-How-do-I-get-restore-the-current-shader //Article on opengl perf https://software.intel.com/en-us/articles/opengl-performance-tips-avoid-opengl-calls-that-synchronize-cpu-and-gpu
-			glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader);
-			glUseProgram(switchToThisShader);
+			ec(glGetIntegerv(GL_CURRENT_PROGRAM, &cachedPreviousShader));
+			ec(glUseProgram(switchToThisShader));
 #endif // RAII_SHADER_SWITCH
 		}
 		~RAII_ScopedShaderSwitcher()
 		{
 #if RAII_SHADER_SWITCH
 			//restore previous shader
-			glUseProgram(cachedPreviousShader);
+			ec(glUseProgram(cachedPreviousShader));
 #endif // RAII_SHADER_SWITCH
 		}
 	};
@@ -89,20 +90,20 @@ namespace SA
 
 		//SET SHADER SOURCES
 		const char* vertShaderSource_cstr = vertShaderSrc.c_str();
-		glShaderSource(vertexShader, 1, &vertShaderSource_cstr, nullptr);
+		ec(glShaderSource(vertexShader, 1, &vertShaderSource_cstr, nullptr));
 
 		const char* fragShaderSource_cstr = fragShaderSrc.c_str();
-		glShaderSource(fragmentShader, 1, &fragShaderSource_cstr, nullptr);
+		ec(glShaderSource(fragmentShader, 1, &fragShaderSource_cstr, nullptr));
 
 		const char* geoShaderSource_cstr = geoShaderSrc.c_str();
-		glShaderSource(geometryShader, 1, &geoShaderSource_cstr, nullptr);
+		ec(glShaderSource(geometryShader, 1, &geoShaderSource_cstr, nullptr));
 
 		//COMPILE SHADERS
-		glCompileShader(vertexShader);
-		glCompileShader(fragmentShader);
+		ec(glCompileShader(vertexShader));
+		ec(glCompileShader(fragmentShader));
 		if (hasGeometryShader)
 		{
-			glCompileShader(geometryShader);
+			ec(glCompileShader(geometryShader));
 		}
 
 		if (failed = !shaderCompileSuccess(vertexShader))
@@ -127,13 +128,13 @@ namespace SA
 
 		//ATTACH AND LINK SHADERS
 		linkedProgram = glCreateProgram();
-		glAttachShader(linkedProgram, vertexShader);
-		glAttachShader(linkedProgram, fragmentShader);
+		ec(glAttachShader(linkedProgram, vertexShader));
+		ec(glAttachShader(linkedProgram, fragmentShader));
 		if (hasGeometryShader)
 		{
-			glAttachShader(linkedProgram, geometryShader);
+			ec(glAttachShader(linkedProgram, geometryShader));
 		}
-		glLinkProgram(linkedProgram);
+		ec(glLinkProgram(linkedProgram));
 		if (failed = !programLinkSuccess(linkedProgram))
 		{
 			std::cerr << "failed to link shader program" << std::endl;
@@ -141,9 +142,9 @@ namespace SA
 		}
 
 		//CLEAN UP
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
-		glDeleteShader(geometryShader);
+		ec(glDeleteShader(vertexShader));
+		ec(glDeleteShader(fragmentShader));
+		ec(glDeleteShader(geometryShader));
 	}
 
 	Shader::Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths /*= true*/)
@@ -173,11 +174,11 @@ namespace SA
 	{
 		if (activate)
 		{
-			glUseProgram(linkedProgram);
+			ec(glUseProgram(linkedProgram));
 		}
 		else
 		{
-			glUseProgram(0);
+			ec(glUseProgram(0));
 		}
 	}
 
@@ -194,8 +195,8 @@ namespace SA
 		int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
 
 		//must be using the shader to update uniform value
-		glUseProgram(linkedProgram);
-		glUniform4f(uniformLocation, red, green, blue, alpha);
+		ec(glUseProgram(linkedProgram));
+		ec(glUniform4f(uniformLocation, red, green, blue, alpha));
 	}
 
 	void Shader::setUniform4f(const char* uniform, const glm::vec4& values)
@@ -208,8 +209,8 @@ namespace SA
 		RAII_ScopedShaderSwitcher scoped(linkedProgram);
 
 		int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-		glUseProgram(linkedProgram);
-		glUniform3f(uniformLocation, red, green, blue);
+		ec(glUseProgram(linkedProgram));
+		ec(glUniform3f(uniformLocation, red, green, blue));
 	}
 
 	void Shader::setUniform3f(const char* uniform, const glm::vec3& vals)
@@ -217,8 +218,8 @@ namespace SA
 		RAII_ScopedShaderSwitcher scoped(linkedProgram);
 
 		int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-		glUseProgram(linkedProgram);
-		glUniform3f(uniformLocation, vals.r, vals.g, vals.b);
+		ec(glUseProgram(linkedProgram));
+		ec(glUniform3f(uniformLocation, vals.r, vals.g, vals.b));
 	}
 
 	void Shader::setUniform1i(const char* uniform, int newValue)
@@ -226,8 +227,8 @@ namespace SA
 		RAII_ScopedShaderSwitcher scoped(linkedProgram);
 
 		int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-		glUseProgram(linkedProgram);
-		glUniform1i(uniformLocation, newValue);
+		ec(glUseProgram(linkedProgram));
+		ec(glUniform1i(uniformLocation, newValue));
 	}
 
 
@@ -236,15 +237,15 @@ namespace SA
 		RAII_ScopedShaderSwitcher scoped(linkedProgram);
 
 		int uniformLocation = glGetUniformLocation(linkedProgram, uniform);
-		glUseProgram(linkedProgram);
-		glUniformMatrix4fv(uniformLocation, numberMatrices, transpose, data);
+		ec(glUseProgram(linkedProgram));
+		ec(glUniformMatrix4fv(uniformLocation, numberMatrices, transpose, data));
 	}
 
 	void Shader::setUniform1f(const char* uniformName, float value)
 	{
 		GLuint uniformLocationInShader = glGetUniformLocation(getId(), uniformName);
-		glUseProgram(linkedProgram);
-		glUniform1f(uniformLocationInShader, value);
+		ec(glUseProgram(linkedProgram));
+		ec(glUniform1f(uniformLocationInShader, value));
 	}
 
 	bool Shader::shaderCompileSuccess(GLuint shaderID)
@@ -252,11 +253,11 @@ namespace SA
 		char infolog[256];
 		int success = true;
 
-		glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+		ec(glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success));
 
 		if (!success)
 		{
-			glGetShaderInfoLog(shaderID, 256, nullptr, infolog);
+			ec(glGetShaderInfoLog(shaderID, 256, nullptr, infolog));
 			std::cerr << "shader compile fail, infolog:\n" << infolog << std::endl;
 		}
 
@@ -268,11 +269,11 @@ namespace SA
 		char infolog[256];
 		int success = true;
 
-		glGetProgramiv(programID, GL_LINK_STATUS, &success);
+		ec(glGetProgramiv(programID, GL_LINK_STATUS, &success));
 
 		if (!success)
 		{
-			glGetProgramInfoLog(programID, 256, nullptr, infolog);
+			ec(glGetProgramInfoLog(programID, 256, nullptr, infolog));
 			std::cerr << "OpenGL program link fail, infolog:\n" << infolog << std::endl;
 		}
 

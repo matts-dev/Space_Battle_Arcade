@@ -25,6 +25,9 @@ namespace SA
 		*/
 		void setWindowCloseOnEscape(GLFWwindow* window);
 
+
+		GLuint loadTextureToOpengl(const char* relative_filepath, int texture_unit = -1, bool useGammaCorrection = false);
+
 		extern const float cubeVerticesWithUVs[36 * 5];
 		extern const float cubeVerticesWithNormals[36 * 6];
 	}

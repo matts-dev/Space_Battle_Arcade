@@ -504,6 +504,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\RemoveSpecialMemberFunctionUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1358,12 +1364,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAPlayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\DemoTemplate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\PlayerControlTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1392,6 +1392,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\GameBaseTesting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

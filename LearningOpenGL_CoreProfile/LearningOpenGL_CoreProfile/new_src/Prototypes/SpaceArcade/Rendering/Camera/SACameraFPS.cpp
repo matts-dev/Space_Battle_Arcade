@@ -1,5 +1,6 @@
 #include "SACameraFPS.h"
 #include <iostream>
+#include "..\SAWindow.h"
 
 namespace SA
 {
@@ -170,6 +171,32 @@ namespace SA
 		{
 			//don't gitter camera
 			refocused = true;
+		}
+	}
+
+	void CameraFPS::registerToWindowCallbacks(sp<Window>& window)
+	{
+		deregisterToWindowCallbacks();
+
+		if (window)
+		{
+			registeredWindow = window;
+
+			//adding strong bindings for speed, but this will keep camera alive through shared_ptrs and must be cleared via deregister
+			window->cursorPosEvent.addStrongObj(sp_this(), &CameraFPS::mouseMoved);
+			window->mouseLeftEvent.addStrongObj(sp_this(), &CameraFPS::windowFocusedChanged);
+			window->scrollCallback.addStrongObj(sp_this(), &CameraFPS::mouseWheelUpdate);
+		}
+	}
+
+	void CameraFPS::deregisterToWindowCallbacks()
+	{
+		if (!registeredWindow.expired())
+		{
+			sp<Window> window = registeredWindow.lock();
+			window->cursorPosEvent.removeStrong(sp_this(), &CameraFPS::mouseMoved);
+			window->mouseLeftEvent.removeStrong(sp_this(), &CameraFPS::windowFocusedChanged);
+			window->scrollCallback.removeStrong(sp_this(), &CameraFPS::mouseWheelUpdate);
 		}
 	}
 

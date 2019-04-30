@@ -1,4 +1,5 @@
 #include "SAWindowSubsystem.h"
+#include "SAGameBase.h"
 
 namespace SA
 {
@@ -15,14 +16,29 @@ namespace SA
 
 	void WindowSubsystem::tick(float deltaSec)
 	{
+		glfwPollEvents();
 		if (focusedWindow)
 		{
-			//fill out as needed, perhaps this subsystem will handle drawing of windows
 			if (focusedWindow->shouldClose())
 			{
+				//perhaps try to find another valid window
 				makeWindowPrimary(nullptr);
 			}
 		}
+	}
+
+	void WindowSubsystem::handlePostRender()
+	{
+		//will need to do this for all windows that were rendered to if supporting more than a single window
+		if (focusedWindow)
+		{
+			glfwSwapBuffers(focusedWindow->get());
+		}
+	}
+
+	void WindowSubsystem::initSystem()
+	{
+		GameBase::get().SubscribePostRender(sp_this());
 	}
 }
 

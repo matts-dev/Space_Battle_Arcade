@@ -24,9 +24,9 @@ namespace SA
 		glm::mat4 getView() const;
 
 		//callbacks
-		virtual void mouseMoved(double xpos, double ypos) override;
-		virtual void windowFocusedChanged(int focusEntered) override;
-		virtual void mouseWheelUpdate(double xOffset, double yOffset) override;
+		virtual void mouseMoved(double xpos, double ypos);
+		virtual void windowFocusedChanged(int focusEntered);
+		virtual void mouseWheelUpdate(double xOffset, double yOffset);
 
 		void handleInput(GLFWwindow* window, float deltaTime);
 
@@ -47,7 +47,12 @@ namespace SA
 		void setCursorMode(bool inCursorMode);
 		bool isInCursorMode() { return cursorMode; }
 
+	public:
+		virtual void registerToWindowCallbacks(sp<Window>& window) override;
+		virtual void deregisterToWindowCallbacks() override;
+
 	private: //helper fields
+		wp<SA::Window> registeredWindow;
 		double lastX;
 		double lastY;
 		bool refocused = true;

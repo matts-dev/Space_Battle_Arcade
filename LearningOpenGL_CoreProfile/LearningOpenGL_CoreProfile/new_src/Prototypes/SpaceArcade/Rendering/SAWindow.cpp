@@ -190,6 +190,17 @@ namespace SA
 		return glfwWindowShouldClose(window);
 	}
 
+	float Window::getAspect()
+	{
+		int width, height;
+
+		//unsure if this should be framebuffer size or actual window size
+		glfwGetFramebufferSize(window, &width, &height);
+		//glfwGetWindowSize(window, &width, &height);
+
+		return (float)width / height;
+	}
+
 	void Window::setViewportToWindowSize()
 	{
 		//window size is not in pixels, but frame size returns the framebuffer size which is pixels.

@@ -18,5 +18,9 @@ namespace SA
 	private:
 		friend GameBase;
 		virtual void tick(float deltaSec) = 0;
+
+		/** Called when main game subsystems can safely be accessed; though not all may be initialized */
+		virtual void initSystem() {};
+		virtual void handlePostRender() {}
 	};
 }

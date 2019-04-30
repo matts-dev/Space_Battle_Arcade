@@ -7,19 +7,7 @@
 
 SA::CameraBase::~CameraBase()
 {
-	//clean up if this is currently the registered camera for callbacks
-	CameraCallbackRegister::deregister(*this);
 }
 
-void SA::CameraBase::registerToWindowCallbacks(GLFWwindow* window)
-{
-	if (window)
-	{
-		CameraCallbackRegister::registerExclusive(*window, *this);
-	}
-	else
-	{
-		std::cerr << "warning: null window passed when attempting to register for glfw mouse callbacks" << std::endl;
-	}
-}
+
 

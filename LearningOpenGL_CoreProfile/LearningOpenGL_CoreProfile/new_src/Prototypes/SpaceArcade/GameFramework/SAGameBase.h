@@ -13,31 +13,42 @@ namespace SA
 
 	class GameBase : public GameEntity, public RemoveCopies, public RemoveMoves
 	{
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	//  Construction
+	/////////////////////////////////////////////////////////////////////////////////////
 	public:
 		GameBase();
 
-		//Subsystem getters
-		WindowSubsystem& getWindowSubsystem() { return *windowSS; }
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	///  START UP
+	//  Base Class Singleton
+	/////////////////////////////////////////////////////////////////////////////////////
+	public:
+		static GameBase& get();
+
+	private:
+		/** It is preferred to make a static getter in the implemented subclass, but this
+		    exists to avoid having subsystems know about concrete class types*/
+		static GameBase* RegisteredSingleton;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	//  START UP / SHUT DOWN
 	/////////////////////////////////////////////////////////////////////////////////////
 	public: //starting system
 		/** Starts up systems and begins game loop */
 		void start();
 	protected:
-		/** 
-			Child game classes should set up pre-gameloop state here.
-
-			#return value Provide an initial primary window on startup.
-		*/
+		/** Child game classes should set up pre-gameloop state here.
+			#return value Provide an initial primary window on startup.	*/
 		virtual sp<Window> startUp() = 0;
+		virtual void shutDown() = 0;
 	private: //starting systems
 		bool bStarted = false;
 		bool bExitGame = false;
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	///  GAME LOOP
+	//  GAME LOOP
 	//////////////////////////////////////////////////////////////////////////////////////
 	private: 
 		void TickGameloop();
@@ -46,11 +57,23 @@ namespace SA
 		void startShutdown() { bExitGame = true; }
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	///  SUBSYSTEMS 
+	//  SUBSYSTEMS 
 	//////////////////////////////////////////////////////////////////////////////////////
+	public:
+		//Subsystem getters
+		WindowSubsystem& getWindowSubsystem() { return *windowSS; }
+
+		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
+		void SubscribePostRender(const sp <SubsystemBase>& subsystem);
+
 	private: //subsystems
 		sp<WindowSubsystem> windowSS;
 		std::set< sp<SubsystemBase> > subsystems;
+		std::set< sp<SubsystemBase> > postRenderNotifys;
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	//  Time
+	//////////////////////////////////////////////////////////////////////////////////////
 
 	private: //time management 
 		/** Time management needs to be separate from subsystems since their tick relies on its results. */

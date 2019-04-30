@@ -148,6 +148,8 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\RemoveSpecialMemberFunctionUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\SADemoInterface.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\SAUtilities.h" />
@@ -369,14 +371,14 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSubsystem.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\DemoTemplate.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_MultipleInstantiation.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\PlayerControlTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SACameraFPS.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAShader.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\SpaceArcadeModels\test_spacearcade_models.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\SAUtilities.cpp" />
     <ClCompile Include="new_src\Tests\collada_import_assimp_test.cpp" />
     <ClCompile Include="new_src\Tests\does_out_vars_undergoes_w_division.cpp" />
