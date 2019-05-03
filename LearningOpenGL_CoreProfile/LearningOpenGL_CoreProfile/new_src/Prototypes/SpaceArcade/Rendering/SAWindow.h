@@ -31,6 +31,7 @@ namespace SA
 	//window instances
 	public:
 		Window(uint32_t width, uint32_t height);
+		virtual void postConstruct() override;
 		~Window();
 
 		inline GLFWwindow* get() { return window; }
@@ -39,6 +40,9 @@ namespace SA
 		float getAspect();
 
 		void setViewportToWindowSize();
+
+	private:
+		void handleFramebufferSizeChanged(int width, int height);
 
 	private:
 		GLFWwindow* window;

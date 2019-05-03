@@ -1,7 +1,6 @@
 #include "..\..\Rendering\SAWindow.h"
-#include "..\..\Tools\SmartPointerAlias.h"
 #include "..\..\Rendering\OpenGLHelpers.h"
-
+#include "..\SAGameEntity.h"
 
 namespace
 {
@@ -16,6 +15,8 @@ namespace
 
 	int trueMain()
 	{
+		using namespace SA;
+
 		sp<SA::Window> window_1 = new_sp<SA::Window>(1000, 500);
 
 		sp<MouseMonitor> mm = new_sp<MouseMonitor>();

@@ -1,10 +1,9 @@
-#include "..\Tools\SmartPointerAlias.h"
 #include "EngineTestSuite.h"
 #include <iostream>
 
-namespace
+namespace SA
 {
-	int trueMain()
+	int RunEngineTests()
 	{
 		sp<SA::EngineTestSuite> engineTests = new_sp<SA::EngineTestSuite>();
 		engineTests->run(false);
@@ -16,5 +15,5 @@ namespace
 
 //int main()
 //{
-//	return trueMain();
+//	return SA::RunEngineTests();
 //}

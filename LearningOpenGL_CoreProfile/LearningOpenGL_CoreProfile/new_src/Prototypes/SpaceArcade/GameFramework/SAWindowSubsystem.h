@@ -1,6 +1,5 @@
 #pragma once
 #include "SASubsystemBase.h"
-#include "..\Tools\SmartPointerAlias.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
 #include "..\Rendering\SAWindow.h"
 #include <cstdint>

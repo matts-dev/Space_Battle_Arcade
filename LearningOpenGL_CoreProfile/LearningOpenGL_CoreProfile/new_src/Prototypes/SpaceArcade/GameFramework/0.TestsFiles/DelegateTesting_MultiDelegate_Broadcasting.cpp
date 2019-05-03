@@ -1,5 +1,4 @@
 #include "..\..\Rendering\SAWindow.h"
-#include "..\..\Tools\SmartPointerAlias.h"
 #include "..\..\Rendering\OpenGLHelpers.h"
 #include "..\SAGameEntity.h"
 #include "..\..\Tools\DataStructures\MultiDelegate.h"
@@ -8,12 +7,12 @@
 #include <string>
 
 
-namespace
+namespace SA
 {
 	class MouseTracker : public SA::GameEntity
 	{
 	public:
-		void bindDelegate(MultiDelegate<double, double>& posDelegate)
+		void bindDelegate(SA::MultiDelegate<double, double>& posDelegate)
 		{
 			//different ways to get a shaped ptr in game framework
 			sp<MouseTracker> a = std::static_pointer_cast<MouseTracker>(shared_from_this());
@@ -34,7 +33,7 @@ namespace
 	class ADifferentMouseTracker : public SA::GameEntity{
 		void posUpdated(double xpos, double ypos) { std::cout << "this " << this << " pos changed callback" << xpos << " " << ypos << std::endl;}
 	public:
-		void bindDelegate(MultiDelegate<double, double>& posDelegate){
+		void bindDelegate(SA::MultiDelegate<double, double>& posDelegate){
 			//sp_this() compiles for in-line usage!
 			std::cout << this << " : binding mouse pos callback" << std::endl;
 			posDelegate.addStrongObj(sp_this(), &ADifferentMouseTracker::posUpdated);
@@ -64,7 +63,7 @@ namespace
 	class CallbackTester : public SA::GameEntity
 	{
 	public:
-		MultiDelegate<const int, float&, const bool&> complexPrimitivesCopy;
+		SA::MultiDelegate<const int, float&, const bool&> complexPrimitivesCopy;
 		void handleComplexPrim(const int cint, float& floatref, const bool& crefb)
 		{
 			std::cout << "ci:" << cint << " f:" << floatref << " rval bool: " << crefb << std::endl;

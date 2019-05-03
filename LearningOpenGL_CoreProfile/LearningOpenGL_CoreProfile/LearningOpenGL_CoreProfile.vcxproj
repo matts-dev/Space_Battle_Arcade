@@ -155,7 +155,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\RemoveSpecialMemberFunctionUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\SADemoInterface.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\SAUtilities.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\SmartPointerAlias.h" />
     <ClInclude Include="new_src\Utilities\CubeTexturedMesh.h" />
     <ClInclude Include="new_src\Utilities\FrameRateDisplay.h" />
     <ClInclude Include="new_src\Utilities\Lighting\ConeLight.h" />
@@ -367,6 +366,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\EngineTests\DelegateTests.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestRunner.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\GameEntityAndSharedPtrIncludeOrder.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\DelegateTesting_MultiDelegate_Broadcasting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\GameBaseTesting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_Callbacks.cpp" />

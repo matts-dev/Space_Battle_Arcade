@@ -179,6 +179,14 @@ namespace SA
 
 	}
 
+	void Window::postConstruct()
+	{
+		//it is weird that it listens to its own delegate, but the alternative is to friend the
+		//interface between the C api that calls the event. But I also wanted to test the system for
+		//letting objects subscrib at construction. So this acts as sa test for that.
+		framebufferSizeChanged.addWeakObj(sp_this(), &Window::handleFramebufferSizeChanged);
+	}
+
 	Window::~Window()
 	{
 		windowStatics.stopTrackingWindow(window);
@@ -213,6 +221,12 @@ namespace SA
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 
+		ec(glViewport(0, 0, width, height));
+	}
+
+	void Window::handleFramebufferSizeChanged(int width, int height)
+	{
+		//update view port to support resizing
 		ec(glViewport(0, 0, width, height));
 	}
 

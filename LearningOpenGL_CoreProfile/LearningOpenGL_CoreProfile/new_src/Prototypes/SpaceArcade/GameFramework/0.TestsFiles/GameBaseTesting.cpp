@@ -1,14 +1,14 @@
 #include "..\..\Rendering\SAWindow.h"
-#include "..\..\Tools\SmartPointerAlias.h"
 #include "..\..\Rendering\OpenGLHelpers.h"
 #include "..\SAGameBase.h"
 #include "..\SAWindowSubsystem.h"
 #include "..\..\Rendering\Camera\SACameraFPS.h"
 #include "..\..\Rendering\SAShader.h"
-
+#include "..\SAGameEntity.h"
 
 namespace
 {
+	using namespace SA;
 	const char* const litObjectShaderVertSrc = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;			
@@ -132,6 +132,7 @@ namespace
 
 	class ProtoGame : public SA::GameBase
 	{
+		
 	public:
 
 		static ProtoGame& get() 
@@ -142,6 +143,8 @@ namespace
 	private:
 		virtual sp<SA::Window> startUp() override
 		{
+			using namespace SA;
+
 			int width = 1000, height = 500;
 			sp<SA::Window> window = new_sp<SA::Window>(width, height);
 			ec(glViewport(0,0, width, height)); //TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?

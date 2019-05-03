@@ -1,12 +1,13 @@
 #include "..\..\Rendering\SAWindow.h"
-#include "..\..\Tools\SmartPointerAlias.h"
 #include "..\..\Rendering\OpenGLHelpers.h"
-
+#include "..\SAGameEntity.h"
 
 namespace
 {
 	int trueMain()
 	{
+		using namespace SA;
+
 		sp<SA::Window> window_1 = new_sp<SA::Window>(100, 50);
 		sp<SA::Window> window_2 = new_sp<SA::Window>(200, 100);
 		sp<SA::Window> window_3 = new_sp<SA::Window>(300, 200);

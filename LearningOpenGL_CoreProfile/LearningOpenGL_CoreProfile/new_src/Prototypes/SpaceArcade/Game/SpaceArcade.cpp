@@ -1,7 +1,6 @@
 #include "SpaceArcade.h"
 
 #include "..\Rendering\SAWindow.h"
-#include "..\Tools\SmartPointerAlias.h"
 #include "..\Rendering\OpenGLHelpers.h"
 #include "..\Rendering\Camera\SACameraFPS.h"
 #include "..\Rendering\SAShader.h"
@@ -11,7 +10,6 @@
 #include "..\Tools\ModelLoading\SAModel.h"
 
 #include "..\Rendering\BuiltInShaders.h"
-
 
 namespace SA
 {
