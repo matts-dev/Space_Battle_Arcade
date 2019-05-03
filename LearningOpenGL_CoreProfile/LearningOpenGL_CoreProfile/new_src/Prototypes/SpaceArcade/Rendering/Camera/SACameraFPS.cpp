@@ -185,7 +185,7 @@ namespace SA
 			//adding strong bindings for speed, but this will keep camera alive through shared_ptrs and must be cleared via deregister
 			window->cursorPosEvent.addStrongObj(sp_this(), &CameraFPS::mouseMoved);
 			window->mouseLeftEvent.addStrongObj(sp_this(), &CameraFPS::windowFocusedChanged);
-			window->scrollCallback.addStrongObj(sp_this(), &CameraFPS::mouseWheelUpdate);
+			window->scrollChanged.addStrongObj(sp_this(), &CameraFPS::mouseWheelUpdate);
 		}
 	}
 
@@ -196,7 +196,7 @@ namespace SA
 			sp<Window> window = registeredWindow.lock();
 			window->cursorPosEvent.removeStrong(sp_this(), &CameraFPS::mouseMoved);
 			window->mouseLeftEvent.removeStrong(sp_this(), &CameraFPS::windowFocusedChanged);
-			window->scrollCallback.removeStrong(sp_this(), &CameraFPS::mouseWheelUpdate);
+			window->scrollChanged.removeStrong(sp_this(), &CameraFPS::mouseWheelUpdate);
 		}
 	}
 

@@ -103,9 +103,14 @@ namespace SA
 	static void c_callback_Scroll(GLFWwindow* window, double xOffset, double yOffset)
 	{
 		Window& windowObj = windowStatics.findWindow(window);
-		windowObj.scrollCallback.broadcast(xOffset, yOffset);
+		windowObj.scrollChanged.broadcast(xOffset, yOffset);
 	}
 
+	static void c_callback_FramebufferSize(GLFWwindow* window, int width, int height)
+	{
+		Window& windowObj = windowStatics.findWindow(window);
+		windowObj.framebufferSizeChanged.broadcast(width, height);
+	}
 
 	///this must come after callbacks for proper definition order, otherwise forward declarations are going to be needed
 	void WindowStaticsImplementation::bindWindowCallbacks(GLFWwindow* window)
@@ -114,6 +119,7 @@ namespace SA
 		glfwSetCursorPosCallback(window, &c_callback_CursorPos);
 		glfwSetCursorEnterCallback(window, &c_callback_CursorEnter);
 		glfwSetScrollCallback(window, &c_callback_Scroll);
+		glfwSetFramebufferSizeCallback(window, &c_callback_FramebufferSize);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

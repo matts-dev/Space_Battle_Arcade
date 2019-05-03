@@ -53,7 +53,7 @@ namespace SA
 	private: 
 		void TickGameloop();
 	protected:
-		virtual void TickGameLoopDerived(float deltaTimeSecs) = 0;
+		virtual void tickGameLoopDerived(float deltaTimeSecs) = 0;
 		void startShutdown() { bExitGame = true; }
 
 	//////////////////////////////////////////////////////////////////////////////////////

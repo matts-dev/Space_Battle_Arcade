@@ -29,6 +29,8 @@ namespace SA
 		GLuint loadTextureToOpengl(const char* relative_filepath, int texture_unit = -1, bool useGammaCorrection = false);
 
 		extern const float cubeVerticesWithUVs[36 * 5];
-		extern const float cubeVerticesWithNormals[36 * 6];
+
+		//unit create cube (that matches the size of the collision cube)
+		extern const float unitCubeVertices_Position_Normal[36 * 6];
 	}
 }

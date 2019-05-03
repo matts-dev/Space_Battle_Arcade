@@ -161,8 +161,9 @@ namespace SA
 			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 		};
 
-
-		const float cubeVerticesWithNormals[] = {
+		//unit create cube (that matches the size of the collision cube)
+		const float unitCubeVertices_Position_Normal[] = {
+			//x     y       z      _____normal_xyz___
 			-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 			0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 			0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,

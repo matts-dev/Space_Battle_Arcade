@@ -24,7 +24,8 @@ namespace SA
 	public:
 		MultiDelegate<double /*x*/, double /*y*/> cursorPosEvent;
 		MultiDelegate<int /*Enter*/> mouseLeftEvent;
-		MultiDelegate<double /*xOffset*/, double /*yOffset*/> scrollCallback;
+		MultiDelegate<double /*xOffset*/, double /*yOffset*/> scrollChanged;
+		MultiDelegate<int /*newWidth*/, int /*newHeight*/> framebufferSizeChanged;
 		
 
 	//window instances
@@ -37,7 +38,6 @@ namespace SA
 		bool shouldClose();
 		float getAspect();
 
-	private:
 		void setViewportToWindowSize();
 
 	private:

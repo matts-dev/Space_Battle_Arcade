@@ -73,7 +73,7 @@ namespace SA
 			subsystem->tick(deltaTimeSecs);
 		}
 
-		TickGameLoopDerived(deltaTimeSecs);
+		tickGameLoopDerived(deltaTimeSecs);
 
 		//perhaps this should be a subscription service since few systems care about post render
 		for (const sp<SubsystemBase>& subsystem : postRenderNotifys)
