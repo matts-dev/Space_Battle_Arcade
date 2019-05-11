@@ -212,7 +212,13 @@ namespace SA
 		glfwGetFramebufferSize(window, &width, &height);
 		//glfwGetWindowSize(window, &width, &height);
 
-		return (float)width / height;
+		float aspect = static_cast<float>(width) / height;
+		if (aspect != 0.0f) 
+		{
+			//make sure user can't do scale window in a way that has 0 as aspect in some sort.
+			assert(true);
+		}
+		return aspect;
 	}
 
 	void Window::setViewportToWindowSize()

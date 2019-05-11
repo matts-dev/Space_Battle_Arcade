@@ -100,25 +100,30 @@ namespace SA
 
 	void CameraFPS::handleInput(GLFWwindow* window, float deltaTime)
 	{
+		float bSpeedAccerlationFactor = 1.0f;
+		if (bAllowSpeedModifier && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		{
+			bSpeedAccerlationFactor = 10.0f;
+		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
-			cameraPosition -= cameraFront_n * cameraSpeed * deltaTime;
+			cameraPosition -= cameraFront_n * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
 		}
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			cameraPosition += cameraFront_n * cameraSpeed * deltaTime;
+			cameraPosition += cameraFront_n * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
 			//the w basis vector is the -cameraFront
 			glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
-			cameraPosition += cameraRight * cameraSpeed * deltaTime;
+			cameraPosition += cameraRight * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
 		}
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
 			//the w basis vector is the -cameraFront
 			glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
-			cameraPosition -= cameraRight * cameraSpeed * deltaTime;
+			cameraPosition -= cameraRight * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
 		}
 	}
 

@@ -102,7 +102,7 @@ namespace SA
 		//glDeleteVertexArrays(1, &VAO);
 	}
 
-	void Mesh3D::draw(Shader& shader)
+	void Mesh3D::draw(Shader& shader) const
 	{
 		using std::string;
 

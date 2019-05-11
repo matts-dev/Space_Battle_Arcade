@@ -26,7 +26,7 @@ namespace SA
 
 	}
 
-	void Model3D::draw(Shader& shader)
+	void Model3D::draw(Shader& shader) const
 	{
 		for (uint32_t i = 0; i < meshes.size(); ++i)
 		{

@@ -2,6 +2,7 @@
 #include "SASubsystemBase.h"
 #include "SAWindowSubsystem.h"
 #include "..\Rendering\SAWindow.h"
+#include <iostream>
 
 namespace SA
 {
@@ -40,6 +41,9 @@ namespace SA
 			bStarted = true;
 
 			//initialize subsystems; this is not done in gamebase ctor because it subsystemse may call gamebase virtuals
+			bCustomSubsystemRegistrationAllowedTimeWindow = true;
+			onRegisterCustomSubsystem();
+			bCustomSubsystemRegistrationAllowedTimeWindow = false;
 			for (const sp<SubsystemBase>& subsystem : subsystems)
 			{
 				subsystem->initSystem();
@@ -53,7 +57,7 @@ namespace SA
 			//game loop processes
 			while (!bExitGame)
 			{
-				TickGameloop();
+				TickGameloop_GameBase();
 			}
 
 			//begin shutdown process
@@ -64,7 +68,7 @@ namespace SA
 		}
 	}
 
-	void GameBase::TickGameloop()
+	void GameBase::TickGameloop_GameBase()
 	{
 		updateTime();
 
@@ -73,7 +77,7 @@ namespace SA
 			subsystem->tick(deltaTimeSecs);
 		}
 
-		tickGameLoopDerived(deltaTimeSecs);
+		tickGameLoop(deltaTimeSecs);
 
 		//perhaps this should be a subscription service since few systems care about post render
 		for (const sp<SubsystemBase>& subsystem : postRenderNotifys)
@@ -85,6 +89,18 @@ namespace SA
 	void GameBase::SubscribePostRender(const sp < SubsystemBase>& subsystem)
 	{
 		postRenderNotifys.insert(subsystem);
+	}
+
+	void GameBase::RegisterCustomSubsystem(const sp <SubsystemBase>& subsystem)
+	{
+		if (bCustomSubsystemRegistrationAllowedTimeWindow)
+		{
+			subsystems.insert(subsystem);
+		}
+		else
+		{
+			std::cerr << "FATAL: attempting to register a custom subsystem outside of start up window; use appropraite virtual function to register these systems" << std::endl;
+		}
 	}
 
 	void GameBase::updateTime()

@@ -97,7 +97,7 @@ namespace SA
 				uniform float lightConstant			= 1.f;
 				uniform float lightLinear			= 0.09f;
 				uniform float lightQuadratic		= 0.032f;
-				uniform vec3 directionalLightDir	= vec3(-1, -1, -1);
+				uniform vec3 directionalLightDir	= vec3(1, -1, -1);
 				uniform vec3 directionalLightColor	= vec3(1, 1, 1);
 
 				in vec3 fragNormal;

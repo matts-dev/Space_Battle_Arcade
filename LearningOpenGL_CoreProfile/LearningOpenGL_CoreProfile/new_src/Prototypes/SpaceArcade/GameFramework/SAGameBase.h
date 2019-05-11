@@ -51,9 +51,9 @@ namespace SA
 	//  GAME LOOP
 	//////////////////////////////////////////////////////////////////////////////////////
 	private: 
-		void TickGameloop();
+		void TickGameloop_GameBase();
 	protected:
-		virtual void tickGameLoopDerived(float deltaTimeSecs) = 0;
+		virtual void tickGameLoop(float deltaTimeSecs) = 0;
 		void startShutdown() { bExitGame = true; }
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +65,11 @@ namespace SA
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
 		void SubscribePostRender(const sp <SubsystemBase>& subsystem);
+	private:
+		bool bCustomSubsystemRegistrationAllowedTimeWindow = false;
+	protected:
+		virtual void onRegisterCustomSubsystem() {};
+		void RegisterCustomSubsystem(const sp <SubsystemBase>& subsystem);
 
 	private: //subsystems
 		sp<WindowSubsystem> windowSS;

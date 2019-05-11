@@ -188,7 +188,7 @@ namespace
 		GLuint cubeVAO, cubeVBO;
 
 		//putting tick below rest class so it will be close to bottom of file.
-		virtual void tickGameLoopDerived(float deltaTimeSecs) override
+		virtual void tickGameLoop(float deltaTimeSecs) override
 		{
 			using namespace SA;
 			using glm::vec3; using glm::vec4; using glm::mat4; 

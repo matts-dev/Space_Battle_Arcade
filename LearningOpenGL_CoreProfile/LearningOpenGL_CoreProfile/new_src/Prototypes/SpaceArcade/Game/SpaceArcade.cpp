@@ -10,6 +10,10 @@
 #include "..\Tools\ModelLoading\SAModel.h"
 
 #include "..\Rendering\BuiltInShaders.h"
+#include "SAShip.h"
+#include <random>
+#include "SACollisionSubsystem.h"
+#include "..\GameFramework\Input\SAInput.h"
 
 namespace SA
 {
@@ -53,6 +57,32 @@ namespace SA
 		sp<Model3D> carrierModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/Carrier/SGCarrier.obj");
 		loadedModels.push_back(carrierModel);
 
+		Transform carrierTransform;
+		carrierTransform.position = { 200,0,0 };
+		carrierTransform.scale = { 5, 5, 5 };
+		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
+		sp<Ship> carrierShip1 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
+
+		std::random_device rng;
+		std::seed_seq seed{ 28 };
+		std::mt19937 rng_eng = std::mt19937(seed);
+		std::uniform_real_distribution<float> startDist(-200.f, 200.f); //[a, b)
+		for (int fighterShip = 0; fighterShip < 5000; ++fighterShip)
+		{
+			glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
+			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little addhoc, but with radians it should cover full 360 possibilities
+			startPos += carrierTransform.position;
+			Transform fighterXform = Transform{ startPos, rot, {0.1,0.1,0.1} };
+			spawnEntity<Ship>(fighterModel, fighterXform, createUnitCubeCollisionInfo());
+		}
+
+		carrierTransform.position.y += 50;
+		carrierTransform.position.x += 120;
+		carrierTransform.position.z -= 50;
+		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
+		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
+
+
 		return window;
 	}
 
@@ -64,8 +94,23 @@ namespace SA
 		ec(glDeleteBuffers(1, &cubeVBO));
 	}
 
+	void SpaceArcade::renderDebug(const glm::mat4& view,  const glm::mat4& projection)
+	{
+#ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
+		auto& worldGrid = getCollisionSS()->getWorldGrid();
+		if (bRenderDebugCells)
+		{
+			glm::vec3 color{ 0.5f, 0.f, 0.f };
+			SpatialHashCellDebugVisualizer::render(worldGrid, view, projection, color);
+		}
+		//TODO: this is a candidate for a ticker and a ticker subsystem
+		SpatialHashCellDebugVisualizer::clearCells(worldGrid);
+#endif //SA_CAPTURE_SPATIAL_HASH_CELLS
+
+	}
+
 	//putting tick below rest class so it will be close to bottom of file.
-	void SpaceArcade::tickGameLoopDerived(float deltaTimeSecs) 
+	void SpaceArcade::tickGameLoop(float deltaTimeSecs) 
 	{
 		using namespace SA;
 		using glm::vec3; using glm::vec4; using glm::mat4;
@@ -87,10 +132,16 @@ namespace SA
 		ec(glClearColor(0, 0, 0, 1));
 		ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
+		for (const sp<WorldEntity>& entity : worldEntities)
+		{
+			entity->tick(deltaTimeSecs);
+		}
 
 		mat4 view = fpsCamera->getView();
-		mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 300.0f);
+		mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 500.0f);
 		 
+		renderDebug(view, projection);
+
 		{ //render cube
 			mat4 model = glm::mat4(1.f);
 			model = glm::translate(model, vec3(5.f, 0.f, -5.f));
@@ -104,19 +155,19 @@ namespace SA
 			ec(glDrawArrays(GL_TRIANGLES, 0, sizeof(Utils::unitCubeVertices_Position_Normal) / (6 * sizeof(float))));
 		}
 
+		//render world entities
 		forwardShadedModelShader->use();
-
-		{//render fighter model
+		forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+		forwardShadedModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+		forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
+		forwardShadedModelShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
+		forwardShadedModelShader->setUniform1i("material.shininess", 32);
+		for (const sp<RenderModelEntity>& entity : renderEntities)
+		{
 			mat4 model = glm::mat4(1.f);
 			model = glm::translate(model, vec3(5.f, 0.f, -5.f));
-			forwardShadedModelShader->use();
-			forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-			forwardShadedModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-			forwardShadedModelShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
-			forwardShadedModelShader->setUniform1i("material.shininess", 32);
-			loadedModels[0]->draw(*forwardShadedModelShader);
+			forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
+			entity->getModel()->draw(*forwardShadedModelShader);
 		}
 
 		{//render fighter carrier model
@@ -129,9 +180,15 @@ namespace SA
 			forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
 			forwardShadedModelShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
 			forwardShadedModelShader->setUniform1i("material.shininess", 32);
-			loadedModels[1]->draw(*forwardShadedModelShader);
+			//loadedModels[1]->draw(*forwardShadedModelShader);
 		}
 
+	}
+
+	void SpaceArcade::onRegisterCustomSubsystem()
+	{
+		CollisionSS = new_sp<CollisionSubsystem>();
+		RegisterCustomSubsystem(CollisionSS);
 	}
 
 	void SpaceArcade::updateInput(float detltaTimeSec)
@@ -142,6 +199,14 @@ namespace SA
 			if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			{
 				startShutdown();
+			}
+
+			//debug
+			static InputTracker DebugInputTracker;
+			DebugInputTracker.updateState(window);
+			if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 
+			{ 
+				if(DebugInputTracker.isKeyJustPressed(window, GLFW_KEY_C)) { bRenderDebugCells = !bRenderDebugCells; }
 			}
 		}
 	}

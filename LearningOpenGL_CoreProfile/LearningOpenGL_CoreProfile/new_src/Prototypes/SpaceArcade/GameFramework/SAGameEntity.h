@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include "../Game/OptionalCompilationMacros.h"
 
 namespace SA
 {
@@ -52,7 +53,7 @@ namespace SA
 		template<typename T>
 		sp<T> sp_this_impl()
 		{
-			//static cast safe because this must be called from base classes 
+			//static cast safe because this must be called from derived classes 
 			//static cast for speed; does not inccur RTTI overhead of dynamic cast
 			return std::static_pointer_cast<T>(shared_from_this());
 		}
@@ -99,7 +100,7 @@ namespace SA
 	template<typename T, typename... Args>
 	sp<T> new_sp(Args&&... args)
 	{
-		if (std::is_base_of<SA::GameEntity, T>::value)
+		if constexpr (std::is_base_of<SA::GameEntity, T>::value)
 		{
 			sp<T> newObj = std::make_shared<T>(std::forward<Args>(args)...);
 			//safe cast because of type-trait
