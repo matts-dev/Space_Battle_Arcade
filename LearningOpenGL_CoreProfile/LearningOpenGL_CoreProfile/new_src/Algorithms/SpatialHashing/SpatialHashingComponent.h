@@ -23,9 +23,23 @@
 #include <memory>
 #include <iostream>
 #include <cstdint>
+#include <array>
 
 namespace SH
 {
+	/** axis aligned bounding box(AABB); transform each point into new array to get Oriented Bounding Box (OBB) */
+	const std::array<const glm::vec4, 8> AABB =
+	{
+		glm::vec4(-0.5f, -0.5f, -0.5f,	1.0f),
+		glm::vec4(-0.5f, -0.5f, 0.5f,	1.0f),
+		glm::vec4(-0.5f, 0.5f, -0.5f,	1.0f),
+		glm::vec4(-0.5f, 0.5f, 0.5f,	1.0f),
+		glm::vec4(0.5f, -0.5f, -0.5f,	1.0f),
+		glm::vec4(0.5f, -0.5f, 0.5f,	1.0f),
+		glm::vec4(0.5f, 0.5f, -0.5f,	1.0f),
+		glm::vec4(0.5f, 0.5f, 0.5f,     1.0f),
+	};
+
 	struct Transform
 	{
 		glm::vec3 position = { 0, 0, 0 };
@@ -195,13 +209,14 @@ namespace SH
 		* bounding box has 8 corner vertices, which is why this an array of size 8. 
 		*
 		* Always does insertion. Good for performance worst-case testing.
+		* @Param oriented bound box (OBB) in the spatial hash grid's local space.
 		*
 		* unique_ptr holds an RAII object that will manage cleanup from the spatial hash.
 		*/
-		std::unique_ptr<HashEntry<T>> insert(T& obj, const std::array<glm::vec4, 8>& localSpaceOBB);
+		std::unique_ptr<HashEntry<T>> insert(T& obj, const std::array<glm::vec4, 8>& OBB_hashLocalSpace);
 
 		/** 
-		* optimized function for updating a prevoius entry. Only does re-hashing if there is change in cell contents
+		* optimized function for updating a previous entry. Only does re-hashing if there is change in cell contents
 		*/
 		void updateEntry(std::unique_ptr<HashEntry<T>>& entry, const std::array<glm::vec4, 8>& newLocalSpaceOBB);
 

@@ -137,11 +137,15 @@
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h" />
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASubsystemBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSubsystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\OptionalCompilationMacros.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SpaceArcade.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\BuiltInShaders.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SACameraFPS.h" />
@@ -374,6 +378,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSubsystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_MultipleInstantiation.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionSubsystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SpaceArcade.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SACameraFPS.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.cpp" />
@@ -387,6 +392,7 @@
     <ClCompile Include="new_src\Tests\does_out_vars_undergoes_w_division.cpp" />
     <ClCompile Include="new_src\Tests\glm_matrix_data_row_vs_column.cpp" />
     <ClCompile Include="new_src\Tests\glm_vs_aimatrix4x4.cpp" />
+    <ClCompile Include="new_src\Tests\how_stbi_loads_colors.cpp" />
     <ClCompile Include="new_src\Utilities\CubeTexturedMesh.cpp" />
     <ClCompile Include="new_src\Utilities\FrameRateDisplay.cpp" />
     <ClCompile Include="new_src\Utilities\Lighting\ConeLight.cpp" />
