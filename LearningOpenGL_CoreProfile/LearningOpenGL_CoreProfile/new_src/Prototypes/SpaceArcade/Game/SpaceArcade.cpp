@@ -14,6 +14,9 @@
 #include <random>
 #include "SACollisionSubsystem.h"
 #include "..\GameFramework\Input\SAInput.h"
+#include <assert.h>
+#include "..\GameFramework\SATextureSubsystem.h"
+#include "SAProjectileSubsystem.h"
 
 namespace SA
 {
@@ -32,6 +35,7 @@ namespace SA
 		litObjShader = new_sp<SA::Shader>(litObjectShader_VertSrc, litObjectShader_FragSrc, false);
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);
 		forwardShadedModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_SimpleLighting_fragSrc, false);
+		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
 
 		//set up unit cube
 		ec(glGenVertexArrays(1, &cubeVAO));
@@ -51,6 +55,12 @@ namespace SA
 		glfwSetInputMode(window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		//load models
+		lazerBoltModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/LazerBolt/LazerBolt.obj");
+		loadedModels.push_back(lazerBoltModel); 
+
+		Transform projectileAABBTransform;
+		lazerBoltHandle = ProjectileSS->createProjectileType(lazerBoltModel, projectileAABBTransform);
+
 		sp<Model3D> fighterModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/Fighter/SGFighter.obj");
 		loadedModels.push_back(fighterModel);
 
@@ -67,7 +77,12 @@ namespace SA
 		std::seed_seq seed{ 28 };
 		std::mt19937 rng_eng = std::mt19937(seed);
 		std::uniform_real_distribution<float> startDist(-200.f, 200.f); //[a, b)
-		for (int fighterShip = 0; fighterShip < 5000; ++fighterShip)
+		
+		int numFighterShipsToSpawn = 5000; 
+#ifdef _DEBUG
+		numFighterShipsToSpawn = 500;
+#endif//NDEBUG 
+		for (int fighterShip = 0; fighterShip < numFighterShipsToSpawn; ++fighterShip)
 		{
 			glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
 			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little addhoc, but with radians it should cover full 360 possibilities
@@ -82,6 +97,12 @@ namespace SA
 		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
 		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
 
+		GLuint radialGradientTex = 0;
+		if (getTextureSubsystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
+		{
+			//loaded!
+		}
+		
 
 		return window;
 	}
@@ -112,7 +133,6 @@ namespace SA
 	//putting tick below rest class so it will be close to bottom of file.
 	void SpaceArcade::tickGameLoop(float deltaTimeSecs) 
 	{
-		using namespace SA;
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
 		const sp<Window>& window = getWindowSubsystem().getPrimaryWindow();
@@ -137,10 +157,23 @@ namespace SA
 			entity->tick(deltaTimeSecs);
 		}
 
+	}
+
+	void SpaceArcade::renderLoop(float deltaTimeSecs)
+	{
+		using glm::vec3; using glm::vec4; using glm::mat4;
+
+		const sp<Window>& window = getWindowSubsystem().getPrimaryWindow();
+		if (!window)
+		{
+			return;
+		}
+
 		mat4 view = fpsCamera->getView();
 		mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 500.0f);
-		 
+
 		renderDebug(view, projection);
+
 
 		{ //render cube
 			mat4 model = glm::mat4(1.f);
@@ -170,17 +203,19 @@ namespace SA
 			entity->getModel()->draw(*forwardShadedModelShader);
 		}
 
-		{//render fighter carrier model
+		forwardShaded_EmissiveModelShader->use();
+		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
+		ProjectileSS->renderProjectiles(*forwardShaded_EmissiveModelShader);
+
+		//DEBUG render lazer bolt
+		{
 			mat4 model = glm::mat4(1.f);
-			model = glm::translate(model, vec3(-10.f, 0.f, -10.f));
+			model = glm::translate(model, vec3(-0.f, 0.f, -0.f));
 			forwardShadedModelShader->use();
 			forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-			forwardShadedModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-			forwardShadedModelShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
-			forwardShadedModelShader->setUniform1i("material.shininess", 32);
-			//loadedModels[1]->draw(*forwardShadedModelShader);
+			lazerBoltModel->draw(*forwardShadedModelShader);
 		}
 
 	}
@@ -189,6 +224,9 @@ namespace SA
 	{
 		CollisionSS = new_sp<CollisionSubsystem>();
 		RegisterCustomSubsystem(CollisionSS);
+
+		ProjectileSS = new_sp<ProjectileSubsystem>();
+		RegisterCustomSubsystem(ProjectileSS);
 	}
 
 	void SpaceArcade::updateInput(float detltaTimeSec)
@@ -201,12 +239,24 @@ namespace SA
 				startShutdown();
 			}
 
+			//TODO probably should create a system that has input bubbling/capturing and binding support from player down to entities
+			static InputTracker input;
+			input.updateState(window);
+
+			if (input.isMouseButtonJustPressed(window, GLFW_MOUSE_BUTTON_LEFT))
+			{
+				//TODO this ideally will go something like:
+				//playerShip = get player controlled ship
+				//playerShip.fireProjectile
+				glm::vec3 start = fpsCamera->getPosition() + glm::vec3(0, -0.25f, 0);
+				glm::vec3 direction = fpsCamera->getFront();
+				ProjectileSS->spawnProjectile(start, direction, *lazerBoltHandle);
+			}
+			 
 			//debug
-			static InputTracker DebugInputTracker;
-			DebugInputTracker.updateState(window);
 			if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 
 			{ 
-				if(DebugInputTracker.isKeyJustPressed(window, GLFW_KEY_C)) { bRenderDebugCells = !bRenderDebugCells; }
+				if(input.isKeyJustPressed(window, GLFW_KEY_C)) { bRenderDebugCells = !bRenderDebugCells; }
 			}
 		}
 	}

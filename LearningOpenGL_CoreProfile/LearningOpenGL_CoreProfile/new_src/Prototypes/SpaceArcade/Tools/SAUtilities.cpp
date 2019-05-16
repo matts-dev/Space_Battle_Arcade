@@ -3,6 +3,7 @@
 #include<fstream>
 #include<sstream>
 #include "..\..\..\..\Libraries\stb_image.h"
+#include <complex>
 
 namespace SA
 {
@@ -117,6 +118,34 @@ namespace SA
 			return textureID;
 		}
 
+		glm::vec3 getDifferentVector(glm::vec3 vec)
+		{
+			if (vec.x < vec.y && vec.z)
+			{
+				vec.x = 1.f;
+			}
+			else if (vec.y < vec.x && vec.z)
+			{
+				vec.y = 1.f;
+			}
+			else if (vec.z < vec.x && vec.y)
+			{
+				vec.z = 1.f;
+			}
+			else //all are equal
+			{
+				if (vec.x == 1.f)
+				{
+					vec.x = -1.f;
+				}
+				else
+				{
+					vec.x = 1.f;
+				}
+			}
+			return vec;
+		}
+
 		const float cubeVerticesWithUVs[] = {
 			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -206,5 +235,17 @@ namespace SA
 			-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
 			-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 		};
+
+		const float quadVerticesWithUVs[] = {
+			//x y z					//u v		
+			 0.5f,  0.5f, 0.0f,      1.0f, 1.0f,   
+			-0.5f,  0.5f, 0.0f,      0.0f, 1.0f,
+			 0.5f, -0.5f, 0.0f,      1.0f, 0.0f,   
+
+			-0.5f, -0.5f, 0.0f,      0.0f, 0.0f,
+			0.5f, -0.5f, 0.0f,      1.0f, 0.0f,
+			-0.5f,  0.5f, 0.0f,      0.0f, 1.0f
+		};
+
 	}
 }

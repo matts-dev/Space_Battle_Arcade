@@ -42,7 +42,7 @@ namespace SA
 namespace SA
 {
 	class GameEntity : public std::enable_shared_from_this<GameEntity>
-	{
+ 	{
 	public:
 		/** Game entities will all have virtual destructors to avoid easy-to-miss mistakes*/
 		virtual ~GameEntity(){}

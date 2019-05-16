@@ -6,15 +6,19 @@
 #include <stack>
 namespace SA
 {
+	//TODO this is probably a temporary class (I should build a proper input routing system), but if not -- refactor so it takes window references to remove branches around checking window if window is not null
 	class InputTracker final
 	{
 	public:
-		bool isKeyJustPressed(GLFWwindow* window, int key);
-		bool isKeyDown(GLFWwindow* window, int key);
 		void updateState(GLFWwindow* window);
 
+		bool isKeyJustPressed(GLFWwindow* window, int key);
+		bool isKeyDown(GLFWwindow* window, int key);
+
+		bool isMouseButtonJustPressed(GLFWwindow* window, int button);
+		bool isMouseButtonDown(GLFWwindow* window, int button);
 	private:
 		std::set<int> keysCurrentlyPressed;
-
+		std::set<int> mouseButtonsCurrentlyPressed;
 	};
 }

@@ -3,12 +3,14 @@
 
 #include "SAGameEntity.h"
 #include "..\Tools\RemoveSpecialMemberFunctionUtils.h"
+#include "..\Tools\DataStructures\MultiDelegate.h"
 
 namespace SA
 {
 	//forward declarations
 	class SubsystemBase;
 	class WindowSubsystem;
+	class TextureSubsystem;
 	class Window;
 
 	class GameBase : public GameEntity, public RemoveCopies, public RemoveMoves
@@ -50,10 +52,15 @@ namespace SA
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  GAME LOOP
 	//////////////////////////////////////////////////////////////////////////////////////
+	public:
+		MultiDelegate<float /*deltaSec*/> PreGameloopTick;
+		MultiDelegate<float /*deltaSec*/> PostGameloopTick;
+
 	private: 
 		void TickGameloop_GameBase();
 	protected:
 		virtual void tickGameLoop(float deltaTimeSecs) = 0;
+		virtual void renderLoop(float deltaTimeSecs) = 0;
 		void startShutdown() { bExitGame = true; }
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +69,7 @@ namespace SA
 	public:
 		//Subsystem getters
 		WindowSubsystem& getWindowSubsystem() { return *windowSS; }
+		TextureSubsystem& getTextureSubsystem() { return *textureSS; }
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
 		void SubscribePostRender(const sp <SubsystemBase>& subsystem);
@@ -73,6 +81,7 @@ namespace SA
 
 	private: //subsystems
 		sp<WindowSubsystem> windowSS;
+		sp<TextureSubsystem> textureSS;
 		std::set< sp<SubsystemBase> > subsystems;
 		std::set< sp<SubsystemBase> > postRenderNotifys;
 	

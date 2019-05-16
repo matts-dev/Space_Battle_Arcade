@@ -13,7 +13,11 @@ namespace SA
 	class CameraFPS;
 	class Shader;
 	class Model3D;
+
 	class CollisionSubsystem;
+	class ProjectileSubsystem;
+	class ProjectileClassHandle;
+
 
 	class SpaceArcade : public GameBase
 	{
@@ -24,6 +28,7 @@ namespace SA
 		virtual sp<SA::Window> startUp() override;
 		virtual void shutDown() override;
 		virtual void tickGameLoop(float deltaTimeSecs) override;
+		virtual void renderLoop(float deltaTimeSecs) override;
 		virtual void onRegisterCustomSubsystem() override;
 
 		void updateInput(float detltaTimeSec);
@@ -47,8 +52,10 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 	public:
 		inline const sp<CollisionSubsystem>& getCollisionSS() noexcept { return CollisionSS; }
+		inline const sp<ProjectileSubsystem>& getProjectileSS() noexcept { return ProjectileSS; }
 	private:
 		sp<CollisionSubsystem> CollisionSS;
+		sp<ProjectileSubsystem> ProjectileSS;
 		/////////////////////////////////////////////////////////////////////////////////////
 
 	private: //debugging
@@ -62,11 +69,14 @@ namespace SA
 		sp<SA::Shader> litObjShader;
 		sp<SA::Shader> lampObjShader;
 		sp<SA::Shader> forwardShadedModelShader;
+		sp<SA::Shader> forwardShaded_EmissiveModelShader;
 
 		//unit cube data
 		GLuint cubeVAO, cubeVBO;
 
 		std::vector<sp<Model3D>> loadedModels;
+		sp<Model3D> lazerBoltModel;
+		sp<ProjectileClassHandle> lazerBoltHandle;
 
 		//gameplay
 		std::set<sp<WorldEntity>> worldEntities;

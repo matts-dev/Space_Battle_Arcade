@@ -3,6 +3,7 @@
 #include "SAWindowSubsystem.h"
 #include "..\Rendering\SAWindow.h"
 #include <iostream>
+#include "SATextureSubsystem.h"
 
 namespace SA
 {
@@ -17,10 +18,13 @@ namespace SA
 		{
 			throw std::runtime_error("Only a single instance of the game can be created.");
 		}
-
+		
 		//create and register subsystems
 		windowSS = new_sp<WindowSubsystem>();
 		subsystems.insert(windowSS);
+
+		textureSS = new_sp<TextureSubsystem>();
+		subsystems.insert(textureSS);
 	}
 
 	GameBase* GameBase::RegisteredSingleton = nullptr;
@@ -64,7 +68,10 @@ namespace SA
 			shutDown();
 
 			//shutdown subsystems after game client has been shutdown
-			//currently not needed, but will do it here when it is needed
+			for (const sp<SubsystemBase>& subsystem : subsystems)
+			{
+				subsystem->shutdown();
+			}
 		}
 	}
 
@@ -72,18 +79,17 @@ namespace SA
 	{
 		updateTime();
 
-		for (const sp<SubsystemBase>& subsystem : subsystems)
-		{
-			subsystem->tick(deltaTimeSecs);
-		}
+		for (const sp<SubsystemBase>& subsystem : subsystems) { subsystem->tick(deltaTimeSecs);	}
 
+		//NOTE: there probably needs to be a priority based pre/post loop; but not needed yet so it is not implemented (priorities should probably be defined in a single file via template specliazations)
+		PreGameloopTick.broadcast(deltaTimeSecs);
 		tickGameLoop(deltaTimeSecs);
+		PostGameloopTick.broadcast(deltaTimeSecs);
+
+		renderLoop(deltaTimeSecs);
 
 		//perhaps this should be a subscription service since few systems care about post render
-		for (const sp<SubsystemBase>& subsystem : postRenderNotifys)
-		{
-			subsystem->handlePostRender();
-		}
+		for (const sp<SubsystemBase>& subsystem : postRenderNotifys) { subsystem->handlePostRender();}
 	}
 
 	void GameBase::SubscribePostRender(const sp < SubsystemBase>& subsystem)

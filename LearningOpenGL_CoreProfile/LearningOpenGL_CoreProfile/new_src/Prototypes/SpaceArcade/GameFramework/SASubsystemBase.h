@@ -21,6 +21,9 @@ namespace SA
 
 		/** Called when main game subsystems can safely be accessed; though not all may be initialized */
 		virtual void initSystem() {};
+
+		/** Called when game is shuting down for resource releasing; resources that require other subsystems should prefer releasing here rather than the dtor of the subsystem */
+		virtual void shutdown() {}
 		virtual void handlePostRender() {}
 	};
 }

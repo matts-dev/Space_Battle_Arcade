@@ -145,6 +145,23 @@ namespace SA
 				}
 			)";
 
+	const char* forwardShadedModel_Emissive_fragSrc = R"(
+				#version 330 core
+
+				out vec4 fragmentColor;
+
+				uniform vec3 cameraPosition;
+				uniform vec3 lightColor	= vec3(1, 1, 1);
+
+				in vec3 fragNormal;
+				in vec3 fragPosition;
+				in vec2 interpTextCoords;
+
+				void main(){
+					fragmentColor = vec4(lightColor	, 1.0f);
+				}
+			)";
+
 
 	const char* forwardShadedModel_vertSrc = R"(
 				#version 330 core
