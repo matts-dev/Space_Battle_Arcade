@@ -247,6 +247,7 @@
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SHDebugUtils.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized.cpp" />
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashingVisualized_ManyObjectsPerfTest.cpp" />
+    <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashing_LineTraceCellsTest.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\animationDemo1.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\LoadedMesh_NM_Anim.cpp" />
     <ClCompile Include="new_src\ImportingModels\Models\AnimatedModelLoader\Model_NM_Anim.cpp" />

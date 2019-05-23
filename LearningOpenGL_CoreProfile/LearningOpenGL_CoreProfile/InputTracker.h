@@ -8,13 +8,16 @@
 class InputTracker final
 {
 public:
+	void updateState(GLFWwindow* window);
 
 	bool isKeyJustPressed(GLFWwindow* window, int key);
 	bool isKeyDown(GLFWwindow* window, int key);
-	void updateState(GLFWwindow* window);
 
+	bool isMouseButtonJustPressed(GLFWwindow* window, int button);
+	bool isMouseButtonDown(GLFWwindow* window, int button);
 private:
 	std::set<int> keysCurrentlyPressed;
+	std::set<int> mouseButtonsCurrentlyPressed;
 
 };
 

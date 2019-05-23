@@ -4,6 +4,8 @@
 #include<sstream>
 #include "..\..\..\..\Libraries\stb_image.h"
 #include <complex>
+#include <vector>
+#include "..\Rendering\SAShader.h"
 
 namespace SA
 {
@@ -116,6 +118,73 @@ namespace SA
 			stbi_image_free(textureData);
 
 			return textureID;
+		}
+
+		void renderDebugWireCube(SA::Shader& debugShader, const glm::vec3 color, const glm::mat4& model, const glm::mat4& view, const glm::mat4& perspective)
+		{
+			//would be much faster if we just render a unit cube VBO and transform it in polygonmode lines, 
+			//this should be regarded as less-than-ideal immediate_mode-like method but a quick and dirty way to test things
+
+			glm::vec4 FBR(0.5f, -0.5f, 0.5f,		1.f);
+			glm::vec4 FTR(0.5f, 0.5f, 0.5f,			1.f);
+			glm::vec4 FTL(-0.5f, 0.5f, 0.5f,		1.f);
+			glm::vec4 FBL(-0.5f, -0.5f, 0.5f,		1.f);
+			glm::vec4 BBR(0.5f, -0.5f, -0.5f,		1.f);
+			glm::vec4 BTR(0.5f, 0.5f, -0.5f,		1.f);
+			glm::vec4 BTL(-0.5f, 0.5f, -0.5f,		1.f);
+			glm::vec4 BBL(-0.5f, -0.5f, -0.5f,		1.f);			
+
+			std::vector<glm::vec4> linesToDraw;
+			
+			linesToDraw.push_back(FBR);
+			linesToDraw.push_back(FTR);
+			linesToDraw.push_back(FBR);
+			linesToDraw.push_back(FBL);
+			linesToDraw.push_back(FTR);
+			linesToDraw.push_back(FTL);
+			linesToDraw.push_back(FBL);
+			linesToDraw.push_back(FTL);
+
+			linesToDraw.push_back(BBR);
+			linesToDraw.push_back(BTR);
+			linesToDraw.push_back(BBR);
+			linesToDraw.push_back(BBL);
+			linesToDraw.push_back(BTR);
+			linesToDraw.push_back(BTL);
+			linesToDraw.push_back(BBL);
+			linesToDraw.push_back(BTL);
+
+			linesToDraw.push_back(FBR);
+			linesToDraw.push_back(BBR);
+			linesToDraw.push_back(FTR);
+			linesToDraw.push_back(BTR);
+			linesToDraw.push_back(FTL);
+			linesToDraw.push_back(BTL);
+			linesToDraw.push_back(FBL);
+			linesToDraw.push_back(BBL);
+			
+			/* This method is extremely slow and non-performant; use only for debugging purposes */
+			debugShader.use();
+			debugShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+			debugShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+			debugShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(perspective));
+			debugShader.setUniform3f("color", color);
+
+			//basically immediate mode, should be very bad performance
+			GLuint tmpVAO, tmpVBO;
+			glGenVertexArrays(1, &tmpVAO);
+			glBindVertexArray(tmpVAO);
+
+			glGenBuffers(1, &tmpVBO);
+			glBindBuffer(GL_ARRAY_BUFFER, tmpVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * linesToDraw.size(), &linesToDraw[0], GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(0));
+			glEnableVertexAttribArray(0);
+
+			glDrawArrays(GL_LINES, 0, linesToDraw.size());
+
+			glDeleteVertexArrays(1, &tmpVAO);
+			glDeleteBuffers(1, &tmpVBO);
 		}
 
 		glm::vec3 getDifferentVector(glm::vec3 vec)

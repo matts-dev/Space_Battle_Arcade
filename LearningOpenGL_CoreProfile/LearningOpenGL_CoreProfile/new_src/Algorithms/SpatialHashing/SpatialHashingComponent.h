@@ -1,6 +1,7 @@
 #pragma once
 
 #define LOG_LIFETIME_ERRORS 1
+#define SH_THROW_ERRORS 1
 
 //Quickly switch between underlying data structures used
 #define HASH_MAP_UNORDERED_MULTIMAP 1
@@ -24,6 +25,7 @@
 #include <iostream>
 #include <cstdint>
 #include <array>
+#include <limits>
 
 namespace SH
 {
@@ -222,6 +224,9 @@ namespace SH
 
 		inline void lookupNodesInCells(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<SH::GridNode<T>>>& outNodes, bool filterOutSource = true);
 		inline void lookupCellsForEntry(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells);
+
+		inline void findCellLocationsForLine(const glm::vec3& start_hashLocalSpace, const glm::vec3& end_hashLocalSpace, std::vector<glm::ivec3>& outCells, float nudgeIntersectionBias = 0.01f);
+		inline void lookupCellsForLine(const glm::vec3& start_hashLocalSpace, const glm::vec3& end_hashLocalSpace, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells);
 		inline void logDebugInformation();
 
 	private: //methods
@@ -231,10 +236,12 @@ namespace SH
 		inline bool remove(HashEntry<T>& toRemove, bool bRemoveFromValidEntries = true);
 
 		inline void projectOBBToCells(Range<int>& xCellIndices, Range<int>& yCellIndices, Range<int>& zCellIndices, const std::array<glm::vec4, 8>& localSpaceOBB);
+		inline glm::ivec3 convertPntToCellLoc(const glm::vec3 pnt);
 
 		inline uint64_t hash(glm::ivec3 location);
 		inline void hashInsert(std::shared_ptr<GridNode<T>>& gridNode, glm::ivec3 hashLocation);
 		inline bool hashRemove(const std::shared_ptr<GridNode<T>>& gridNode, glm::ivec3 hashLocation);
+		inline std::shared_ptr<SH::HashCell<T>> findCellForHash(uint64_t hashValue, const glm::ivec3& hashLocation);
 
 	public: //variables
 		const glm::vec3 gridCellSize;
@@ -259,10 +266,6 @@ namespace SH
 		std::vector< std::list< std::shared_ptr<HashCell<T>>>> hashMap;
 #endif
 	};
-
-
-
-
 
 
 
@@ -416,28 +419,21 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 ///////////////////////////////////////////////////////////////////////////////////////
 
 	template<typename T>
-	void SpatialHashGrid<T>::hashInsert(std::shared_ptr<GridNode<T>>& gridNode, glm::ivec3 hashLocation)
+	std::shared_ptr<SH::HashCell<T>> SH::SpatialHashGrid<T>::findCellForHash(uint64_t hashVal, const glm::ivec3& hashLocation)
 	{
-		std::shared_ptr<HashCell<T>> targetCell = nullptr;
-		uint64_t hashVal = hash(hashLocation);
-
-		int debug_bucketsForHash = 0;
-
 #if HASH_MAP_UNORDERED_MULTIMAP
 		using UMMIter = typename decltype(hashMap)::iterator;
-		//walk over bucket to find correct cell
-		std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal);
-		UMMIter& start = bucketRange.first;
-		UMMIter& end = bucketRange.second;
-		for (UMMIter bucketIter = start; bucketIter != end; ++bucketIter)
+		std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
+
+		//look over bucket of cells (ideally this will be a small number)
+		for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
 		{
 			std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
-			++debug_bucketsForHash;
-			uint64_t debug_cellHash = hash(cell->location);
+
+			//make sure we're not dealing with a cell that is hash collision 
 			if (cell->location == hashLocation)
 			{
-				targetCell = cell;
-				break;
+				return cell;
 			}
 		}
 #elif HASH_MAP_UNORDERED_SET
@@ -447,12 +443,10 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			std::list<std::shared_ptr<HashCell<T>>>& bucket = bucketIter->second;
 			for (std::shared_ptr<HashCell<T>>& cell : bucket)
 			{
-				++debug_bucketsForHash;
-				uint64_t debug_cellHash = hash(cell->location);
+				//make sure we're not dealing with a cell that is hash collision 
 				if (cell->location == hashLocation)
 				{
-					targetCell = cell;
-					break;
+					return cell;
 				}
 			}
 		}
@@ -460,14 +454,72 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 		auto& bucket = hashMap[hashVal % hashMap.size()];
 		for (std::shared_ptr<HashCell<T>>& cell : bucket)
 		{
-			++debug_bucketsForHash;
 			if (cell->location == hashLocation)
 			{
-				targetCell = cell;
-				break;
+				return cell;
 			}
 		}
 #endif
+		return nullptr;
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+	template<typename T>
+	void SpatialHashGrid<T>::hashInsert(std::shared_ptr<GridNode<T>>& gridNode, glm::ivec3 hashLocation)
+	{
+		std::shared_ptr<HashCell<T>> targetCell = nullptr;
+		uint64_t hashVal = hash(hashLocation);
+
+		int debug_bucketsForHash = 0;
+
+		targetCell = findCellForHash(hashVal, hashLocation);
+//#if HASH_MAP_UNORDERED_MULTIMAP
+//		using UMMIter = typename decltype(hashMap)::iterator;
+//		//walk over bucket to find correct cell
+//		std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal);
+//		UMMIter& start = bucketRange.first;
+//		UMMIter& end = bucketRange.second;
+//		for (UMMIter bucketIter = start; bucketIter != end; ++bucketIter)
+//		{
+//			std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
+//			++debug_bucketsForHash;
+//			uint64_t debug_cellHash = hash(cell->location);
+//			if (cell->location == hashLocation)
+//			{
+//				targetCell = cell;
+//				break;
+//			}
+//		}
+//#elif HASH_MAP_UNORDERED_SET
+//		const auto& bucketIter = hashMap.find(hashVal); //gets start_end iter pair
+//		if (bucketIter != hashMap.end())
+//		{
+//			std::list<std::shared_ptr<HashCell<T>>>& bucket = bucketIter->second;
+//			for (std::shared_ptr<HashCell<T>>& cell : bucket)
+//			{
+//				++debug_bucketsForHash;
+//				uint64_t debug_cellHash = hash(cell->location);
+//				if (cell->location == hashLocation)
+//				{
+//					targetCell = cell;
+//					break;
+//				}
+//			}
+//		}
+//#elif HASH_MAP_MANUAL_HASH_ARRAY
+//		auto& bucket = hashMap[hashVal % hashMap.size()];
+//		for (std::shared_ptr<HashCell<T>>& cell : bucket)
+//		{
+//			++debug_bucketsForHash;
+//			if (cell->location == hashLocation)
+//			{
+//				targetCell = cell;
+//				break;
+//			}
+//		}
+//#endif
 
 		if (!targetCell)
 		{
@@ -683,6 +735,9 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 	{
 		using UMMIter = typename decltype(hashMap)::iterator;
 
+		//clearing out nodes to make api less fragile
+		outNodes.clear();
+
 		std::unordered_set<GridNode<T>*> nodesFoundThisCall; //dtor is O(n) for unique insertions
 
 		BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
@@ -769,52 +824,232 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 	template<typename T>
 	inline void SpatialHashGrid<T>::lookupCellsForEntry(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells)
 	{
+		//clearing to make api less prone to user-error; delete that line if you want accumulation behavior
+		outCells.clear();
 
 		BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
 			glm::ivec3 hashLocation(cellX, cellY, cellZ);
-		uint64_t hashVal = hash(hashLocation);
+			uint64_t hashVal = hash(hashLocation);
 
-#if HASH_MAP_UNORDERED_MULTIMAP
-		using UMMIter = typename decltype(hashMap)::iterator;
-		std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
+			std::shared_ptr<HashCell<T>> cell = findCellForHash(hashVal, hashLocation);
+			if (cell) { outCells.push_back(cell); }
 
-		//look over bucket of cells (ideally this will be a small number)
-		for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
-		{
-			std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
-
-			//make sure we're not dealing with a cell that is hash collision 
-			if (cell->location == hashLocation)
-			{
-				outCells.push_back(cell);
-			}
-		}
-#elif HASH_MAP_UNORDERED_SET
-		const auto& bucketIter = hashMap.find(hashVal); //gets start_end iter pair
-		if (bucketIter != hashMap.end())
-		{
-			std::list<std::shared_ptr<HashCell<T>>>& bucket = bucketIter->second;
-			for (std::shared_ptr<HashCell<T>>& cell : bucket)
-			{
-				//make sure we're not dealing with a cell that is hash collision 
-				if (cell->location == hashLocation)
-				{
-					outCells.push_back(cell);
-				}
-			}
-		}
-#elif HASH_MAP_MANUAL_HASH_ARRAY
-		auto& bucket = hashMap[hashVal % hashMap.size()];
-		for (std::shared_ptr<HashCell<T>>& cell : bucket)
-		{
-			if (cell->location == hashLocation)
-			{
-				outCells.push_back(cell);
-			}
-		}
-#endif
+//#if HASH_MAP_UNORDERED_MULTIMAP
+//			using UMMIter = typename decltype(hashMap)::iterator;
+//			std::pair<UMMIter, UMMIter> bucketRange = hashMap.equal_range(hashVal); //gets start_end iter pair
+//
+//			//look over bucket of cells (ideally this will be a small number)
+//			for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
+//			{
+//				std::shared_ptr<HashCell<T>>& cell = bucketIter->second;
+//
+//				//make sure we're not dealing with a cell that is hash collision 
+//				if (cell->location == hashLocation)
+//				{
+//					outCells.push_back(cell);
+//				}
+//			}
+//#elif HASH_MAP_UNORDERED_SET
+//			const auto& bucketIter = hashMap.find(hashVal); //gets start_end iter pair
+//			if (bucketIter != hashMap.end())
+//			{
+//				std::list<std::shared_ptr<HashCell<T>>>& bucket = bucketIter->second;
+//				for (std::shared_ptr<HashCell<T>>& cell : bucket)
+//				{
+//					//make sure we're not dealing with a cell that is hash collision 
+//					if (cell->location == hashLocation)
+//					{
+//						outCells.push_back(cell);
+//					}
+//				}
+//			}
+//#elif HASH_MAP_MANUAL_HASH_ARRAY
+//			auto& bucket = hashMap[hashVal % hashMap.size()];
+//			for (std::shared_ptr<HashCell<T>>& cell : bucket)
+//			{
+//				if (cell->location == hashLocation)
+//				{
+//					outCells.push_back(cell);
+//				}
+//			}
+//#endif
 		END_FOR_EVERY_CELL
 
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+	template<typename T>
+	glm::ivec3 SH::SpatialHashGrid<T>::convertPntToCellLoc(const glm::vec3 pnt)
+	{
+		float startX = std::floor(pnt.x / gridCellSize.x);
+		float startY = std::floor(pnt.y / gridCellSize.y);
+		float startZ = std::floor(pnt.z / gridCellSize.z);
+
+		glm::ivec3 cellIdx(0, 0, 0);
+
+		cellIdx.x = static_cast<int>(std::lroundf(startX));
+		cellIdx.y = static_cast<int>(std::lroundf(startY));
+		cellIdx.z = static_cast<int>(std::lroundf(startZ));
+
+		return cellIdx;
+	}
+
+	template<typename T>
+	void SH::SpatialHashGrid<T>::findCellLocationsForLine(const glm::vec3& start, const glm::vec3& end, std::vector<glm::ivec3>& outCells, float nudgeIntersectionBias)
+	{
+		// -- find cell ray starts within --
+		glm::ivec3 startIdx = convertPntToCellLoc(start);
+
+		//perhaps should rely on caller to clear this data structure, but that will make the api more fragile
+		outCells.clear(); 
+		outCells.push_back(startIdx); 
+
+
+		//FAST RAY BOX INTERSECTION
+		//intersection = s + t*d;		where s is the start and d is the direction
+		//for an axis aligned box, we can look at each axis individually
+		//
+		//intersection_x = s_x + t_x * d_x
+		//intersection_y = s_y + t_y * d_y
+		//intersection_z = s_z + t_z * d_z
+		//
+		//for each of those, we can solve for t
+		//eg: (intersection_x - s_x) / d_z = t_z
+		//intersection_x can be easily found since we have an axis aligned box, and there are 2 yz-planes that represent x values a ray will have to pass through
+		//
+		//intuitively, a ray that DOES intersect will pass through 3 planes before entering the cube; and pass through 3 planes to exit the cube.
+		//the last plane it intersects when entering the cube, is the t value for the box intersection.
+		//		eg ray goes through X plane, Y plane, and then Z Plane, the intersection point is the t value associated with the Z plane
+		//the first plane it intersects when it leaves the box is also its exit intersection t value
+		//		eg ray goes leaves Y plane, X plane, Z plane, then the intersection of the Y plane is the intersection point
+		//if the object doesn't collide, then it will exit a plane before all 3 entrance places are intersected
+		//		eg ray Enters X Plane, Enters Y plane, Exits X PLane, Enters Z plane, Exits Y plane, Exits Z plane; 
+		//		there is no collision because it exited the x plane before it penetrated the z plane
+		//it seems that, if it is within the cube, the entrance planes will all have negative t values
+
+		auto getLargerMagnitudeCellBounds = [this](const glm::ivec3& loc) {
+			return glm::vec3{ loc.x * gridCellSize.x, loc.y * gridCellSize.x, loc.z * gridCellSize.z };
+		};
+		auto getSmallerMagnitudeCellBounds = [this, getLargerMagnitudeCellBounds](glm::ivec3 locCopy) {
+			//adjust the location by 1 and get the  value
+			locCopy.x = locCopy.x < 0 ? locCopy.x + 1 : locCopy.x - 1;
+			locCopy.y = locCopy.y < 0 ? locCopy.y + 1 : locCopy.y - 1;
+			locCopy.z = locCopy.z < 0 ? locCopy.z + 1 : locCopy.z - 1;
+			return getLargerMagnitudeCellBounds(locCopy);
+		};
+
+		glm::vec3 intersectPoint = start;
+		const glm::vec3 dir = glm::normalize(end - start);
+		//endX = startX + t * dirX;			//solve for t
+		float endT = (end.x - start.x) / dir.x;
+		float previousT = 0;
+		do
+		{
+			//calculate bounding box dimensions; may need to nudge intersection pnt so it doesn't pick up previous box
+			float fX = std::floor(intersectPoint.x / gridCellSize.x) * gridCellSize.x;
+			float cX = std::ceil(intersectPoint.x / gridCellSize.x)  * gridCellSize.x;
+			float fY = std::floor(intersectPoint.y / gridCellSize.y) * gridCellSize.y;
+			float cY = std::ceil(intersectPoint.y / gridCellSize.y)  * gridCellSize.y;
+			float fZ = std::floor(intersectPoint.z / gridCellSize.z) * gridCellSize.z;
+			float cZ = std::ceil(intersectPoint.z / gridCellSize.z)  * gridCellSize.z;
+
+			//account for when intersection point lies exactly on grid value; 
+			// direct float comparisions should be okay -- if are slightly different '
+			//then logic above deterining cX will have worked.
+			if (fX == cX) { cX += fX < 0 ? -gridCellSize.x : gridCellSize.x; };
+			if (fY == cY) { cY += fY < 0 ? -gridCellSize.y : gridCellSize.y; };
+			if (fZ == cZ) { cZ += fZ < 0 ? -gridCellSize.z : gridCellSize.z; };
+
+			//use algbra to calculate T when these planes are hit; similar to above example -- looking at single components
+			// pnt = s + t * d;			t = (pnt - s)/d
+			//these calculations may produce infinity
+			float tMaxX = (fX - start.x) / dir.x;
+			float tMinX = (cX - start.x) / dir.x;
+			float tMaxY = (fY - start.y) / dir.y;
+			float tMinY = (cY - start.y) / dir.y;
+			float tMaxZ = (fZ - start.z) / dir.z;
+			float tMinZ = (cZ - start.z) / dir.z;
+
+			float x_enter_t = std::min(tMinX, tMaxX);
+			float x_exit_t =  std::max(tMinX, tMaxX);
+			float y_enter_t = std::min(tMinY, tMaxY);
+			float y_exit_t =  std::max(tMinY, tMaxY);
+			float z_enter_t = std::min(tMinZ, tMaxZ);
+			float z_exit_t =  std::max(tMinZ, tMaxZ);
+
+			float enterTs[3] = { x_enter_t, y_enter_t, z_enter_t };
+			std::size_t numElements = sizeof(enterTs) / sizeof(enterTs[0]); 
+			std::sort(enterTs, enterTs + numElements);
+
+			float exitTs[3] = { x_exit_t, y_exit_t, z_exit_t };
+			std::sort(exitTs, exitTs + numElements);
+
+			//handle cases where infinity is within enterT
+			for (int idx = numElements - 1; idx >= 0; ++idx)
+			{
+				if (enterTs[idx] != std::numeric_limits<float>::infinity())
+				{
+					//move a real value to the place where infinity was sorted
+					enterTs[2] = enterTs[idx];
+					break;
+				}
+			}
+
+			bool intersects = enterTs[2] < exitTs[0];
+			if (intersects)
+			{
+				//collision is that of the enter values
+				float collisionT = enterTs[2];
+
+				//check if ray is within the box; don't intersec with back
+				if (collisionT < previousT)
+				{
+					collisionT = exitTs[0];
+				}
+
+				//helper value to push collision t out of edge plane and within cell's box
+				collisionT += nudgeIntersectionBias;
+
+				//calculate new intersection point!
+				intersectPoint = start + collisionT * dir;
+				previousT = collisionT;
+
+				if (previousT <= endT)
+				{
+					glm::ivec3 cellLoc = convertPntToCellLoc(intersectPoint);
+					outCells.push_back(cellLoc);
+				}
+			}
+			else
+			{
+#if SH_THROW_ERRORS
+				throw std::logic_error("Logic flaw: there was no intersect with cube during line trace -- this should never happen since cubes should surround");
+#endif //SH_THROW_ERRORS
+				break;
+			}
+		} while (previousT < endT);
+	}
+
+	template<typename T>
+	void SH::SpatialHashGrid<T>::lookupCellsForLine(const glm::vec3& start, const glm::vec3& end, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells)
+	{
+		static std::vector<glm::ivec3> cellIdices;
+		static const int singleInvokeInit = [&]() { cellIdices.reserve(20); return 0; }();
+
+		cellIdices.clear();
+		findCellLocationsForLine(start, end, cellIdices);
+
+		outCells.clear();
+		for (const glm::vec3& cellIdx : cellIdices)
+		{
+			uint64_t hashVal = hash(cellIdx);
+			if (std::shared_ptr<const SH::HashCell<T>> cell = findCellForHash(hashVal, cellIdx))
+			{
+				outCells.push_back(cell);
+			}
+		}
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////

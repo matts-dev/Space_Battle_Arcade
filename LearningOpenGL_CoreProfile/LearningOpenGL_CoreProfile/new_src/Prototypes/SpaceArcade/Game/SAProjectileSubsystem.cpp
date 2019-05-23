@@ -9,8 +9,22 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	void Projectile::tick(float dt_sec)
 	{
-		xform.position += dt_sec * speed * direction;
+#ifdef _DEBUG
+		static bool freezeProjectiles = false;
+		if (freezeProjectiles)
+		{
+			return;
+		}
+#endif // _DEBUG
+
+		float dt_distance = dt_sec * speed;
+		xform.position += dt_distance * direction;
 		timeAlive += dt_sec;
+
+
+		//collision box scaling
+		// models aligned along z
+		distanceStretchScale = dt_distance / collisionAABB.scale.z;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,12 +99,16 @@ namespace SA
 		//todo define a argument struct to pass for spawning projectiles
 		spawned->xform.position = start;
 		spawned->xform.rotQuat = spawnRotation;
+		spawned->modelOffset.position = modelForward_n * -2.f;
+		spawned->collisionAABB = projectileTypeHandle.collisionTransform;
+
+		spawned->distanceStretchScale = 1;
 		spawned->direction = direction_n;
-		spawned->speed = 200.0f;
-		spawned->collisionTransform = projectileTypeHandle.collisionTransform;
+		spawned->speed = 1.0f;//200.0f;
+		spawned->collisionAABB = projectileTypeHandle.collisionTransform;
 		spawned->model = projectileTypeHandle.model;
 		spawned->timeAlive = 0.f;
-		spawned->lifetimeSec = 1.f;
+		spawned->lifetimeSec = 30.f;//1.f;
 
 		activeProjectiles.insert( spawned );
 	}
@@ -98,13 +116,44 @@ namespace SA
 	void ProjectileSubsystem::renderProjectiles(Shader& projectileShader) const
 	{
 		//TODO potential optimization is to use instanced rendering to reduce draw call number
+		//TODO perhaps projectile should be made a full class and encapsulate this logic
 
-		//invariant: shader uniforms preconfigured
+		//invariant: shader uniforms pre-configured
 		for (const sp<Projectile>& projectile : activeProjectiles)
 		{
-			projectileShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(projectile->xform.getModelMatrix()));
+			glm::mat4 model = projectile->xform.getModelMatrix();
+			glm::mat4 tipOffset = projectile->modelOffset.getModelMatrix();
+			model =  model * tipOffset;
+
+			//glm::vec3 tipOffsetVec = projectile->modelOffset.position * (projectile->distanceStretchScale / 2); //TODO this may should just be a vector rather than a whole transform
+			//glm::mat4 tipOffset = glm::translate(glm::mat4(1.0f), tipOffsetVec);
+			//glm::mat4 distanceStrech = glm::scale(glm::mat4(1.0f), glm::vec3(1, 1, projectile->distanceStretchScale));
+			//model = model * distanceStrech * tipOffset;
+
+			projectileShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 			projectile->model->draw(projectileShader);
+
 		}
 	}
+
+	void ProjectileSubsystem::renderProjectileBoundingBoxes(Shader& debugShader, const glm::vec3& color, const glm::mat4& view, const glm::mat4& perspective) const
+	{
+		for (const sp<Projectile>& projectile : activeProjectiles)
+		{
+			//TODO perhaps projectile should be made a full class and encapsulate this logic
+
+			//There's quite a few matrix multiples happening here, perhaps tipOffset and collisionTransform can be combined at spawn
+			//but the tip offset is used for rendering too. So it cannot have the collision scaling within it. 
+			//or at least, some of these can be single matrices rather than full 3-matrix transforms
+			glm::mat4 model = projectile->xform.getModelMatrix();
+			glm::mat4 tipOffset = projectile->modelOffset.getModelMatrix();
+			glm::mat4 collisionOBB = projectile->collisionAABB.getModelMatrix();
+			model = model * tipOffset * collisionOBB;
+
+			Utils::renderDebugWireCube(debugShader, color, model, view, perspective);
+			//Utils::renderDebugWireCube(debugShader, color, projectile->xform.getModelMatrix(), view, perspective);
+		}
+	}
+
 }
 

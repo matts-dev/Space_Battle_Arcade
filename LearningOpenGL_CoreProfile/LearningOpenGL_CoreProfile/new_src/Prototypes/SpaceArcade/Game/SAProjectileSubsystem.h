@@ -39,14 +39,15 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	struct Projectile
 	{
-		//TODO on the fence between designing this as mostly data managed by ProjectilSubsystem vs making this a proper OO class 
-		glm::vec3 direction;
 		Transform xform; 
-		sp<Model3D> model;
-		Transform collisionTransform;
+		Transform modelOffset;
+		Transform collisionAABB;
+		glm::vec3 direction;
+		float distanceStretchScale;
 		float speed;
 		float lifetimeSec;
 		float timeAlive;
+		sp<Model3D> model;
 
 		void tick(float dt_sec);
 	};
@@ -72,6 +73,7 @@ namespace SA
 		virtual void spawnProjectile(const glm::vec3& start, const glm::vec3& direction, const ProjectileClassHandle& projectileTypeHandle);
 		
 		void renderProjectiles(Shader& projectileShader) const;
+		void renderProjectileBoundingBoxes(Shader& debugShader, const glm::vec3& color, const glm::mat4& view, const glm::mat4& perspective) const;
 
 	private:
 		virtual void tick(float dt_sec) override {};

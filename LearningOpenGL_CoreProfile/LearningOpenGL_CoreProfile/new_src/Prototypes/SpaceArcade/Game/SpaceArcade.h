@@ -61,6 +61,7 @@ namespace SA
 	private: //debugging
 		void renderDebug(const glm::mat4& view, const glm::mat4& projection);
 		bool bRenderDebugCells = false;
+		bool bRenderProjectileOBBs = false;
 
 	private:
 		sp<SA::CameraFPS> fpsCamera;
@@ -70,6 +71,7 @@ namespace SA
 		sp<SA::Shader> lampObjShader;
 		sp<SA::Shader> forwardShadedModelShader;
 		sp<SA::Shader> forwardShaded_EmissiveModelShader;
+		sp<SA::Shader> debugLineShader;
 
 		//unit cube data
 		GLuint cubeVAO, cubeVBO;

@@ -17,6 +17,7 @@
 #include <assert.h>
 #include "..\GameFramework\SATextureSubsystem.h"
 #include "SAProjectileSubsystem.h"
+#include "..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
 
 namespace SA
 {
@@ -36,6 +37,7 @@ namespace SA
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);
 		forwardShadedModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_SimpleLighting_fragSrc, false);
 		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
+		debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false);
 
 		//set up unit cube
 		ec(glGenVertexArrays(1, &cubeVAO));
@@ -58,7 +60,9 @@ namespace SA
 		lazerBoltModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/LazerBolt/LazerBolt.obj");
 		loadedModels.push_back(lazerBoltModel); 
 
+		//this transform should probably be configured within a designer; hard coding reasonable values for now.
 		Transform projectileAABBTransform;
+		projectileAABBTransform.scale.z = 4.5;
 		lazerBoltHandle = ProjectileSS->createProjectileType(lazerBoltModel, projectileAABBTransform);
 
 		sp<Model3D> fighterModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/Fighter/SGFighter.obj");
@@ -115,7 +119,7 @@ namespace SA
 		ec(glDeleteBuffers(1, &cubeVBO));
 	}
 
-	void SpaceArcade::renderDebug(const glm::mat4& view,  const glm::mat4& projection)
+	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
 	{
 #ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
 		auto& worldGrid = getCollisionSS()->getWorldGrid();
@@ -127,7 +131,10 @@ namespace SA
 		//TODO: this is a candidate for a ticker and a ticker subsystem
 		SpatialHashCellDebugVisualizer::clearCells(worldGrid);
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
-
+		if (bRenderProjectileOBBs)
+		{
+			ProjectileSS->renderProjectileBoundingBoxes(*debugLineShader, glm::vec3(0, 1, 0), view, projection);
+		}
 	}
 
 	//putting tick below rest class so it will be close to bottom of file.
@@ -257,6 +264,7 @@ namespace SA
 			if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 
 			{ 
 				if(input.isKeyJustPressed(window, GLFW_KEY_C)) { bRenderDebugCells = !bRenderDebugCells; }
+				if (input.isKeyJustPressed(window, GLFW_KEY_V)) { bRenderProjectileOBBs = !bRenderProjectileOBBs; }
 			}
 		}
 	}
@@ -271,7 +279,7 @@ namespace
 	}
 }
 
-int main()
-{
-	return trueMain();
-}
+//int main()
+//{
+//	return trueMain();
+//}

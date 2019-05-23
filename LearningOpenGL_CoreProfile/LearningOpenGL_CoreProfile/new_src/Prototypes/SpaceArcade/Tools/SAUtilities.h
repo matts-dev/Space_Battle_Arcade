@@ -9,10 +9,13 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
+#include "DataStructures/SATransform.h"
 
 
 namespace SA
 {
+	class Shader;
+
 	namespace Utils
 	{
 		/*
@@ -39,6 +42,18 @@ namespace SA
 		extern const float unitCubeVertices_Position_Normal[36 * 6];
 
 		extern const float quadVerticesWithUVs[5 * 6];
+
+
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Debug Rendering 
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		void renderDebugWireCube(
+			SA::Shader& debugShader,
+			const glm::vec3 color,
+			const glm::mat4& model,
+			const glm::mat4& view,
+			const glm::mat4& perspective
+		);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Math Utils
