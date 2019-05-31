@@ -18,6 +18,8 @@
 #include "..\GameFramework\SATextureSubsystem.h"
 #include "SAProjectileSubsystem.h"
 #include "..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
+#include "Levels\BasicTestSpaceLevel.h"
+#include "Levels\ProjectileEditor_Level.h"
 
 namespace SA
 {
@@ -57,56 +59,29 @@ namespace SA
 		glfwSetInputMode(window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		//load models
-		lazerBoltModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/LazerBolt/LazerBolt.obj");
-		loadedModels.push_back(lazerBoltModel); 
+		laserBoltModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/LazerBolt/LazerBolt.obj");
+		loadedModels.insert({laserBoltModelKey, laserBoltModel });
 
 		//this transform should probably be configured within a designer; hard coding reasonable values for now.
 		Transform projectileAABBTransform;
 		projectileAABBTransform.scale.z = 4.5;
-		lazerBoltHandle = ProjectileSS->createProjectileType(lazerBoltModel, projectileAABBTransform);
+		laserBoltHandle = ProjectileSS->createProjectileType(laserBoltModel, projectileAABBTransform);
 
 		sp<Model3D> fighterModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/Fighter/SGFighter.obj");
-		loadedModels.push_back(fighterModel);
+		loadedModels.insert({ fighterModelKey, fighterModel});
 
 		sp<Model3D> carrierModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/Carrier/SGCarrier.obj");
-		loadedModels.push_back(carrierModel);
-
-		Transform carrierTransform;
-		carrierTransform.position = { 200,0,0 };
-		carrierTransform.scale = { 5, 5, 5 };
-		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip1 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
-
-		std::random_device rng;
-		std::seed_seq seed{ 28 };
-		std::mt19937 rng_eng = std::mt19937(seed);
-		std::uniform_real_distribution<float> startDist(-200.f, 200.f); //[a, b)
-		
-		int numFighterShipsToSpawn = 5000; 
-#ifdef _DEBUG
-		numFighterShipsToSpawn = 500;
-#endif//NDEBUG 
-		for (int fighterShip = 0; fighterShip < numFighterShipsToSpawn; ++fighterShip)
-		{
-			glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
-			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little addhoc, but with radians it should cover full 360 possibilities
-			startPos += carrierTransform.position;
-			Transform fighterXform = Transform{ startPos, rot, {0.1,0.1,0.1} };
-			spawnEntity<Ship>(fighterModel, fighterXform, createUnitCubeCollisionInfo());
-		}
-
-		carrierTransform.position.y += 50;
-		carrierTransform.position.x += 120;
-		carrierTransform.position.z -= 50;
-		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
+		loadedModels.insert({ carrierModelKey, carrierModel });
 
 		GLuint radialGradientTex = 0;
 		if (getTextureSubsystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
 		{
 			//loaded!
 		}
-		
+
+		//make sure resources are loaded before the level starts
+		sp<Level> startupLevel = new_sp<BasicTestSpaceLevel>();
+		getLevelSubsystem().loadLevel(startupLevel);
 
 		return window;
 	}
@@ -117,6 +92,19 @@ namespace SA
 
 		ec(glDeleteVertexArrays(1, &cubeVAO));
 		ec(glDeleteBuffers(1, &cubeVBO));
+	}
+
+	sp<SA::Model3D> SpaceArcade::getModel(const std::string& key)
+	{
+		const auto& iter = loadedModels.find(key);
+		if (iter != loadedModels.end())
+		{
+			return iter->second;
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
@@ -216,15 +204,6 @@ namespace SA
 		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
 		ProjectileSS->renderProjectiles(*forwardShaded_EmissiveModelShader);
 
-		//DEBUG render lazer bolt
-		{
-			mat4 model = glm::mat4(1.f);
-			model = glm::translate(model, vec3(-0.f, 0.f, -0.f));
-			forwardShadedModelShader->use();
-			forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			lazerBoltModel->draw(*forwardShadedModelShader);
-		}
-
 	}
 
 	void SpaceArcade::onRegisterCustomSubsystem()
@@ -257,7 +236,7 @@ namespace SA
 				//playerShip.fireProjectile
 				glm::vec3 start = fpsCamera->getPosition() + glm::vec3(0, -0.25f, 0);
 				glm::vec3 direction = fpsCamera->getFront();
-				ProjectileSS->spawnProjectile(start, direction, *lazerBoltHandle);
+				ProjectileSS->spawnProjectile(start, direction, *laserBoltHandle);
 			}
 			 
 			//debug
@@ -265,6 +244,13 @@ namespace SA
 			{ 
 				if(input.isKeyJustPressed(window, GLFW_KEY_C)) { bRenderDebugCells = !bRenderDebugCells; }
 				if (input.isKeyJustPressed(window, GLFW_KEY_V)) { bRenderProjectileOBBs = !bRenderProjectileOBBs; }
+				if (input.isKeyJustPressed(window, GLFW_KEY_U)) 
+				{
+					//sp<Level> currentLevel = getLevelSubsystem().getCurrentLevel();
+					//getLevelSubsystem().unloadLevel(currentLevel);
+					sp<Level> projectileEditor = new_sp<ProjectileEditor_Level>();
+					getLevelSubsystem().loadLevel(projectileEditor);
+				}
 			}
 		}
 	}
@@ -279,7 +265,7 @@ namespace
 	}
 }
 
-//int main()
-//{
-//	return trueMain();
-//}
+int main()
+{
+	return trueMain();
+}

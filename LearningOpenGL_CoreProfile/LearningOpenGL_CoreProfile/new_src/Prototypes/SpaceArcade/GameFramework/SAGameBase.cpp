@@ -1,9 +1,13 @@
+#include <iostream>
+
 #include "SAGameBase.h"
+
 #include "SASubsystemBase.h"
 #include "SAWindowSubsystem.h"
-#include "..\Rendering\SAWindow.h"
-#include <iostream>
 #include "SATextureSubsystem.h"
+#include "SALevelSubsystem.h"
+
+#include "..\Rendering\SAWindow.h"
 
 namespace SA
 {
@@ -25,6 +29,9 @@ namespace SA
 
 		textureSS = new_sp<TextureSubsystem>();
 		subsystems.insert(textureSS);
+
+		levelSS = new_sp<LevelSubsystem>();
+		subsystems.insert(levelSS);
 	}
 
 	GameBase* GameBase::RegisteredSingleton = nullptr;

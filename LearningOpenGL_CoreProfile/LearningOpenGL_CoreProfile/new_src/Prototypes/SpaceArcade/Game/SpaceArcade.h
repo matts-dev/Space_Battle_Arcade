@@ -18,7 +18,6 @@ namespace SA
 	class ProjectileSubsystem;
 	class ProjectileClassHandle;
 
-
 	class SpaceArcade : public GameBase
 	{
 	public:
@@ -36,7 +35,7 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		//Spawning Interface
 		/////////////////////////////////////////////////////////////////////////////////////
-	private:
+	public:
 		// all are #candidate for gamebase
 		template<typename T>
 		void spawnCompileCheck(){static_assert(std::is_base_of<RenderModelEntity, T>::value, "spawn/unspawn only works with objects that will be rendered.");}
@@ -58,6 +57,14 @@ namespace SA
 		sp<ProjectileSubsystem> ProjectileSS;
 		/////////////////////////////////////////////////////////////////////////////////////
 
+	public:
+		const std::string fighterModelKey = "fighter";
+		const std::string carrierModelKey = "carrier";
+		const std::string laserBoltModelKey = "laser";
+
+		/** Gets a loaded model for a given key if it exists; perhaps this should be its own asset subsystem */
+		sp<Model3D> getModel(const std::string& key);
+
 	private: //debugging
 		void renderDebug(const glm::mat4& view, const glm::mat4& projection);
 		bool bRenderDebugCells = false;
@@ -76,9 +83,10 @@ namespace SA
 		//unit cube data
 		GLuint cubeVAO, cubeVBO;
 
-		std::vector<sp<Model3D>> loadedModels;
-		sp<Model3D> lazerBoltModel;
-		sp<ProjectileClassHandle> lazerBoltHandle;
+		std::unordered_map<std::string, sp<Model3D>> loadedModels;
+
+		sp<Model3D> laserBoltModel;
+		sp<ProjectileClassHandle> laserBoltHandle;
 
 		//gameplay
 		std::set<sp<WorldEntity>> worldEntities;

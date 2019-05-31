@@ -4,6 +4,7 @@
 #include "SAGameEntity.h"
 #include "..\Tools\RemoveSpecialMemberFunctionUtils.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
+#include "SALevelSubsystem.h"
 
 namespace SA
 {
@@ -11,6 +12,7 @@ namespace SA
 	class SubsystemBase;
 	class WindowSubsystem;
 	class TextureSubsystem;
+	class LevelSubsystem;
 	class Window;
 
 	class GameBase : public GameEntity, public RemoveCopies, public RemoveMoves
@@ -67,9 +69,10 @@ namespace SA
 	//  SUBSYSTEMS 
 	//////////////////////////////////////////////////////////////////////////////////////
 	public:
-		//Subsystem getters
-		WindowSubsystem& getWindowSubsystem() { return *windowSS; }
-		TextureSubsystem& getTextureSubsystem() { return *textureSS; }
+		//Subsystem getters (to prevent circular dependencies, be sure to use forward declared references)
+		inline WindowSubsystem& getWindowSubsystem() { return *windowSS; }
+		inline TextureSubsystem& getTextureSubsystem() { return *textureSS; }
+		inline LevelSubsystem& getLevelSubsystem() { return *levelSS; }
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
 		void SubscribePostRender(const sp <SubsystemBase>& subsystem);
@@ -82,6 +85,7 @@ namespace SA
 	private: //subsystems
 		sp<WindowSubsystem> windowSS;
 		sp<TextureSubsystem> textureSS;
+		sp<LevelSubsystem> levelSS;
 		std::set< sp<SubsystemBase> > subsystems;
 		std::set< sp<SubsystemBase> > postRenderNotifys;
 	

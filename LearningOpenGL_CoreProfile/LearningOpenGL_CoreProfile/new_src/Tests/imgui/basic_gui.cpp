@@ -13,10 +13,10 @@
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
-#include "SpatialHashingComponent.h"
-#include "SHDebugUtils.h"
+#include "../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "../../Algorithms/SpatialHashing/SHDebugUtils.h"
 #include <functional>
-#include "../ObjectPicker/ObjectPicker.h"
+#include "../../Algorithms/ObjectPicker/ObjectPicker.h"
 
 namespace
 {
@@ -245,7 +245,7 @@ namespace
 	////////////////////////////////////////////////////////////////////////////////////////////
 	// class used to hold state of demo
 	////////////////////////////////////////////////////////////////////////////////////////////
-	class SpatialHashLineTraceTest final : public IOpenGLDemo
+	class IMGUI_TestDemo final : public IOpenGLDemo
 	{
 		//Cached Window Data
 		int height;
@@ -295,7 +295,7 @@ namespace
 
 
 	public:
-		SpatialHashLineTraceTest(int width, int height)
+		IMGUI_TestDemo(int width, int height)
 			: IOpenGLDemo(width, height)
 		{
 			using glm::vec2;
@@ -393,7 +393,7 @@ namespace
 			DrawRay.start = glm::vec3(10000, 10000, 10000);
 		}
 
-		~SpatialHashLineTraceTest()
+		~IMGUI_TestDemo()
 		{
 			glDeleteVertexArrays(1, &cubeVAO);
 			glDeleteBuffers(1, &cubeVBO);
@@ -881,7 +881,7 @@ namespace
 					transformTarget->position += cachedVelocity;
 				}
 			}
-			if(input.isMouseButtonJustPressed(window, GLFW_MOUSE_BUTTON_LEFT))
+			if (input.isMouseButtonJustPressed(window, GLFW_MOUSE_BUTTON_LEFT))
 			{
 				int screenWidth = 0, screenHeight = 0;
 				glfwGetWindowSize(window, &screenWidth, &screenHeight);
@@ -963,7 +963,7 @@ namespace
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow*window, int width, int height) {  glViewport(0, 0, width, height); });
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		SpatialHashLineTraceTest demo(width, height);
+		IMGUI_TestDemo demo(width, height);
 		demo.handleModuleFocused(window);
 
 		/////////////////////////////////////////////////////////////////////
