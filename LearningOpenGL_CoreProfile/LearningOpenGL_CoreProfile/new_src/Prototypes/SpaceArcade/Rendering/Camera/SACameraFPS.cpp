@@ -1,6 +1,8 @@
 #include "SACameraFPS.h"
 #include <iostream>
 #include "..\SAWindow.h"
+#include "..\..\Game\SpaceArcade.h"
+#include "..\..\GameFramework\SAWindowSubsystem.h"
 
 namespace SA
 {
@@ -176,6 +178,25 @@ namespace SA
 		{
 			//don't gitter camera
 			refocused = true;
+		}
+
+		if (!registeredWindow.expired())
+		{
+			if (sp<Window> primaryWindow = registeredWindow.lock())
+			{
+				GLFWwindow* window = primaryWindow->get();
+				//It may be heavy handed to have the camera direct the state of the window; but doing this now as camera system is in flux
+				glfwSetInputMode(window, GLFW_CURSOR, inCursorMode ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+
+				if (inCursorMode)
+				{
+					deregisterToWindowCallbacks();
+				}
+				else
+				{
+					registerToWindowCallbacks(primaryWindow);
+				}
+			}
 		}
 	}
 

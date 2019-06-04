@@ -15,6 +15,13 @@ namespace SA
 	class LevelSubsystem;
 	class Window;
 
+	//////////////////////////////////////////////////////////////////////////////////////
+
+	/** 
+		The Game Base class; this is the root to the game systems and has a static getter. 
+		Understanding this class should be an early step in understanding the systems of
+		this engine. 
+	*/
 	class GameBase : public GameEntity, public RemoveCopies, public RemoveMoves
 	{
 

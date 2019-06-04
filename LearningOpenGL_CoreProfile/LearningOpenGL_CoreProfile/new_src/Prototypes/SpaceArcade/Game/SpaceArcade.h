@@ -17,6 +17,9 @@ namespace SA
 	class CollisionSubsystem;
 	class ProjectileSubsystem;
 	class ProjectileClassHandle;
+	class UISubsystem;
+	
+	class UIRootWindow;
 
 	class SpaceArcade : public GameBase
 	{
@@ -52,9 +55,11 @@ namespace SA
 	public:
 		inline const sp<CollisionSubsystem>& getCollisionSS() noexcept { return CollisionSS; }
 		inline const sp<ProjectileSubsystem>& getProjectileSS() noexcept { return ProjectileSS; }
+		inline const sp<UISubsystem>& getUISubsystem() noexcept { return UI_SS; }
 	private:
 		sp<CollisionSubsystem> CollisionSS;
 		sp<ProjectileSubsystem> ProjectileSS;
+		sp<UISubsystem> UI_SS;
 		/////////////////////////////////////////////////////////////////////////////////////
 
 	public:
@@ -91,6 +96,9 @@ namespace SA
 		//gameplay
 		std::set<sp<WorldEntity>> worldEntities;
 		std::set<sp<RenderModelEntity>> renderEntities;
+
+		//ui
+		sp<UIRootWindow> ui_root;
 	};
 
 

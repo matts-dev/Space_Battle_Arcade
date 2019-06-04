@@ -1,25 +1,31 @@
 #include "SpaceArcade.h"
 
-#include "..\Rendering\SAWindow.h"
-#include "..\Rendering\OpenGLHelpers.h"
-#include "..\Rendering\Camera\SACameraFPS.h"
-#include "..\Rendering\SAShader.h"
-#include "..\GameFramework\SAGameBase.h"
-#include "..\GameFramework\SAWindowSubsystem.h"
-#include "..\Tools\SAUtilities.h"
-#include "..\Tools\ModelLoading\SAModel.h"
-
-#include "..\Rendering\BuiltInShaders.h"
-#include "SAShip.h"
-#include <random>
-#include "SACollisionSubsystem.h"
-#include "..\GameFramework\Input\SAInput.h"
 #include <assert.h>
-#include "..\GameFramework\SATextureSubsystem.h"
+#include <random>
+
+#include "../Rendering/SAWindow.h"
+#include "../Rendering/OpenGLHelpers.h"
+#include "../Rendering/Camera/SACameraFPS.h"
+#include "../Rendering/SAShader.h"
+#include "../Rendering/BuiltInShaders.h"
+
+#include "../GameFramework/SAGameBase.h"
+#include "../GameFramework/SAWindowSubsystem.h"
+#include "../GameFramework/Input/SAInput.h"
+#include "../GameFramework/SATextureSubsystem.h"
+
+#include "../Tools/SAUtilities.h"
+#include "../Tools/ModelLoading/SAModel.h"
+#include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
+
+#include "SACollisionSubsystem.h"
 #include "SAProjectileSubsystem.h"
-#include "..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
-#include "Levels\BasicTestSpaceLevel.h"
-#include "Levels\ProjectileEditor_Level.h"
+#include "SAUISubsystem.h"
+
+#include "SAShip.h"
+#include "Levels/BasicTestSpaceLevel.h"
+#include "Levels/ProjectileEditor_Level.h"
+#include "UI/SAUIRootWindow.h"
 
 namespace SA
 {
@@ -78,6 +84,8 @@ namespace SA
 		{
 			//loaded!
 		}
+
+		ui_root = new_sp<UIRootWindow>();
 
 		//make sure resources are loaded before the level starts
 		sp<Level> startupLevel = new_sp<BasicTestSpaceLevel>();
@@ -142,15 +150,12 @@ namespace SA
 
 		fpsCamera->handleInput(window->get(), deltaTimeSecs);
 
-		//RENDER
-		ec(glEnable(GL_DEPTH_TEST));
-		ec(glClearColor(0, 0, 0, 1));
-		ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
-
 		for (const sp<WorldEntity>& entity : worldEntities)
 		{
 			entity->tick(deltaTimeSecs);
 		}
+
+		ui_root->tick(deltaTimeSecs);
 
 	}
 
@@ -163,6 +168,10 @@ namespace SA
 		{
 			return;
 		}
+
+		ec(glEnable(GL_DEPTH_TEST));
+		ec(glClearColor(0, 0, 0, 1));
+		ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
 		mat4 view = fpsCamera->getView();
 		mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 500.0f);
@@ -204,6 +213,7 @@ namespace SA
 		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
 		ProjectileSS->renderProjectiles(*forwardShaded_EmissiveModelShader);
 
+		getUISubsystem()->render();
 	}
 
 	void SpaceArcade::onRegisterCustomSubsystem()
@@ -213,6 +223,9 @@ namespace SA
 
 		ProjectileSS = new_sp<ProjectileSubsystem>();
 		RegisterCustomSubsystem(ProjectileSS);
+
+		UI_SS = new_sp<UISubsystem>();
+		RegisterCustomSubsystem(UI_SS);
 	}
 
 	void SpaceArcade::updateInput(float detltaTimeSec)
@@ -220,14 +233,24 @@ namespace SA
 		if (const sp<Window> windowObj = getWindowSubsystem().getPrimaryWindow())
 		{
 			GLFWwindow* window = windowObj->get();
-			if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			{
-				startShutdown();
-			}
 
-			//TODO probably should create a system that has input bubbling/capturing and binding support from player down to entities
+			//TODO need a proper input system that has input bubbling/capturing and binding support from player down to entities
 			static InputTracker input;
 			input.updateState(window);
+
+			if (input.isKeyJustPressed(window, GLFW_KEY_ESCAPE))
+			{
+				if (input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT))
+				{
+					startShutdown();
+				}
+				else
+				{
+					ui_root->toggleUIVisible();
+					fpsCamera->setCursorMode(ui_root->getUIVisible());
+				}
+			}
+
 
 			if (input.isMouseButtonJustPressed(window, GLFW_MOUSE_BUTTON_LEFT))
 			{

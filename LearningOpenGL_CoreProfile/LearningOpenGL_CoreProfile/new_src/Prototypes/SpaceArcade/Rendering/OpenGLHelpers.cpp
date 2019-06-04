@@ -4,7 +4,11 @@
 
 void UtilGL::clearErrorsGL()
 {
-	while (glGetError() != GL_NO_ERROR);
+	unsigned long error = GL_NO_ERROR;
+	do
+	{
+		error = glGetError();
+	} while (error != GL_NO_ERROR);
 }
 
 void UtilGL::LogGLErrors(const char* functionName, const char* file, int line)

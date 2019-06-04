@@ -5,12 +5,13 @@ namespace SA
 {
 	void WindowSubsystem::makeWindowPrimary(const sp<Window>& window)
 	{
+		primaryWindowChangingEvent.broadcast(focusedWindow, window);
+
 		if (window)
 		{
 			glfwMakeContextCurrent(window->get());
 		}
 
-		primaryWindowChangingEvent.broadcast(focusedWindow, window);
 		focusedWindow = window;
 	}
 

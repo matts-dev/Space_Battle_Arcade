@@ -46,7 +46,7 @@ namespace SA
 
 	void GameBase::start()
 	{
-		//WARNING: any local objects (eg smart pointers) in this function will have lifttime of game!
+		//WARNING: any local objects (eg smart pointers) in this function will have lifetime of game!
 		if (!bStarted)
 		{
 			bStarted = true;

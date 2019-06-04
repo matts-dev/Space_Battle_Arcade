@@ -153,6 +153,8 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionSubsystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUISubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SpaceArcade.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\BuiltInShaders.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SACameraFPS.h" />
@@ -394,6 +396,8 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSubsystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSubsystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAUISubsystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SpaceArcade.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SACameraFPS.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.cpp" />

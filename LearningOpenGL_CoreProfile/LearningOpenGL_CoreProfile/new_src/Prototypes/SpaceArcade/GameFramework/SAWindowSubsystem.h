@@ -12,7 +12,7 @@ namespace SA
 	class WindowSubsystem : public SubsystemBase
 	{
 	public: //events
-		MultiDelegate<const sp<Window>& /*old_window*/, const sp<Window>& /*new window*/> primaryWindowChangingEvent;
+		MultiDelegate<const sp<Window>& /*old_window*/, const sp<Window>& /*new_window*/> primaryWindowChangingEvent;
 
 	public:
 		const sp<Window>& getPrimaryWindow() { return focusedWindow; }
