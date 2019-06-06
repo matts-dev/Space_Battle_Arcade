@@ -284,20 +284,17 @@ namespace
 				flags |= ImGuiWindowFlags_NoResize;
 				flags |= ImGuiWindowFlags_NoCollapse;
 				ImGui::Begin("Test Window", nullptr, flags);
-
-				const char* windowText = "This is a demo text!";
-
-				//calculate padding for center alignment
-				ImVec2 textSize = ImGui::CalcTextSize(windowText);
-				ImVec2 windowSize = ImGui::GetWindowSize();
-				float rightPaddingSize = (windowSize.x - textSize.x) / 2.0f;
-				ImGui::SameLine(rightPaddingSize); //center text by padding on the right 
-
-				ImGui::Text(windowText);
-				if (ImGui::Button("Click to print a message!"))
-				{
-					std::cout << "you pressed the button(last frame?)!" << std::endl;
-				}
+					const char* windowText = "This is a demo text!";
+					//calculate padding for center alignment
+					ImVec2 textSize = ImGui::CalcTextSize(windowText);
+					ImVec2 windowSize = ImGui::GetWindowSize();
+					float rightPaddingSize = (windowSize.x - textSize.x) / 2.0f;
+					ImGui::SameLine(rightPaddingSize); //center text by padding on the right 
+					ImGui::Text(windowText);
+					if (ImGui::Button("Click to print a message!"))
+					{
+						std::cout << "you pressed the button(last frame?)!" << std::endl;
+					}
 				ImGui::End();
 			}
 			ImGui::EndFrame(); //added this to test decoupling rendering from frame; seems okay

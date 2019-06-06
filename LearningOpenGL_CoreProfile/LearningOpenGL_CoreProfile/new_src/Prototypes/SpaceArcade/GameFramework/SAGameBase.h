@@ -65,12 +65,12 @@ namespace SA
 		MultiDelegate<float /*deltaSec*/> PreGameloopTick;
 		MultiDelegate<float /*deltaSec*/> PostGameloopTick;
 
+		void startShutdown();
 	private: 
 		void TickGameloop_GameBase();
 	protected:
 		virtual void tickGameLoop(float deltaTimeSecs) = 0;
 		virtual void renderLoop(float deltaTimeSecs) = 0;
-		void startShutdown() { bExitGame = true; }
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  SUBSYSTEMS 
@@ -95,7 +95,7 @@ namespace SA
 		sp<LevelSubsystem> levelSS;
 		std::set< sp<SubsystemBase> > subsystems;
 		std::set< sp<SubsystemBase> > postRenderNotifys;
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Time
 	//////////////////////////////////////////////////////////////////////////////////////

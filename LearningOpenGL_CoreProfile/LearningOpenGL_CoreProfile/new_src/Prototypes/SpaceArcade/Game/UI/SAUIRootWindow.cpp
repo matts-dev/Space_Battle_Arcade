@@ -45,7 +45,7 @@ namespace SA
 		flags |= ImGuiWindowFlags_NoMove;
 		flags |= ImGuiWindowFlags_NoResize;
 		flags |= ImGuiWindowFlags_NoCollapse;
-		ImGui::Begin("Space Arcade!");
+		ImGui::Begin("Space Arcade!", nullptr, flags);
 			if (ImGui::Button("Dev Menu"))
 			{
 				menuState = UIMenuState::DEV_MENU;
@@ -61,7 +61,7 @@ namespace SA
 		flags |= ImGuiWindowFlags_NoMove;
 		flags |= ImGuiWindowFlags_NoResize;
 		flags |= ImGuiWindowFlags_NoCollapse;
-		ImGui::Begin("Developer Menu!");
+		ImGui::Begin("Developer Menu!", nullptr, flags);
 			if (ImGui::Button("Load Basic Test Level"))
 			{
 				sp<Level> startupLevel = new_sp<BasicTestSpaceLevel>();

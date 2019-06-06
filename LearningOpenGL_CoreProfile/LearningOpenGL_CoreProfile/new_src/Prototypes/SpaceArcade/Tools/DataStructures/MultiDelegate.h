@@ -407,6 +407,7 @@ namespace SA
 			pendingWeakAdds.clear();
 		}
 
+		std::size_t numBound() { return numStrong() + numWeak(); }
 		std::size_t numStrong() { return strongSubscribers.size(); }
 		std::size_t numWeak() { return weakSubscribers.size(); }
 

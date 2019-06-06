@@ -13,55 +13,68 @@ namespace SA
 {
 	void UISubsystem::initSystem()
 	{
-		//set up IMGUI
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO imguiIO = ImGui::GetIO();
-		ImGui::StyleColorsDark();
-		ImGui_ImplOpenGL3_Init("#version 330 core"); //seems to be window independent, but example code has this set after window
 
 		//requires window subsystem be available; which is safe within the initSystem 
 		WindowSubsystem& windowSubsystem = GameBase::get().getWindowSubsystem();
-		windowSubsystem.primaryWindowChangingEvent.addWeakObj(sp_this(), &UISubsystem::handlePrimaryWindowChangingEvent);
+		windowSubsystem.onWindowLosingOpenglContext.addWeakObj(sp_this(), &UISubsystem::handleLosingOpenGLContext);
+		windowSubsystem.onWindowAcquiredOpenglContext.addWeakObj(sp_this(), &UISubsystem::handleWindowAcquiredOpenGLContext);
 
 		//in case things are refactored and windows are created during subsystem initialization, this will catch
 		//the edge case where a window is already created before we start listening to the primary changed delegate
 		if (const sp<Window>& window = windowSubsystem.getPrimaryWindow())
 		{
-			handlePrimaryWindowChangingEvent(nullptr, window);
+			handleWindowAcquiredOpenGLContext(window);
 		}
 
 		GameBase& game = GameBase::get();
 		game.PostGameloopTick.addStrongObj(sp_this(), &UISubsystem::handleGameloopOver);
 	}
 
-	void UISubsystem::handlePrimaryWindowChangingEvent(const sp<Window>& old_window, const sp<Window>& new_window)
+	void UISubsystem::handleLosingOpenGLContext(const sp<Window>& window)
 	{
-		//if there isn't a new window, we're probably shutting down
-		if (old_window)
+		if (!imguiBoundWindow.expired())
 		{
-			//unregister from old window; untested and this may not work
-			ImGui_ImplGlfw_Shutdown();
-			imguiBoundWindow = sp<Window>(nullptr);
+			//assuming window == imguiBoundWindow since it ImGui should always be associated with current bound context
+			if (window)
+			{
+				destroyImGuiContext();
+			}
 		}
+	}
 
-		if (new_window)
+	void UISubsystem::handleWindowAcquiredOpenGLContext(const sp<Window>& window)
+	{
+		//make sure we have cleaned up the old context and have nullptr within the imguiBoundWindow
+		assert(imguiBoundWindow.expired());
+
+		if (window)
 		{
-			ImGui_ImplGlfw_InitForOpenGL(new_window->get(), /*install callbacks*/false); //false will require manually calling callbacks in our own handlers
-			imguiBoundWindow = new_window;
+			//set up IMGUI
+			IMGUI_CHECKVERSION();
+			ImGui::CreateContext();
+			ImGuiIO imguiIO = ImGui::GetIO();
+			ImGui::StyleColorsDark();
+			ImGui_ImplOpenGL3_Init("#version 330 core");							 //seems to be window independent, but example code has this set after window
+			ImGui_ImplGlfw_InitForOpenGL(window->get(), /*install callbacks*/false); //false will require manually calling callbacks in our own handlers
+			imguiBoundWindow = window;
 		}
+	}
+
+	void UISubsystem::destroyImGuiContext()
+	{
+		//shut down IMGUI
+		ImGui_ImplGlfw_Shutdown();
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui::DestroyContext();
+		imguiBoundWindow = sp<Window>(nullptr);
 	}
 
 	void UISubsystem::shutdown()
 	{
-		//shut down IMGUI
 		if (!imguiBoundWindow.expired())
 		{
-			ImGui_ImplGlfw_Shutdown();
-			imguiBoundWindow = sp<Window>(nullptr);
+			destroyImGuiContext();
 		}
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui::DestroyContext();
 	}
 
 	void UISubsystem::handleGameloopOver(float dt_sec)

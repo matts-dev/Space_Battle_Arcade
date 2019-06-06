@@ -22,8 +22,12 @@ namespace SA
 		virtual void initSystem() override;
 		virtual void shutdown() override;
 		
-		void handlePrimaryWindowChangingEvent(const sp<Window>& old_window, const sp<Window>& new_window);
+		void handleLosingOpenGLContext(const sp<Window>& window);
+		void handleWindowAcquiredOpenGLContext(const sp<Window>& window);
+
 		void handleGameloopOver(float dt_sec);
+
+		void destroyImGuiContext();
 		
 
 	private:

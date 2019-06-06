@@ -8,12 +8,14 @@
 #include "SALevelSubsystem.h"
 
 #include "..\Rendering\SAWindow.h"
+#include "SALog.h"
 
 namespace SA
 {
 
 	GameBase::GameBase()
 	{
+		//allows subclasses to have local-static singleton getters
 		if(!RegisteredSingleton)
 		{
 			RegisteredSingleton = this;
@@ -80,6 +82,12 @@ namespace SA
 				subsystem->shutdown();
 			}
 		}
+	}
+
+	void GameBase::startShutdown()
+	{
+		log("Game : Shutdown Initiated", "GameFramework", LogLevel::LOG);
+		bExitGame = true;
 	}
 
 	void GameBase::TickGameloop_GameBase()

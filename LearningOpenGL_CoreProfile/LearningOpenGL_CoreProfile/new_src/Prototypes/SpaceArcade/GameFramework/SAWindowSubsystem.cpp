@@ -1,5 +1,6 @@
 #include "SAWindowSubsystem.h"
 #include "SAGameBase.h"
+#include "SALog.h"
 
 namespace SA
 {
@@ -7,10 +8,13 @@ namespace SA
 	{
 		primaryWindowChangingEvent.broadcast(focusedWindow, window);
 
+		onWindowLosingOpenglContext.broadcast(focusedWindow);
 		if (window)
 		{
 			glfwMakeContextCurrent(window->get());
+			onWindowAcquiredOpenglContext.broadcast(window);
 		}
+
 
 		focusedWindow = window;
 	}
@@ -18,12 +22,21 @@ namespace SA
 	void WindowSubsystem::tick(float deltaSec)
 	{
 		glfwPollEvents();
+
 		if (focusedWindow)
 		{
 			if (focusedWindow->shouldClose())
 			{
-				//perhaps try to find another valid window
-				makeWindowPrimary(nullptr);
+				if (onFocusedWindowTryingToClose.numBound() > 0)
+				{
+					//NOTE: below may result in focus window changing; making a sp copy per tick isn't cheap so be careful
+					onFocusedWindowTryingToClose.broadcast(focusedWindow);
+				}
+				else
+				{
+					log("Window Subsystem : Primary window requesting close, shutting down game.");
+					GameBase::get().startShutdown();
+				}
 			}
 		}
 	}
