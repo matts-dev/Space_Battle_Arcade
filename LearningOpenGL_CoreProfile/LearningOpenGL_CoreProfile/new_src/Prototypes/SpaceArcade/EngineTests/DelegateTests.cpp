@@ -806,6 +806,44 @@ namespace SA
 			}
 		};
 
+		/// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// Test Has Strong Bindings
+		/// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		class Test_NumStrongBindings : public MultiDelegate_UnitTest
+		{
+			struct User : public GameEntity
+			{
+				void handler(int& outVal)
+				{
+					//irrelevant 
+				}
+			};
+
+			virtual bool runInternal(bool stopOnFail = false) override
+			{
+				testName = "Test querying is object strong bound";
+
+				MultiDelegate<int&> basicDelegate;
+				sp<User> user = new_sp<User>();
+				
+				basicDelegate.addStrongObj(user, &User::handler);
+
+				if (!basicDelegate.hasBoundStrong(*user.get()))
+				{
+					errorMessage = "Did not detect that game entity object was bound to delegate";
+					return false;
+				}
+
+				basicDelegate.removeStrong(user, &User::handler);
+				
+				if (basicDelegate.hasBoundStrong(*user.get()))
+				{
+					errorMessage = "User is still registering as bound after removal.";
+					return false;
+				}
+				return true;
+			}
+		};
 
 		/// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// Container test suite
@@ -830,6 +868,7 @@ namespace SA
 				addTest(new_sp<Test_AddDuringBroadcast>());
 				addTest(new_sp<Test_PassingDelegateAsParam>());
 				addTest(new_sp<Test_ExpiredWeakBindingsRemoved>());
+				addTest(new_sp<Test_NumStrongBindings>());
 			}
 		};
 	}

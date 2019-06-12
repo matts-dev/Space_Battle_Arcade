@@ -9,6 +9,7 @@
 
 #include "..\Rendering\SAWindow.h"
 #include "SALog.h"
+#include "SAPlayerSubsystem.h"
 
 namespace SA
 {
@@ -34,6 +35,9 @@ namespace SA
 
 		levelSS = new_sp<LevelSubsystem>();
 		subsystems.insert(levelSS);
+
+		playerSS = new_sp<PlayerSubsystem>();
+		subsystems.insert(playerSS);
 	}
 
 	GameBase* GameBase::RegisteredSingleton = nullptr;

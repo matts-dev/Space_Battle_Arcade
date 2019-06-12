@@ -72,6 +72,8 @@ namespace SA
 
 	private: //debugging
 		void renderDebug(const glm::mat4& view, const glm::mat4& projection);
+
+	public: //debug state (public to allow sub-editor access)
 		bool bRenderDebugCells = false;
 		bool bRenderProjectileOBBs = false;
 

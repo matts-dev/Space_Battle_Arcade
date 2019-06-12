@@ -26,6 +26,8 @@
 #include "Levels/BasicTestSpaceLevel.h"
 #include "Levels/ProjectileEditor_Level.h"
 #include "UI/SAUIRootWindow.h"
+#include "SAPlayer.h"
+#include "../GameFramework/SAPlayerSubsystem.h"
 
 namespace SA
 {
@@ -47,6 +49,8 @@ namespace SA
 		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
 		debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false);
 
+		sp<Player> playerZero = getPlayerSystem().createPlayer<Player>();
+
 		//set up unit cube
 		ec(glGenVertexArrays(1, &cubeVAO));
 		ec(glBindVertexArray(cubeVAO));
@@ -59,10 +63,12 @@ namespace SA
 		ec(glEnableVertexAttribArray(1));
 		ec(glBindVertexArray(0));
 
+
 		//camera
 		fpsCamera = new_sp<SA::CameraFPS>(45.f, 0.f, 0.f);
-		fpsCamera->registerToWindowCallbacks(window);
-		glfwSetInputMode(window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		fpsCamera->registerToWindowCallbacks_v(window);
+		fpsCamera->setCursorMode(false);
+		playerZero->setCamera(fpsCamera);
 
 		//load models
 		laserBoltModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/LazerBolt/LazerBolt.obj");
@@ -96,7 +102,7 @@ namespace SA
 
 	void SpaceArcade::shutDown() 
 	{
-		fpsCamera->deregisterToWindowCallbacks();
+		fpsCamera->deregisterToWindowCallbacks_v();
 
 		ec(glDeleteVertexArrays(1, &cubeVAO));
 		ec(glDeleteBuffers(1, &cubeVBO));
@@ -178,25 +184,28 @@ namespace SA
 
 		renderDebug(view, projection);
 
-
-		{ //render cube
-			mat4 model = glm::mat4(1.f);
-			model = glm::translate(model, vec3(5.f, 0.f, -5.f));
-			litObjShader->use();
-			litObjShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-			litObjShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-			litObjShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-			litObjShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-			litObjShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
-			ec(glBindVertexArray(cubeVAO));
-			ec(glDrawArrays(GL_TRIANGLES, 0, sizeof(Utils::unitCubeVertices_Position_Normal) / (6 * sizeof(float))));
-		}
+		//{ //render cube
+		//	mat4 model = glm::mat4(1.f);
+		//	model = glm::translate(model, vec3(5.f, 0.f, -5.f));
+		//	litObjShader->use();
+		//	litObjShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+		//	litObjShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+		//	litObjShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+		//	litObjShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
+		//	litObjShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
+		//	ec(glBindVertexArray(cubeVAO));
+		//	ec(glDrawArrays(GL_TRIANGLES, 0, sizeof(Utils::unitCubeVertices_Position_Normal) / (6 * sizeof(float))));
+		//}
 
 		//render world entities
 		forwardShadedModelShader->use();
 		forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 		forwardShadedModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 		forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
+		forwardShadedModelShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
+		forwardShadedModelShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
+		forwardShadedModelShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0));
+
 		forwardShadedModelShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
 		forwardShadedModelShader->setUniform1i("material.shininess", 32);
 		for (const sp<RenderModelEntity>& entity : renderEntities)
@@ -212,6 +221,11 @@ namespace SA
 		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
 		ProjectileSS->renderProjectiles(*forwardShaded_EmissiveModelShader);
+
+		if (const sp<Level>& loadedLevel = getLevelSubsystem().getCurrentLevel())
+		{
+			loadedLevel->render(deltaTimeSecs, view, projection);
+		}
 
 		getUISubsystem()->render();
 	}
@@ -250,7 +264,6 @@ namespace SA
 					fpsCamera->setCursorMode(ui_root->getUIVisible());
 				}
 			}
-
 
 			if (input.isMouseButtonJustPressed(window, GLFW_MOUSE_BUTTON_LEFT))
 			{

@@ -13,7 +13,7 @@ namespace SA
 	{
 	public: //events
 		/*This event should not be used to determine when OpenGL contexts change */
-		MultiDelegate<const sp<Window>& /*old_window*/, const sp<Window>& /*new_window*/> primaryWindowChangingEvent;
+		MultiDelegate<const sp<Window>& /*old_window*/, const sp<Window>& /*new_window*/> onPrimaryWindowChangingEvent;
 		MultiDelegate<const sp<Window>&> onWindowLosingOpenglContext;
 		MultiDelegate<const sp<Window>&> onWindowAcquiredOpenglContext;
 		MultiDelegate<const sp<Window>&> onFocusedWindowTryingToClose;

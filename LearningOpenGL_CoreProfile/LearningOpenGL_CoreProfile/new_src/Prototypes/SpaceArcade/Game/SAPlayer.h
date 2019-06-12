@@ -1,9 +1,10 @@
 #pragma once
 #include "..\GameFramework\SAGameEntity.h"
+#include "..\GameFramework\SAPlayerBase.h"
 
 namespace SA
 {
-	class Player : public GameEntity
+	class Player : public PlayerBase
 	{
 	public:
 		virtual ~Player() {}

@@ -16,8 +16,9 @@ namespace SA
 	public:
 
 	private:
-		friend GameBase;
-		virtual void tick(float deltaSec) = 0;
+		friend GameBase; //driver of virtual functions
+
+		virtual void tick(float deltaSec){};
 
 		/** Called when main game subsystems can safely be accessed; though not all may be initialized */
 		virtual void initSystem() {};

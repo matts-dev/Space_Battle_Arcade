@@ -13,6 +13,8 @@ namespace SA
 	class WindowSubsystem;
 	class TextureSubsystem;
 	class LevelSubsystem;
+	class PlayerSubsystem;
+
 	class Window;
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +82,7 @@ namespace SA
 		inline WindowSubsystem& getWindowSubsystem() { return *windowSS; }
 		inline TextureSubsystem& getTextureSubsystem() { return *textureSS; }
 		inline LevelSubsystem& getLevelSubsystem() { return *levelSS; }
+		inline PlayerSubsystem& getPlayerSystem() { return *playerSS; }
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
 		void SubscribePostRender(const sp <SubsystemBase>& subsystem);
@@ -93,6 +96,7 @@ namespace SA
 		sp<WindowSubsystem> windowSS;
 		sp<TextureSubsystem> textureSS;
 		sp<LevelSubsystem> levelSS;
+		sp<PlayerSubsystem> playerSS;
 		std::set< sp<SubsystemBase> > subsystems;
 		std::set< sp<SubsystemBase> > postRenderNotifys;
 

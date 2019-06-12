@@ -40,4 +40,12 @@ namespace SA
 		}
 	}
 
+	void LevelSubsystem::tick(float deltaSec)
+	{
+		if (loadedLevel)
+		{
+			loadedLevel->tick(deltaSec);
+		}
+	}
+
 }

@@ -165,7 +165,7 @@ namespace
 			ec(glBindVertexArray(0));
 
 			fpsCamera = new_sp<SA::CameraFPS>(45.f, 0.f, 0.f);
-			fpsCamera->registerToWindowCallbacks(window);
+			fpsCamera->registerToWindowCallbacks_v(window);
 
 			glfwSetInputMode(window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -174,7 +174,7 @@ namespace
 
 		virtual void shutDown() override
 		{
-			fpsCamera->deregisterToWindowCallbacks();
+			fpsCamera->deregisterToWindowCallbacks_v();
 
 			ec(glDeleteVertexArrays(1, &cubeVAO));
 			ec(glDeleteBuffers(1, &cubeVBO));

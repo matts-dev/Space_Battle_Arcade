@@ -26,12 +26,15 @@ namespace SA
 		{
 		}
 
-	private:
+	public:
 		/** Transform a unit cube into the model's single AABB
 			projectiles only support simple cube collision for speed
 			but the cube can be molded in fit around the model*/
-		const Transform collisionTransform;
-		const sp<Model3D> model;
+		sp<Model3D> model;
+		Transform collisionTransform;
+		float speed = 200.0f;
+		float lifeTimeSec = 1.f;
+
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,10 +71,13 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	class ProjectileSubsystem : public SubsystemBase
 	{
+		friend class ProjectileEditor_Level;
+
 	public:
 		sp<ProjectileClassHandle> createProjectileType(const sp<Model3D>& model, const Transform& AABB_unitCubeTransform);
-		virtual void spawnProjectile(const glm::vec3& start, const glm::vec3& direction, const ProjectileClassHandle& projectileTypeHandle);
-		
+		void spawnProjectile(const glm::vec3& start, const glm::vec3& direction, const ProjectileClassHandle& projectileTypeHandle);
+		void unspawnAllProjectiles();
+
 		void renderProjectiles(Shader& projectileShader) const;
 		void renderProjectileBoundingBoxes(Shader& debugShader, const glm::vec3& color, const glm::mat4& view, const glm::mat4& perspective) const;
 

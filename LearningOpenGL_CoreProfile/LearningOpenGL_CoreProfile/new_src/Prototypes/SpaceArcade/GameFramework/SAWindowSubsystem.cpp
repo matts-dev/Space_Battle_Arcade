@@ -6,7 +6,7 @@ namespace SA
 {
 	void WindowSubsystem::makeWindowPrimary(const sp<Window>& window)
 	{
-		primaryWindowChangingEvent.broadcast(focusedWindow, window);
+		onPrimaryWindowChangingEvent.broadcast(focusedWindow, window);
 
 		onWindowLosingOpenglContext.broadcast(focusedWindow);
 		if (window)

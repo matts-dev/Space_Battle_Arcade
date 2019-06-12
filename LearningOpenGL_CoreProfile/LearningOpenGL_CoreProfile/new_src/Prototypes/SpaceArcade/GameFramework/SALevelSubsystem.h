@@ -25,7 +25,7 @@ namespace SA
 		inline const sp<Level>& getCurrentLevel() { return loadedLevel; }
 		
 	private:
-		virtual void tick(float deltaSec) {}
+		virtual void tick(float deltaSec);
 
 	private:
 		sp<Level> loadedLevel = nullptr;

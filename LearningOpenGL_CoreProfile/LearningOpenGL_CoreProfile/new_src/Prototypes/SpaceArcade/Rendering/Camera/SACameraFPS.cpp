@@ -3,15 +3,16 @@
 #include "..\SAWindow.h"
 #include "..\..\Game\SpaceArcade.h"
 #include "..\..\GameFramework\SAWindowSubsystem.h"
+#include <gtx\compatibility.hpp>
+#include "..\..\Tools\SAUtilities.h"
 
 namespace SA
 {
 	CameraFPS::CameraFPS(float inFOV, float inYaw, float inPitch) :
-		worldUp_n(0.f, 1.f, 0.f),
-		FOV(inFOV),
 		yaw(inYaw),
 		pitch(inPitch)
 	{
+		setFOV(inFOV);
 		calculateEulerAngles();
 	}
 
@@ -19,44 +20,7 @@ namespace SA
 	{
 	}
 
-	glm::mat4 CameraFPS::getView() const
-	{
-		//this creates a view matrix from two matrices.
-		//the first matrix (ie the matrix on the right which gets applied first) is just translating points by the opposite of the camera's position.
-		//the second matrix (ie matrix on the left) is a matrix where the first 3 rows are the U, V, and W axes of the camera.
-		//		The matrix with the axes of the camera is a change of basis matrix.
-		//		If you think about it, what it does to a vector is a dot product with each of the camera's axes.
-		//		Since the camera axes are all normalized, what this is really doing is projecting the vector on the 3 axes of the camera!
-		//			(recall that a vector dotted with a normal vector is equivalent of getting the scalar projection onto the normal)
-		//		So, the result of the projection is the vector's position in terms of the camera position.
-		//		Since we're saying that the camera's axes align with our NDC axes, we get coordinates in terms x y z that are ready for clipping and projection to NDC 
-		//So, ultimately the lookAt matrix shifts points based on camera's position, then projects them onto the camera's axes -- which are aligned with OpenGL's axes 
-
-		glm::vec3 cameraAxisW = glm::normalize(cameraPosition - (cameraFront_n + cameraPosition)); //points towards camera; camera looks down its -z axis (ie down its -w axis)
-		glm::vec3 cameraAxisU = glm::normalize(glm::cross(worldUp_n, cameraAxisW)); //this is the right axis (ie x-axis)
-		glm::vec3 cameraAxisV = glm::normalize(glm::cross(cameraAxisW, cameraAxisU));
-		//make each row in the matrix a camera's basis vector; glm is column-major
-		glm::mat4 cameraBasisProjection;
-		cameraBasisProjection[0][0] = cameraAxisU.x;
-		cameraBasisProjection[1][0] = cameraAxisU.y;
-		cameraBasisProjection[2][0] = cameraAxisU.z;
-
-		cameraBasisProjection[0][1] = cameraAxisV.x;
-		cameraBasisProjection[1][1] = cameraAxisV.y;
-		cameraBasisProjection[2][1] = cameraAxisV.z;
-
-		cameraBasisProjection[0][2] = cameraAxisW.x;
-		cameraBasisProjection[1][2] = cameraAxisW.y;
-		cameraBasisProjection[2][2] = cameraAxisW.z;
-		glm::mat4 cameraTranslate = glm::translate(glm::mat4(), -1.f * cameraPosition);
-
-		glm::mat4 view = cameraBasisProjection * cameraTranslate;
-		//glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, worldUp);
-
-		return view;
-	}
-
-	void CameraFPS::mouseMoved(double xpos, double ypos)
+	void CameraFPS::onMouseMoved_v(double xpos, double ypos)
 	{
 		if (refocused)
 		{
@@ -85,19 +49,21 @@ namespace SA
 		calculateEulerAngles();
 	}
 
-	void CameraFPS::windowFocusedChanged(int focusEntered)
+	void CameraFPS::onWindowFocusedChanged_v(int focusEntered)
 	{
+		CameraBase::onWindowFocusedChanged_v(focusEntered);
 		refocused = focusEntered;
 	}
 
-	void CameraFPS::mouseWheelUpdate(double xOffset, double yOffset)
+	void CameraFPS::onMouseWheelUpdate_v(double xOffset, double yOffset)
 	{
-		if (FOV >= 1.0f && FOV <= 45.0f)
-			FOV -= static_cast<float>(yOffset);
-		if (FOV <= 1.0f)
-			FOV = 1.0f;
-		if (FOV >= 45.0)
-			FOV = 45.0f;
+		float& mutableFOV = adjustFOV();
+		if (mutableFOV >= 1.0f && mutableFOV <= 45.0f)
+			mutableFOV -= static_cast<float>(yOffset);
+		if (mutableFOV <= 1.0f)
+			mutableFOV = 1.0f;
+		if (mutableFOV >= 45.0)
+			mutableFOV = 45.0f;
 	}
 
 	void CameraFPS::handleInput(GLFWwindow* window, float deltaTime)
@@ -109,36 +75,28 @@ namespace SA
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
-			cameraPosition -= cameraFront_n * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
+			//cameraPosition -= cameraFront_n * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
+			adjustPosition(-(getFront() * cameraSpeed * bSpeedAccerlationFactor * deltaTime));
 		}
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			cameraPosition += cameraFront_n * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
+			//cameraPosition += cameraFront_n * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
+			adjustPosition(getFront() * cameraSpeed * bSpeedAccerlationFactor  * deltaTime);
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
 			//the w basis vector is the -cameraFront
-			glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
-			cameraPosition += cameraRight * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
+			glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
+			//cameraPosition += cameraRight * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
+			adjustPosition(cameraRight * cameraSpeed * bSpeedAccerlationFactor  * deltaTime);
 		}
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
 			//the w basis vector is the -cameraFront
-			glm::vec3 cameraRight = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
-			cameraPosition -= cameraRight * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
+			glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
+			//cameraPosition -= cameraRight * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
+			adjustPosition(-(cameraRight * cameraSpeed * bSpeedAccerlationFactor * deltaTime));
 		}
-	}
-
-	void CameraFPS::setPosition(float x, float y, float z)
-	{
-		cameraPosition.x = x;
-		cameraPosition.y = y;
-		cameraPosition.z = z;
-	}
-
-	void CameraFPS::setPosition(glm::vec3 newPos)
-	{
-		cameraPosition = newPos;
 	}
 
 	void CameraFPS::setYaw(float inYaw)
@@ -158,72 +116,62 @@ namespace SA
 		cameraSpeed = speed;
 	}
 
-	const glm::vec3 CameraFPS::getRight() const
+	void CameraFPS::onCursorModeSet_v(bool inCursorMode)
 	{
-		glm::vec3 cameraRight_n = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
-		return cameraRight_n;
-	}
-
-	const glm::vec3 CameraFPS::getUp() const
-	{
-		glm::vec3 cameraRight_n = glm::normalize(glm::cross(worldUp_n, -cameraFront_n));
-		glm::vec3 cameraUp_n = glm::normalize(glm::cross(-cameraFront_n, cameraRight_n));
-		return cameraUp_n;
-	}
-
-	void CameraFPS::setCursorMode(bool inCursorMode)
-	{
-		cursorMode = inCursorMode;
-		if (!cursorMode)
+		if (!inCursorMode)
 		{
-			//don't gitter camera
+			//don't jitter camera
 			refocused = true;
 		}
+	}
 
-		if (!registeredWindow.expired())
+	void CameraFPS::lookAt_v(glm::vec3 point)
+	{
+		glm::vec3 dir = glm::normalize(point - getPosition());
+
+		//based on euler calculation func
+		// camDir.y = sin(pitch); so pitch = asin(camDir.y)
+		pitch = std::asinf(dir.y);
+		pitch = glm::clamp(pitch, -1.f, 1.f);
+
+		//don't let a divide by zero happen
+		if (!Utils::float_equals(pitch, 1.f))
 		{
-			if (sp<Window> primaryWindow = registeredWindow.lock())
+			if (!Utils::float_equals(dir.x, 0.f))
 			{
-				GLFWwindow* window = primaryWindow->get();
-				//It may be heavy handed to have the camera direct the state of the window; but doing this now as camera system is in flux
-				glfwSetInputMode(window, GLFW_CURSOR, inCursorMode ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+				//camDir.x = cos(pitch) * cos(yaw)
+				//camDir.x / cos(pitch) = cos(yaw)
+				//acos(camDir.x / cos(pitch)) = yaw
+				float cosval = dir.x / std::cosf(pitch);
 
-				if (inCursorMode)
-				{
-					deregisterToWindowCallbacks();
-				}
-				else
-				{
-					registerToWindowCallbacks(primaryWindow);
-				}
+				//float rounding errors like 1.000000012 are possible
+				cosval = glm::clamp(cosval, -1.f, 1.f);
+				yaw = std::acosf(cosval);
+			}
+			else
+			{
+				//camDir.z = cos(pitch) * sin(yaw)
+				//camDir.z / cos(pitch) = sin(yaw)
+				//asin(camDir.z / cos(pitch)) = yaw
+				float sinval = dir.x / std::cosf(pitch);
+
+				//float rounding errors like 1.000000012 are possible
+				sinval = glm::clamp(sinval, -1.f, 1.f); 
+				yaw = std::asinf(sinval);
 			}
 		}
-	}
-
-	void CameraFPS::registerToWindowCallbacks(sp<Window>& window)
-	{
-		deregisterToWindowCallbacks();
-
-		if (window)
+		else //looking straight up/down
 		{
-			registeredWindow = window;
-
-			//adding strong bindings for speed, but this will keep camera alive through shared_ptrs and must be cleared via deregister
-			window->cursorPosEvent.addStrongObj(sp_this(), &CameraFPS::mouseMoved);
-			window->mouseLeftEvent.addStrongObj(sp_this(), &CameraFPS::windowFocusedChanged);
-			window->scrollChanged.addStrongObj(sp_this(), &CameraFPS::mouseWheelUpdate);
+			//preserve previous yaw so when looking down/up it aligns with previous direction
+			//(or we could set it to zero)
 		}
-	}
 
-	void CameraFPS::deregisterToWindowCallbacks()
-	{
-		if (!registeredWindow.expired())
-		{
-			sp<Window> window = registeredWindow.lock();
-			window->cursorPosEvent.removeStrong(sp_this(), &CameraFPS::mouseMoved);
-			window->mouseLeftEvent.removeStrong(sp_this(), &CameraFPS::windowFocusedChanged);
-			window->scrollChanged.removeStrong(sp_this(), &CameraFPS::mouseWheelUpdate);
-		}
+		//previous operations were using radians, convert to degrees before exit
+		//must do this last because yaw operations depend on pitch being in radians
+		pitch = glm::degrees(pitch);
+		yaw = glm::degrees(yaw);
+
+		calculateEulerAngles();
 	}
 
 	void CameraFPS::calculateEulerAngles()
@@ -233,6 +181,6 @@ namespace SA
 		camDir.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
 		camDir.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
 		camDir = glm::normalize(camDir); //make sure this is normalized for when user polls front
-		cameraFront_n = camDir;
+		child_setFront(camDir);
 	}
 }

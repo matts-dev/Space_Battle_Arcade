@@ -26,6 +26,11 @@ namespace SA
 		MultiDelegate<int /*Enter*/> mouseLeftEvent;
 		MultiDelegate<double /*xOffset*/, double /*yOffset*/> scrollChanged;
 		MultiDelegate<int /*newWidth*/, int /*newHeight*/> framebufferSizeChanged;
+
+		/* mods: GLFW_MOD_SHIFT, GLFW_MOD_CONTROL,GLFW_MOD_ALT, GLFW_MOD_SUPER
+		   actions: GLFW_PRESS, GLFW_RELEASE, GLFW_REPEAT (kb only) */
+		MultiDelegate<int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/> onKeyInput;
+		MultiDelegate<int /*button*/, int /*action*/, int /*mods*/> onMouseButtonInput;
 		
 
 	//window instances

@@ -1,13 +1,5 @@
 #pragma once
 
-#include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
-#include<GLFW/glfw3.h>
-#include <string>
-
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-
 #include "SACameraBase.h"
 
 namespace SA
@@ -21,55 +13,41 @@ namespace SA
 		CameraFPS(float inFOV, float inYaw, float inPitch);
 		~CameraFPS();
 
-		glm::mat4 getView() const;
-
 		//callbacks
-		virtual void mouseMoved(double xpos, double ypos);
-		virtual void windowFocusedChanged(int focusEntered);
-		virtual void mouseWheelUpdate(double xOffset, double yOffset);
+		virtual void onMouseMoved_v(double xpos, double ypos) override;
+		virtual void onWindowFocusedChanged_v(int focusEntered) override;
+		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset) override;
 
 		void handleInput(GLFWwindow* window, float deltaTime);
 
 		//setters and getters
-		void setPosition(float x, float y, float z);
-		void setPosition(glm::vec3 newPos);
 		void setYaw(float inYaw);
 		void setPitch(float inPitch);
 		void setSpeed(float speed);
+		virtual void onCursorModeSet_v(bool inCursorMode) override;
 
-		const glm::vec3& getPosition() const { return cameraPosition; }
-		const glm::vec3 getFront() const { return cameraFront_n; }
-		const glm::vec3 getRight() const;
-		const glm::vec3 getUp() const;
-		float getFOV() const { return FOV; }
 		float getYaw() const { return yaw; }
 		float getPitch() const { return pitch; }
-		void setCursorMode(bool inCursorMode);
-		bool isInCursorMode() { return cursorMode; }
+
+		virtual void lookAt_v(glm::vec3 point) override;
 
 	public:
-		virtual void registerToWindowCallbacks(sp<Window>& window) override;
-		virtual void deregisterToWindowCallbacks() override;
+
+		//virtual void registerToWindowCallbacks(sp<Window>& window) override;
+		//virtual void deregisterToWindowCallbacks() override;
 
 	private: //helper fields
-		wp<SA::Window> registeredWindow;
 		double lastX;
 		double lastY;
-		bool refocused = true;
 		void calculateEulerAngles();
 
 	private:
-		glm::vec3 cameraPosition;
-		glm::vec3 cameraFront_n;
-		glm::vec3 worldUp_n;
-
 		float pitch = 0.f;
 		float yaw = -90.f;
-		float FOV = 45.0f;
-
+		
 		float mouseSensitivity = 0.05f;
 		float cameraSpeed = 2.5f;
-		bool cursorMode = false;
 		bool bAllowSpeedModifier = true;
+		bool refocused = true;
 	};
 }

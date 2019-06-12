@@ -53,7 +53,7 @@ namespace SA
 				}
 			)";
 
-	const char* forwardShadedModel_SimpleLighting_vertSrc = R"(
+	const char* const forwardShadedModel_SimpleLighting_vertSrc = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;			
 				layout (location = 1) in vec3 normal;	
@@ -77,7 +77,7 @@ namespace SA
 					interpTextCoords = textureCoordinates;
 				}
 			)";
-	const char* forwardShadedModel_SimpleLighting_fragSrc = R"(
+	const char* const forwardShadedModel_SimpleLighting_fragSrc = R"(
 				#version 330 core
 
 				out vec4 fragmentColor;
@@ -145,7 +145,7 @@ namespace SA
 				}
 			)";
 
-	const char* forwardShadedModel_Emissive_fragSrc = R"(
+	const char* const forwardShadedModel_Emissive_fragSrc = R"(
 				#version 330 core
 
 				out vec4 fragmentColor;
@@ -163,7 +163,7 @@ namespace SA
 			)";
 
 
-	const char* forwardShadedModel_vertSrc = R"(
+	const char* const forwardShadedModel_vertSrc = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;			
 				layout (location = 1) in vec3 normal;	
@@ -187,7 +187,7 @@ namespace SA
 					interpTextCoords = textureCoordinates;
 				}
 			)";
-	const char* forwardShadedModel_fragSrc = R"(
+	const char* const forwardShadedModel_fragSrc = R"(
 				#version 330 core
 
 				out vec4 fragmentColor;

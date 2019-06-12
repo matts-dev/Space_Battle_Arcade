@@ -407,6 +407,15 @@ namespace SA
 			pendingWeakAdds.clear();
 		}
 
+		bool hasBoundStrong(const GameEntity& const_obj)
+		{
+			//add/removes use non-const pointers because callbacks will potentially change state, this may can be removed
+			//with clever designing. Unfortunately there are compile errors with trying to find the const version directly
+			//within strongSubscribers, so const casting const since the query will not change the value of the pointer
+			GameEntity* obj = const_cast<GameEntity*>(&const_obj);
+			return strongSubscribers.find(obj) != strongSubscribers.end();
+		}
+
 		std::size_t numBound() { return numStrong() + numWeak(); }
 		std::size_t numStrong() { return strongSubscribers.size(); }
 		std::size_t numWeak() { return weakSubscribers.size(); }

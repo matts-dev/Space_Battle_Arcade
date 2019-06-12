@@ -78,16 +78,22 @@ namespace SA
 	void ProjectileSubsystem::spawnProjectile(const glm::vec3& start, const glm::vec3& direction_n, const ProjectileClassHandle& projectileTypeHandle)
 	{
 		sp<Projectile> spawned = objPool.getInstance();
+		glm::quat spawnRotation; //unit quaternion
 
 		//note there may some optimized functions in glm to do this work
 		glm::vec3 modelForward_n(0, 0, 1);//TODO make this part of the projectile type handle
-		glm::vec3 rotAxis = glm::normalize(glm::cross(modelForward_n, direction_n)); //theoretically, I don't think I need to normalize if both normal; but generally I normalize the result of xproduct
 		float cosTheta = glm::dot(modelForward_n, direction_n);
-		float rotDegreesRadians = glm::acos(cosTheta);
-		glm::quat spawnRotation = glm::angleAxis(rotDegreesRadians, rotAxis);
 
-		//case when vectors are 180 apart; 
-		if (Utils::float_equals(cosTheta, -1.0f))
+		bool bVectorsAre180 = Utils::float_equals(cosTheta, -1.0f);
+		bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f) && !bVectorsAre180;
+
+		if (!bVectorsAreSame)
+		{
+			glm::vec3 rotAxis = glm::normalize(glm::cross(modelForward_n, direction_n)); //theoretically, I don't think I need to normalize if both normal; but generally I normalize the result of xproduct
+			float rotDegreesRadians = glm::acos(cosTheta);
+			spawnRotation = glm::angleAxis(rotDegreesRadians, rotAxis);
+		}
+		else if (bVectorsAre180)
 		{
 			//if tail end and front of projectile are not the same, we need a 180 rotation around ?any? axis
 			glm::vec3 temp = Utils::getDifferentVector(modelForward_n);
@@ -99,18 +105,26 @@ namespace SA
 		//todo define a argument struct to pass for spawning projectiles
 		spawned->xform.position = start;
 		spawned->xform.rotQuat = spawnRotation;
-		spawned->modelOffset.position = modelForward_n * -2.f;
 		spawned->collisionAABB = projectileTypeHandle.collisionTransform;
+
+		spawned->modelOffset.position = modelForward_n * -2.f;
 
 		spawned->distanceStretchScale = 1;
 		spawned->direction = direction_n;
-		spawned->speed = 1.0f;//200.0f;
+
+		spawned->speed = projectileTypeHandle.speed;//1.0f;//200.0f;
 		spawned->collisionAABB = projectileTypeHandle.collisionTransform;
 		spawned->model = projectileTypeHandle.model;
+		spawned->lifetimeSec = projectileTypeHandle.lifeTimeSec;
+
 		spawned->timeAlive = 0.f;
-		spawned->lifetimeSec = 30.f;//1.f;
 
 		activeProjectiles.insert( spawned );
+	}
+
+	void ProjectileSubsystem::unspawnAllProjectiles()
+	{
+		activeProjectiles.clear();
 	}
 
 	void ProjectileSubsystem::renderProjectiles(Shader& projectileShader) const

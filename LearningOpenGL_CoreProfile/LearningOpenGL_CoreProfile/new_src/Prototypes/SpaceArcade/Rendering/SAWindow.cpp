@@ -112,6 +112,18 @@ namespace SA
 		windowObj.framebufferSizeChanged.broadcast(width, height);
 	}
 
+	static void c_callback_KeyCallback(GLFWwindow* window, int key, int scanecode, int action, int mods)
+	{
+		Window& windowObj = windowStatics.findWindow(window);
+		windowObj.onKeyInput.broadcast(key, scanecode, action, mods);
+	}
+
+	static void c_callback_MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	{
+		Window& windowObj = windowStatics.findWindow(window);
+		windowObj.onMouseButtonInput.broadcast(button, action, mods);
+	}
+
 	///this must come after callbacks for proper definition order, otherwise forward declarations are going to be needed
 	void WindowStaticsImplementation::bindWindowCallbacks(GLFWwindow* window)
 	{
@@ -120,6 +132,8 @@ namespace SA
 		glfwSetCursorEnterCallback(window, &c_callback_CursorEnter);
 		glfwSetScrollCallback(window, &c_callback_Scroll);
 		glfwSetFramebufferSizeCallback(window, &c_callback_FramebufferSize);
+		glfwSetKeyCallback(window, &c_callback_KeyCallback);
+		glfwSetMouseButtonCallback(window, &c_callback_MouseButtonCallback);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
