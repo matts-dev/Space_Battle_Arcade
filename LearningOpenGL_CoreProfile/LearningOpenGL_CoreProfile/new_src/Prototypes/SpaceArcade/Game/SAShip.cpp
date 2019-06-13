@@ -1,5 +1,6 @@
 #include "SAShip.h"
 #include "SpaceArcade.h"
+#include "..\GameFramework\SALevel.h"
 
 
 namespace SA
@@ -25,14 +26,19 @@ namespace SA
 
 	void Ship::postConstruct()
 	{
-		//cache this later to avoid this getter overhead in each ship's tick
-		CollisionSS = SpaceArcade::get().getCollisionSS();
-
-		Transform xform = getTransform();
-		glm::mat4 xform_m = xform.getModelMatrix();
-		collisionHandle = CollisionSS->getWorldGrid().insert(*this, getWorldOBB(xform_m));
+		//WARNING: caching world sp will create cyclic reference
+		if (Level* world = getWorld())
+		{
+			Transform xform = getTransform();
+			glm::mat4 xform_m = xform.getModelMatrix();
+			collisionHandle = world->getWorldGrid().insert(*this, getWorldOBB(xform_m));
+		}
+		else
+		{
+			throw std::logic_error("World entity being created but there is no containing world");
+		}
 	}
-
+	
 	void Ship::tick(float deltaTimeSecs)
 	{
 		Transform xform = getTransform();
@@ -46,24 +52,27 @@ namespace SA
 		}
 
 		//update the spatial hash
-		SH::SpatialHashGrid<GameEntity>& worldGrid = CollisionSS->getWorldGrid();
-		worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));
-
-		//test if collisions occurred
-		overlappingNodes_SH.clear();
-		worldGrid.lookupNodesInCells(*collisionHandle, overlappingNodes_SH);
-		for (sp <SH::GridNode<GameEntity>> node : overlappingNodes_SH)
+		if (Level* world = getWorld())
 		{
-			//TODO make sure this object's shape has been updated to transform! this should be done before the loop
-			//TODO for each node, get their shape and do a collision tests
-			//TODO if collision, make sure this object's SAT::Shapes are updated
+			SH::SpatialHashGrid<GameEntity>& worldGrid = world->getWorldGrid();
+			worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));
+
+			//test if collisions occurred
+			overlappingNodes_SH.clear();
+			worldGrid.lookupNodesInCells(*collisionHandle, overlappingNodes_SH);
+			for (sp <SH::GridNode<GameEntity>> node : overlappingNodes_SH)
+			{
+				//TODO make sure this object's shape has been updated to transform! this should be done before the loop
+				//TODO for each node, get their shape and do a collision tests
+				//TODO if collision, make sure this object's SAT::Shapes are updated
+			}
+#ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
+			SpatialHashCellDebugVisualizer::appendCells(worldGrid, *collisionHandle);
+#endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 		}
 
 		setTransform(xform);
 
-#ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
-		SpatialHashCellDebugVisualizer::appendCells(worldGrid, *collisionHandle);
-#endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 	}
 
 	const std::array<glm::vec4, 8> Ship::getWorldOBB(const glm::mat4 xform) const

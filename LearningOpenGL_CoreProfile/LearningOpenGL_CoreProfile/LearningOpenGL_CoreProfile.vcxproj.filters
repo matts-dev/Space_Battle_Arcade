@@ -519,9 +519,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionSubsystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\OptionalCompilationMacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -559,6 +556,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSubsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\SABaseLevel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1457,9 +1460,6 @@
     <ClCompile Include="new_src\Tests\how_stbi_loads_colors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionSubsystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SATextureSubsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1500,6 +1500,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SABaseLevel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

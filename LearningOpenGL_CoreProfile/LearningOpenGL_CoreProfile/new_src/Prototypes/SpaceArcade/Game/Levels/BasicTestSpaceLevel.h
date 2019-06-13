@@ -1,6 +1,7 @@
 #pragma once
-#include "..\..\GameFramework\SALevel.h"
 #include <map>
+
+#include "SABaseLevel.h"
 
 
 namespace SA
@@ -8,11 +9,11 @@ namespace SA
 	class Ship;
 	class RenderModelEntity;
 
-	class BasicTestSpaceLevel : public Level
+	class BasicTestSpaceLevel : public BaseLevel
 	{
 	private:
-		virtual void startLevel() override;
-		virtual void endLevel() override;
+		virtual void startLevel_v() override;
+		virtual void endLevel_v() override;
 
 	private:
 		std::multimap<RenderModelEntity*, wp<RenderModelEntity>> cachedSpawnEntities;

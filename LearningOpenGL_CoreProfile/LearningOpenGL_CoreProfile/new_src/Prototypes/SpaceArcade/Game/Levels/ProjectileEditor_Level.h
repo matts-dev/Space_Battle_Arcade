@@ -15,8 +15,8 @@ namespace SA
 	class ProjectileEditor_Level : public Level
 	{
 	private:
-		virtual void startLevel() override;
-		virtual void endLevel() override;
+		virtual void startLevel_v() override;
+		virtual void endLevel_v() override;
 		virtual void tick(float dt_sec) override;
 
 		virtual void postConstruct() override;

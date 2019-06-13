@@ -48,4 +48,12 @@ namespace SA
 		}
 	}
 
+	void LevelSubsystem::shutdown()
+	{
+		if (loadedLevel)
+		{
+			loadedLevel = nullptr;
+		}
+	}
+
 }

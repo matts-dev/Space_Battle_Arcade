@@ -39,25 +39,14 @@ namespace SA
 		//Spawning Interface
 		/////////////////////////////////////////////////////////////////////////////////////
 	public:
-		// all are #candidate for gamebase
-		template<typename T>
-		void spawnCompileCheck(){static_assert(std::is_base_of<RenderModelEntity, T>::value, "spawn/unspawn only works with objects that will be rendered.");}
-
-		template<typename T, typename... Args>
-		sp<T> spawnEntity(Args&&... args);
-
-		template<typename T>
-		bool unspawnEntity(const sp<T>& entity);
 
 		//////////////////////////////////////////////////////////////////////////////////////
 		//  Custom Subsystems
 		/////////////////////////////////////////////////////////////////////////////////////
 	public:
-		inline const sp<CollisionSubsystem>& getCollisionSS() noexcept { return CollisionSS; }
 		inline const sp<ProjectileSubsystem>& getProjectileSS() noexcept { return ProjectileSS; }
 		inline const sp<UISubsystem>& getUISubsystem() noexcept { return UI_SS; }
 	private:
-		sp<CollisionSubsystem> CollisionSS;
 		sp<ProjectileSubsystem> ProjectileSS;
 		sp<UISubsystem> UI_SS;
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +72,6 @@ namespace SA
 		//shaders
 		sp<SA::Shader> litObjShader;
 		sp<SA::Shader> lampObjShader;
-		sp<SA::Shader> forwardShadedModelShader;
 		sp<SA::Shader> forwardShaded_EmissiveModelShader;
 		sp<SA::Shader> debugLineShader;
 
@@ -95,35 +83,8 @@ namespace SA
 		sp<Model3D> laserBoltModel;
 		sp<ProjectileClassHandle> laserBoltHandle;
 
-		//gameplay
-		std::set<sp<WorldEntity>> worldEntities;
-		std::set<sp<RenderModelEntity>> renderEntities;
-
 		//ui
 		sp<UIRootWindow> ui_root;
 	};
 
-
-	///////////////////////////////////////////////////////////////////////////////////
-	// Template Bodies
-	///////////////////////////////////////////////////////////////////////////////////
-	template<typename T, typename... Args>
-	sp<T> SpaceArcade::spawnEntity(Args&&... args)
-	{
-		spawnCompileCheck<T>();
-		sp<T> entity = new_sp<T>(std::forward<Args>(args)...);
-		worldEntities.insert(entity);
-		renderEntities.insert(entity);
-		return entity;
-	}
-
-	template<typename T>
-	bool SpaceArcade::unspawnEntity(const sp<T>& entity)
-	{
-		spawnCompileCheck<T>();
-		bool foundInAllLocations = renderEntities.find(entity) != renderEntities.end() && worldEntities.find(entity) != worldEntities.end();
-		worldEntities.erase(entity);
-		renderEntities.erase(entity);
-		return foundInAllLocations;
-	}
 }

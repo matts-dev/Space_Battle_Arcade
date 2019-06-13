@@ -5,6 +5,8 @@
 
 namespace SA
 {
+	class Level;
+
 	/**
 		A world entity is a game entity that has a physical presence in the game world.
 		Examples:
@@ -26,6 +28,12 @@ namespace SA
 
 		inline const Transform& getTransform() const noexcept				{ return transform; }
 		inline void				setTransform(const Transform& inTransform)	{ transform = inTransform; }
+
+	protected:
+		/** World returns a raw pointer because caching a world sp will often result cyclic references. 
+			A raw pointer should make a programmer think about how to safely cache it and find this message.*/
+		Level* getWorld();
+
 	private:
 		Transform transform;
 	};

@@ -18,7 +18,7 @@
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
 
-#include "SACollisionSubsystem.h"
+#include "SACollisionUtils.h"
 #include "SAProjectileSubsystem.h"
 #include "SAUISubsystem.h"
 
@@ -45,7 +45,6 @@ namespace SA
 
 		litObjShader = new_sp<SA::Shader>(litObjectShader_VertSrc, litObjectShader_FragSrc, false);
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);
-		forwardShadedModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_SimpleLighting_fragSrc, false);
 		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
 		debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false);
 
@@ -124,14 +123,18 @@ namespace SA
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
 	{
 #ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
-		auto& worldGrid = getCollisionSS()->getWorldGrid();
-		if (bRenderDebugCells)
+		const sp<Level>& world = getLevelSubsystem().getCurrentLevel();
+		if (world)
 		{
-			glm::vec3 color{ 0.5f, 0.f, 0.f };
-			SpatialHashCellDebugVisualizer::render(worldGrid, view, projection, color);
+			auto& worldGrid = world->getWorldGrid();
+			if (bRenderDebugCells)
+			{
+				glm::vec3 color{ 0.5f, 0.f, 0.f };
+				SpatialHashCellDebugVisualizer::render(worldGrid, view, projection, color);
+			}
+			//TODO: this is a candidate for a ticker and a ticker subsystem
+			SpatialHashCellDebugVisualizer::clearCells(worldGrid);
 		}
-		//TODO: this is a candidate for a ticker and a ticker subsystem
-		SpatialHashCellDebugVisualizer::clearCells(worldGrid);
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 		if (bRenderProjectileOBBs)
 		{
@@ -155,11 +158,6 @@ namespace SA
 		updateInput(deltaTimeSecs);
 
 		fpsCamera->handleInput(window->get(), deltaTimeSecs);
-
-		for (const sp<WorldEntity>& entity : worldEntities)
-		{
-			entity->tick(deltaTimeSecs);
-		}
 
 		ui_root->tick(deltaTimeSecs);
 
@@ -198,24 +196,6 @@ namespace SA
 		//}
 
 		//render world entities
-		forwardShadedModelShader->use();
-		forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-		forwardShadedModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-		forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-		forwardShadedModelShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
-		forwardShadedModelShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
-		forwardShadedModelShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0));
-
-		forwardShadedModelShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
-		forwardShadedModelShader->setUniform1i("material.shininess", 32);
-		for (const sp<RenderModelEntity>& entity : renderEntities)
-		{
-			mat4 model = glm::mat4(1.f);
-			model = glm::translate(model, vec3(5.f, 0.f, -5.f));
-			forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
-			entity->getModel()->draw(*forwardShadedModelShader);
-		}
-
 		forwardShaded_EmissiveModelShader->use();
 		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
@@ -232,9 +212,6 @@ namespace SA
 
 	void SpaceArcade::onRegisterCustomSubsystem()
 	{
-		CollisionSS = new_sp<CollisionSubsystem>();
-		RegisterCustomSubsystem(CollisionSS);
-
 		ProjectileSS = new_sp<ProjectileSubsystem>();
 		RegisterCustomSubsystem(ProjectileSS);
 

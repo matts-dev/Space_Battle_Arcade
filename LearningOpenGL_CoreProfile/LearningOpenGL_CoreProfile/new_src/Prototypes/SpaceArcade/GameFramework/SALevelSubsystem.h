@@ -26,6 +26,7 @@ namespace SA
 		
 	private:
 		virtual void tick(float deltaSec);
+		virtual void shutdown() override;
 
 	private:
 		sp<Level> loadedLevel = nullptr;

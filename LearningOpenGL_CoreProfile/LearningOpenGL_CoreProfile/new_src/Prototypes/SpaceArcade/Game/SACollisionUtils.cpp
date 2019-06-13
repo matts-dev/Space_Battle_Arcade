@@ -1,11 +1,10 @@
-#include "SACollisionSubsystem.h"
+#include "SACollisionUtils.h"
 #include "..\Rendering\SAShader.h"
 #include "..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
 #include "..\Rendering\OpenGLHelpers.h"
 
 namespace SA
 {
-
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,12 +25,6 @@ namespace SA
 		defaultInfo->localAABB[7] = SH::AABB[7];
 		return defaultInfo;
 	}
-
-	void CollisionSubsystem::tick(float deltaSec)
-	{
-
-	}
-
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Spatial hashing debug information

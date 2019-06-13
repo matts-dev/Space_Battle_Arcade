@@ -2,7 +2,7 @@
 #include "..\GameFramework\SAWorldEntity.h"
 #include "..\Tools\ModelLoading\SAModel.h"
 #include "..\GameFramework\RenderModelEntity.h"
-#include "SACollisionSubsystem.h"
+#include "SACollisionUtils.h"
 
 
 namespace SA
@@ -26,9 +26,6 @@ namespace SA
 	private:
 		//helper data structures
 		std::vector<sp<SH::GridNode<GameEntity>>> overlappingNodes_SH;
-
-	private:
-		sp<CollisionSubsystem> CollisionSS;
 
 	private:
 		const sp<ModelCollisionInfo> collisionData;

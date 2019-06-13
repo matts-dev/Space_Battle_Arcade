@@ -7,8 +7,10 @@
 
 namespace SA
 {
-	void BasicTestSpaceLevel::startLevel()
+	void BasicTestSpaceLevel::startLevel_v()
 	{
+		BaseLevel::startLevel_v();
+
 		SpaceArcade& game = SpaceArcade::get();
 
 		sp<Model3D> carrierModel = game.getModel(game.carrierModelKey);
@@ -24,7 +26,7 @@ namespace SA
 		carrierTransform.position = { 200,0,0 };
 		carrierTransform.scale = { 5, 5, 5 };
 		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip1 = game.spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
+		sp<Ship> carrierShip1 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
 		cachedSpawnEntities.insert({ carrierShip1.get(), carrierShip1 });
 
 		std::random_device rng;
@@ -42,7 +44,7 @@ namespace SA
 			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little addhoc, but with radians it should cover full 360 possibilities
 			startPos += carrierTransform.position;
 			Transform fighterXform = Transform{ startPos, rot, {0.1,0.1,0.1} };
-			sp<Ship> fighter = game.spawnEntity<Ship>(fighterModel, fighterXform, createUnitCubeCollisionInfo());
+			sp<Ship> fighter = spawnEntity<Ship>(fighterModel, fighterXform, createUnitCubeCollisionInfo());
 			cachedSpawnEntities.insert({ fighter.get(), fighter});
 		}
 
@@ -50,12 +52,12 @@ namespace SA
 		carrierTransform.position.x += 120;
 		carrierTransform.position.z -= 50;
 		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip2 = game.spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
+		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
 		cachedSpawnEntities.insert({ carrierShip2.get(), carrierShip2 });
 
 	}
 
-	void BasicTestSpaceLevel::endLevel()
+	void BasicTestSpaceLevel::endLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
 
@@ -68,9 +70,12 @@ namespace SA
 			if (!current->second.expired())
 			{
 				sp<RenderModelEntity> entityToRemove = current->second.lock();
-				game.unspawnEntity(entityToRemove);
+				unspawnEntity(entityToRemove);
 			}
 		}
+
+
+		BaseLevel::endLevel_v();
 	}
 
 }

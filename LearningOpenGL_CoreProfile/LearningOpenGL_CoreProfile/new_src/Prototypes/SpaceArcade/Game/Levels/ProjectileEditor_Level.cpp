@@ -16,7 +16,7 @@
 namespace SA
 {
 
-	void ProjectileEditor_Level::startLevel()
+	void ProjectileEditor_Level::startLevel_v()
 	{
 		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
 		debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false);
@@ -36,7 +36,7 @@ namespace SA
 		projectile = new_sp<RenderModelEntity>(projectileModel, worldTransform);
 	}
 
-	void ProjectileEditor_Level::endLevel()
+	void ProjectileEditor_Level::endLevel_v()
 	{
 		forwardShaded_EmissiveModelShader = nullptr;
 		debugLineShader = nullptr;
