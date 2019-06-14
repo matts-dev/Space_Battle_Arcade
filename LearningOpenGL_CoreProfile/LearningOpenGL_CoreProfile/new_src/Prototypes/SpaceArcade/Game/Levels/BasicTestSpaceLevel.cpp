@@ -4,6 +4,11 @@
 #include "..\..\Tools\DataStructures\SATransform.h"
 #include "..\SAShip.h"
 #include "..\..\GameFramework\RenderModelEntity.h"
+#include "..\..\GameFramework\SAPlayerBase.h"
+#include "..\..\GameFramework\SAPlayerSubsystem.h"
+#include "..\..\Rendering\Camera\SACameraBase.h"
+#include "..\SAProjectileSubsystem.h"
+#include "..\..\GameFramework\Input\SAInput.h"
 
 namespace SA
 {
@@ -27,7 +32,7 @@ namespace SA
 		carrierTransform.scale = { 5, 5, 5 };
 		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
 		sp<Ship> carrierShip1 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
-		cachedSpawnEntities.insert({ carrierShip1.get(), carrierShip1 });
+		//cachedSpawnEntities.insert({ carrierShip1.get(), carrierShip1 });
 
 		std::random_device rng;
 		std::seed_seq seed{ 28 };
@@ -41,11 +46,11 @@ namespace SA
 		for (int fighterShip = 0; fighterShip < numFighterShipsToSpawn; ++fighterShip)
 		{
 			glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
-			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little addhoc, but with radians it should cover full 360 possibilities
+			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
 			startPos += carrierTransform.position;
 			Transform fighterXform = Transform{ startPos, rot, {0.1,0.1,0.1} };
 			sp<Ship> fighter = spawnEntity<Ship>(fighterModel, fighterXform, createUnitCubeCollisionInfo());
-			cachedSpawnEntities.insert({ fighter.get(), fighter});
+			//cachedSpawnEntities.insert({ fighter.get(), fighter});
 		}
 
 		carrierTransform.position.y += 50;
@@ -53,29 +58,58 @@ namespace SA
 		carrierTransform.position.z -= 50;
 		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
 		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
-		cachedSpawnEntities.insert({ carrierShip2.get(), carrierShip2 });
+		//cachedSpawnEntities.insert({ carrierShip2.get(), carrierShip2 });
 
+
+		if(const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
+		{
+			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleLeftMouseButton);
+		}
+
+		sp<Model3D> laserBoltModel = game.getModel(game.laserBoltModelKey);
+		Transform projectileAABBTransform;
+		projectileAABBTransform.scale.z = 4.5;
+		laserBoltHandle = game.getProjectileSS()->createProjectileType(laserBoltModel, projectileAABBTransform);
 	}
 
 	void BasicTestSpaceLevel::endLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
 
-		using MIter = decltype(cachedSpawnEntities)::iterator;
-		MIter end = cachedSpawnEntities.end();
+		//using MIter = decltype(cachedSpawnEntities)::iterator;
+		//MIter end = cachedSpawnEntities.end();
 
-		//O(n) walk with multimap/set
-		for (MIter current = cachedSpawnEntities.begin(); current != end; ++current)
-		{
-			if (!current->second.expired())
-			{
-				sp<RenderModelEntity> entityToRemove = current->second.lock();
-				unspawnEntity(entityToRemove);
-			}
-		}
+		////O(n) walk with multimap/set
+		//for (MIter current = cachedSpawnEntities.begin(); current != end; ++current)
+		//{
+		//	if (!current->second.expired())
+		//	{
+		//		sp<RenderModelEntity> entityToRemove = current->second.lock();
+		//		unspawnEntity(entityToRemove);
+		//	}
+		//}
 
 
 		BaseLevel::endLevel_v();
+	}
+
+	void BasicTestSpaceLevel::handleLeftMouseButton(int state, int modifier_keys)
+	{
+		if (state == GLFW_PRESS)
+		{
+			SpaceArcade& game = SpaceArcade::get();
+			if (const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
+			{
+				if (const sp<CameraBase>& camera = player->getCamera())
+				{
+					const sp<ProjectileSubsystem>& projectileSS = game.getProjectileSS();
+
+					glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
+					glm::vec3 direction = camera->getFront();
+					projectileSS->spawnProjectile(start, direction, *laserBoltHandle);
+				}
+			}
+		}
 	}
 
 }

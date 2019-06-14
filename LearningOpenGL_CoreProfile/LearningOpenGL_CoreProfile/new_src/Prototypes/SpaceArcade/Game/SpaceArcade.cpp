@@ -241,16 +241,6 @@ namespace SA
 					fpsCamera->setCursorMode(ui_root->getUIVisible());
 				}
 			}
-
-			if (input.isMouseButtonJustPressed(window, GLFW_MOUSE_BUTTON_LEFT))
-			{
-				//TODO this ideally will go something like:
-				//playerShip = get player controlled ship
-				//playerShip.fireProjectile
-				glm::vec3 start = fpsCamera->getPosition() + glm::vec3(0, -0.25f, 0);
-				glm::vec3 direction = fpsCamera->getFront();
-				ProjectileSS->spawnProjectile(start, direction, *laserBoltHandle);
-			}
 			 
 			//debug
 			if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 

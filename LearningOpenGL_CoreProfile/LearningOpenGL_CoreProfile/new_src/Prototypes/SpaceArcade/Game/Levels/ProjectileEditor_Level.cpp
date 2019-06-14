@@ -64,7 +64,7 @@ namespace SA
 		SpaceArcade& game = SpaceArcade::get();
 
 		ImGui::SetNextWindowPos(ImVec2{ 25, 25 });
-		ImGui::SetNextWindowSize(ImVec2{ 350, 300 });
+		//ImGui::SetNextWindowSize(ImVec2{ 350, 300 });
 		ImGuiWindowFlags flags = 0;
 		flags |= ImGuiWindowFlags_NoMove;
 		flags |= ImGuiWindowFlags_NoResize;
@@ -75,7 +75,7 @@ namespace SA
 			ImGui::Checkbox("Render Collision Box", &bRenderCollisionBox);
 			ImGui::Checkbox("Render Collision Center Offset",  &bRenderCollisionCenterOffset);
 			ImGui::Checkbox("Render Collision Box Scale Up",  &bRenderCollisionBoxScaleup);
-			ImGui::SliderFloat("projectile scale", &projectileScale, 0.1f, 10.f);
+			ImGui::SliderFloat("projectile scale  ", &projectileScale, 0.1f, 10.f);
 			ImGui::SliderFloat("Simulated dt_sec", &simulatedDeltaTime, 0.f, 10.f);
 		ImGui::End();
 	}
