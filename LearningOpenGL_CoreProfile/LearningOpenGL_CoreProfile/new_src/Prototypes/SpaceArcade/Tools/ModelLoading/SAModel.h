@@ -46,21 +46,9 @@ namespace SA
 		static aiMatrix4x4 toAiMat4(glm::mat4 glmMat4);
 		static glm::mat4 toGlmMat4(aiMatrix4x4 aiMat4);
 
-	private: //members
-		std::vector<Mesh3D> meshes;
-		std::string directory;
-		std::vector<MaterialTexture> texturesLoaded;
-		//std::vector<Bone> allBones;
-		std::map<std::string, Bone> allBonesByName;
+		std::tuple<glm::vec3, glm::vec3> getAABB() const;
 
-
-		/** This dtor will clean up graphs loaded; thus, this is a member variable to make lifetime of assimp graphs the same as the instance of this object.*/
-		Assimp::Importer importer;
-		std::set<aiNode*> skeletonRelevantNode;		//memory managed by importer
-		const aiScene* cachedScene;					//memory managed by importer
-		aiMatrix4x4 inverseSceneTransform;
-
-	private://methods
+	private://model/mesh methods
 
 		void loadModel(std::string path);
 
@@ -69,7 +57,10 @@ namespace SA
 
 		std::vector<MaterialTexture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 
-	private:
+	private: 
+		void updateCachedAABB(const glm::vec3& vertexPosition);
+
+	private: //bone methods
 		void markNodesForBone(const std::string& boneName);
 		aiNode* findNamedNode(const char* name, aiNode* startNode);
 		void calculateAnimationTransforms(aiAnimation* anim, float animationTimeInTicks, aiNode* node, const aiMatrix4x4& parentTransform, const std::map<std::string, aiNodeAnim*>& nodeNameToChannel);
@@ -80,6 +71,20 @@ namespace SA
 		aiMatrix4x4 interpolatePositionKeys(aiNodeAnim* animNode, float animationTimeInTicks);
 		aiMatrix4x4 interpolateRotationKeys(aiNodeAnim* animNode, float animationTimeInTicks);
 		aiMatrix4x4 interpolateScaleKeys(aiNodeAnim* animNode, float animationTimeInTicks);
+
+	private: //members
+		std::vector<Mesh3D> meshes;
+		std::string directory;
+		std::vector<MaterialTexture> texturesLoaded;
+		std::map<std::string, Bone> allBonesByName;
+
+		/** This dtor will clean up graphs loaded; thus, this is a member variable to make lifetime of assimp graphs the same as the instance of this object.*/
+		Assimp::Importer importer;
+		std::set<aiNode*> skeletonRelevantNode;		//memory managed by importer
+		const aiScene* cachedScene;					//memory managed by importer
+		aiMatrix4x4 inverseSceneTransform;
+
+		std::tuple<glm::vec3, glm::vec3> cachedAABB;
 	};
 
 

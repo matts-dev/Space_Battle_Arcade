@@ -41,13 +41,11 @@ namespace SA
 		void startLevel();
 		void endLevel();
 
-	protected: //virtual that subclasses may need to call 
+	protected: //virtuals
 		virtual void startLevel_v() = 0;
 		virtual void endLevel_v() = 0;
-
 	private:
 		virtual void tick(float dt_sec);
-
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {};
 

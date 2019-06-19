@@ -37,6 +37,10 @@ namespace SA
 			//assuming window == imguiBoundWindow since it ImGui should always be associated with current bound context
 			if (window)
 			{
+				window->onRawGLFWKeyCallback.removeStrong(sp_this(), &UISubsystem::handleRawGLFWKeyCallback);
+				window->onRawGLFWCharCallback.removeStrong(sp_this(), &UISubsystem::handleRawGLFWCharCallback);
+				window->onRawGLFWMouseButtonCallback.removeStrong(sp_this(), &UISubsystem::handleRawGLFWMouseButtonCallback);
+				window->onRawGLFWScrollCallback.removeStrong(sp_this(), &UISubsystem::handleRawGLFWScroll);
 				destroyImGuiContext();
 			}
 		}
@@ -57,7 +61,33 @@ namespace SA
 			ImGui_ImplOpenGL3_Init("#version 330 core");							 //seems to be window independent, but example code has this set after window
 			ImGui_ImplGlfw_InitForOpenGL(window->get(), /*install callbacks*/false); //false will require manually calling callbacks in our own handlers
 			imguiBoundWindow = window;
+
+			//manually unregister these when window loses active context
+			window->onRawGLFWKeyCallback.addStrongObj(sp_this(), &UISubsystem::handleRawGLFWKeyCallback);
+			window->onRawGLFWCharCallback.addStrongObj(sp_this(), &UISubsystem::handleRawGLFWCharCallback);
+			window->onRawGLFWMouseButtonCallback.addStrongObj(sp_this(), &UISubsystem::handleRawGLFWMouseButtonCallback);
+			window->onRawGLFWScrollCallback.addStrongObj(sp_this(), &UISubsystem::handleRawGLFWScroll);
 		}
+	}
+
+	void UISubsystem::handleRawGLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	{
+		ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+	}
+
+	void UISubsystem::handleRawGLFWCharCallback(GLFWwindow* window, unsigned int c)
+	{
+		ImGui_ImplGlfw_CharCallback(window, c);
+	}
+
+	void UISubsystem::handleRawGLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	{
+		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+	}
+
+	void UISubsystem::handleRawGLFWScroll(GLFWwindow* window, double xOffset, double yOffset)
+	{
+		ImGui_ImplGlfw_ScrollCallback(window, xOffset, yOffset);
 	}
 
 	void UISubsystem::destroyImGuiContext()

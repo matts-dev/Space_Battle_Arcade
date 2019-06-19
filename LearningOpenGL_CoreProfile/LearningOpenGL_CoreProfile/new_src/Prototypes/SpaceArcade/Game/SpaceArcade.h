@@ -75,8 +75,9 @@ namespace SA
 		sp<SA::Shader> forwardShaded_EmissiveModelShader;
 		sp<SA::Shader> debugLineShader;
 
-		//unit cube data
-		GLuint cubeVAO, cubeVBO;
+		////unit cube data
+		//GLuint cubeVAO, cubeVBO;
+
 
 		std::unordered_map<std::string, sp<Model3D>> loadedModels;
 

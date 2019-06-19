@@ -154,6 +154,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\OptionalCompilationMacros.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSubsystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAPrimitiveShapeRenderer.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.h" />
@@ -400,6 +401,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SABaseLevel.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAPrimitiveShapeRenderer.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSubsystem.cpp" />

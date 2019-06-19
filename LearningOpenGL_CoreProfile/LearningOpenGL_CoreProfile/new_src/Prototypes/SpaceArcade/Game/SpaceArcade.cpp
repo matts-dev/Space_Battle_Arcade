@@ -50,17 +50,17 @@ namespace SA
 
 		sp<Player> playerZero = getPlayerSystem().createPlayer<Player>();
 
-		//set up unit cube
-		ec(glGenVertexArrays(1, &cubeVAO));
-		ec(glBindVertexArray(cubeVAO));
-		ec(glGenBuffers(1, &cubeVBO));
-		ec(glBindBuffer(GL_ARRAY_BUFFER, cubeVBO));
-		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(Utils::unitCubeVertices_Position_Normal), Utils::unitCubeVertices_Position_Normal, GL_STATIC_DRAW));
-		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0)));
-		ec(glEnableVertexAttribArray(0));
-		ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))));
-		ec(glEnableVertexAttribArray(1));
-		ec(glBindVertexArray(0));
+		////set up unit cube
+		//ec(glGenVertexArrays(1, &cubeVAO));
+		//ec(glBindVertexArray(cubeVAO));
+		//ec(glGenBuffers(1, &cubeVBO));
+		//ec(glBindBuffer(GL_ARRAY_BUFFER, cubeVBO));
+		//ec(glBufferData(GL_ARRAY_BUFFER, sizeof(Utils::unitCubeVertices_Position_Normal), Utils::unitCubeVertices_Position_Normal, GL_STATIC_DRAW));
+		//ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0)));
+		//ec(glEnableVertexAttribArray(0));
+		//ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))));
+		//ec(glEnableVertexAttribArray(1));
+		//ec(glBindVertexArray(0));
 
 
 		//camera
@@ -103,8 +103,8 @@ namespace SA
 	{
 		fpsCamera->deregisterToWindowCallbacks_v();
 
-		ec(glDeleteVertexArrays(1, &cubeVAO));
-		ec(glDeleteBuffers(1, &cubeVBO));
+		//ec(glDeleteVertexArrays(1, &cubeVAO));
+		//ec(glDeleteBuffers(1, &cubeVBO));
 	}
 
 	sp<SA::Model3D> SpaceArcade::getModel(const std::string& key)

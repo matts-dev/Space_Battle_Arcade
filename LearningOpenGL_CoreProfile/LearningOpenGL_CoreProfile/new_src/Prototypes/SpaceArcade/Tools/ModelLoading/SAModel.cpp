@@ -18,6 +18,7 @@ namespace SA
 
 	Model3D::Model3D(const char* path)
 	{
+		cachedAABB = std::make_tuple(glm::vec3{ 0,0,0 }, glm::vec3{ 0,0,0 });
 		loadModel(path);
 	}
 
@@ -353,6 +354,11 @@ namespace SA
 		return result;
 	}
 
+	std::tuple<glm::vec3, glm::vec3> Model3D::getAABB() const
+	{
+		return cachedAABB;
+	}
+
 	void Model3D::loadModel(std::string path)
 	{
 		//--------------------------------------------------------------------------------------------
@@ -407,6 +413,7 @@ namespace SA
 			vertex.position.x = mesh->mVertices[i].x;
 			vertex.position.y = mesh->mVertices[i].y;
 			vertex.position.z = mesh->mVertices[i].z;
+			updateCachedAABB(vertex.position);
 
 			vertex.normal.x = mesh->mNormals[i].x;
 			vertex.normal.y = mesh->mNormals[i].y;
@@ -561,6 +568,20 @@ namespace SA
 			}
 		}
 		return textures;
+	}
+
+	void Model3D::updateCachedAABB(const glm::vec3& vertexPosition)
+	{
+		glm::vec3& min = std::get<0>(cachedAABB);
+		glm::vec3& max = std::get<1>(cachedAABB);
+
+		if (min.x > vertexPosition.x) min.x = vertexPosition.x;
+		if (min.y > vertexPosition.y) min.y = vertexPosition.y;
+		if (min.z > vertexPosition.z) min.z = vertexPosition.z;
+
+		if (max.x < vertexPosition.x) max.x = vertexPosition.x;
+		if (max.y < vertexPosition.y) max.y = vertexPosition.y;
+		if (max.z < vertexPosition.z) max.z = vertexPosition.z;
 	}
 
 	void Model3D::markNodesForBone(const std::string& boneName)

@@ -2,6 +2,8 @@
 #include "..\GameFramework\SASubsystemBase.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
 
+struct GLFWwindow;
+
 namespace SA
 {
 	class Window;
@@ -24,6 +26,10 @@ namespace SA
 		
 		void handleLosingOpenGLContext(const sp<Window>& window);
 		void handleWindowAcquiredOpenGLContext(const sp<Window>& window);
+		void handleRawGLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+		void handleRawGLFWCharCallback(GLFWwindow* window, unsigned int c);
+		void handleRawGLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+		void handleRawGLFWScroll(GLFWwindow* window, double xOffset, double yOffset);
 
 		void handleGameloopOver(float dt_sec);
 

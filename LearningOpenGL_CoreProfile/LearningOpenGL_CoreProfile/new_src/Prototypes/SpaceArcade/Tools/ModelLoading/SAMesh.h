@@ -68,6 +68,8 @@ namespace SA
 
 		GLuint VAO, VBO, VBO_TANGENTS, VBO_BONE_IDS, VBO_BONE_WEIGHTS, EAO;
 		GLuint modelVBO = 0;
+		std::tuple<glm::vec3, glm::vec3> aabb;
+
 		void setupMesh();
 
 		//helpers
@@ -89,6 +91,5 @@ namespace SA
 		GLuint getVAO();
 		void setInstancedModelMatrixVBO(GLuint modelVBO);
 		void setInstancedModelMatricesData(glm::mat4* modelMatrices, unsigned int count);
-
 	};
 }
