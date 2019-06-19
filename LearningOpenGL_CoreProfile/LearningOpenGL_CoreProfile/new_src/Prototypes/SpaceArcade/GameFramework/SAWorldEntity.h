@@ -5,7 +5,7 @@
 
 namespace SA
 {
-	class Level;
+	class LevelBase;
 
 	/**
 		A world entity is a game entity that has a physical presence in the game world.
@@ -32,7 +32,7 @@ namespace SA
 	protected:
 		/** World returns a raw pointer because caching a world sp will often result cyclic references. 
 			A raw pointer should make a programmer think about how to safely cache it and find this message.*/
-		Level* getWorld();
+		LevelBase* getWorld();
 
 	private:
 		Transform transform;

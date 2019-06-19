@@ -27,7 +27,7 @@ namespace SA
 	void Ship::postConstruct()
 	{
 		//WARNING: caching world sp will create cyclic reference
-		if (Level* world = getWorld())
+		if (LevelBase* world = getWorld())
 		{
 			Transform xform = getTransform();
 			glm::mat4 xform_m = xform.getModelMatrix();
@@ -52,7 +52,7 @@ namespace SA
 		}
 
 		//update the spatial hash
-		if (Level* world = getWorld())
+		if (LevelBase* world = getWorld())
 		{
 			SH::SpatialHashGrid<GameEntity>& worldGrid = world->getWorldGrid();
 			worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));

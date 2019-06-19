@@ -93,7 +93,7 @@ namespace SA
 		ui_root = new_sp<UIRootWindow>();
 
 		//make sure resources are loaded before the level starts
-		sp<Level> startupLevel = new_sp<BasicTestSpaceLevel>();
+		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		getLevelSubsystem().loadLevel(startupLevel);
 
 		return window;
@@ -123,7 +123,7 @@ namespace SA
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
 	{
 #ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
-		const sp<Level>& world = getLevelSubsystem().getCurrentLevel();
+		const sp<LevelBase>& world = getLevelSubsystem().getCurrentLevel();
 		if (world)
 		{
 			auto& worldGrid = world->getWorldGrid();
@@ -202,7 +202,7 @@ namespace SA
 		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
 		ProjectileSS->renderProjectiles(*forwardShaded_EmissiveModelShader);
 
-		if (const sp<Level>& loadedLevel = getLevelSubsystem().getCurrentLevel())
+		if (const sp<LevelBase>& loadedLevel = getLevelSubsystem().getCurrentLevel())
 		{
 			loadedLevel->render(deltaTimeSecs, view, projection);
 		}
@@ -251,7 +251,7 @@ namespace SA
 				{
 					//sp<Level> currentLevel = getLevelSubsystem().getCurrentLevel();
 					//getLevelSubsystem().unloadLevel(currentLevel);
-					sp<Level> projectileEditor = new_sp<ProjectileEditor_Level>();
+					sp<LevelBase> projectileEditor = new_sp<ProjectileEditor_Level>();
 					getLevelSubsystem().loadLevel(projectileEditor);
 				}
 			}

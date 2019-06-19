@@ -10,7 +10,7 @@ namespace SA
 	class RenderModelEntity;
 	class ProjectileClassHandle;
 
-	class BasicTestSpaceLevel : public BaseLevel
+	class BasicTestSpaceLevel : public BaseSpaceLevel
 	{
 	private:
 		virtual void startLevel_v() override;

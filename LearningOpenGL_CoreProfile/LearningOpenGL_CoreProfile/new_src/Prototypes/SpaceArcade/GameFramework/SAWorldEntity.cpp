@@ -5,7 +5,7 @@
 
 namespace SA
 {
-	SA::Level* WorldEntity::getWorld()
+	SA::LevelBase* WorldEntity::getWorld()
 	{
 		GameBase& game = GameBase::get();
 		return game.getLevelSubsystem().getCurrentLevel().get();

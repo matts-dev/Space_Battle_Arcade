@@ -64,12 +64,12 @@ namespace SA
 		ImGui::Begin("Developer Menu!", nullptr, flags);
 			if (ImGui::Button("Load Basic Test Level"))
 			{
-				sp<Level> startupLevel = new_sp<BasicTestSpaceLevel>();
+				sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 				SpaceArcade::get().getLevelSubsystem().loadLevel(startupLevel);
 			}
 			if (ImGui::Button("Projectile Editor"))
 			{
-				sp<Level> projectileEditor = new_sp<ProjectileEditor_Level>();
+				sp<LevelBase> projectileEditor = new_sp<ProjectileEditor_Level>();
 				SpaceArcade::get().getLevelSubsystem().loadLevel(projectileEditor);
 			}
 			if (ImGui::Button("Back to Main Menu"))

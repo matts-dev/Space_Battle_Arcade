@@ -14,7 +14,7 @@ namespace SA
 {
 	void BasicTestSpaceLevel::startLevel_v()
 	{
-		BaseLevel::startLevel_v();
+		BaseSpaceLevel::startLevel_v();
 
 		SpaceArcade& game = SpaceArcade::get();
 
@@ -90,7 +90,7 @@ namespace SA
 		//}
 
 
-		BaseLevel::endLevel_v();
+		BaseSpaceLevel::endLevel_v();
 	}
 
 	void BasicTestSpaceLevel::handleLeftMouseButton(int state, int modifier_keys)

@@ -8,7 +8,7 @@
 
 namespace SA
 {
-	void BaseLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
+	void BaseSpaceLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		using glm::vec3; using glm::mat4;
 
@@ -38,21 +38,21 @@ namespace SA
 		}
 	}
 
-	void BaseLevel::startLevel_v()
+	void BaseSpaceLevel::startLevel_v()
 	{
-		Level::startLevel_v();
+		LevelBase::startLevel_v();
 
 		forwardShadedModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_SimpleLighting_fragSrc, false);
 	}
 
-	void BaseLevel::endLevel_v()
+	void BaseSpaceLevel::endLevel_v()
 	{
 		//this means that we're going to generate a new shader between each level transition.
 		//this can be avoided with static members or by some other mechanism, but I do not see 
 		//transitioning levels being a slow process currently, so each level gets its own shaders.
 		forwardShadedModelShader = nullptr;
 
-		Level::endLevel_v();
+		LevelBase::endLevel_v();
 	}
 
 }

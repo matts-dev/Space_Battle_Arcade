@@ -4,13 +4,13 @@
 
 namespace SA
 {
-	void LevelSubsystem::loadLevel(sp<Level>& newLevel)
+	void LevelSubsystem::loadLevel(sp<LevelBase>& newLevel)
 	{
 		if (newLevel)
 		{
 			onPreLevelChange.broadcast(loadedLevel, newLevel);
 
-			sp<Level> previousLevel = loadedLevel;
+			sp<LevelBase> previousLevel = loadedLevel;
 			unloadLevel(previousLevel);
 			loadedLevel = newLevel;
 
@@ -24,7 +24,7 @@ namespace SA
 		}
 	}
 
-	void LevelSubsystem::unloadLevel(sp<Level>& level)
+	void LevelSubsystem::unloadLevel(sp<LevelBase>& level)
 	{
 		if (level == loadedLevel)
 		{

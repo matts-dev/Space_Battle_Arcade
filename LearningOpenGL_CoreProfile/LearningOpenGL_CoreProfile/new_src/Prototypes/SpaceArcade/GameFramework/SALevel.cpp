@@ -3,14 +3,14 @@
 namespace SA
 {
 
-	Level::~Level()
+	LevelBase::~LevelBase()
 	{
 		//make sure that the collision entities are cleared before we destroy the hash map.
 		worldEntities.clear();
 		renderEntities.clear();
 	}
 
-	void Level::startLevel()
+	void LevelBase::startLevel()
 	{
 		//base behavior should go here, before the subclass callbacks
 
@@ -18,7 +18,7 @@ namespace SA
 		startLevel_v();
 	}
 
-	void Level::endLevel()
+	void LevelBase::endLevel()
 	{
 		//end subclass specific behavior before base behavior (ctor/dtor pattern)
 		endLevel_v();
@@ -28,15 +28,15 @@ namespace SA
 		renderEntities.clear();
 	}
 
-	void Level::startLevel_v()
+	void LevelBase::startLevel_v()
 	{
 	}
 
-	void Level::endLevel_v()
+	void LevelBase::endLevel_v()
 	{
 	}
 
-	void Level::tick(float dt_sec)
+	void LevelBase::tick(float dt_sec)
 	{
 		for (const sp<WorldEntity>& entity : worldEntities)
 		{

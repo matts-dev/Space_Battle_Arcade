@@ -4,7 +4,7 @@
 
 namespace SA
 {
-	class BaseLevel : public Level
+	class BaseSpaceLevel : public LevelBase
 	{
 
 	public:

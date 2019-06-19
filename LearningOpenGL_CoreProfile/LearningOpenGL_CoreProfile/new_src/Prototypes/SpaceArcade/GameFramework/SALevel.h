@@ -18,11 +18,11 @@ namespace SA
 	class LevelSubsystem;
 
 	/** Base class for a level object */
-	class Level : public GameEntity, public Tickable
+	class LevelBase : public GameEntity, public Tickable
 	{
 		friend LevelSubsystem;
 	public:
-		virtual ~Level();
+		virtual ~LevelBase();
 
 	public:
 		template<typename T>
@@ -61,7 +61,7 @@ namespace SA
 	// Template Bodies
 	///////////////////////////////////////////////////////////////////////////////////
 		template<typename T, typename... Args>
-		sp<T> Level::spawnEntity(Args&&... args)
+		sp<T> LevelBase::spawnEntity(Args&&... args)
 		{
 			spawnCompileCheck<T>();
 			sp<T> entity = new_sp<T>(std::forward<Args>(args)...);
@@ -71,7 +71,7 @@ namespace SA
 		}
 
 		template<typename T>
-		bool Level::unspawnEntity(const sp<T>& entity)
+		bool LevelBase::unspawnEntity(const sp<T>& entity)
 		{
 			spawnCompileCheck<T>();
 			bool foundInAllLocations = renderEntities.find(entity) != renderEntities.end() && worldEntities.find(entity) != worldEntities.end();

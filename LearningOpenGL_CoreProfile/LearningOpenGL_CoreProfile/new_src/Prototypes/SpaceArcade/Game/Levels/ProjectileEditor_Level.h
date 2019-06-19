@@ -15,7 +15,7 @@ namespace SA
 	struct Projectile;
 	
 
-	class ProjectileEditor_Level : public Level
+	class ProjectileEditor_Level : public LevelBase
 	{
 		enum SimulationState : int
 		{
