@@ -85,10 +85,10 @@ namespace SA
 			SimulationState currentState = static_cast<SimulationState>(simulationState);
 			if (currentState == SimulationState::COLLISION)
 			{
-				ImGui::Checkbox("Render Model Tip Offset", &bRenderModelTipOffset_collision);
 				ImGui::Checkbox("Render Collision Box", &bRenderCollisionBox_collision);
-				ImGui::Checkbox("Render Collision Center Offset",  &bRenderCollisionCenterOffset_collision);
 				ImGui::Checkbox("Render Collision Box Scale Up",  &bRenderCollisionBoxScaleup_collision);
+				ImGui::Checkbox("Render Model Tip Offset", &bRenderModelTipOffset_collision);
+				ImGui::Checkbox("Render Collision Center Offset",  &bRenderCollisionCenterOffset_collision);
 				ImGui::SliderFloat3("projectile scale  ", &projectileScale_collision.x, 0.1f, 10.f);
 			}
 			else if (currentState == SimulationState::DELTA_TIME)

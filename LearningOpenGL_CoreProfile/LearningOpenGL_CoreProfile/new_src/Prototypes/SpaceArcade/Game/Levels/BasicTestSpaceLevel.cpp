@@ -102,11 +102,14 @@ namespace SA
 			{
 				if (const sp<CameraBase>& camera = player->getCamera())
 				{
-					const sp<ProjectileSubsystem>& projectileSS = game.getProjectileSS();
+					if (!camera->isInCursorMode())
+					{
+						const sp<ProjectileSubsystem>& projectileSS = game.getProjectileSS();
 
-					glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
-					glm::vec3 direction = camera->getFront();
-					projectileSS->spawnProjectile(start, direction, *laserBoltHandle);
+						glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
+						glm::vec3 direction = camera->getFront();
+						projectileSS->spawnProjectile(start, direction, *laserBoltHandle);
+					}
 				}
 			}
 		}
