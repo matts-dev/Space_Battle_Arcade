@@ -1,30 +1,84 @@
 #include"SAProjectileSubsystem.h"
 #include "..\Tools\SAUtilities.h"
 #include "..\GameFramework\SAGameBase.h"
+#include "..\GameFramework\SALevelSubsystem.h"
+#include "..\GameFramework\SALevel.h"
 
 namespace SA
 {
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	// Handle defining spawn properties for projectile
+	///////////////////////////////////////////////////////////////////////////////////////////////
+
+	ProjectileClassHandle::ProjectileClassHandle(const Transform& inTransform, const sp<Model3D>& inModel) : model(inModel)
+	{
+		using glm::vec3;
+
+		if (inModel)
+		{
+			std::tuple<glm::vec3, glm::vec3> modelAABB = inModel->getAABB();
+
+			const vec3& aabbMin = std::get<0>(modelAABB);
+			const vec3& aabbMax = std::get<1>(modelAABB);
+			aabb = aabbMax - aabbMin;
+
+			//Below potentially supports models not aligned with z axis; see ProjectileEditor_Level::renderDeltaTimeSimulation
+			//Utils::getRotationBetween(modelForward_n, { 0,0,1 })
+			//const vec3 aabb = vec3(vec4(aabb, 0.f) * modelAdjustmentMat);
+		}
+		else { throw std::runtime_error("No model provided when creating projectile class handle"); }
+	}
+
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Actual Projectile Instances; these subsystem is responsible for creating these instances
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	void Projectile::tick(float dt_sec)
 	{
-#ifdef _DEBUG
-		static bool freezeProjectiles = false;
-		if (freezeProjectiles)
-		{
-			return;
-		}
-#endif // _DEBUG
+		//////////////////////////////////////////////////////////////
+//#ifdef _DEBUG
+//		static bool freezeProjectiles = false;
+//		if (freezeProjectiles)
+//		{
+//			return;
+//		}
+//#endif // _DEBUG
+		//////////////////////////////////////////////////////////////
 
-		float dt_distance = dt_sec * speed;
-		xform.position += dt_distance * direction;
+		using glm::mat4; using glm::vec3; using glm::quat;
+
+		float timeDialationFactor = 1.f;
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSubsystem().getCurrentLevel())
+		{
+			timeDialationFactor = currentLevel->getTimeDialationFactor();
+		}
+
 		timeAlive += dt_sec;
 
+		float dt_distance = dt_sec * speed;
 
-		//collision box scaling
-		// models aligned along z
-		distanceStretchScale = dt_distance / collisionAABB.scale.z;
+		//TODO investigate whether some of the matrices below can be cached once (eg fire rotation? offsetDirection?)
+		vec3 start = xform.position;
+		vec3 end = start + dt_distance * direction_n;
+		vec3 offsetDir = glm::normalize(start - end);
+		float offsetLength = dt_distance / 2;
+		vec3 zOffset = vec3(0, 0, offsetLength);
+
+		vec3 modelScaleStrech(1.f);
+		modelScaleStrech.z = dt_distance / aabb.z;
+
+		vec3 collisionBoxScaleStretch = aabb;
+		collisionBoxScaleStretch.z = dt_distance;
+
+		mat4 transToEnd_rotToFireDir_zOffset = glm::translate(glm::mat4(1.f), end);
+		transToEnd_rotToFireDir_zOffset = transToEnd_rotToFireDir_zOffset * glm::toMat4(directionQuat); //TODO this could also be xform.rot... which to use?
+		transToEnd_rotToFireDir_zOffset = glm::translate(transToEnd_rotToFireDir_zOffset, zOffset);
+
+		//model matrix composition: translateToEnd * rotateToFireDirection * OffsetZValueSoTipAtPoint * StretchToFitDistance
+		collisionXform = glm::scale(transToEnd_rotToFireDir_zOffset, collisionBoxScaleStretch);
+		renderXform = glm::scale(transToEnd_rotToFireDir_zOffset, modelScaleStrech);
+
+		// models parallel to z
+		xform.position = end;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,44 +132,24 @@ namespace SA
 	void ProjectileSubsystem::spawnProjectile(const glm::vec3& start, const glm::vec3& direction_n, const ProjectileClassHandle& projectileTypeHandle)
 	{
 		sp<Projectile> spawned = objPool.getInstance();
-		glm::quat spawnRotation; //unit quaternion
 
 		//note there may some optimized functions in glm to do this work
-		glm::vec3 modelForward_n(0, 0, 1);//TODO make this part of the projectile type handle
-		float cosTheta = glm::dot(modelForward_n, direction_n);
+		glm::vec3 projectileSystemForward(0, 0, -1);
+		glm::quat spawnRotation = Utils::getRotationBetween(projectileSystemForward, direction_n);
 
-		bool bVectorsAre180 = Utils::float_equals(cosTheta, -1.0f);
-		bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f) && !bVectorsAre180;
-
-		if (!bVectorsAreSame)
-		{
-			glm::vec3 rotAxis = glm::normalize(glm::cross(modelForward_n, direction_n)); //theoretically, I don't think I need to normalize if both normal; but generally I normalize the result of xproduct
-			float rotDegreesRadians = glm::acos(cosTheta);
-			spawnRotation = glm::angleAxis(rotDegreesRadians, rotAxis);
-		}
-		else if (bVectorsAre180)
-		{
-			//if tail end and front of projectile are not the same, we need a 180 rotation around ?any? axis
-			glm::vec3 temp = Utils::getDifferentVector(modelForward_n);
-			glm::vec3 rotAxisFor180 = glm::normalize(cross(modelForward_n, temp));
-
-			spawnRotation = glm::angleAxis(glm::pi<float>(), rotAxisFor180); 
-		}
-
-		//todo define a argument struct to pass for spawning projectiles
+		//todo define an argument struct to pass for spawning projectiles
 		spawned->xform.position = start;
 		spawned->xform.rotQuat = spawnRotation;
-		spawned->collisionAABB = projectileTypeHandle.collisionTransform;
 
-		spawned->modelOffset.position = modelForward_n * -2.f;
 
 		spawned->distanceStretchScale = 1;
-		spawned->direction = direction_n;
+		spawned->direction_n = direction_n;
+		spawned->directionQuat = spawnRotation;
 
-		spawned->speed = projectileTypeHandle.speed;//1.0f;//200.0f;
-		spawned->collisionAABB = projectileTypeHandle.collisionTransform;
+		spawned->speed = projectileTypeHandle.speed;
 		spawned->model = projectileTypeHandle.model;
 		spawned->lifetimeSec = projectileTypeHandle.lifeTimeSec;
+		spawned->aabb = projectileTypeHandle.aabb;
 
 		spawned->timeAlive = 0.f;
 
@@ -135,18 +169,8 @@ namespace SA
 		//invariant: shader uniforms pre-configured
 		for (const sp<Projectile>& projectile : activeProjectiles)
 		{
-			glm::mat4 model = projectile->xform.getModelMatrix();
-			glm::mat4 tipOffset = projectile->modelOffset.getModelMatrix();
-			model =  model * tipOffset;
-
-			//glm::vec3 tipOffsetVec = projectile->modelOffset.position * (projectile->distanceStretchScale / 2); //TODO this may should just be a vector rather than a whole transform
-			//glm::mat4 tipOffset = glm::translate(glm::mat4(1.0f), tipOffsetVec);
-			//glm::mat4 distanceStrech = glm::scale(glm::mat4(1.0f), glm::vec3(1, 1, projectile->distanceStretchScale));
-			//model = model * distanceStrech * tipOffset;
-
-			projectileShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+			projectileShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(projectile->renderXform));
 			projectile->model->draw(projectileShader);
-
 		}
 	}
 
@@ -154,18 +178,7 @@ namespace SA
 	{
 		for (const sp<Projectile>& projectile : activeProjectiles)
 		{
-			//TODO perhaps projectile should be made a full class and encapsulate this logic
-
-			//There's quite a few matrix multiples happening here, perhaps tipOffset and collisionTransform can be combined at spawn
-			//but the tip offset is used for rendering too. So it cannot have the collision scaling within it. 
-			//or at least, some of these can be single matrices rather than full 3-matrix transforms
-			glm::mat4 model = projectile->xform.getModelMatrix();
-			glm::mat4 tipOffset = projectile->modelOffset.getModelMatrix();
-			glm::mat4 collisionOBB = projectile->collisionAABB.getModelMatrix();
-			model = model * tipOffset * collisionOBB;
-
-			Utils::renderDebugWireCube(debugShader, color, model, view, perspective);
-			//Utils::renderDebugWireCube(debugShader, color, projectile->xform.getModelMatrix(), view, perspective);
+			Utils::renderDebugWireCube(debugShader, color, projectile->collisionXform, view, perspective);
 		}
 	}
 

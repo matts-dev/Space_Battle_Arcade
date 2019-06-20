@@ -215,6 +215,33 @@ namespace SA
 			return vec;
 		}
 
+		glm::quat getRotationBetween(const glm::vec3& from_n, const glm::vec3& to_n)
+		{
+			glm::quat rot; //unit quaternion;
+
+			float cosTheta = glm::dot(from_n, to_n);
+
+			bool bVectorsAre180 = Utils::float_equals(cosTheta, -1.0f);
+			bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f) && !bVectorsAre180; //TODO, don't want to change this mid-refactor; but second check seems unecessary and impossible
+
+			if (!bVectorsAreSame)
+			{
+				glm::vec3 rotAxis = glm::normalize(glm::cross(from_n, to_n)); //theoretically, I don't think I need to normalize if both normal; but generally I normalize the result of xproduct
+				float rotDegreesRadians = glm::acos(cosTheta);
+				rot = glm::angleAxis(rotDegreesRadians, rotAxis);
+			}
+			else if (bVectorsAre180)
+			{
+				//if tail end and front of projectile are not the same, we need a 180 rotation around ?any? axis
+				glm::vec3 temp = Utils::getDifferentVector(from_n);
+				glm::vec3 rotAxisFor180 = glm::normalize(cross(from_n, temp));
+
+				rot = glm::angleAxis(glm::pi<float>(), rotAxisFor180);
+			}
+
+			return rot;
+		}
+
 		const float cubeVerticesWithUVs[] = {
 			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,

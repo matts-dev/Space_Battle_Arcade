@@ -21,20 +21,15 @@ namespace SA
 	{
 		friend ProjectileSubsystem;
 	public: //std::make_shared requires public ctor, friend declarations of scope calling std::make_shared isn't enough for std::make_shared
-		ProjectileClassHandle(const Transform& inTransform, const sp<Model3D>& inModel)
-			: collisionTransform(inTransform), model(inModel)
-		{
-		}
+		ProjectileClassHandle(const Transform& inTransform, const sp<Model3D>& inModel);
 
+		glm::vec3 getAABBB() { return aabb; }
 	public:
-		/** Transform a unit cube into the model's single AABB
-			projectiles only support simple cube collision for speed
-			but the cube can be molded in fit around the model*/
 		sp<Model3D> model;
-		Transform collisionTransform;
-		float speed = 200.0f;
+		float speed = 250.0f;
 		float lifeTimeSec = 1.f;
-
+	private:
+		glm::vec3 aabb;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,9 +38,11 @@ namespace SA
 	struct Projectile
 	{
 		Transform xform; 
-		Transform modelOffset;
-		Transform collisionAABB;
-		glm::vec3 direction;
+		glm::vec3 direction_n;
+		glm::quat directionQuat; //maybe? duplicate info in xform
+		glm::vec3 aabb;
+		glm::mat4 collisionXform;
+		glm::mat4 renderXform;
 		float distanceStretchScale;
 		float speed;
 		float lifetimeSec;

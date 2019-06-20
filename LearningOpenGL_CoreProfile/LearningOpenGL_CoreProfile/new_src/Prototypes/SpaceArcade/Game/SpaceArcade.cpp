@@ -138,7 +138,7 @@ namespace SA
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 		if (bRenderProjectileOBBs)
 		{
-			ProjectileSS->renderProjectileBoundingBoxes(*debugLineShader, glm::vec3(0, 1, 0), view, projection);
+			ProjectileSS->renderProjectileBoundingBoxes(*debugLineShader, glm::vec3(0, 0, 1), view, projection);
 		}
 	}
 

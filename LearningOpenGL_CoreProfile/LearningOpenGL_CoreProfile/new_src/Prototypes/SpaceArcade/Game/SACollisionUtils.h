@@ -13,6 +13,8 @@
 
 namespace SA
 {
+	class WorldEntity;
+
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Collision information configured for a model; includes shapes for separating axis theorem 
 	// and bounding box for spatial hashing
@@ -32,17 +34,17 @@ namespace SA
 	class SpatialHashCellDebugVisualizer
 	{
 	public:
-		static void clearCells(SH::SpatialHashGrid<GameEntity>& grid);
-		static void appendCells(SH::SpatialHashGrid<GameEntity>& grid, SH::HashEntry<GameEntity>& collisionHandle);
+		static void clearCells(SH::SpatialHashGrid<WorldEntity>& grid);
+		static void appendCells(SH::SpatialHashGrid<WorldEntity>& grid, SH::HashEntry<WorldEntity>& collisionHandle);
 		static void render(
-			SH::SpatialHashGrid<GameEntity>& grid, 
+			SH::SpatialHashGrid<WorldEntity>& grid,
 			const glm::mat4& view,
 			const glm::mat4& projection, 
 			glm::vec3 color = glm::vec3(1, 1, 1));
 
 	private:
 		static std::map<
-			SH::SpatialHashGrid<GameEntity>*,
+			SH::SpatialHashGrid<WorldEntity>*,
 			std::vector<glm::ivec3>
 		> gridNameToCells;
 

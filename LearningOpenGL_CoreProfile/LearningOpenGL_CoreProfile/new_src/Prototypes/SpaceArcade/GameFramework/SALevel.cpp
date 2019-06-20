@@ -38,9 +38,11 @@ namespace SA
 
 	void LevelBase::tick(float dt_sec)
 	{
+		float dialated_dt_sec = dt_sec * timeDialationFactor;
+
 		for (const sp<WorldEntity>& entity : worldEntities)
 		{
-			entity->tick(dt_sec);
+			entity->tick(dialated_dt_sec);
 		}
 	}
 

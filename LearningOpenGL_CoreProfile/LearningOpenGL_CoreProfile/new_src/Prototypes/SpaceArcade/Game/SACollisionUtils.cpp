@@ -2,6 +2,7 @@
 #include "..\Rendering\SAShader.h"
 #include "..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
 #include "..\Rendering\OpenGLHelpers.h"
+#include "..\GameFramework\SAWorldEntity.h"
 
 namespace SA
 {
@@ -30,17 +31,17 @@ namespace SA
 	// Spatial hashing debug information
 	/////////////////////////////////////////////////////////////////////////////////////////////
 
-	/*static*/ void SpatialHashCellDebugVisualizer::clearCells(SH::SpatialHashGrid<GameEntity>& grid)
+	/*static*/ void SpatialHashCellDebugVisualizer::clearCells(SH::SpatialHashGrid<WorldEntity>& grid)
 	{
 		auto& gridCells = gridNameToCells[&grid];
 		gridCells.clear();
 	}
 
-	/*static*/ void SpatialHashCellDebugVisualizer::appendCells(SH::SpatialHashGrid<GameEntity>& grid, SH::HashEntry<GameEntity>& collisionHandle)
+	/*static*/ void SpatialHashCellDebugVisualizer::appendCells(SH::SpatialHashGrid<WorldEntity>& grid, SH::HashEntry<WorldEntity>& collisionHandle)
 	{
 		auto& gridCellLocs = gridNameToCells[&grid];
 
-		static std::vector<std::shared_ptr<const SH::HashCell<GameEntity>>> cells;
+		static std::vector<std::shared_ptr<const SH::HashCell<WorldEntity>>> cells;
 		static std::vector<glm::ivec3> cellLocs;
 		static int oneTimeStaticLocalSetup = [&]() -> int {
 			cells.reserve(500);
@@ -55,7 +56,7 @@ namespace SA
 		grid.lookupCellsForEntry(collisionHandle, cells);
 
 		cellLocs.reserve(cells.size());
-		for (const std::shared_ptr<const SH::HashCell<GameEntity>>& cell : cells)
+		for (const std::shared_ptr<const SH::HashCell<WorldEntity>>& cell : cells)
 		{
 			cellLocs.push_back(cell->location);
 		}
@@ -64,7 +65,7 @@ namespace SA
 	}
 
 	/*static*/ void SpatialHashCellDebugVisualizer::render(
-		SH::SpatialHashGrid<GameEntity>& grid,
+		SH::SpatialHashGrid<WorldEntity>& grid,
 		const glm::mat4& view,
 		const glm::mat4& projection,
 		glm::vec3 color /*= glm::vec3(1,1,1)*/)
@@ -81,7 +82,7 @@ namespace SA
 	}
 
 	std::map<
-		SH::SpatialHashGrid<GameEntity>*,
+		SH::SpatialHashGrid<WorldEntity>*,
 		std::vector<glm::ivec3>
 	> SpatialHashCellDebugVisualizer::gridNameToCells;
 

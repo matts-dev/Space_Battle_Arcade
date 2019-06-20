@@ -5,9 +5,15 @@
 #include "..\..\Tools\DataStructures\SATransform.h"
 #include "..\..\GameFramework\SAPlayerBase.h"
 #include "..\..\Rendering\Camera\SACameraBase.h"
+#include "..\SAProjectileSubsystem.h"
 
 namespace SA
 {
+
+	BaseSpaceLevel::BaseSpaceLevel()
+	{
+	}
+
 	void BaseSpaceLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		using glm::vec3; using glm::mat4;
@@ -43,6 +49,7 @@ namespace SA
 		LevelBase::startLevel_v();
 
 		forwardShadedModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_SimpleLighting_fragSrc, false);
+
 	}
 
 	void BaseSpaceLevel::endLevel_v()

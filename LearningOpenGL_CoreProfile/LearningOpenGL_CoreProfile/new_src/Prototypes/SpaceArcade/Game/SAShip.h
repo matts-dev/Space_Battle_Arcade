@@ -25,11 +25,11 @@ namespace SA
 
 	private:
 		//helper data structures
-		std::vector<sp<SH::GridNode<GameEntity>>> overlappingNodes_SH;
+		std::vector<sp<SH::GridNode<WorldEntity>>> overlappingNodes_SH;
 
 	private:
 		const sp<ModelCollisionInfo> collisionData;
-		up<SH::HashEntry<GameEntity>> collisionHandle = nullptr;
+		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
 
 		glm::vec3 velocity;
 	};

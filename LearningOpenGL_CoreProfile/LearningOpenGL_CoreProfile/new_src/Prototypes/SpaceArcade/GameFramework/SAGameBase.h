@@ -110,8 +110,8 @@ namespace SA
 		float currentTime = 0; 
 		float lastFrameTime = 0;
 		float rawDeltaTimeSecs = 0;
-		float timeDialoationFactor = 1.0f;
 		float deltaTimeSecs = 0.f;
+		float MAX_DELTA_TIME_SECS = 0.5f;
 	};
 
 }

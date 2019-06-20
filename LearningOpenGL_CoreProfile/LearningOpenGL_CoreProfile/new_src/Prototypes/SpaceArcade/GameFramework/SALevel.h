@@ -35,7 +35,8 @@ namespace SA
 		bool unspawnEntity(const sp<T>& entity);
 
 		/** Get this level's collision grid */
-		inline SH::SpatialHashGrid<GameEntity>& getWorldGrid() { return worldCollisionGrid; }
+		inline SH::SpatialHashGrid<WorldEntity>& getWorldGrid() { return worldCollisionGrid; }
+		float getTimeDialationFactor() { return timeDialationFactor; }
 
 	private:
 		void startLevel();
@@ -54,7 +55,10 @@ namespace SA
 		std::set<sp<WorldEntity>> worldEntities;
 		std::set<sp<RenderModelEntity>> renderEntities;
 
-		SH::SpatialHashGrid<GameEntity> worldCollisionGrid{ glm::vec3(4,4,4) };
+		SH::SpatialHashGrid<WorldEntity> worldCollisionGrid{ glm::vec3(4,4,4) };
+
+	private:
+		float timeDialationFactor = 1.f;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////

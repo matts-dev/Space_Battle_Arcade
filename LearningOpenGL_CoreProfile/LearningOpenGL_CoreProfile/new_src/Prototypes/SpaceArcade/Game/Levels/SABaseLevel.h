@@ -4,10 +4,14 @@
 
 namespace SA
 {
+	class ProjectileSubsystem;
+
 	class BaseSpaceLevel : public LevelBase
 	{
 
 	public:
+		BaseSpaceLevel();
+
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
 
 	protected:

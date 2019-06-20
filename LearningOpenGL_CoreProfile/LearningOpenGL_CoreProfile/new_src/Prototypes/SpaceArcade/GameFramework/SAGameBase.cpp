@@ -132,7 +132,8 @@ namespace SA
 	{
 		float currentTime = static_cast<float>(glfwGetTime());
 		rawDeltaTimeSecs = currentTime - lastFrameTime;
-		deltaTimeSecs = timeDialoationFactor * rawDeltaTimeSecs;
+		rawDeltaTimeSecs = rawDeltaTimeSecs > MAX_DELTA_TIME_SECS ? MAX_DELTA_TIME_SECS : rawDeltaTimeSecs;
+		deltaTimeSecs = rawDeltaTimeSecs;
 		lastFrameTime = currentTime;
 	}
 

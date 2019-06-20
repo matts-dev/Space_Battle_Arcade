@@ -218,7 +218,6 @@ namespace SA
 		vec3 frame0EndPnt;
 		vec3 frame1EndPnt;
 		vec3 frame2EndPnt;
-		
 
 		//dts.x = frame0, dts.y = frame1, dts.z = frame2
 		vec3 dts = simulatedDeltaTime_dtsimulation;
@@ -294,18 +293,17 @@ namespace SA
 
 			//collision box needs to fix model exactly
 			vec3 collisionBoxStretchScale = rotatedAABB;
-			collisionBoxStretchScale.z = stretchScale.z * rotatedAABB.z;
+			collisionBoxStretchScale.z = travelDistance;
 			mat4 collisionBoxStretchScaleMat = glm::scale(mat4(1.f), collisionBoxStretchScale);
 
 			mat4 offsetXForm = glm::translate(mat4(1.f), vec3(0,0, travelDistance / 2));
-			
 
 			mat4 translateToEndPnt = glm::translate(glm::mat4(1.f), frameEnd);
 
-			mat4 translateend_firerot_offset = translateToEndPnt * fireRotMat * offsetXForm;
+			mat4 translateEnd_firerot_offset = translateToEndPnt * fireRotMat * offsetXForm;
 
-			mat4 projectileTransform = translateend_firerot_offset * stretchXForm * modelAdjustmentMat;
-			const mat4& collisionXform = translateend_firerot_offset * collisionBoxStretchScaleMat;
+			mat4 projectileTransform = translateEnd_firerot_offset * stretchXForm * modelAdjustmentMat;
+			const mat4& collisionXform = translateEnd_firerot_offset * collisionBoxStretchScaleMat;
 
 			forwardShaded_EmissiveModelShader->use(); 
 			forwardShaded_EmissiveModelShader->setUniform3f("lightColor", emissiveColor);

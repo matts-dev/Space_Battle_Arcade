@@ -8,8 +8,7 @@ namespace SA
 	class GameBase;
 
 	/**
-		INVARIANT: No subsystem shall attempt to retrieve another subsystem within its constructor
-
+		INVARIANT: No subsystem shall attempt to retrieve another subsystem within its constructor; handle that in "initSystem" virtuals
 	 */
 	class SubsystemBase : public GameEntity, public RemoveCopies, public RemoveMoves
 	{

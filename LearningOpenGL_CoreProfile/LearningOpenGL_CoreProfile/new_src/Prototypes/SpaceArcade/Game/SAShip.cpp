@@ -54,13 +54,13 @@ namespace SA
 		//update the spatial hash
 		if (LevelBase* world = getWorld())
 		{
-			SH::SpatialHashGrid<GameEntity>& worldGrid = world->getWorldGrid();
+			SH::SpatialHashGrid<WorldEntity>& worldGrid = world->getWorldGrid();
 			worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));
 
 			//test if collisions occurred
 			overlappingNodes_SH.clear();
 			worldGrid.lookupNodesInCells(*collisionHandle, overlappingNodes_SH);
-			for (sp <SH::GridNode<GameEntity>> node : overlappingNodes_SH)
+			for (sp <SH::GridNode<WorldEntity>> node : overlappingNodes_SH)
 			{
 				//TODO make sure this object's shape has been updated to transform! this should be done before the loop
 				//TODO for each node, get their shape and do a collision tests
