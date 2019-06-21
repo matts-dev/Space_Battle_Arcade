@@ -20,7 +20,7 @@ namespace SA
 
 			const vec3& aabbMin = std::get<0>(modelAABB);
 			const vec3& aabbMax = std::get<1>(modelAABB);
-			aabb = aabbMax - aabbMin;
+			aabbSize = aabbMax - aabbMin;
 
 			//Below potentially supports models not aligned with z axis; see ProjectileEditor_Level::renderDeltaTimeSimulation
 			//Utils::getRotationBetween(modelForward_n, { 0,0,1 })
@@ -64,9 +64,9 @@ namespace SA
 		vec3 zOffset = vec3(0, 0, offsetLength);
 
 		vec3 modelScaleStrech(1.f);
-		modelScaleStrech.z = dt_distance / aabb.z;
+		modelScaleStrech.z = dt_distance / aabbSize.z;
 
-		vec3 collisionBoxScaleStretch = aabb;
+		vec3 collisionBoxScaleStretch = aabbSize;
 		collisionBoxScaleStretch.z = dt_distance;
 
 		mat4 transToEnd_rotToFireDir_zOffset = glm::translate(glm::mat4(1.f), end);
@@ -149,7 +149,7 @@ namespace SA
 		spawned->speed = projectileTypeHandle.speed;
 		spawned->model = projectileTypeHandle.model;
 		spawned->lifetimeSec = projectileTypeHandle.lifeTimeSec;
-		spawned->aabb = projectileTypeHandle.aabb;
+		spawned->aabbSize = projectileTypeHandle.aabbSize;
 
 		spawned->timeAlive = 0.f;
 

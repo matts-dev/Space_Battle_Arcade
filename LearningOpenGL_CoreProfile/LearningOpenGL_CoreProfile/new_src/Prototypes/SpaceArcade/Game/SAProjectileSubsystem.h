@@ -23,13 +23,13 @@ namespace SA
 	public: //std::make_shared requires public ctor, friend declarations of scope calling std::make_shared isn't enough for std::make_shared
 		ProjectileClassHandle(const Transform& inTransform, const sp<Model3D>& inModel);
 
-		glm::vec3 getAABBB() { return aabb; }
+		glm::vec3 getAABBSize() { return aabbSize; }
 	public:
 		sp<Model3D> model;
 		float speed = 250.0f;
 		float lifeTimeSec = 1.f;
 	private:
-		glm::vec3 aabb;
+		glm::vec3 aabbSize;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ namespace SA
 		Transform xform; 
 		glm::vec3 direction_n;
 		glm::quat directionQuat; //maybe? duplicate info in xform
-		glm::vec3 aabb;
+		glm::vec3 aabbSize;
 		glm::mat4 collisionXform;
 		glm::mat4 renderXform;
 		float distanceStretchScale;
