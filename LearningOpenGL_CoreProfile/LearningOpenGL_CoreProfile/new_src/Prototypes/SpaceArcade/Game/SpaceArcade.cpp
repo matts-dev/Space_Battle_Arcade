@@ -12,7 +12,7 @@
 #include "../GameFramework/SAGameBase.h"
 #include "../GameFramework/SAWindowSubsystem.h"
 #include "../GameFramework/Input/SAInput.h"
-#include "../GameFramework/SATextureSubsystem.h"
+#include "../GameFramework/SAAssetSubsystem.h"
 
 #include "../Tools/SAUtilities.h"
 #include "../Tools/ModelLoading/SAModel.h"
@@ -72,23 +72,20 @@ namespace SA
 		fpsCamera->setCursorMode(false);
 		playerZero->setCamera(fpsCamera);
 
+		AssetSubsystem& assetSS = getAssetSubsystem();
+
 		//load models
-		laserBoltModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/LazerBolt/LazerBolt.obj");
-		loadedModels.insert({laserBoltModelKey, laserBoltModel });
+		laserBoltModel = assetSS.loadModel(URLs.laserURL);
+		sp<Model3D> fighterModel = assetSS.loadModel(URLs.fighterURL);
+		sp<Model3D> carrierModel = assetSS.loadModel(URLs.carrierURL);
 
 		//this transform should probably be configured within a designer; hard coding reasonable values for now.
 		Transform projectileAABBTransform;
 		projectileAABBTransform.scale.z = 4.5;
 		laserBoltHandle = ProjectileSS->createProjectileType(laserBoltModel, projectileAABBTransform);
 
-		sp<Model3D> fighterModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/Fighter/SGFighter.obj");
-		loadedModels.insert({ fighterModelKey, fighterModel});
-
-		sp<Model3D> carrierModel = new_sp<Model3D>("Models/TestModels/SpaceArcade/Carrier/SGCarrier.obj");
-		loadedModels.insert({ carrierModelKey, carrierModel });
-
 		GLuint radialGradientTex = 0;
-		if (getTextureSubsystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
+		if (getAssetSubsystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
 		{
 			//loaded!
 		}
@@ -108,19 +105,6 @@ namespace SA
 
 		//ec(glDeleteVertexArrays(1, &cubeVAO));
 		//ec(glDeleteBuffers(1, &cubeVBO));
-	}
-
-	sp<SA::Model3D> SpaceArcade::getModel(const std::string& key)
-	{
-		const auto& iter = loadedModels.find(key);
-		if (iter != loadedModels.end())
-		{
-			return iter->second;
-		}
-		else
-		{
-			return nullptr;
-		}
 	}
 
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)

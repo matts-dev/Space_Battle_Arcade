@@ -146,7 +146,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASubsystemBase.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SATextureSubsystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.h" />
@@ -159,6 +159,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAPrimitiveShapeRenderer.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUISubsystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SpaceArcade.h" />
@@ -396,7 +397,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSubsystem.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SATextureSubsystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSubsystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSubsystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_MultipleInstantiation.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.cpp" />

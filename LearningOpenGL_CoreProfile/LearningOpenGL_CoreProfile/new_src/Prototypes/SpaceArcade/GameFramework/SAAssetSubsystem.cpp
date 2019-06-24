@@ -1,11 +1,12 @@
-#include "SATextureSubsystem.h"
+#include "SAAssetSubsystem.h"
 
 #include <iostream>
 #include "..\..\..\..\Libraries\stb_image.h"
+#include "..\Tools\ModelLoading\SAModel.h"
 
 namespace SA
 {
-	void TextureSubsystem::shutdown()
+	void AssetSubsystem::shutdown()
 	{
 		for (GLuint textureId : loadedTextureIds)
 		{
@@ -14,7 +15,39 @@ namespace SA
 		loadedTextureIds.clear();
 	}
 
-	bool TextureSubsystem::loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
+	sp<Model3D> AssetSubsystem::loadModel(const char* relative_filepath)
+	{
+		auto loadedModelIter = loadedModel3Ds.find(relative_filepath);
+		if (loadedModelIter != loadedModel3Ds.end())
+		{
+			return loadedModelIter->second;
+		}
+		else
+		{
+			sp<Model3D> loadedModel = new_sp<Model3D>(relative_filepath);
+			loadedModel3Ds[relative_filepath] = loadedModel;
+
+			return loadedModel;
+		}
+
+		//returning by value so this is safe; be careful when returning nullptr directly when returning reference to a sp
+		return nullptr;
+	}
+
+	SA::sp<SA::Model3D> AssetSubsystem::getModel(const std::string& key) const
+	{
+		const auto& iter = loadedModel3Ds.find(key);
+		if (iter != loadedModel3Ds.end())
+		{
+			return iter->second;
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
+	bool AssetSubsystem::loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
 	{
 		//TODO upgrade 3d model class to use this; but care will need to be taken so that textures are deleted after models
 		int img_width, img_height, img_nrChannels;

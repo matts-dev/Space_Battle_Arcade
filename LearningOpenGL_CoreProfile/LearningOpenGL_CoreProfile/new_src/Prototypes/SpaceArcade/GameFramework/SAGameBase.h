@@ -11,7 +11,7 @@ namespace SA
 	//forward declarations
 	class SubsystemBase;
 	class WindowSubsystem;
-	class TextureSubsystem;
+	class AssetSubsystem;
 	class LevelSubsystem;
 	class PlayerSubsystem;
 
@@ -80,7 +80,7 @@ namespace SA
 	public:
 		//Subsystem getters (to prevent circular dependencies, be sure to use forward declared references)
 		inline WindowSubsystem& getWindowSubsystem() { return *windowSS; }
-		inline TextureSubsystem& getTextureSubsystem() { return *textureSS; }
+		inline AssetSubsystem& getAssetSubsystem() { return *assetSS; }
 		inline LevelSubsystem& getLevelSubsystem() { return *levelSS; }
 		inline PlayerSubsystem& getPlayerSystem() { return *playerSS; }
 
@@ -94,7 +94,7 @@ namespace SA
 
 	private: //subsystems
 		sp<WindowSubsystem> windowSS;
-		sp<TextureSubsystem> textureSS;
+		sp<AssetSubsystem> assetSS;
 		sp<LevelSubsystem> levelSS;
 		sp<PlayerSubsystem> playerSS;
 		std::set< sp<SubsystemBase> > subsystems;

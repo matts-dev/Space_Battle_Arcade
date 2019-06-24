@@ -9,6 +9,7 @@
 #include "..\..\Rendering\Camera\SACameraBase.h"
 #include "..\SAProjectileSubsystem.h"
 #include "..\..\GameFramework\Input\SAInput.h"
+#include "..\..\GameFramework\SAAssetSubsystem.h"
 
 namespace SA
 {
@@ -17,15 +18,16 @@ namespace SA
 		BaseSpaceLevel::startLevel_v();
 
 		SpaceArcade& game = SpaceArcade::get();
+		AssetSubsystem& assetSS = game.getAssetSubsystem();
 
-		sp<Model3D> carrierModel = game.getModel(game.carrierModelKey);
-		sp<Model3D> fighterModel = game.getModel(game.fighterModelKey);
+		//specifically not loading model, because assuming model will be owned elsewhere 
+		sp<Model3D> carrierModel = assetSS.getModel(game.URLs.carrierURL);
+		sp<Model3D> fighterModel = assetSS.getModel(game.URLs.fighterURL);
 		if (!carrierModel || !fighterModel)
 		{
 			std::cout << "models not available for level" << std::endl;
 			return;
 		}
-
 
 		Transform carrierTransform;
 		carrierTransform.position = { 200,0,0 };
@@ -66,7 +68,7 @@ namespace SA
 			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleLeftMouseButton);
 		}
 
-		sp<Model3D> laserBoltModel = game.getModel(game.laserBoltModelKey);
+		sp<Model3D> laserBoltModel = assetSS.getModel(game.URLs.laserURL);
 		Transform projectileAABBTransform;
 		projectileAABBTransform.scale.z = 4.5;
 		laserBoltHandle = game.getProjectileSS()->createProjectileType(laserBoltModel, projectileAABBTransform);

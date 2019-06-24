@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include "..\GameFramework\RenderModelEntity.h"
+#include "SAUniformResourceLocators.h"
 
 
 namespace SA
@@ -52,12 +53,7 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 
 	public:
-		const std::string fighterModelKey = "fighter";
-		const std::string carrierModelKey = "carrier";
-		const std::string laserBoltModelKey = "laser";
-
-		/** Gets a loaded model for a given key if it exists; perhaps this should be its own asset subsystem */
-		sp<Model3D> getModel(const std::string& key);
+		UniformResourceLocators URLs;
 
 	private: //debugging
 		void renderDebug(const glm::mat4& view, const glm::mat4& projection);
@@ -77,9 +73,6 @@ namespace SA
 
 		////unit cube data
 		//GLuint cubeVAO, cubeVBO;
-
-
-		std::unordered_map<std::string, sp<Model3D>> loadedModels;
 
 		sp<Model3D> laserBoltModel;
 		sp<ProjectileClassHandle> laserBoltHandle;

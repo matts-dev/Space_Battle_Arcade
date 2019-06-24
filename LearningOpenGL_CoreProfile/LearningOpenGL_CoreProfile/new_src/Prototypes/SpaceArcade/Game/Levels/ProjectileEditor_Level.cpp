@@ -13,6 +13,7 @@
 #include "..\..\Rendering\Camera\SACameraBase.h"
 #include "..\..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
 #include "..\SAPrimitiveShapeRenderer.h"
+#include "..\..\GameFramework\SAAssetSubsystem.h"
 
 namespace SA
 {
@@ -32,7 +33,7 @@ namespace SA
 		}
 
 		//configure projectile
-		sp<Model3D> projectileModel = game.getModel(game.laserBoltModelKey);
+		sp<Model3D> projectileModel = game.getAssetSubsystem().getModel(game.URLs.laserURL); 
 
 		Transform worldTransform;
 		projectile = new_sp<RenderModelEntity>(projectileModel, worldTransform);

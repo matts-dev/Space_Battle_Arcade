@@ -4,7 +4,7 @@
 
 #include "SASubsystemBase.h"
 #include "SAWindowSubsystem.h"
-#include "SATextureSubsystem.h"
+#include "SAAssetSubsystem.h"
 #include "SALevelSubsystem.h"
 
 #include "..\Rendering\SAWindow.h"
@@ -30,8 +30,8 @@ namespace SA
 		windowSS = new_sp<WindowSubsystem>();
 		subsystems.insert(windowSS);
 
-		textureSS = new_sp<TextureSubsystem>();
-		subsystems.insert(textureSS);
+		assetSS = new_sp<AssetSubsystem>();
+		subsystems.insert(assetSS);
 
 		levelSS = new_sp<LevelSubsystem>();
 		subsystems.insert(levelSS);
