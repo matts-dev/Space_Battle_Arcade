@@ -1,5 +1,5 @@
 #pragma once
-#include "..\GameFramework\SASubsystemBase.h"
+#include "..\GameFramework\SASystemBase.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
 
 struct GLFWwindow;
@@ -8,7 +8,7 @@ namespace SA
 {
 	class Window;
 
-	class UISubsystem : public SubsystemBase
+	class UISystem : public SystemBase
 	{
 	public:
 		MultiDelegate<> onUIFrameStarted;

@@ -1,6 +1,7 @@
 #include "SAUIRootWindow.h"
 #include "../SpaceArcade.h"
-#include "../SAUISubsystem.h"
+#include "../SAUISystem.h"
+#include "../../GameFramework/SALevelSystem.h"
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 #include "../Levels/BasicTestSpaceLevel.h"
 #include "../Levels/ProjectileEditor_Level.h"
@@ -8,11 +9,10 @@
 
 namespace SA
 {
-
 	void UIRootWindow::postConstruct()
 	{
 		SpaceArcade& game = SpaceArcade::get();
-		const sp<UISubsystem>& UI_SS = game.getUISubsystem();
+		const sp<UISystem>& UI_SS = game.getUISystem();
 		
 		UI_SS->onUIFrameStarted.addWeakObj(sp_this(), &UIRootWindow::handleUIFrameStarted);
 
@@ -66,17 +66,17 @@ namespace SA
 			if (ImGui::Button("Load Basic Test Level"))
 			{
 				sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
-				SpaceArcade::get().getLevelSubsystem().loadLevel(startupLevel);
+				SpaceArcade::get().getLevelSystem().loadLevel(startupLevel);
 			}
 			if (ImGui::Button("Model Editor"))
 			{
 				sp<LevelBase> modelEditor = new_sp<ModelConfigurerEditor_Level>();
-				SpaceArcade::get().getLevelSubsystem().loadLevel(modelEditor);
+				SpaceArcade::get().getLevelSystem().loadLevel(modelEditor);
 			}
 			if (ImGui::Button("Projectile Editor"))
 			{
 				sp<LevelBase> projectileEditor = new_sp<ProjectileEditor_Level>();
-				SpaceArcade::get().getLevelSubsystem().loadLevel(projectileEditor);
+				SpaceArcade::get().getLevelSystem().loadLevel(projectileEditor);
 			}
 			if (ImGui::Button("Back to Main Menu"))
 			{

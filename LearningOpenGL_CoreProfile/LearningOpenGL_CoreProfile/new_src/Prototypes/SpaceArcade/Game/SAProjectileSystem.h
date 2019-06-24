@@ -2,7 +2,7 @@
 
 
 
-#include "../GameFramework\SASubsystemBase.h"
+#include "../GameFramework\SASystemBase.h"
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../Tools/DataStructures/SATransform.h"
@@ -12,14 +12,14 @@
 
 namespace SA
 {
-	class ProjectileSubsystem;
+	class ProjectileSystem;
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// User Configured projectile specification
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	class ProjectileClassHandle
 	{
-		friend ProjectileSubsystem;
+		friend ProjectileSystem;
 	public: //std::make_shared requires public ctor, friend declarations of scope calling std::make_shared isn't enough for std::make_shared
 		ProjectileClassHandle(const Transform& inTransform, const sp<Model3D>& inModel);
 
@@ -33,7 +33,7 @@ namespace SA
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	// Actual Projectile Instances; these subsystem is responsible for creating these instances
+	// Actual Projectile Instances; these system is responsible for creating these instances
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	struct Projectile
 	{
@@ -64,9 +64,9 @@ namespace SA
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	// Projectile subsystem
+	// Projectile system
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	class ProjectileSubsystem : public SubsystemBase
+	class ProjectileSystem : public SystemBase
 	{
 		friend class ProjectileEditor_Level;
 

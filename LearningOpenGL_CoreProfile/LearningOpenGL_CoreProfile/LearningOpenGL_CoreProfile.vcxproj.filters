@@ -492,12 +492,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSubsystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASubsystemBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\RemoveSpecialMemberFunctionUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -522,16 +516,10 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\OptionalCompilationMacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSubsystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ObjectPools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSubsystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.h">
@@ -543,16 +531,10 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUISubsystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSubsystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\SABaseLevel.h">
@@ -570,10 +552,28 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSubsystem.h">
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h">
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASystemBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUISystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1448,9 +1448,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_Callbacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSubsystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1472,9 +1469,6 @@
     <ClCompile Include="new_src\Tests\how_stbi_loads_colors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSubsystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Algorithms\SpatialHashing\SpatialHashing_LineTraceCellsTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1482,9 +1476,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Tests\imgui\basic_gui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSubsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.cpp">
@@ -1496,16 +1487,10 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAUISubsystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSubsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.cpp">
@@ -1529,7 +1514,22 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSubsystem.cpp">
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAUISystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

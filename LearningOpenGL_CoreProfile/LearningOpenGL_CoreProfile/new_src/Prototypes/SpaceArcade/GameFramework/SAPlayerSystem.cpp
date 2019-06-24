@@ -1,10 +1,10 @@
-#include "SAPlayerSubsystem.h"
+#include "SAPlayerSystem.h"
 
 namespace SA
 {
-	const sp<PlayerBase> PlayerSubsystem::NULL_PLAYER = nullptr;
+	const sp<PlayerBase> PlayerSystem::NULL_PLAYER = nullptr;
 
-	const sp<SA::PlayerBase>& PlayerSubsystem::getPlayer(uint32_t idx)
+	const sp<SA::PlayerBase>& PlayerSystem::getPlayer(uint32_t idx)
 	{
 		if (idx < players.size())
 		{

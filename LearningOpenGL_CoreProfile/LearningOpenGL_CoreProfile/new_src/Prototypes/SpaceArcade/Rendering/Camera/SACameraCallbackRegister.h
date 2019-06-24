@@ -7,7 +7,7 @@
 //{
 //	/** 
 //		----- DEPRECATED -------
-//		This class exists for quick testing. It bypasses the system window subsystem and directly binds to GLFW callbacks.
+//		This class exists for quick testing. It bypasses the system window system and directly binds to GLFW callbacks.
 //	*/
 //	namespace CameraCallbackRegister
 //	{

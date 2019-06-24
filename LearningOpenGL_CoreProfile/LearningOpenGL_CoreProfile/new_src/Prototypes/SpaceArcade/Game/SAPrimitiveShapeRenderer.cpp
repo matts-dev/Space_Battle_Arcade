@@ -1,7 +1,7 @@
 #include "SAPrimitiveShapeRenderer.h"
 #include "..\Rendering\OpenGLHelpers.h"
 #include "..\GameFramework\SAGameBase.h"
-#include "..\GameFramework\SAWindowSubsystem.h"
+#include "..\GameFramework\SAWindowSystem.h"
 #include <assert.h>
 #include "..\Tools\SAUtilities.h"
 #include "..\Rendering\BuiltInShaders.h"
@@ -56,7 +56,7 @@ namespace SA
 
 	void PrimitiveShapeRenderer::postConstruct()
 	{
-		WindowSubsystem& windowSystem = GameBase::get().getWindowSubsystem();
+		WindowSystem& windowSystem = GameBase::get().getWindowSystem();
 
 		windowSystem.onWindowAcquiredOpenglContext.addWeakObj(sp_this(), &PrimitiveShapeRenderer::handleWindowAquiredOpenglContext);
 		windowSystem.onWindowLosingOpenglContext.addWeakObj(sp_this(), &PrimitiveShapeRenderer::handleWindowLosingOpenglContext);

@@ -3,14 +3,14 @@
 #include<cstdint>
 #include <vector>
 
-#include "SASubsystemBase.h"
+#include "SASystemBase.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
 
 namespace SA
 {
 	class PlayerBase;
 
-	class PlayerSubsystem : public SubsystemBase
+	class PlayerSystem : public SystemBase
 	{
 	public:
 

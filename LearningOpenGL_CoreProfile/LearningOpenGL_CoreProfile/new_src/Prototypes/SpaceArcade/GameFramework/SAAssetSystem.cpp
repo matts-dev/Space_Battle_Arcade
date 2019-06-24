@@ -1,4 +1,4 @@
-#include "SAAssetSubsystem.h"
+#include "SAAssetSystem.h"
 
 #include <iostream>
 #include "..\..\..\..\Libraries\stb_image.h"
@@ -6,7 +6,7 @@
 
 namespace SA
 {
-	void AssetSubsystem::shutdown()
+	void AssetSystem::shutdown()
 	{
 		for (GLuint textureId : loadedTextureIds)
 		{
@@ -15,7 +15,7 @@ namespace SA
 		loadedTextureIds.clear();
 	}
 
-	sp<Model3D> AssetSubsystem::loadModel(const char* relative_filepath)
+	sp<Model3D> AssetSystem::loadModel(const char* relative_filepath)
 	{
 		auto loadedModelIter = loadedModel3Ds.find(relative_filepath);
 		if (loadedModelIter != loadedModel3Ds.end())
@@ -34,7 +34,7 @@ namespace SA
 		return nullptr;
 	}
 
-	SA::sp<SA::Model3D> AssetSubsystem::getModel(const std::string& key) const
+	SA::sp<SA::Model3D> AssetSystem::getModel(const std::string& key) const
 	{
 		const auto& iter = loadedModel3Ds.find(key);
 		if (iter != loadedModel3Ds.end())
@@ -47,7 +47,7 @@ namespace SA
 		}
 	}
 
-	bool AssetSubsystem::loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
+	bool AssetSystem::loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
 	{
 		//TODO upgrade 3d model class to use this; but care will need to be taken so that textures are deleted after models
 		int img_width, img_height, img_nrChannels;

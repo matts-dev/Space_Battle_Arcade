@@ -4,7 +4,7 @@
 
 namespace SA
 {
-	class ProjectileSubsystem;
+	class ProjectileSystem;
 
 	class BaseSpaceLevel : public LevelBase
 	{

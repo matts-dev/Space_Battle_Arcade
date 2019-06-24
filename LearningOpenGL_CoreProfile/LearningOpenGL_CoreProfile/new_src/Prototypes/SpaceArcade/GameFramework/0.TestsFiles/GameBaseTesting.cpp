@@ -1,7 +1,7 @@
 #include "..\..\Rendering\SAWindow.h"
 #include "..\..\Rendering\OpenGLHelpers.h"
 #include "..\SAGameBase.h"
-#include "..\SAWindowSubsystem.h"
+#include "..\SAWindowSystem.h"
 #include "..\..\Rendering\Camera\SACameraFPS.h"
 #include "..\..\Rendering\SAShader.h"
 #include "..\SAGameEntity.h"
@@ -193,7 +193,7 @@ namespace
 			using namespace SA;
 			using glm::vec3; using glm::vec4; using glm::mat4; 
 
-			const sp<Window>& window = getWindowSubsystem().getPrimaryWindow();
+			const sp<Window>& window = getWindowSystem().getPrimaryWindow();
 			if (!window)
 			{
 				startShutdown();

@@ -1,10 +1,10 @@
-#include "SAWindowSubsystem.h"
+#include "SAWindowSystem.h"
 #include "SAGameBase.h"
 #include "SALog.h"
 
 namespace SA
 {
-	void WindowSubsystem::makeWindowPrimary(const sp<Window>& window)
+	void WindowSystem::makeWindowPrimary(const sp<Window>& window)
 	{
 		onPrimaryWindowChangingEvent.broadcast(focusedWindow, window);
 
@@ -19,7 +19,7 @@ namespace SA
 		focusedWindow = window;
 	}
 
-	void WindowSubsystem::tick(float deltaSec)
+	void WindowSystem::tick(float deltaSec)
 	{
 		glfwPollEvents();
 
@@ -34,14 +34,14 @@ namespace SA
 				}
 				else
 				{
-					log("Window Subsystem : Primary window requesting close, shutting down game.");
+					log("Window System : Primary window requesting close, shutting down game.");
 					GameBase::get().startShutdown();
 				}
 			}
 		}
 	}
 
-	void WindowSubsystem::handlePostRender()
+	void WindowSystem::handlePostRender()
 	{
 		//will need to do this for all windows that were rendered to if supporting more than a single window
 		if (focusedWindow)
@@ -50,7 +50,7 @@ namespace SA
 		}
 	}
 
-	void WindowSubsystem::initSystem()
+	void WindowSystem::initSystem()
 	{
 		GameBase::get().SubscribePostRender(sp_this());
 	}

@@ -5,11 +5,11 @@
 #include "..\SAShip.h"
 #include "..\..\GameFramework\RenderModelEntity.h"
 #include "..\..\GameFramework\SAPlayerBase.h"
-#include "..\..\GameFramework\SAPlayerSubsystem.h"
+#include "..\..\GameFramework\SAPlayerSystem.h"
 #include "..\..\Rendering\Camera\SACameraBase.h"
-#include "..\SAProjectileSubsystem.h"
+#include "..\SAProjectileSystem.h"
 #include "..\..\GameFramework\Input\SAInput.h"
-#include "..\..\GameFramework\SAAssetSubsystem.h"
+#include "..\..\GameFramework\SAAssetSystem.h"
 
 namespace SA
 {
@@ -18,7 +18,7 @@ namespace SA
 		BaseSpaceLevel::startLevel_v();
 
 		SpaceArcade& game = SpaceArcade::get();
-		AssetSubsystem& assetSS = game.getAssetSubsystem();
+		AssetSystem& assetSS = game.getAssetSystem();
 
 		//specifically not loading model, because assuming model will be owned elsewhere 
 		sp<Model3D> carrierModel = assetSS.getModel(game.URLs.carrierURL);
@@ -71,7 +71,7 @@ namespace SA
 		sp<Model3D> laserBoltModel = assetSS.getModel(game.URLs.laserURL);
 		Transform projectileAABBTransform;
 		projectileAABBTransform.scale.z = 4.5;
-		laserBoltHandle = game.getProjectileSS()->createProjectileType(laserBoltModel, projectileAABBTransform);
+		laserBoltHandle = game.getProjectileSys()->createProjectileType(laserBoltModel, projectileAABBTransform);
 	}
 
 	void BasicTestSpaceLevel::endLevel_v()
@@ -106,7 +106,7 @@ namespace SA
 				{
 					if (!camera->isInCursorMode())
 					{
-						const sp<ProjectileSubsystem>& projectileSS = game.getProjectileSS();
+						const sp<ProjectileSystem>& projectileSS = game.getProjectileSys();
 
 						glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
 						glm::vec3 direction = camera->getFront();

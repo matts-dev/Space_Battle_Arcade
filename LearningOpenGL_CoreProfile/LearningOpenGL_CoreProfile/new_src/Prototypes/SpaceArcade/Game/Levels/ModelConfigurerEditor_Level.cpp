@@ -1,18 +1,18 @@
 #include "ModelConfigurerEditor_Level.h"
-#include "..\SpaceArcade.h"
-#include "..\SAUISubsystem.h"
-#include "..\..\..\..\..\Libraries\imgui.1.69.gl\imgui.h"
-#include "..\..\Rendering\Camera\SACameraBase.h"
-#include "..\..\GameFramework\SAPlayerBase.h"
-#include "..\..\GameFramework\Input\SAInput.h"
-#include "..\..\GameFramework\SAPlayerSubsystem.h"
+#include "../SpaceArcade.h"
+#include "../SAUISystem.h"
+#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "../../Rendering/Camera/SACameraBase.h"
+#include "../../GameFramework/SAPlayerBase.h"
+#include "../../GameFramework/Input/SAInput.h"
+#include "../../GameFramework/SAPlayerSystem.h"
 
 namespace SA
 {
 	void ModelConfigurerEditor_Level::startLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
-		game.getUISubsystem()->onUIFrameStarted.addStrongObj(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
+		game.getUISystem()->onUIFrameStarted.addStrongObj(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
 
 		game.getPlayerSystem().onPlayerCreated.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handlePlayerCreated);
 		if (const sp<SA::PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
@@ -25,7 +25,7 @@ namespace SA
 	void ModelConfigurerEditor_Level::endLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
-		game.getUISubsystem()->onUIFrameStarted.removeStrong(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
+		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
 		
 	}
 

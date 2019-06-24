@@ -1,6 +1,6 @@
 #include "SAInput.h"
 #include "..\SAGameBase.h"
-#include "..\SAWindowSubsystem.h"
+#include "..\SAWindowSystem.h"
 
 namespace SA
 {
@@ -147,7 +147,7 @@ namespace SA
 	void InputProcessor::postConstruct()
 	{
 		GameBase& game = GameBase::get();
-		WindowSubsystem& windowSystem = game.getWindowSubsystem();
+		WindowSystem& windowSystem = game.getWindowSystem();
 
 		windowSystem.onPrimaryWindowChangingEvent.addWeakObj(sp_this(), &InputProcessor::handlePrimaryWindowChanging);
 

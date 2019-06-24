@@ -1,5 +1,5 @@
 #pragma once
-#include "..\GameFramework\SASubsystemBase.h"
+#include "..\GameFramework\SASystemBase.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
 //#include "SALevel.h"
 
@@ -7,7 +7,7 @@ namespace SA
 {
 	class LevelBase;
 
-	class LevelSubsystem : public SubsystemBase
+	class LevelSystem : public SystemBase
 	{
 	public:
 		/** Broadcasts just before level is changed */

@@ -1,5 +1,5 @@
 #pragma once
-#include "SASubsystemBase.h"
+#include "SASystemBase.h"
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include <set>
@@ -10,7 +10,7 @@ namespace SA
 {
 	class Model3D;
 
-	class AssetSubsystem : public SubsystemBase
+	class AssetSystem : public SystemBase
 	{
 	public:
 		sp<Model3D> loadModel(const char* relative_filepath);

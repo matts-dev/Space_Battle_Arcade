@@ -1,19 +1,19 @@
 #include "ProjectileEditor_Level.h"
-#include "..\SpaceArcade.h"
-#include "..\SAShip.h"
-#include "..\..\GameFramework\RenderModelEntity.h"
-#include "..\SAProjectileSubsystem.h"
-#include "..\SAUISubsystem.h"
-#include "..\..\..\..\..\Libraries\imgui.1.69.gl\imgui.h"
-#include "..\..\Rendering\BuiltInShaders.h"
-#include "..\..\GameFramework\SAPlayerBase.h"
-#include "..\..\GameFramework\SAGameBase.h"
-#include "..\..\GameFramework\SAPlayerSubsystem.h"
-#include "..\..\GameFramework\Input\SAInput.h"
-#include "..\..\Rendering\Camera\SACameraBase.h"
-#include "..\..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
-#include "..\SAPrimitiveShapeRenderer.h"
-#include "..\..\GameFramework\SAAssetSubsystem.h"
+#include "../SpaceArcade.h"
+#include "../SAShip.h"
+#include "../../GameFramework/RenderModelEntity.h"
+#include "../SAProjectileSystem.h"
+#include "../SAUISystem.h"
+#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "../../Rendering/BuiltInShaders.h"
+#include "../../GameFramework/SAPlayerBase.h"
+#include "../../GameFramework/SAGameBase.h"
+#include "../../GameFramework/SAPlayerSystem.h"
+#include "../../GameFramework/Input/SAInput.h"
+#include "../../Rendering/Camera/SACameraBase.h"
+#include "../../../../Algorithms/SpatialHashing/SHDebugUtils.h"
+#include "../SAPrimitiveShapeRenderer.h"
+#include "../../GameFramework/SAAssetSystem.h"
 
 namespace SA
 {
@@ -25,7 +25,7 @@ namespace SA
 		shapeRenderer = new_sp<PrimitiveShapeRenderer>();
 
 		SpaceArcade& game = SpaceArcade::get();
-		game.getUISubsystem()->onUIFrameStarted.addStrongObj(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
+		game.getUISystem()->onUIFrameStarted.addStrongObj(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
 		game.getPlayerSystem().onPlayerCreated.addWeakObj(sp_this(), &ProjectileEditor_Level::handlePlayerCreated);
 		if (const sp<SA::PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{
@@ -33,7 +33,7 @@ namespace SA
 		}
 
 		//configure projectile
-		sp<Model3D> projectileModel = game.getAssetSubsystem().getModel(game.URLs.laserURL); 
+		sp<Model3D> projectileModel = game.getAssetSystem().getModel(game.URLs.laserURL); 
 
 		Transform worldTransform;
 		projectile = new_sp<RenderModelEntity>(projectileModel, worldTransform);
@@ -49,10 +49,10 @@ namespace SA
 
 		SpaceArcade& game = SpaceArcade::get();
 
-		game.getUISubsystem()->onUIFrameStarted.removeStrong(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
+		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
  
 		//unspawn all projectiles so they're not in the new level
-		sp<ProjectileSubsystem> projectileSS = game.getProjectileSS();
+		sp<ProjectileSystem> projectileSS = game.getProjectileSys();
 		projectileSS->unspawnAllProjectiles();
 	}
 

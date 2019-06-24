@@ -5,7 +5,7 @@
 #include "..\..\..\Algorithms\SpatialHashing\SpatialHashingComponent.h"
 #include "..\..\..\Algorithms\SeparatingAxisTheorem\SATComponent.h"
 
-#include "..\GameFramework\SASubsystemBase.h"
+#include "..\GameFramework\SASystemBase.h"
 #include "..\Tools\DataStructures\SATransform.h"
 #include "..\Tools\RemoveSpecialMemberFunctionUtils.h"
 #include <map>

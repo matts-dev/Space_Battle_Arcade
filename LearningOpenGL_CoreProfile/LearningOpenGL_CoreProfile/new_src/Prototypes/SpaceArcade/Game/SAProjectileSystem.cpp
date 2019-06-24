@@ -1,7 +1,7 @@
-#include"SAProjectileSubsystem.h"
+#include "SAProjectileSystem.h"
 #include "..\Tools\SAUtilities.h"
 #include "..\GameFramework\SAGameBase.h"
-#include "..\GameFramework\SALevelSubsystem.h"
+#include "..\GameFramework\SALevelSystem.h"
 #include "..\GameFramework\SALevel.h"
 
 namespace SA
@@ -30,7 +30,7 @@ namespace SA
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	// Actual Projectile Instances; these subsystem is responsible for creating these instances
+	// Actual Projectile Instances; these system is responsible for creating these instances
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	void Projectile::tick(float dt_sec)
 	{
@@ -47,7 +47,7 @@ namespace SA
 		using glm::mat4; using glm::vec3; using glm::quat;
 
 		float timeDialationFactor = 1.f;
-		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSubsystem().getCurrentLevel())
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
 		{
 			timeDialationFactor = currentLevel->getTimeDialationFactor();
 		}
@@ -82,10 +82,10 @@ namespace SA
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	// Projectile subsystem
+	// Projectile system
 	///////////////////////////////////////////////////////////////////////////////////////////////
 
-	void ProjectileSubsystem::postGameLoopTick(float dt_sec)
+	void ProjectileSystem::postGameLoopTick(float dt_sec)
 	{
 		auto iter = std::begin(activeProjectiles);
 		auto end = std::end(activeProjectiles);
@@ -115,13 +115,13 @@ namespace SA
 		}
 	}
 
-	void ProjectileSubsystem::initSystem()
+	void ProjectileSystem::initSystem()
 	{
 		//align projectiles with camera
-		GameBase::get().PostGameloopTick.addStrongObj(sp_this(), &ProjectileSubsystem::postGameLoopTick);
+		GameBase::get().PostGameloopTick.addStrongObj(sp_this(), &ProjectileSystem::postGameLoopTick);
 	}
 
-	sp<ProjectileClassHandle> ProjectileSubsystem::createProjectileType(const sp<Model3D>& model, const Transform& AABB_unitCubeTransform)
+	sp<ProjectileClassHandle> ProjectileSystem::createProjectileType(const sp<Model3D>& model, const Transform& AABB_unitCubeTransform)
 	{
 		//this method met not be necessary after all; clients should be free to just create projectile handles when ever
 		sp<ProjectileClassHandle> projectileType = new_sp<ProjectileClassHandle>(AABB_unitCubeTransform, model);
@@ -129,7 +129,7 @@ namespace SA
 		return projectileType;
 	}
 
-	void ProjectileSubsystem::spawnProjectile(const glm::vec3& start, const glm::vec3& direction_n, const ProjectileClassHandle& projectileTypeHandle)
+	void ProjectileSystem::spawnProjectile(const glm::vec3& start, const glm::vec3& direction_n, const ProjectileClassHandle& projectileTypeHandle)
 	{
 		sp<Projectile> spawned = objPool.getInstance();
 
@@ -156,12 +156,12 @@ namespace SA
 		activeProjectiles.insert( spawned );
 	}
 
-	void ProjectileSubsystem::unspawnAllProjectiles()
+	void ProjectileSystem::unspawnAllProjectiles()
 	{
 		activeProjectiles.clear();
 	}
 
-	void ProjectileSubsystem::renderProjectiles(Shader& projectileShader) const
+	void ProjectileSystem::renderProjectiles(Shader& projectileShader) const
 	{
 		//TODO potential optimization is to use instanced rendering to reduce draw call number
 		//TODO perhaps projectile should be made a full class and encapsulate this logic
@@ -174,7 +174,7 @@ namespace SA
 		}
 	}
 
-	void ProjectileSubsystem::renderProjectileBoundingBoxes(Shader& debugShader, const glm::vec3& color, const glm::mat4& view, const glm::mat4& perspective) const
+	void ProjectileSystem::renderProjectileBoundingBoxes(Shader& debugShader, const glm::vec3& color, const glm::mat4& view, const glm::mat4& perspective) const
 	{
 		for (const sp<Projectile>& projectile : activeProjectiles)
 		{

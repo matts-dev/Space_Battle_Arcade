@@ -1,10 +1,10 @@
-#include "SALevelSubsystem.h"
+#include "SALevelSystem.h"
 #include "SALevel.h"
 #include <iostream>
 
 namespace SA
 {
-	void LevelSubsystem::loadLevel(sp<LevelBase>& newLevel)
+	void LevelSystem::loadLevel(sp<LevelBase>& newLevel)
 	{
 		if (newLevel)
 		{
@@ -24,7 +24,7 @@ namespace SA
 		}
 	}
 
-	void LevelSubsystem::unloadLevel(sp<LevelBase>& level)
+	void LevelSystem::unloadLevel(sp<LevelBase>& level)
 	{
 		if (level == loadedLevel)
 		{
@@ -36,11 +36,11 @@ namespace SA
 		}
 		else
 		{
-			std::cerr << "LEVEL SUBSYSTEM: attempting to unload level that is not current level" << std::endl;
+			std::cerr << "LEVEL SYSTEM: attempting to unload level that is not current level" << std::endl;
 		}
 	}
 
-	void LevelSubsystem::tick(float deltaSec)
+	void LevelSystem::tick(float deltaSec)
 	{
 		if (loadedLevel)
 		{
@@ -48,7 +48,7 @@ namespace SA
 		}
 	}
 
-	void LevelSubsystem::shutdown()
+	void LevelSystem::shutdown()
 	{
 		if (loadedLevel)
 		{

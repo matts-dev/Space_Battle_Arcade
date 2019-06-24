@@ -10,17 +10,18 @@
 #include "../Rendering/BuiltInShaders.h"
 
 #include "../GameFramework/SAGameBase.h"
-#include "../GameFramework/SAWindowSubsystem.h"
+#include "../GameFramework/SAWindowSystem.h"
 #include "../GameFramework/Input/SAInput.h"
-#include "../GameFramework/SAAssetSubsystem.h"
+#include "../GameFramework/SAAssetSystem.h"
+#include "../GameFramework/SALevelSystem.h"
 
 #include "../Tools/SAUtilities.h"
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
 
 #include "SACollisionUtils.h"
-#include "SAProjectileSubsystem.h"
-#include "SAUISubsystem.h"
+#include "SAProjectileSystem.h"
+#include "SAUISystem.h"
 
 //for quick level switching, can remove these
 #include "Levels/ProjectileEditor_Level.h"
@@ -30,7 +31,7 @@
 #include "Levels/BasicTestSpaceLevel.h"
 #include "UI/SAUIRootWindow.h"
 #include "SAPlayer.h"
-#include "../GameFramework/SAPlayerSubsystem.h"
+#include "../GameFramework/SAPlayerSystem.h"
 
 namespace SA
 {
@@ -72,7 +73,7 @@ namespace SA
 		fpsCamera->setCursorMode(false);
 		playerZero->setCamera(fpsCamera);
 
-		AssetSubsystem& assetSS = getAssetSubsystem();
+		AssetSystem& assetSS = getAssetSystem();
 
 		//load models
 		laserBoltModel = assetSS.loadModel(URLs.laserURL);
@@ -82,10 +83,10 @@ namespace SA
 		//this transform should probably be configured within a designer; hard coding reasonable values for now.
 		Transform projectileAABBTransform;
 		projectileAABBTransform.scale.z = 4.5;
-		laserBoltHandle = ProjectileSS->createProjectileType(laserBoltModel, projectileAABBTransform);
+		laserBoltHandle = ProjectileSys->createProjectileType(laserBoltModel, projectileAABBTransform);
 
 		GLuint radialGradientTex = 0;
-		if (getAssetSubsystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
+		if (getAssetSystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
 		{
 			//loaded!
 		}
@@ -94,7 +95,7 @@ namespace SA
 
 		//make sure resources are loaded before the level starts
 		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
-		getLevelSubsystem().loadLevel(startupLevel);
+		getLevelSystem().loadLevel(startupLevel);
 
 		return window;
 	}
@@ -110,7 +111,7 @@ namespace SA
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
 	{
 #ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
-		const sp<LevelBase>& world = getLevelSubsystem().getCurrentLevel();
+		const sp<LevelBase>& world = getLevelSystem().getCurrentLevel();
 		if (world)
 		{
 			auto& worldGrid = world->getWorldGrid();
@@ -119,13 +120,13 @@ namespace SA
 				glm::vec3 color{ 0.5f, 0.f, 0.f };
 				SpatialHashCellDebugVisualizer::render(worldGrid, view, projection, color);
 			}
-			//TODO: this is a candidate for a ticker and a ticker subsystem
+			//TODO: this is a candidate for a ticker and a ticker system
 			SpatialHashCellDebugVisualizer::clearCells(worldGrid);
 		}
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 		if (bRenderProjectileOBBs)
 		{
-			ProjectileSS->renderProjectileBoundingBoxes(*debugLineShader, glm::vec3(0, 0, 1), view, projection);
+			ProjectileSys->renderProjectileBoundingBoxes(*debugLineShader, glm::vec3(0, 0, 1), view, projection);
 		}
 	}
 
@@ -134,7 +135,7 @@ namespace SA
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
-		const sp<Window>& window = getWindowSubsystem().getPrimaryWindow();
+		const sp<Window>& window = getWindowSystem().getPrimaryWindow();
 		if (!window)
 		{
 			startShutdown();
@@ -154,7 +155,7 @@ namespace SA
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
-		const sp<Window>& window = getWindowSubsystem().getPrimaryWindow();
+		const sp<Window>& window = getWindowSystem().getPrimaryWindow();
 		if (!window)
 		{
 			return;
@@ -187,28 +188,28 @@ namespace SA
 		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
-		ProjectileSS->renderProjectiles(*forwardShaded_EmissiveModelShader);
+		ProjectileSys->renderProjectiles(*forwardShaded_EmissiveModelShader);
 
-		if (const sp<LevelBase>& loadedLevel = getLevelSubsystem().getCurrentLevel())
+		if (const sp<LevelBase>& loadedLevel = getLevelSystem().getCurrentLevel())
 		{
 			loadedLevel->render(deltaTimeSecs, view, projection);
 		}
 
-		getUISubsystem()->render();
+		getUISystem()->render();
 	}
 
-	void SpaceArcade::onRegisterCustomSubsystem()
+	void SpaceArcade::onRegisterCustomSystem()
 	{
-		ProjectileSS = new_sp<ProjectileSubsystem>();
-		RegisterCustomSubsystem(ProjectileSS);
+		ProjectileSys = new_sp<ProjectileSystem>();
+		RegisterCustomSystem(ProjectileSys);
 
-		UI_SS = new_sp<UISubsystem>();
-		RegisterCustomSubsystem(UI_SS);
+		UI_Sys = new_sp<UISystem>();
+		RegisterCustomSystem(UI_Sys);
 	}
 
 	void SpaceArcade::updateInput(float detltaTimeSec)
 	{
-		if (const sp<Window> windowObj = getWindowSubsystem().getPrimaryWindow())
+		if (const sp<Window> windowObj = getWindowSystem().getPrimaryWindow())
 		{
 			GLFWwindow* window = windowObj->get();
 
@@ -236,10 +237,10 @@ namespace SA
 				if (input.isKeyJustPressed(window, GLFW_KEY_V)) { bRenderProjectileOBBs = !bRenderProjectileOBBs; }
 				if (input.isKeyJustPressed(window, GLFW_KEY_U)) 
 				{
-					//sp<Level> currentLevel = getLevelSubsystem().getCurrentLevel();
-					//getLevelSubsystem().unloadLevel(currentLevel);
+					//sp<Level> currentLevel = getLevelSystem().getCurrentLevel();
+					//getLevelSystem().unloadLevel(currentLevel);
 					sp<LevelBase> projectileEditor = new_sp<ModelConfigurerEditor_Level>();
-					getLevelSubsystem().loadLevel(projectileEditor);
+					getLevelSystem().loadLevel(projectileEditor);
 				}
 			}
 		}

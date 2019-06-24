@@ -1,5 +1,5 @@
 #pragma once
-#include "SASubsystemBase.h"
+#include "SASystemBase.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
 #include "..\Rendering\SAWindow.h"
 #include <cstdint>
@@ -9,7 +9,7 @@
 
 namespace SA
 {
-	class WindowSubsystem : public SubsystemBase
+	class WindowSystem : public SystemBase
 	{
 	public: //events
 		/*This event should not be used to determine when OpenGL contexts change */

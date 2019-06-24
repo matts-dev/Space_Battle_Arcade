@@ -4,16 +4,15 @@
 #include "SAGameEntity.h"
 #include "..\Tools\RemoveSpecialMemberFunctionUtils.h"
 #include "..\Tools\DataStructures\MultiDelegate.h"
-#include "SALevelSubsystem.h"
 
 namespace SA
 {
 	//forward declarations
-	class SubsystemBase;
-	class WindowSubsystem;
-	class AssetSubsystem;
-	class LevelSubsystem;
-	class PlayerSubsystem;
+	class SystemBase;
+	class WindowSystem;
+	class AssetSystem;
+	class LevelSystem;
+	class PlayerSystem;
 
 	class Window;
 
@@ -42,7 +41,7 @@ namespace SA
 
 	private:
 		/** It is preferred to make a static getter in the implemented subclass, but this
-		    exists to avoid having subsystems know about concrete class types*/
+		    exists to avoid having systems know about concrete class types*/
 		static GameBase* RegisteredSingleton;
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -75,37 +74,37 @@ namespace SA
 		virtual void renderLoop(float deltaTimeSecs) = 0;
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	//  SUBSYSTEMS 
+	//  SYSTEMS 
 	//////////////////////////////////////////////////////////////////////////////////////
 	public:
-		//Subsystem getters (to prevent circular dependencies, be sure to use forward declared references)
-		inline WindowSubsystem& getWindowSubsystem() { return *windowSS; }
-		inline AssetSubsystem& getAssetSubsystem() { return *assetSS; }
-		inline LevelSubsystem& getLevelSubsystem() { return *levelSS; }
-		inline PlayerSubsystem& getPlayerSystem() { return *playerSS; }
+		//System getters (to prevent circular dependencies, be sure to use forward declared references)
+		inline WindowSystem& getWindowSystem() { return *windowSys; }
+		inline AssetSystem& getAssetSystem() { return *assetSys; }
+		inline LevelSystem& getLevelSystem() { return *levelSys; }
+		inline PlayerSystem& getPlayerSystem() { return *playerSys; }
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
-		void SubscribePostRender(const sp <SubsystemBase>& subsystem);
+		void SubscribePostRender(const sp<SystemBase>& system);
 	private:
-		bool bCustomSubsystemRegistrationAllowedTimeWindow = false;
+		bool bCustomSystemRegistrationAllowedTimeWindow = false;
 	protected:
-		virtual void onRegisterCustomSubsystem() {};
-		void RegisterCustomSubsystem(const sp <SubsystemBase>& subsystem);
+		virtual void onRegisterCustomSystem() {};
+		void RegisterCustomSystem(const sp<SystemBase>& system);
 
-	private: //subsystems
-		sp<WindowSubsystem> windowSS;
-		sp<AssetSubsystem> assetSS;
-		sp<LevelSubsystem> levelSS;
-		sp<PlayerSubsystem> playerSS;
-		std::set< sp<SubsystemBase> > subsystems;
-		std::set< sp<SubsystemBase> > postRenderNotifys;
+	private: //systems
+		sp<WindowSystem> windowSys;
+		sp<AssetSystem> assetSys;
+		sp<LevelSystem> levelSys;
+		sp<PlayerSystem> playerSys;
+		std::set< sp<SystemBase> > systems;
+		std::set< sp<SystemBase> > postRenderNotifys;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Time
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	private: //time management 
-		/** Time management needs to be separate from subsystems since their tick relies on its results. */
+		/** Time management needs to be separate from systems since their tick relies on its results. */
 		void updateTime();
 		float currentTime = 0; 
 		float lastFrameTime = 0;

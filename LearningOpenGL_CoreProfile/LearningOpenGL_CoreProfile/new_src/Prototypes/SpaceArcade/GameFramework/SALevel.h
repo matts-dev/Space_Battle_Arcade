@@ -15,12 +15,12 @@
 
 namespace SA
 {
-	class LevelSubsystem;
+	class LevelSystem;
 
 	/** Base class for a level object */
 	class LevelBase : public GameEntity, public Tickable
 	{
-		friend LevelSubsystem;
+		friend LevelSystem;
 	public:
 		virtual ~LevelBase();
 

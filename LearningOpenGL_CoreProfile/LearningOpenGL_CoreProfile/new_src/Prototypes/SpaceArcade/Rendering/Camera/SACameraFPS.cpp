@@ -2,7 +2,7 @@
 #include <iostream>
 #include "..\SAWindow.h"
 #include "..\..\Game\SpaceArcade.h"
-#include "..\..\GameFramework\SAWindowSubsystem.h"
+#include "..\..\GameFramework\SAWindowSystem.h"
 #include <gtx\compatibility.hpp>
 #include "..\..\Tools\SAUtilities.h"
 

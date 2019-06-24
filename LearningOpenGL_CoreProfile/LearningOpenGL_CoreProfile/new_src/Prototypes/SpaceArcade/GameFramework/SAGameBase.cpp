@@ -2,14 +2,14 @@
 
 #include "SAGameBase.h"
 
-#include "SASubsystemBase.h"
-#include "SAWindowSubsystem.h"
-#include "SAAssetSubsystem.h"
-#include "SALevelSubsystem.h"
+#include "SASystemBase.h"
+#include "SAWindowSystem.h"
+#include "SAAssetSystem.h"
+#include "SALevelSystem.h"
 
 #include "..\Rendering\SAWindow.h"
 #include "SALog.h"
-#include "SAPlayerSubsystem.h"
+#include "SAPlayerSystem.h"
 
 namespace SA
 {
@@ -26,18 +26,18 @@ namespace SA
 			throw std::runtime_error("Only a single instance of the game can be created.");
 		}
 		
-		//create and register subsystems
-		windowSS = new_sp<WindowSubsystem>();
-		subsystems.insert(windowSS);
+		//create and register systems
+		windowSys = new_sp<WindowSystem>();
+		systems.insert(windowSys);
 
-		assetSS = new_sp<AssetSubsystem>();
-		subsystems.insert(assetSS);
+		assetSys = new_sp<AssetSystem>();
+		systems.insert(assetSys);
 
-		levelSS = new_sp<LevelSubsystem>();
-		subsystems.insert(levelSS);
+		levelSys = new_sp<LevelSystem>();
+		systems.insert(levelSys);
 
-		playerSS = new_sp<PlayerSubsystem>();
-		subsystems.insert(playerSS);
+		playerSys = new_sp<PlayerSystem>();
+		systems.insert(playerSys);
 	}
 
 	GameBase* GameBase::RegisteredSingleton = nullptr;
@@ -57,18 +57,18 @@ namespace SA
 		{
 			bStarted = true;
 
-			//initialize subsystems; this is not done in gamebase ctor because it subsystemse may call gamebase virtuals
-			bCustomSubsystemRegistrationAllowedTimeWindow = true;
-			onRegisterCustomSubsystem();
-			bCustomSubsystemRegistrationAllowedTimeWindow = false;
-			for (const sp<SubsystemBase>& subsystem : subsystems)
+			//initialize systems; this is not done in gamebase ctor because it systemse may call gamebase virtuals
+			bCustomSystemRegistrationAllowedTimeWindow = true;
+			onRegisterCustomSystem();
+			bCustomSystemRegistrationAllowedTimeWindow = false;
+			for (const sp<SystemBase>& system : systems)
 			{
-				subsystem->initSystem();
+				system->initSystem();
 			}
 
 			{ //prevent permanent window reference via scoped destruction
 				sp<Window> window = startUp();
-				windowSS->makeWindowPrimary(window);
+				windowSys->makeWindowPrimary(window);
 			}
 
 			//game loop processes
@@ -80,10 +80,10 @@ namespace SA
 			//begin shutdown process
 			shutDown();
 
-			//shutdown subsystems after game client has been shutdown
-			for (const sp<SubsystemBase>& subsystem : subsystems)
+			//shutdown systems after game client has been shutdown
+			for (const sp<SystemBase>& system : systems)
 			{
-				subsystem->shutdown();
+				system->shutdown();
 			}
 		}
 	}
@@ -98,7 +98,7 @@ namespace SA
 	{
 		updateTime();
 
-		for (const sp<SubsystemBase>& subsystem : subsystems) { subsystem->tick(deltaTimeSecs);	}
+		for (const sp<SystemBase>& system : systems) { system->tick(deltaTimeSecs);	}
 
 		//NOTE: there probably needs to be a priority based pre/post loop; but not needed yet so it is not implemented (priorities should probably be defined in a single file via template specliazations)
 		PreGameloopTick.broadcast(deltaTimeSecs);
@@ -108,23 +108,23 @@ namespace SA
 		renderLoop(deltaTimeSecs);
 
 		//perhaps this should be a subscription service since few systems care about post render
-		for (const sp<SubsystemBase>& subsystem : postRenderNotifys) { subsystem->handlePostRender();}
+		for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}
 	}
 
-	void GameBase::SubscribePostRender(const sp < SubsystemBase>& subsystem)
+	void GameBase::SubscribePostRender(const sp<SystemBase>& system)
 	{
-		postRenderNotifys.insert(subsystem);
+		postRenderNotifys.insert(system);
 	}
 
-	void GameBase::RegisterCustomSubsystem(const sp <SubsystemBase>& subsystem)
+	void GameBase::RegisterCustomSystem(const sp<SystemBase>& system)
 	{
-		if (bCustomSubsystemRegistrationAllowedTimeWindow)
+		if (bCustomSystemRegistrationAllowedTimeWindow)
 		{
-			subsystems.insert(subsystem);
+			systems.insert(system);
 		}
 		else
 		{
-			std::cerr << "FATAL: attempting to register a custom subsystem outside of start up window; use appropraite virtual function to register these systems" << std::endl;
+			std::cerr << "FATAL: attempting to register a custom system outside of start up window; use appropraite virtual function to register these systems" << std::endl;
 		}
 	}
 

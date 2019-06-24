@@ -1,11 +1,11 @@
 #include "SABaseLevel.h"
 #include "..\..\Rendering\BuiltInShaders.h"
-#include "..\..\GameFramework\SAPlayerSubsystem.h"
+#include "..\..\GameFramework\SAPlayerSystem.h"
 #include "..\..\GameFramework\SAGameBase.h"
 #include "..\..\Tools\DataStructures\SATransform.h"
 #include "..\..\GameFramework\SAPlayerBase.h"
 #include "..\..\Rendering\Camera\SACameraBase.h"
-#include "..\SAProjectileSubsystem.h"
+#include "..\SAProjectileSystem.h"
 
 namespace SA
 {

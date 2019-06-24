@@ -15,10 +15,9 @@ namespace SA
 	class Shader;
 	class Model3D;
 
-	class CollisionSubsystem;
-	class ProjectileSubsystem;
+	class ProjectileSystem;
 	class ProjectileClassHandle;
-	class UISubsystem;
+	class UISystem;
 	
 	class UIRootWindow;
 
@@ -32,7 +31,7 @@ namespace SA
 		virtual void shutDown() override;
 		virtual void tickGameLoop(float deltaTimeSecs) override;
 		virtual void renderLoop(float deltaTimeSecs) override;
-		virtual void onRegisterCustomSubsystem() override;
+		virtual void onRegisterCustomSystem() override;
 
 		void updateInput(float detltaTimeSec);
 
@@ -42,14 +41,14 @@ namespace SA
 	public:
 
 		//////////////////////////////////////////////////////////////////////////////////////
-		//  Custom Subsystems
+		//  Custom Systems
 		/////////////////////////////////////////////////////////////////////////////////////
 	public:
-		inline const sp<ProjectileSubsystem>& getProjectileSS() noexcept { return ProjectileSS; }
-		inline const sp<UISubsystem>& getUISubsystem() noexcept { return UI_SS; }
+		inline const sp<ProjectileSystem>& getProjectileSys() noexcept { return ProjectileSys; }
+		inline const sp<UISystem>& getUISystem() noexcept { return UI_Sys; }
 	private:
-		sp<ProjectileSubsystem> ProjectileSS;
-		sp<UISubsystem> UI_SS;
+		sp<ProjectileSystem> ProjectileSys;
+		sp<UISystem> UI_Sys;
 		/////////////////////////////////////////////////////////////////////////////////////
 
 	public:
