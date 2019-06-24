@@ -52,8 +52,8 @@ namespace SA
 		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
  
 		//unspawn all projectiles so they're not in the new level
-		sp<ProjectileSystem> projectileSS = game.getProjectileSys();
-		projectileSS->unspawnAllProjectiles();
+		sp<ProjectileSystem> projectileSys = game.getProjectileSys();
+		projectileSys->unspawnAllProjectiles();
 	}
 
 	void ProjectileEditor_Level::tick(float dt_sec)
