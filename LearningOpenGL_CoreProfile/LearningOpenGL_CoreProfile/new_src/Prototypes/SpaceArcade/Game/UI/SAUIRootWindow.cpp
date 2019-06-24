@@ -4,6 +4,7 @@
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 #include "../Levels/BasicTestSpaceLevel.h"
 #include "../Levels/ProjectileEditor_Level.h"
+#include "../Levels/ModelConfigurerEditor_Level.h"
 
 namespace SA
 {
@@ -66,6 +67,11 @@ namespace SA
 			{
 				sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 				SpaceArcade::get().getLevelSubsystem().loadLevel(startupLevel);
+			}
+			if (ImGui::Button("Model Editor"))
+			{
+				sp<LevelBase> modelEditor = new_sp<ModelConfigurerEditor_Level>();
+				SpaceArcade::get().getLevelSubsystem().loadLevel(modelEditor);
 			}
 			if (ImGui::Button("Projectile Editor"))
 			{

@@ -22,9 +22,12 @@
 #include "SAProjectileSubsystem.h"
 #include "SAUISubsystem.h"
 
+//for quick level switching, can remove these
+#include "Levels/ProjectileEditor_Level.h"
+#include "Levels/ModelConfigurerEditor_Level.h"
+
 #include "SAShip.h"
 #include "Levels/BasicTestSpaceLevel.h"
-#include "Levels/ProjectileEditor_Level.h"
 #include "UI/SAUIRootWindow.h"
 #include "SAPlayer.h"
 #include "../GameFramework/SAPlayerSubsystem.h"
@@ -251,7 +254,7 @@ namespace SA
 				{
 					//sp<Level> currentLevel = getLevelSubsystem().getCurrentLevel();
 					//getLevelSubsystem().unloadLevel(currentLevel);
-					sp<LevelBase> projectileEditor = new_sp<ProjectileEditor_Level>();
+					sp<LevelBase> projectileEditor = new_sp<ModelConfigurerEditor_Level>();
 					getLevelSubsystem().loadLevel(projectileEditor);
 				}
 			}

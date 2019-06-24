@@ -42,10 +42,10 @@ namespace SA
 		void startLevel();
 		void endLevel();
 
-	protected: //virtuals
+	protected: //virtuals; protected indicates that sub-classes may need to call super::virtual_method
 		virtual void startLevel_v() = 0;
 		virtual void endLevel_v() = 0;
-	private:
+	private: //virtuals; private indicates subclasses inherit when function called, but now how function is completed.
 		virtual void tick(float dt_sec);
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {};

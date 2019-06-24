@@ -80,7 +80,8 @@ namespace SA
 			//static casts on enums because ImGUI api expects pointers to ints
 			ImGui::RadioButton("Collision Configuration", &simulationState, (int)SimulationState::COLLISION); ImGui::SameLine();
 			ImGui::RadioButton("Delta Time Simulation", &simulationState, (int)SimulationState::DELTA_TIME);
-			ImGui::NewLine();
+			//ImGui::NewLine();
+			ImGui::Separator();
 
 			SimulationState currentState = static_cast<SimulationState>(simulationState);
 			if (currentState == SimulationState::COLLISION)
