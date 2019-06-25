@@ -51,6 +51,8 @@ namespace SA
 
 	void ModSystem::refreshModList()
 	{
+		std::map<std::string, sp<Mod>> deletedMods = loadedMods;
+
 		//create directory path
 		std::error_code exists_ec;
 		if (!std::filesystem::exists(MODS_DIRECTORY, exists_ec))
@@ -85,6 +87,9 @@ namespace SA
 				const std::string THIS_MOD_DIR = MODS_DIRECTORY + MOD_NAME_FROM_DIR;
 				const std::string MOD_JSON_FILEPATH = THIS_MOD_DIR + std::string("/") + MOD_NAME_FROM_DIR + ".json";
 
+				//this mod is still present in filestyem, remove it from set of deleted mods
+				deletedMods.erase(MOD_NAME_FROM_DIR);
+
 				std::ifstream file(MOD_JSON_FILEPATH);
 				if (file.is_open())
 				{
@@ -99,6 +104,8 @@ namespace SA
 
 					bool bModNameMatchesPathName = modName == MOD_NAME_FROM_DIR;
 					assert(bModNameMatchesPathName);
+
+
 					if (bModNameMatchesPathName)
 					{
 						if(loadedMods.find(modName) == loadedMods.end())
@@ -125,6 +132,10 @@ namespace SA
 			}
 		}
 		
+		for (const auto& deletedMod : deletedMods)
+		{
+			loadedMods.erase(deletedMod.first);
+		}
 
 		rebuildModArrayView();
 	}
@@ -223,8 +234,10 @@ namespace SA
 			{
 				std::string modDir = mod->getModDirectoryPath();
 				std::error_code remove_error;
-				//std::filesystem::remove_all(modDir, remove_error);
+				std::filesystem::remove_all(modDir, remove_error);
 				refreshModList();
+
+				if (activeMod && activeMod->getModName() == modName) activeMod = nullptr;
 
 				if (remove_error){ log("ModSystem", LogLevel::LOG_ERROR, "Failed to delete mod"); }
 			}

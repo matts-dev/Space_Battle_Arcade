@@ -98,8 +98,10 @@ namespace SA
 
 	void UIRootWindow::buildModMenu()
 	{
+		const float windowHeight = 300;
+
 		ImGui::SetNextWindowPosCenter();
-		ImGui::SetNextWindowSize({ 300,300 });
+		ImGui::SetNextWindowSize({ 300, windowHeight });
 		ImGuiWindowFlags flags = 0;
 		flags |= ImGuiWindowFlags_NoMove;
 		flags |= ImGuiWindowFlags_NoResize;
@@ -142,29 +144,31 @@ namespace SA
 				}
 			}
 
+			ImGui::Dummy(ImVec2(0, 25));
 			ImGui::Separator();
 			///////////////////////////////////////////////////////////////////////
 			// New Mod Button
 			///////////////////////////////////////////////////////////////////////
 			static char newModNameBuffer[MAX_MOD_NAME_LENGTH + 1];
-			ImGui::InputText("New Mod", newModNameBuffer, MAX_MOD_NAME_LENGTH, ImGuiInputTextFlags_CharsNoBlank);
+			ImGui::InputText("New Mod Name", newModNameBuffer, MAX_MOD_NAME_LENGTH, ImGuiInputTextFlags_CharsNoBlank);
+
 			if (ImGui::Button("Create New Mod"))
 			{
 				std::string newModName(newModNameBuffer);
 				if (modSystem->createNewMod(newModName))
 				{
 					//clear buffer
-					newModName[0] = 0;
+					newModNameBuffer[0] = 0;
 				}
 			}
 
 			///////////////////////////////////////////////////////////////////////
 			// Delete Button
 			///////////////////////////////////////////////////////////////////////
-			ImGui::SameLine();
 			bool bDeleteEnabled = activeMod != nullptr && activeMod->isDeletable();
 			if (bDeleteEnabled)
 			{
+				ImGui::SameLine(); //only call same line if we're actually inlining a widget
 				if (ImGui::Button("Delete Mod"))
 				{
 					ImGui::OpenPopup("DeleteModPopup");
@@ -172,6 +176,7 @@ namespace SA
 			}
 			else if(activeMod)
 			{
+				ImGui::SameLine(); //only call same line if we're actually inlining a widget
 				ImGui::Text("This mod isn't deletable");
 			}
 
@@ -197,11 +202,10 @@ namespace SA
 				ImGui::EndPopup();
 			}
 
-			ImGui::Separator();
-
 			///////////////////////////////////////////////////////////////////////
 			// Back To Main Menu
 			///////////////////////////////////////////////////////////////////////
+			ImGui::Dummy(ImVec2(0, 25)); 
 			ImGui::Separator();
 			if (ImGui::Button("Back to Main Menu"))
 			{
