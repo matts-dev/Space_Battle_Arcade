@@ -3,6 +3,7 @@
 #include "..\GameFramework\SASystemBase.h"
 #include <map>
 #include <vector>
+#include "..\Tools\DataStructures\MultiDelegate.h"
 
 namespace SA
 {
@@ -11,6 +12,7 @@ namespace SA
 	////////////////////////////////////////////////////////////////////
 	constexpr std::size_t MAX_MOD_NAME_LENGTH = 512;
 	const char* const MODS_DIRECTORY = "GameData/mods/";
+	std::string getModConfigFilePath();
 
 
 	////////////////////////////////////////////////////////////////////
@@ -54,11 +56,15 @@ namespace SA
 	////////////////////////////////////////////////////////////////////
 	class ModSystem : public SystemBase
 	{
+	public: //events
+		MultiDelegate<const sp<Mod>& /*previous*/, const sp<Mod>& /*active*/> onActiveModChanging;
+
 	public:
 		void refreshModList();
 
 		/* returns true if requested mod is now the active mod */
 		bool setActiveMod(const std::string& modName);
+		void writeModConfigFile();
 		const sp<Mod>& getActiveMod() { return activeMod; }
 
 		bool createNewMod(const std::string& modName);
@@ -68,6 +74,7 @@ namespace SA
 		it is a view of the current mod list, not the actual container. 
 		Changes to the mod list will influence the return value that will invalidate any iterators*/
 		inline const std::vector<sp<Mod>>& getMods() { return modArrayView; }
+
 
 	private:
 		virtual void initSystem() override;

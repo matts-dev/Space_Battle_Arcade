@@ -6,6 +6,7 @@
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/Input/SAInput.h"
 #include "../../GameFramework/SAPlayerSystem.h"
+#include "../SAModSystem.h"
 
 namespace SA
 {
@@ -19,7 +20,6 @@ namespace SA
 		{
 			handlePlayerCreated(player, 0);
 		}
-
 	}
 
 	void ModelConfigurerEditor_Level::endLevel_v()
@@ -40,6 +40,11 @@ namespace SA
 		ImGui::Begin("Model Editor!", nullptr, flags);
 		{
 			ImGui::Text("Press T to toggle between mouse and camera.");
+
+			const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+			std::string activeModText = activeMod ? activeMod->getModName() : "None";
+			ImGui::Text("Active Mod: "); ImGui::SameLine(); ImGui::Text(activeModText.c_str());
+
 			ImGui::Text("Loaded Entity: "); ImGui::SameLine(); ImGui::Text("None");
 			ImGui::Separator();
 
@@ -65,20 +70,15 @@ namespace SA
 					ImGui::Button("Actionable!");
 				}
 				ImGui::EndChild();
+				ImGui::Separator();
+				static char filepath_buffer[512 + 1];
+				ImGui::InputText("New Entity Name", filepath_buffer, 512, 0);
 
-				ImGui::BeginChild("add new model");
-				{
-					ImGui::Separator();
-					static char filepath_buffer[512 + 1];
-					ImGui::InputText("New Entity Name", filepath_buffer, 512, 0);
-
-					ImGui::InputText("3D model Filepath", filepath_buffer, 512, 0);
-					ImGui::Text("File path should be relative to mod");
-					ImGui::Text("eg /mods/basegame/figher.obj");
-					ImGui::Button("Add Entity");
-					ImGui::Separator();
-				}
-				ImGui::EndChild();
+				ImGui::InputText("3D model Filepath", filepath_buffer, 512, 0);
+				ImGui::Text("File path should be relative to mod");
+				ImGui::Text("eg /mods/basegame/figher.obj");
+				ImGui::Button("Add Entity");
+				ImGui::Separator();
 			}
 			if (ImGui::CollapsingHeader("COLLISION"))
 			{

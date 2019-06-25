@@ -12,6 +12,10 @@ using json = nlohmann::json;
 
 namespace SA
 {
+	std::string getModConfigFilePath()
+	{
+		return MODS_DIRECTORY + std::string("config.json");
+	}
 
 	std::string Mod::getModName()
 	{
@@ -152,8 +156,12 @@ namespace SA
 		if (requestModIter != loadedMods.end())
 		{
 			sp<Mod> newMod = requestModIter->second;
-			//TODO broadcast mod changing
+
+			onActiveModChanging.broadcast(activeMod, newMod);
+
 			activeMod = newMod;
+
+			writeModConfigFile();
 			return true;
 		}
 
@@ -251,13 +259,59 @@ namespace SA
 		//load available mods
 		//////////////////////////////////////////////////////////////////////////////////////
 		refreshModList();
-		
-		/*
-			//read game persistent storage to figure out default mod
-		
-		*/
 
+		std::error_code exists_ec;
 
+		std::string configFilePath = getModConfigFilePath();
+		bool bConfigFileExists = std::filesystem::exists(configFilePath, exists_ec);
+		if (exists_ec)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to check if mod config.json exists");
+		}
+
+		if (bConfigFileExists && !exists_ec)
+		{
+			std::ifstream inFile(configFilePath);
+			if (inFile.is_open())
+			{
+				std::stringstream ss;
+				ss << inFile.rdbuf();
+				std::string fileContents = ss.str();
+				if (fileContents.length() > 0)
+				{
+					json configJson = json::parse(fileContents);
+					if (!configJson.is_null())
+					{
+						if (!configJson["start_module"].is_null())
+						{
+							std::string startModuleName = configJson["start_module"];
+							if (!setActiveMod(startModuleName))
+							{
+								log("ModSystem", LogLevel::LOG_WARNING, "Failed to set start-up module");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	void ModSystem::writeModConfigFile()
+	{
+		std::error_code exists_ec;
+		std::string configFilePath = getModConfigFilePath();
+
+		std::ofstream outFile{ configFilePath, std::ios::trunc };
+
+		if (outFile.is_open())
+		{
+			json configJson;
+
+			//conditionally write to file; if there's no active module just remove it
+			if (activeMod) { configJson["start_module"] = activeMod->getModName(); }
+
+			outFile << configJson;
+		}
 	}
 
 	void ModSystem::shutdown()
@@ -274,4 +328,6 @@ namespace SA
 			modArrayView.push_back(pairKV.second);
 		}
 	}
+
+
 }
