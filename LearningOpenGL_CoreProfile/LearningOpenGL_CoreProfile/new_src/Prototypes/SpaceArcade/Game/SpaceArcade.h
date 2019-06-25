@@ -15,9 +15,11 @@ namespace SA
 	class Shader;
 	class Model3D;
 
-	class ProjectileSystem;
 	class ProjectileClassHandle;
+
+	class ProjectileSystem;
 	class UISystem;
+	class ModSystem;
 	
 	class UIRootWindow;
 
@@ -44,11 +46,13 @@ namespace SA
 		//  Custom Systems
 		/////////////////////////////////////////////////////////////////////////////////////
 	public:
-		inline const sp<ProjectileSystem>& getProjectileSys() noexcept { return ProjectileSys; }
-		inline const sp<UISystem>& getUISystem() noexcept { return UI_Sys; }
+		inline const sp<ProjectileSystem>& getProjectileSystem() noexcept { return projectileSystem; }
+		inline const sp<UISystem>& getUISystem() noexcept { return uiSystem; }
+		inline const sp<ModSystem>& getModSystem() noexcept { return modSystem; }
 	private:
-		sp<ProjectileSystem> ProjectileSys;
-		sp<UISystem> UI_Sys;
+		sp<ProjectileSystem> projectileSystem;
+		sp<UISystem> uiSystem;
+		sp<ModSystem> modSystem;
 		/////////////////////////////////////////////////////////////////////////////////////
 
 	public:
@@ -72,9 +76,6 @@ namespace SA
 
 		////unit cube data
 		//GLuint cubeVAO, cubeVBO;
-
-		sp<Model3D> laserBoltModel;
-		sp<ProjectileClassHandle> laserBoltHandle;
 
 		//ui
 		sp<UIRootWindow> ui_root;

@@ -34,7 +34,7 @@ namespace SA
 				}
 				else
 				{
-					log("Window System : Primary window requesting close, shutting down game.");
+					log("WindowSystem", LogLevel::LOG_ERROR, "Window System : Primary window requesting close, shutting down game.");
 					GameBase::get().startShutdown();
 				}
 			}

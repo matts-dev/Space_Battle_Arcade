@@ -27,17 +27,17 @@ namespace SA
 		}
 		
 		//create and register systems
-		windowSys = new_sp<WindowSystem>();
-		systems.insert(windowSys);
+		windowSystem = new_sp<WindowSystem>();
+		systems.insert(windowSystem);
 
-		assetSys = new_sp<AssetSystem>();
-		systems.insert(assetSys);
+		assetSystem = new_sp<AssetSystem>();
+		systems.insert(assetSystem);
 
-		levelSys = new_sp<LevelSystem>();
-		systems.insert(levelSys);
+		levelSystem = new_sp<LevelSystem>();
+		systems.insert(levelSystem);
 
-		playerSys = new_sp<PlayerSystem>();
-		systems.insert(playerSys);
+		playerSystem = new_sp<PlayerSystem>();
+		systems.insert(playerSystem);
 	}
 
 	GameBase* GameBase::RegisteredSingleton = nullptr;
@@ -68,7 +68,7 @@ namespace SA
 
 			{ //prevent permanent window reference via scoped destruction
 				sp<Window> window = startUp();
-				windowSys->makeWindowPrimary(window);
+				windowSystem->makeWindowPrimary(window);
 			}
 
 			//game loop processes
@@ -90,7 +90,7 @@ namespace SA
 
 	void GameBase::startShutdown()
 	{
-		log("Game : Shutdown Initiated", "GameFramework", LogLevel::LOG);
+		log("GameFramework", LogLevel::LOG, "Shutdown Initiated");
 		bExitGame = true;
 	}
 

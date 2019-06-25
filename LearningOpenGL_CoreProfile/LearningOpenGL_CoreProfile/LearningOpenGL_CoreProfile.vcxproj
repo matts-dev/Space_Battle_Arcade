@@ -140,6 +140,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\OptionalCompilationMacros.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAModSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAPrimitiveShapeRenderer.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.h" />
@@ -392,6 +394,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\DelegateTesting_MultiDelegate_Broadcasting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\GameBaseTesting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_Callbacks.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.cpp" />
@@ -405,6 +408,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SABaseLevel.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAModSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAPrimitiveShapeRenderer.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.cpp" />

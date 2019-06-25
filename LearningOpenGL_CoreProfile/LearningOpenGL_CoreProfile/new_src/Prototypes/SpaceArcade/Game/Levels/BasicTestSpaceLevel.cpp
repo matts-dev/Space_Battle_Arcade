@@ -71,7 +71,7 @@ namespace SA
 		sp<Model3D> laserBoltModel = assetSS.getModel(game.URLs.laserURL);
 		Transform projectileAABBTransform;
 		projectileAABBTransform.scale.z = 4.5;
-		laserBoltHandle = game.getProjectileSys()->createProjectileType(laserBoltModel, projectileAABBTransform);
+		laserBoltHandle = game.getProjectileSystem()->createProjectileType(laserBoltModel, projectileAABBTransform);
 	}
 
 	void BasicTestSpaceLevel::endLevel_v()
@@ -106,7 +106,7 @@ namespace SA
 				{
 					if (!camera->isInCursorMode())
 					{
-						const sp<ProjectileSystem>& projectileSys = game.getProjectileSys();
+						const sp<ProjectileSystem>& projectileSys = game.getProjectileSystem();
 
 						glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
 						glm::vec3 direction = camera->getFront();

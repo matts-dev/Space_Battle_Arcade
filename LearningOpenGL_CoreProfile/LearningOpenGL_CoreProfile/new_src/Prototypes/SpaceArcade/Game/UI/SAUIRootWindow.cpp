@@ -6,6 +6,9 @@
 #include "../Levels/BasicTestSpaceLevel.h"
 #include "../Levels/ProjectileEditor_Level.h"
 #include "../Levels/ModelConfigurerEditor_Level.h"
+#include "../SAModSystem.h"
+#include<cstdio>
+#include "../../GameFramework/SACrossPlatformUtils.h"
 
 namespace SA
 {
@@ -32,6 +35,8 @@ namespace SA
 				case UIMenuState::DEV_MENU:
 					buildDevMenu();
 					break;
+				case UIMenuState::MOD_MENU:
+					buildModMenu();
 				default:
 					break;
 			}
@@ -47,10 +52,16 @@ namespace SA
 		flags |= ImGuiWindowFlags_NoResize;
 		flags |= ImGuiWindowFlags_NoCollapse;
 		ImGui::Begin("Space Arcade!", nullptr, flags);
+		{
+			if (ImGui::Button("Mod Selection"))
+			{
+				menuState = UIMenuState::MOD_MENU;
+			}
 			if (ImGui::Button("Dev Menu"))
 			{
 				menuState = UIMenuState::DEV_MENU;
 			}
+		}
 		ImGui::End();
 	}
 
@@ -82,6 +93,121 @@ namespace SA
 			{
 				menuState = UIMenuState::MAIN_MENU;
 			}
+		ImGui::End();
+	}
+
+	void UIRootWindow::buildModMenu()
+	{
+		ImGui::SetNextWindowPosCenter();
+		ImGui::SetNextWindowSize({ 300,300 });
+		ImGuiWindowFlags flags = 0;
+		flags |= ImGuiWindowFlags_NoMove;
+		flags |= ImGuiWindowFlags_NoResize;
+		flags |= ImGuiWindowFlags_NoCollapse;
+		ImGui::Begin("Mod Selector!", nullptr, flags);
+		{
+			ImGui::Text("Available Mods");
+			ImGui::Separator();
+
+			static int modSelection = -1;
+
+			const sp<ModSystem>& modSystem = SpaceArcade::get().getModSystem();
+			const sp<Mod>& activeMod = modSystem->getActiveMod();
+
+			///////////////////////////////////////////////////////////////////////
+			// Mod List
+			///////////////////////////////////////////////////////////////////////
+			if (modSystem->getMods().size() == 0)
+			{
+				ImGui::Text("No Mods Available");
+			}
+			else
+			{
+				int currentModIdx = 0;
+				static char modNameBuffer[MAX_MOD_NAME_LENGTH + 1];
+				for (const sp<Mod>& mod : modSystem->getMods())
+				{
+					if (mod == activeMod){modSelection = currentModIdx;}
+
+					std::string modName = mod->getModName();
+					snprintf(modNameBuffer, MAX_MOD_NAME_LENGTH, "%d : %s", currentModIdx, modName.c_str());
+
+					if (ImGui::Selectable(modNameBuffer, currentModIdx == modSelection))
+					{
+						modSelection = currentModIdx;
+						modSystem->setActiveMod(modName);
+					}
+
+					++currentModIdx;
+				}
+			}
+
+			ImGui::Separator();
+			///////////////////////////////////////////////////////////////////////
+			// New Mod Button
+			///////////////////////////////////////////////////////////////////////
+			static char newModNameBuffer[MAX_MOD_NAME_LENGTH + 1];
+			ImGui::InputText("New Mod", newModNameBuffer, MAX_MOD_NAME_LENGTH, ImGuiInputTextFlags_CharsNoBlank);
+			if (ImGui::Button("Create New Mod"))
+			{
+				std::string newModName(newModNameBuffer);
+				if (modSystem->createNewMod(newModName))
+				{
+					//clear buffer
+					newModName[0] = 0;
+				}
+			}
+
+			///////////////////////////////////////////////////////////////////////
+			// Delete Button
+			///////////////////////////////////////////////////////////////////////
+			ImGui::SameLine();
+			bool bDeleteEnabled = activeMod != nullptr && activeMod->isDeletable();
+			if (bDeleteEnabled)
+			{
+				if (ImGui::Button("Delete Mod"))
+				{
+					ImGui::OpenPopup("DeleteModPopup");
+				}
+			}
+			else if(activeMod)
+			{
+				ImGui::Text("This mod isn't deletable");
+			}
+
+			///////////////////////////////////////////////////////////////////////
+			// Delete Popup
+			///////////////////////////////////////////////////////////////////////
+			if (ImGui::BeginPopupModal("DeleteModPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::Text("WARNING: this operation is irreversible!");
+				ImGui::Text("Do you really want to delete this mod?");
+
+				if (ImGui::Button("DELETE", ImVec2(120, 0))) 
+				{ 
+					modSystem->deleteMod(activeMod->getModName());
+					ImGui::CloseCurrentPopup(); 
+				}
+				ImGui::SetItemDefaultFocus();
+				ImGui::SameLine();
+				if (ImGui::Button("CANCEL", ImVec2(120, 0)))
+				{ 
+					ImGui::CloseCurrentPopup(); 
+				}
+				ImGui::EndPopup();
+			}
+
+			ImGui::Separator();
+
+			///////////////////////////////////////////////////////////////////////
+			// Back To Main Menu
+			///////////////////////////////////////////////////////////////////////
+			ImGui::Separator();
+			if (ImGui::Button("Back to Main Menu"))
+			{
+				menuState = UIMenuState::MAIN_MENU;
+			}
+		}
 		ImGui::End();
 	}
 

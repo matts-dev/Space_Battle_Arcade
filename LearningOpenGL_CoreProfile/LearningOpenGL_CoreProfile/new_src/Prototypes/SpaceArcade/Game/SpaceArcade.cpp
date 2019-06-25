@@ -22,6 +22,7 @@
 #include "SACollisionUtils.h"
 #include "SAProjectileSystem.h"
 #include "SAUISystem.h"
+#include "SAModSystem.h"
 
 //for quick level switching, can remove these
 #include "Levels/ProjectileEditor_Level.h"
@@ -76,14 +77,9 @@ namespace SA
 		AssetSystem& assetSS = getAssetSystem();
 
 		//load models
-		laserBoltModel = assetSS.loadModel(URLs.laserURL);
+		sp<Model3D> laserBoltModel = assetSS.loadModel(URLs.laserURL);
 		sp<Model3D> fighterModel = assetSS.loadModel(URLs.fighterURL);
 		sp<Model3D> carrierModel = assetSS.loadModel(URLs.carrierURL);
-
-		//this transform should probably be configured within a designer; hard coding reasonable values for now.
-		Transform projectileAABBTransform;
-		projectileAABBTransform.scale.z = 4.5;
-		laserBoltHandle = ProjectileSys->createProjectileType(laserBoltModel, projectileAABBTransform);
 
 		GLuint radialGradientTex = 0;
 		if (getAssetSystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
@@ -126,7 +122,7 @@ namespace SA
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 		if (bRenderProjectileOBBs)
 		{
-			ProjectileSys->renderProjectileBoundingBoxes(*debugLineShader, glm::vec3(0, 0, 1), view, projection);
+			projectileSystem->renderProjectileBoundingBoxes(*debugLineShader, glm::vec3(0, 0, 1), view, projection);
 		}
 	}
 
@@ -188,7 +184,7 @@ namespace SA
 		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
-		ProjectileSys->renderProjectiles(*forwardShaded_EmissiveModelShader);
+		projectileSystem->renderProjectiles(*forwardShaded_EmissiveModelShader);
 
 		if (const sp<LevelBase>& loadedLevel = getLevelSystem().getCurrentLevel())
 		{
@@ -200,11 +196,14 @@ namespace SA
 
 	void SpaceArcade::onRegisterCustomSystem()
 	{
-		ProjectileSys = new_sp<ProjectileSystem>();
-		RegisterCustomSystem(ProjectileSys);
+		projectileSystem = new_sp<ProjectileSystem>();
+		RegisterCustomSystem(projectileSystem);
 
-		UI_Sys = new_sp<UISystem>();
-		RegisterCustomSystem(UI_Sys);
+		uiSystem = new_sp<UISystem>();
+		RegisterCustomSystem(uiSystem);
+
+		modSystem = new_sp<ModSystem>();
+		RegisterCustomSystem(modSystem);
 	}
 
 	void SpaceArcade::updateInput(float detltaTimeSec)

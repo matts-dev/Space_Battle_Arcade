@@ -52,7 +52,7 @@ namespace SA
 		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
  
 		//unspawn all projectiles so they're not in the new level
-		sp<ProjectileSystem> projectileSys = game.getProjectileSys();
+		sp<ProjectileSystem> projectileSys = game.getProjectileSystem();
 		projectileSys->unspawnAllProjectiles();
 	}
 

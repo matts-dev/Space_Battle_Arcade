@@ -12,5 +12,5 @@ namespace SA
 	};
 
 	/** TODO Logging system will probably need more fleshing out*/
-	void log(const char* msg, const char* LogName = "Game", LogLevel level = LogLevel::LOG);
+	void log(const char* LogName, LogLevel level, const char* msg);
 }

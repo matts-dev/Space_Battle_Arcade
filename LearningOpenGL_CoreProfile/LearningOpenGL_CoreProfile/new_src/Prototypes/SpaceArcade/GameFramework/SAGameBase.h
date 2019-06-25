@@ -78,10 +78,11 @@ namespace SA
 	//////////////////////////////////////////////////////////////////////////////////////
 	public:
 		//System getters (to prevent circular dependencies, be sure to use forward declared references)
-		inline WindowSystem& getWindowSystem() { return *windowSys; }
-		inline AssetSystem& getAssetSystem() { return *assetSys; }
-		inline LevelSystem& getLevelSystem() { return *levelSys; }
-		inline PlayerSystem& getPlayerSystem() { return *playerSys; }
+		// REFACTOR: returning raw reference like this allows for assignment; returning const sp<>& may be better, but may imply they're null (be impossible)
+		inline WindowSystem& getWindowSystem() noexcept { return *windowSystem; }
+		inline AssetSystem& getAssetSystem() noexcept { return *assetSystem; }
+		inline LevelSystem& getLevelSystem() noexcept { return *levelSystem; }
+		inline PlayerSystem& getPlayerSystem() noexcept { return *playerSystem; }
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
 		void SubscribePostRender(const sp<SystemBase>& system);
@@ -92,10 +93,10 @@ namespace SA
 		void RegisterCustomSystem(const sp<SystemBase>& system);
 
 	private: //systems
-		sp<WindowSystem> windowSys;
-		sp<AssetSystem> assetSys;
-		sp<LevelSystem> levelSys;
-		sp<PlayerSystem> playerSys;
+		sp<WindowSystem> windowSystem;
+		sp<AssetSystem> assetSystem;
+		sp<LevelSystem> levelSystem;
+		sp<PlayerSystem> playerSystem;
 		std::set< sp<SystemBase> > systems;
 		std::set< sp<SystemBase> > postRenderNotifys;
 
