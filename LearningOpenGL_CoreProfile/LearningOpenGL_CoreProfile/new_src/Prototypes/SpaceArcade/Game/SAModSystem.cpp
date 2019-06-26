@@ -7,6 +7,7 @@
 #include "..\GameFramework\SAGameBase.h"
 #include "..\..\..\..\Libraries\nlohmann\json.hpp"
 #include <sstream>
+#include "SASpawnConfig.h"
 
 using json = nlohmann::json;
 
@@ -17,6 +18,60 @@ namespace SA
 		return MODS_DIRECTORY + std::string("config.json");
 	}
 
+	void Mod::addSpawnConfig(sp<SpawnConfig>& spawnConfig)
+	{
+		if (spawnConfigsByName.find(spawnConfig->getName()) == spawnConfigsByName.end())
+		{
+			std::string configName = spawnConfig->getName();
+			sp<SpawnConfig> copySpawnConfig = spawnConfig;
+
+			spawnConfigsByName.insert({ configName, copySpawnConfig });
+		}
+		else
+		{
+			log("Mod", LogLevel::LOG_ERROR, "Attempting to add duplicate spawn config");
+		}
+	}
+
+	void Mod::removeSpawnConfig(sp<SpawnConfig>& spawnConfig)
+	{
+		std::string name = spawnConfig->getName();
+		spawnConfigsByName.erase(name);
+	}
+
+	void Mod::deleteSpawnConfig(sp<SpawnConfig>& spawnConfig)
+	{
+		if (spawnConfig)
+		{
+			std::string filepath = spawnConfig->getRepresentativeFilePath();
+
+			//validation before deleting a file
+			bool bContainsSpawnConfigs = filepath.find("SpawnConfigs") != std::string::npos;
+			bool bBeginsWithGameData = filepath.find("GameData") == 0;
+			bool bContainsModPath = filepath.find(getModDirectoryPath()) != std::string::npos;
+			bool bIsDeletable = spawnConfig->isDeletable();
+
+			if (bContainsSpawnConfigs && bBeginsWithGameData && bContainsModPath)
+			{
+				removeSpawnConfig(spawnConfig);
+
+				char deleteMsg[1024];
+				//will clip files larger than 1024
+				snprintf(deleteMsg, 1024, "Deleting file %s", filepath.c_str());
+			
+				log("Mod", LogLevel::LOG, deleteMsg);
+
+				std::error_code ec;
+				std::filesystem::remove(filepath, ec);
+
+				if (ec)
+				{
+					log("Mod", LogLevel::LOG_ERROR, "failed to remove file");
+				}
+			}
+		}
+	}
+
 	std::string Mod::getModName()
 	{
 		return modName;
@@ -24,7 +79,7 @@ namespace SA
 
 	std::string Mod::getModDirectoryPath()
 	{
-		return MODS_DIRECTORY + getModName();
+		return MODS_DIRECTORY + getModName() + std::string("/");
 	}
 
 	std::string Mod::serialize()
@@ -91,47 +146,53 @@ namespace SA
 				const std::string THIS_MOD_DIR = MODS_DIRECTORY + MOD_NAME_FROM_DIR;
 				const std::string MOD_JSON_FILEPATH = THIS_MOD_DIR + std::string("/") + MOD_NAME_FROM_DIR + ".json";
 
-				//this mod is still present in filestyem, remove it from set of deleted mods
+				//this mod is still present in filesystem, remove it from set of deleted mods
 				deletedMods.erase(MOD_NAME_FROM_DIR);
 
-				std::ifstream file(MOD_JSON_FILEPATH);
-				if (file.is_open())
+				//since this is a "refresh" function, we don't want deserialize a mod we've already loaded;
+				//changes to mod should be done on its runtime representation, we don't support changing the json then refreshing file
+				if (loadedMods.find(MOD_NAME_FROM_DIR) == loadedMods.end())
 				{
-					std::stringstream mod_data_ss;
-					mod_data_ss << file.rdbuf();
-					std::string mod_data = mod_data_ss.str();
-
-					sp<Mod> mod = new_sp<Mod>(); 
-					mod->deserialize(mod_data);
-
-					std::string modName = mod->getModName();
-
-					bool bModNameMatchesPathName = modName == MOD_NAME_FROM_DIR;
-					assert(bModNameMatchesPathName);
-
-
-					if (bModNameMatchesPathName)
+					std::ifstream file(MOD_JSON_FILEPATH);
+					if (file.is_open())
 					{
-						if(loadedMods.find(modName) == loadedMods.end())
+						std::stringstream mod_data_ss;
+						mod_data_ss << file.rdbuf();
+						std::string mod_data = mod_data_ss.str();
+
+						sp<Mod> mod = new_sp<Mod>(); 
+						mod->deserialize(mod_data);
+
+						std::string modName = mod->getModName();
+
+						bool bModNameMatchesPathName = modName == MOD_NAME_FROM_DIR;
+						assert(bModNameMatchesPathName);
+
+						if (bModNameMatchesPathName)
 						{
-							loadedMods.insert({ modName, mod });
+							if(loadedMods.find(modName) == loadedMods.end())
+							{
+								loadedMods.insert({ modName, mod });
+								loadSpawnConfigs(mod);
+							}
+							else
+							{
+								//notice this checks the mod name the file reported, not the directory's name
+								log("ModSystem", SA::LogLevel::LOG_WARNING, "WARNING: ModSystem loaded duplicate mod!");
+							}
 						}
 						else
 						{
-							log("ModSystem", SA::LogLevel::LOG_WARNING, "WARNING: ModSystem loaded duplicate mod!");
+							char errorMsg[MAX_MOD_NAME_LENGTH + 128];
+							//snprintf has safe buffer overflow restrictions on n
+							snprintf(errorMsg, MAX_MOD_NAME_LENGTH + 128, "Error, mod name doesn't match file path[%s]; modname[%s]", MOD_NAME_FROM_DIR.c_str(), modName.c_str());
+							log("ModSystem", LogLevel::LOG_WARNING, errorMsg);
 						}
 					}
 					else
 					{
-						char errorMsg[MAX_MOD_NAME_LENGTH + 128];
-						//snprintf has safe buffer overflow restrictions on n
-						snprintf(errorMsg, MAX_MOD_NAME_LENGTH + 128, "Error, mod name doesn't match file path[%s]; modname[%s]", MOD_NAME_FROM_DIR.c_str(), modName.c_str());
-						log("ModSystem", LogLevel::LOG_WARNING, errorMsg);
+						log("ModSystem", SA::LogLevel::LOG_WARNING, "WARNING: Failed to read mod json file");
 					}
-				}
-				else
-				{
-					log("ModSystem", SA::LogLevel::LOG_WARNING, "WARNING: Failed to read mod json file");
 				}
 			}
 		}
@@ -179,11 +240,11 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		// Check File System; Create new mod folder
 		/////////////////////////////////////////////////////////////////////////////////////////////
-		const std::string modDirectoryPath = MODS_DIRECTORY + std::string("/") + modName;
-		const std::string modFilePath = modDirectoryPath + std::string("/") + modName + std::string(".json");
+		const std::string MOD_DIR_PATH = MODS_DIRECTORY + std::string("/") + modName;
+		const std::string MOD_JSON_FILE_PATH = MOD_DIR_PATH + std::string("/") + modName + std::string(".json");
 
 		std::error_code fileCheckEC;
-		bool bFileAlreadyExists = std::filesystem::exists(modFilePath, fileCheckEC);
+		bool bFileAlreadyExists = std::filesystem::exists(MOD_JSON_FILE_PATH, fileCheckEC);
 		if (fileCheckEC)
 		{
 			log("ModSystem", LogLevel::LOG_ERROR, "Failed to check if mod.json exists");
@@ -196,12 +257,50 @@ namespace SA
 		}
 
 		std::error_code mkModFolderEC;
-		std::filesystem::create_directories(modDirectoryPath, mkModFolderEC);
+		std::filesystem::create_directories(MOD_DIR_PATH, mkModFolderEC);
 		if (mkModFolderEC)
 		{
-			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create new mod folder");
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create mod folder");
 			return false;
 		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/Models3D"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create models folder");
+		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/Sounds"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create sounds folder");
+		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/Levels"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create levels folder");
+		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/Textures"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create textures folder");
+		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/SpawnConfigs"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create SpawnConfigs folder");
+		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/GameSaves"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create game saves folder");
+		}
+
+
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		// Create new mod object instance
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +313,7 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		std::string modJsonStr = mod->serialize();
 		{ //RAII scope
-			std::ofstream outFile_RAII(modFilePath /*do not trunc; never overwrite prexisting mods here*/);
+			std::ofstream outFile_RAII(MOD_JSON_FILE_PATH /*do not trunc; never overwrite prexisting mods here*/);
 			if (outFile_RAII.is_open())
 			{
 				outFile_RAII << modJsonStr;
@@ -329,5 +428,27 @@ namespace SA
 		}
 	}
 
+
+	void ModSystem::loadSpawnConfigs(sp<Mod>& mod)
+	{
+		const std::string SPAWN_CONFIG_DIR = mod->getModDirectoryPath() + std::string("Assets/SpawnConfigs/");
+
+		std::error_code dir_iter_ec;
+		for (const std::filesystem::directory_entry& directory_entry : std::filesystem::directory_iterator(SPAWN_CONFIG_DIR, dir_iter_ec))
+		{
+			const std::filesystem::path& pathObj = directory_entry.path();
+			if (pathObj.has_extension() && pathObj.extension().string() == ".json")
+			{
+				if (sp<SpawnConfig> spawnConfig = SpawnConfig::load(pathObj.string()))
+				{
+					mod->addSpawnConfig(spawnConfig);
+				}
+			}
+		}
+		if (dir_iter_ec)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create a directory iterator over spawn configs");
+		}
+	}
 
 }

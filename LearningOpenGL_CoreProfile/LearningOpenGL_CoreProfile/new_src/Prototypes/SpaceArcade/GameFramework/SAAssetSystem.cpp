@@ -24,10 +24,16 @@ namespace SA
 		}
 		else
 		{
-			sp<Model3D> loadedModel = new_sp<Model3D>(relative_filepath);
-			loadedModel3Ds[relative_filepath] = loadedModel;
-
-			return loadedModel;
+			try //eat failures to load models here and signal failure by returning nullptr
+			{
+				sp<Model3D> loadedModel = new_sp<Model3D>(relative_filepath); //may fail; TODO handling failures at model level would be nice
+				loadedModel3Ds[relative_filepath] = loadedModel;
+				return loadedModel;
+			}
+			catch (std::runtime_error & )
+			{
+				return nullptr;
+			}
 		}
 
 		//returning by value so this is safe; be careful when returning nullptr directly when returning reference to a sp

@@ -5,9 +5,9 @@ namespace SA
 	/** built-in resource locations*/
 	struct UniformResourceLocators
 	{
-		const char* const fighterURL = "Models/TestModels/SpaceArcade/Fighter/SGFighter.obj";
-		const char* const  carrierURL = "Models/TestModels/SpaceArcade/Carrier/SGCarrier.obj";
-		const char* const  laserURL = "Models/TestModels/SpaceArcade/LazerBolt/LazerBolt.obj";
+		const char* const fighterURL = "GameData/mods/SpaceArcade/Assets/Models3D/Fighter/SGFighter.obj";
+		const char* const  carrierURL = "GameData/mods/SpaceArcade/Assets/Models3D/Carrier/SGCarrier.obj";
+		const char* const  laserURL = "GameData/mods/SpaceArcade/Assets/Models3D/LazerBolt/LazerBolt.obj";
 	};
 
 }

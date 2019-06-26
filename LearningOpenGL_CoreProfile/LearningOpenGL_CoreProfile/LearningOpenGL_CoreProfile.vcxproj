@@ -161,6 +161,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAPrimitiveShapeRenderer.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SASpawnConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUISystem.h" />
@@ -414,6 +415,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SASpawnConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAUISystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SpaceArcade.cpp" />

@@ -145,6 +145,30 @@ namespace SA
 				}
 			)";
 
+	const char* const forwardShadedModel_AmbientLight = R"(
+				#version 330 core
+
+				out vec4 fragmentColor;
+				
+				struct Material {
+					sampler2D texture_diffuse0;   
+					sampler2D texture_specular0;   
+					int shininess; /*32 is good default, but cannot default struct members in glsl*/
+				};
+				uniform Material material;			
+				uniform vec3 cameraPosition;
+
+				in vec3 fragNormal;
+				in vec3 fragPosition;
+				in vec2 interpTextCoords;
+
+				void main(){
+					vec3 ambientLight = vec3(texture(material.texture_diffuse0, interpTextCoords));	
+
+					fragmentColor = vec4(ambientLight, 1.0f);
+				}
+			)";
+
 	const char* const forwardShadedModel_Emissive_fragSrc = R"(
 				#version 330 core
 

@@ -4,11 +4,16 @@
 #include <map>
 #include <vector>
 #include "..\Tools\DataStructures\MultiDelegate.h"
+#include <string>
 
 namespace SA
 {
+	//forward declarations
+	class SpawnConfig;
+
+
 	////////////////////////////////////////////////////////////////////
-	// CONSTANTS
+	// Constants
 	////////////////////////////////////////////////////////////////////
 	constexpr std::size_t MAX_MOD_NAME_LENGTH = 512;
 	const char* const MODS_DIRECTORY = "GameData/mods/";
@@ -34,12 +39,24 @@ namespace SA
 		};
 
 	public:
+		////////////////////////////////////////////////////////////////////
+		// Mod public api
+		////////////////////////////////////////////////////////////////////
 		std::string getModName();
-		bool isDeletable() { return bIsDeletable; }
 		std::string getModDirectoryPath();
+		bool isDeletable() { return bIsDeletable; }
 
+		/** WARNING: Care must be taken not to call functions modify the return obj while iterating */
+		const std::map<std::string, sp<SpawnConfig>>& getSpawnConfigs() { return spawnConfigsByName; }
+		void addSpawnConfig(sp<SpawnConfig>& spawnConfig);
+		void removeSpawnConfig(sp<SpawnConfig>& spawnConfig);
 
-		//this implementation uses json strings
+		/** WARNING: this will delete teh spawn config from the file system!*/
+		void deleteSpawnConfig(sp<SpawnConfig>& spawnConfig);
+
+		////////////////////////////////////////////////////////////////////
+		// Serialization
+		////////////////////////////////////////////////////////////////////
 		std::string serialize() ;
 		void deserialize(const std::string& str);
 
@@ -49,6 +66,8 @@ namespace SA
 	private:
 		std::string modName;
 		bool bIsDeletable = true;
+
+		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;
 	};
 
 	////////////////////////////////////////////////////////////////////
@@ -75,15 +94,17 @@ namespace SA
 		Changes to the mod list will influence the return value that will invalidate any iterators*/
 		inline const std::vector<sp<Mod>>& getMods() { return modArrayView; }
 
-
 	private:
 		virtual void initSystem() override;
 		virtual void shutdown() override;
 
 		void rebuildModArrayView();
 
+		void loadSpawnConfigs(sp<Mod>& mod);
 	private:
 		sp<Mod> activeMod = nullptr;
+
+		//Mods
 		std::map<std::string, sp<Mod>> loadedMods;
 		std::vector<sp<Mod>> modArrayView;
 	};
