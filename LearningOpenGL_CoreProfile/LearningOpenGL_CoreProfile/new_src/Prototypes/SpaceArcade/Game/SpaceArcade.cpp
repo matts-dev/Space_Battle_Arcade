@@ -162,6 +162,7 @@ namespace SA
 		ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
 		mat4 view = fpsCamera->getView();
+
 		mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 500.0f);
 
 		renderDebug(view, projection);

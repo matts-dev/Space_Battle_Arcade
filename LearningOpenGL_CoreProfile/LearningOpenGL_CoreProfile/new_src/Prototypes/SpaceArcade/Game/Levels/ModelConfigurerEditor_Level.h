@@ -2,6 +2,13 @@
 #include "..\..\GameFramework\SALevel.h"
 #include "SABaseLevel.h"
 
+namespace SAT
+{
+	//forward declarations outside of SA namespace
+	class CubeShape;
+	class PolygonCapsuleShape;
+}
+
 namespace SA
 {
 	class PlayerBase;
@@ -9,6 +16,12 @@ namespace SA
 	class Mod;
 	class SpawnConfig;
 	class Shader;
+	class PrimitiveShapeRenderer;
+
+	struct ConfigDefaults
+	{
+		bool bUseModelAABBTest = true;
+	};
 
 	class ModelConfigurerEditor_Level : public LevelBase
 	{
@@ -34,13 +47,22 @@ namespace SA
 		/** INVARIANT: filepath has been checked to be a valid model file path */
 		void createNewSpawnConfig(const std::string& name, const std::string& fullModelPath);
 
+	private: 
+		bool bRenderAABB = true;
+		bool bRenderCollisionShapes = true;
+		bool bRenderCollisionShapesLines = true;
+		int selectedShapeIdx = -1;
+
 	private:
 		sp<Model3D> renderModel = nullptr;
-		sp<SpawnConfig> activeSpawnConfig = nullptr;
+		sp<SpawnConfig> activeConfig = nullptr;
 
-		//TODO refactor so that this shader isn't getting re-created for each level/editor
-		//it would be nice to have a way to obtain a shared utility shader for these kinds of things
 		sp<Shader> model3DShader;
+		sp<Shader> collisionShapeShader;
+		sp<PrimitiveShapeRenderer> shapeRenderer;
+
+		sp<SAT::CubeShape> cubeShape;
+		sp<SAT::PolygonCapsuleShape> polyShape;
 
 		bool bAutoSave = true;
 	public:

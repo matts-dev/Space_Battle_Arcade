@@ -15,6 +15,9 @@
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../Rendering/BuiltInShaders.h"
 #include "../../Tools/DataStructures/SATransform.h"
+#include "../SAPrimitiveShapeRenderer.h"
+#include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "../../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
 
 namespace
 {
@@ -25,6 +28,8 @@ namespace
 		ERROR_FILE_DOESNT_EXIST,
 		ERROR_LOADING_MODEL,
 	};
+
+	char tempTextBuffer[4096];
 }
 
 namespace SA
@@ -43,6 +48,14 @@ namespace SA
 		game.getModSystem()->onActiveModChanging.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handleModChanging);
 
 		model3DShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_AmbientLight, false);
+		collisionShapeShader = new_sp<SA::Shader>(SAT::DebugShapeVertSrc, SAT::DebugShapeFragSrc, false);
+		shapeRenderer = new_sp<PrimitiveShapeRenderer>();
+
+		if (!polyShape)
+		{
+			polyShape = new_sp<SAT::PolygonCapsuleShape>();
+			cubeShape = new_sp<SAT::CubeShape>();
+		}
 	}
 
 	void ModelConfigurerEditor_Level::endLevel_v()
@@ -51,6 +64,8 @@ namespace SA
 		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
 
 		model3DShader = nullptr;
+		collisionShapeShader = nullptr;
+		shapeRenderer = nullptr;
 	}
 
 	void ModelConfigurerEditor_Level::handleUIFrameStarted()
@@ -70,7 +85,7 @@ namespace SA
 			std::string activeModText = activeMod ? activeMod->getModName() : "None";
 			ImGui::Text("Active Mod: "); ImGui::SameLine(); ImGui::Text(activeModText.c_str());
 
-			std::string activeConfigText = activeSpawnConfig ? activeSpawnConfig->getName() : "None";
+			std::string activeConfigText = activeConfig ? activeConfig->getName() : "None";
 			ImGui::Text("Loaded Config: "); ImGui::SameLine(); ImGui::Text(activeConfigText.c_str());
 			ImGui::Separator();
 
@@ -108,8 +123,8 @@ namespace SA
 		if (const sp<CameraBase>& camera = player->getCamera())
 		{
 			//configure camera to look at model
-			//camera->setPosition({ 5, 0, 0 });
-			//camera->lookAt_v((camera->getPosition() + glm::vec3{ -1, 0, 0 }));
+			camera->setPosition({ 5, 0, 0 });
+			camera->lookAt_v((camera->getPosition() + glm::vec3{ -1, 0, 0 }));
 		}
 	}
 
@@ -136,7 +151,7 @@ namespace SA
 	void ModelConfigurerEditor_Level::handleModChanging(const sp<Mod>& previous, const sp<Mod>& active)
 	{
 		renderModel = nullptr;
-		activeSpawnConfig = nullptr;
+		activeConfig = nullptr;
 	}
 
 	void ModelConfigurerEditor_Level::renderUI_LoadingSavingMenu()
@@ -160,9 +175,9 @@ namespace SA
 					{
 						if (ImGui::Selectable(kvPair.first.c_str(), curConfigIdx == selectedSpawnConfigIdx))
 						{
-							activeSpawnConfig = kvPair.second;
+							activeConfig = kvPair.second;
 							selectedSpawnConfigIdx = curConfigIdx;
-							std::string modelPath = activeSpawnConfig->getModelFilePath();
+							std::string modelPath = activeConfig->getModelFilePath();
 
 							//may fail to load model if user provided bad path, either way we need to set to null or valid model
 							renderModel = SpaceArcade::get().getAssetSystem().loadModel(modelPath.c_str());
@@ -196,14 +211,14 @@ namespace SA
 			/////////////////////////////////////////////////
 			if (ImGui::Button("Save"))
 			{
-				activeSpawnConfig->save();
+				activeConfig->save();
 			}
 			/////////////////////////////////////////////////
 			// Button Delete
 			/////////////////////////////////////////////////
-			if (activeSpawnConfig)
+			if (activeConfig)
 			{
-				if (activeSpawnConfig->isDeletable())
+				if (activeConfig->isDeletable())
 				{
 					if (ImGui::Button("Delete"))
 					{
@@ -218,9 +233,9 @@ namespace SA
 			}
 			if (ImGui::BeginPopupModal("DeleteSpawnConfigPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 			{
-				if (activeSpawnConfig)
+				if (activeConfig)
 				{
-					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text(activeSpawnConfig->getName().c_str());
+					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text(activeConfig->getName().c_str());
 					ImGui::Text("WARNING: this operation is irreversible!");
 					ImGui::Text("Do you really want to delete this spawn config?");
 
@@ -228,8 +243,8 @@ namespace SA
 					{
 						if (activeMod)
 						{
-							activeMod->deleteSpawnConfig(activeSpawnConfig);
-							activeSpawnConfig = nullptr;
+							activeMod->deleteSpawnConfig(activeConfig);
+							activeConfig = nullptr;
 							renderModel = nullptr;
 						}
 						ImGui::CloseCurrentPopup();
@@ -364,10 +379,73 @@ namespace SA
 	void ModelConfigurerEditor_Level::renderUI_Collision()
 	{
 		ImGui::Separator();
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
+
+		if (activeConfig)
+		{
+			////////////////////////////////////////////////////////
+			// Model Transform
+			////////////////////////////////////////////////////////
+			ImGui::Text("Model Transform Configuration");
+			ImGui::InputFloat3("Scale", &activeConfig->modelScale.x);
+			ImGui::InputFloat3("Rotation", &activeConfig->modelRotationDegress.x);
+			ImGui::InputFloat3("Translation", &activeConfig->modelPosition.x);
+			ImGui::Dummy(ImVec2(0, 20));
+			////////////////////////////////////////////////////////
+			// AABB
+			////////////////////////////////////////////////////////
+			ImGui::Checkbox("Show Model AABB collision", &bRenderAABB);
+			ImGui::Checkbox("Use Model AABB pretest optimization", &activeConfig->bUseModelAABBTest);
+			ImGui::Dummy(ImVec2(0, 20));
+
+			////////////////////////////////////////////////////////
+			// True Collision Shapes
+			////////////////////////////////////////////////////////
+			if (ImGui::Button("Add Shape"))
+			{
+				activeConfig->shapes.push_back({});
+			}
+
+			if (selectedShapeIdx != -1)
+			{
+				ImGui::SameLine();
+				if (ImGui::Button("Remove"))
+				{
+					activeConfig->shapes.erase(activeConfig->shapes.begin() + selectedShapeIdx);
+					selectedShapeIdx = -1;
+				}
+			}
+
+			unsigned int shapeIdx = 0;
+			ImGuiWindowFlags file_load_wndflags = ImGuiWindowFlags_HorizontalScrollbar;
+
+			ImGui::Separator();
+			for (CollisionShapeConfig& shapeConfig : activeConfig->shapes)
+			{
+				snprintf(tempTextBuffer, sizeof(tempTextBuffer), "shape %d : %s", shapeIdx, shapeToStr((ECollisionShape) shapeConfig.shape));
+				if (ImGui::Selectable(tempTextBuffer, shapeIdx == selectedShapeIdx))
+				{
+					selectedShapeIdx = shapeIdx;
+				}
+				if (shapeIdx == selectedShapeIdx)
+				{
+					if (selectedShapeIdx >= 0 && selectedShapeIdx < (int)activeConfig->shapes.size())
+					{
+						ImGui::InputFloat3("Scale", &activeConfig->shapes[selectedShapeIdx].scale.x);
+						ImGui::InputFloat3("Rotation", &activeConfig->shapes[selectedShapeIdx].rotationDegress.x);
+						ImGui::InputFloat3("Translation", &activeConfig->shapes[selectedShapeIdx].position.x);
+						ImGui::RadioButton("Cube", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::CUBE);
+						ImGui::SameLine(); ImGui::RadioButton("PolyCapsule", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::POLYCAPSULE);
+					}
+				}
+				++shapeIdx;
+			}
+			ImGui::Dummy(ImVec2(0, 20));
+			ImGui::Checkbox("Render Collision Shapes", &bRenderCollisionShapes);
+			ImGui::Checkbox("Render With Lines", &bRenderCollisionShapesLines);
+			ImGui::Dummy(ImVec2(0, 20));
+
+		}
+		
 		ImGui::Separator();
 	}
 
@@ -415,34 +493,89 @@ namespace SA
 
 			activeMod->addSpawnConfig(newConfig);
 
-			activeSpawnConfig = newConfig;
+			activeConfig = newConfig;
 		}
 	}
 
 	void ModelConfigurerEditor_Level::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
-		if (renderModel)
+		using glm::vec3; using glm::vec4; using glm::mat4;
+
+		if (renderModel && shapeRenderer && activeConfig)
 		{
+			Transform rootXform;
+			rootXform.position = activeConfig->modelPosition;
+			rootXform.scale = activeConfig->modelScale;
+			rootXform.rotQuat = getRotQuatForDegrees(activeConfig->modelRotationDegress);
+			mat4 rootModelMat = rootXform.getModelMatrix();
+
 			const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
 			if (zeroPlayer)
 			{
 				const sp<CameraBase>& camera = zeroPlayer->getCamera();
 
-				model3DShader->use();
-				model3DShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-				model3DShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-				model3DShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-				model3DShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
-				model3DShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
-				model3DShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0));
+				shapeRenderer->renderAxes(mat4(1.f), view, projection);
+				
+				{ //render model
+					model3DShader->use();
+					//model3DShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
+					//model3DShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
+					//model3DShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
+					//model3DShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0));
+					//model3DShader->setUniform1i("material.shininess", 32);
+					model3DShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+					model3DShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+					model3DShader->setUniform3f("cameraPosition", camera->getPosition());
+					model3DShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(rootModelMat));
+					renderModel->draw(*model3DShader);
+				}
 
-				model3DShader->setUniform3f("cameraPosition", camera->getPosition());
-				model3DShader->setUniform1i("material.shininess", 32);
+				if (bRenderAABB)
+				{
+					std::tuple<vec3, vec3> aabbRange = renderModel->getAABB();
+					vec3 aabbScale = std::get<1>(aabbRange) - std::get<0>(aabbRange); //max - min
+					mat4 aabbModel = glm::scale(rootModelMat, aabbScale);
+					//struct RenderParameters
+					//{
+					//	const glm::mat4& model;
+					//	const glm::mat4& view;
+					//	const glm::mat4& projection;
+					//	const glm::vec3 color;
+					//	const uint32_t renderMode = GL_FILL;
+					//	const uint32_t restoreToRenderMode = GL_FILL;
+					//};
+					shapeRenderer->renderUnitCube({ aabbModel, view, projection, glm::vec3(0,0,1), GL_LINE, GL_FILL });
+				}
 
-				glm::mat4 model = glm::mat4(1.f);
-				model = glm::translate(model, glm::vec3(5.f, 0.f, -5.f)); 
-				model3DShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				renderModel->draw(*model3DShader);
+				if (bRenderCollisionShapes)
+				{
+					int shapeIdx = 0;
+					for (CollisionShapeConfig shape : activeConfig->shapes)
+					{
+						Transform xform;
+						xform.position = shape.position;
+						xform.scale = shape.scale;
+						xform.rotQuat = getRotQuatForDegrees(shape.rotationDegress);
+						mat4 shapeModelMatrix = rootModelMat * xform.getModelMatrix();
+						
+						SAT::Shape* shapeObj = nullptr;
+						switch (static_cast<ECollisionShape>(shape.shape))
+						{
+							case ECollisionShape::CUBE:
+								shapeObj = cubeShape.get();
+								break;
+							case ECollisionShape::POLYCAPSULE:
+							default:
+								shapeObj = polyShape.get();
+								break;
+						}
+						shapeObj->updateTransform(shapeModelMatrix);
+						vec3 color = shapeIdx == selectedShapeIdx ? vec3(0.2f, 1.f, 0.f) : vec3(1, 0, 0);
+
+						//SAT::drawDebugCollisionShape(*collisionShapeShader, *shapeObj, color, 1.f, true, true, view, projection);
+						++shapeIdx;
+					}
+				}
 			}
 		}
 	}

@@ -424,6 +424,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAShader.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\SpaceArcadeModels\test_spacearcade_models.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\SAUtilities.cpp" />

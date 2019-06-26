@@ -1,9 +1,30 @@
 #pragma once
 #include <string>
+
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+#include <gtx/quaternion.hpp>
+
 #include "..\GameFramework\SAGameEntity.h"
+#include <vector>
 
 namespace SA
 {
+	enum class ECollisionShape : int
+	{
+		CUBE, POLYCAPSULE
+	};
+	const char* const shapeToStr(ECollisionShape value);
+
+	struct CollisionShapeConfig
+	{
+		int shape;		//avoiding strict alias violation, this is int type rather than enum
+		glm::vec3 scale{ 1,1,1 };
+		glm::vec3 rotationDegress{ 0,0,0 };
+		glm::vec3 position{ 0,0,0 };
+	};
+
 	class SpawnConfig
 	{
 		friend class ModelConfigurerEditor_Level;
@@ -32,7 +53,15 @@ namespace SA
 		std::string name;
 		std::string fullModelFilePath;
 		bool bIsDeleteable = true;
-		//vector of collision shapes
+
+		glm::vec3 modelScale = glm::vec3(1,1,1);
+		glm::vec3 modelRotationDegress = glm::vec3(0,0,0);
+		glm::vec3 modelPosition = glm::vec3(0, 0, 0);
+
+		bool bUseModelAABBTest = true;
+		
+		std::vector<CollisionShapeConfig> shapes;
+		
 		//color/material
 		//team
 	private: //nonserialized properites

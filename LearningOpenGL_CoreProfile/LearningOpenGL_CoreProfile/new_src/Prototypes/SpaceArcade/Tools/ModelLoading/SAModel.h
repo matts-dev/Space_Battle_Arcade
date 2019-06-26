@@ -46,6 +46,7 @@ namespace SA
 		static aiMatrix4x4 toAiMat4(glm::mat4 glmMat4);
 		static glm::mat4 toGlmMat4(aiMatrix4x4 aiMat4);
 
+		/** min=std::get<0>(aabb); max=std::get<1>(aabb);*/
 		std::tuple<glm::vec3, glm::vec3> getAABB() const;
 
 	private://model/mesh methods

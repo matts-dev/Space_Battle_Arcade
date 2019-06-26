@@ -176,7 +176,7 @@ namespace SA
 			}
 			else if(activeMod)
 			{
-				ImGui::SameLine(); //only call same line if we're actually inlining a widget
+				ImGui::SameLine(); //only call same line if we're actually in lining a widget
 				ImGui::Text("This mod isn't deletable");
 			}
 

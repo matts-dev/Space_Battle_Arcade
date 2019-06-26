@@ -9,6 +9,7 @@
 #include <gtx/quaternion.hpp>
 
 #include "OpenGLHelpers.h"
+#include "../GameFramework/SALog.h"
 
 #define MAP_GLFWWINDOW_TO_WINDOWOBJ
 
@@ -230,6 +231,7 @@ namespace SA
 
 	float Window::getAspect()
 	{
+		static bool bLoggedAspectError = false;
 		int width, height;
 
 		//unsure if this should be framebuffer size or actual window size
@@ -237,11 +239,22 @@ namespace SA
 		//glfwGetWindowSize(window, &width, &height);
 
 		float aspect = static_cast<float>(width) / height;
-		if (aspect != 0.0f) 
+
+		bool bSmallAspect = aspect - std::numeric_limits<float>::epsilon() < 0;
+		if (aspect == 0.0f || std::isnan(aspect) || std::isinf(aspect) || bSmallAspect)
 		{
+			if (!bLoggedAspectError)
+			{
+				//taking care not to log every tick
+				log("Window", LogLevel::LOG_ERROR, "Bad aspect!");
+				bLoggedAspectError = true;
+			}
+
 			//make sure user can't do scale window in a way that has 0 as aspect in some sort.
-			assert(true);
+			//assert(false);
+			return 1.f; //pass a square aspect rather than hard crashing
 		}
+		bLoggedAspectError = false;
 		return aspect;
 	}
 

@@ -23,6 +23,8 @@ namespace SA
 		glm::vec3 scale = { 1, 1, 1 };
 	};
 
+	glm::quat getRotQuatForDegrees(glm::vec3 rotDegrees);
+
 	struct EncapsulatedTransform
 	{
 		inline glm::mat4 getModelMatrix() const noexcept

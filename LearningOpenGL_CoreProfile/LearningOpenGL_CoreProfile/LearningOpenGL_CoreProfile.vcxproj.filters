@@ -1550,6 +1550,9 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SASpawnConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />
