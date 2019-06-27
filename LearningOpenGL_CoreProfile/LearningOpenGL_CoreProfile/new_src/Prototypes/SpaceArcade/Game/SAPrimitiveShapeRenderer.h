@@ -26,8 +26,8 @@ namespace SA
 				const glm::mat4& view;
 				const glm::mat4& projection;
 				const glm::vec3 color;
-				const uint32_t renderMode = GL_FILL;
-				const uint32_t restoreToRenderMode = GL_FILL;
+				const GLenum renderMode = GL_FILL;
+				const GLenum restoreToRenderMode = GL_FILL;
 			};
 
 	public:

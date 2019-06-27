@@ -138,103 +138,225 @@
 //
 //}
 
-SAT::ShapeRender::ShapeRender(const Shape& shape)
+namespace SAT
 {
-	using glm::vec3; using glm::vec4; using glm::mat4;
-
-	const std::vector<glm::vec4>& localPoints = shape.getLocalPoints();
-	std::vector<glm::vec4> triPnts;
-	std::vector<glm::vec3> triNorms;
-	
-	//generate triangles for every face
-	for (const Shape::FacePointIndices& face : shape.getDebugFaceIdxs())
+	ShapeRender::ShapeRender(const Shape& shape)
 	{
-		//not sure, but this may not respect CCW ordering for some shapes
-		uint32_t aIdx = face.edge1.indexA;
-		uint32_t bIdx = face.edge1.indexB;
-		uint32_t cIdx = face.edge2.indexA;
-		cIdx = (cIdx == aIdx || cIdx == bIdx) ? face.edge2.indexB : cIdx;
-		
-		triPnts.push_back(localPoints[aIdx]);
-		triPnts.push_back(localPoints[bIdx]);
-		triPnts.push_back(localPoints[cIdx]);
+		using glm::vec3; using glm::vec4; using glm::mat4;
 
-		//normal generation is not well tested, and if triPnts are not in CCW ordering, the normals will point internally
-		glm::vec3 first = glm::vec3(localPoints[bIdx] - localPoints[aIdx]);
-		glm::vec3 second = glm::vec3(localPoints[cIdx] - localPoints[aIdx]);
-		glm::vec4 normal = glm::vec4(glm::normalize(glm::cross(first, second)), 0.f);
-		triNorms.push_back(normal);
-		triNorms.push_back(normal);
-		triNorms.push_back(normal);
-	}
-	vertCount = triPnts.size();
+		const std::vector<glm::vec4>& localPoints = shape.getLocalPoints();
+		std::vector<glm::vec4> triPnts;
+		std::vector<glm::vec3> triNorms;
 
-	glGenVertexArrays(1, &VAO_tris);
-	glBindVertexArray(VAO_tris);
+		//generate triangles for every face
+		for (const Shape::FacePointIndices& face : shape.getDebugFaceIdxs())
+		{
+			//not sure, but this may not respect CCW ordering for some shapes
+			uint32_t aIdx = face.edge1.indexA;
+			uint32_t bIdx = face.edge1.indexB;
+			uint32_t cIdx = face.edge2.indexA;
+			cIdx = (cIdx == aIdx || cIdx == bIdx) ? face.edge2.indexB : cIdx;
 
-	glGenBuffers(1, &VBO_tris);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_tris);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * triPnts.size(), &triPnts[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(0));
-	glEnableVertexAttribArray(0);
+			triPnts.push_back(localPoints[aIdx]);
+			triPnts.push_back(localPoints[bIdx]);
+			triPnts.push_back(localPoints[cIdx]);
 
-	glGenBuffers(1, &VBO_normals);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * triNorms.size(), &triNorms[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(1));
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(0);
+			//normal generation is not well tested, and if triPnts are not in CCW ordering, the normals will point internally
+			glm::vec3 first = glm::vec3(localPoints[bIdx] - localPoints[aIdx]);
+			glm::vec3 second = glm::vec3(localPoints[cIdx] - localPoints[aIdx]);
+			glm::vec4 normal = glm::vec4(glm::normalize(glm::cross(first, second)), 0.f);
+			triNorms.push_back(normal);
+			triNorms.push_back(normal);
+			triNorms.push_back(normal);
+		}
+		vertCount = triPnts.size();
 
-	//POINTS
-	glGenVertexArrays(1, &VAO_pnts);
-	glBindVertexArray(VAO_pnts);
-	glGenBuffers(1, &VBO_pnts);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_pnts);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * localPoints.size(), &localPoints[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(0));
-	glEnableVertexAttribArray(0);
-	pntCount = localPoints.size();
-	glBindVertexArray(0);
-}
-
-SAT::ShapeRender::~ShapeRender()
-{
-	glDeleteVertexArrays(1, &VAO_tris);
-	glDeleteVertexArrays(1, &VAO_pnts);
-
-	glDeleteBuffers(1, &VBO_tris);
-	glDeleteBuffers(1, &VBO_normals);
-	glDeleteBuffers(1, &VBO_pnts);
-}
-
-void SAT::ShapeRender::render(bool bRenderPnts /*= true*/, bool bRenderUniqueTris /*= true*/)
-{
-	if (bRenderUniqueTris)
-	{
+		glGenVertexArrays(1, &VAO_tris);
 		glBindVertexArray(VAO_tris);
-		glDrawArrays(GL_TRIANGLES, 0, vertCount);
+
+		glGenBuffers(1, &VBO_tris);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_tris);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * triPnts.size(), &triPnts[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(0));
+		glEnableVertexAttribArray(0);
+
+		glGenBuffers(1, &VBO_normals);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_normals);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * triNorms.size(), &triNorms[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(1));
+		glEnableVertexAttribArray(1);
 		glBindVertexArray(0);
-	}
 
-	if (bRenderPnts)
-	{
-		bool pointSizeEnabled = glIsEnabled(GL_POINT_SIZE);
-		float originalPointSize = 1.0f;
-		glGetFloatv(GL_POINT_SIZE, &originalPointSize);
-		if (!pointSizeEnabled)
-		{
-			glEnable(GL_POINT_SIZE);
-			glPointSize(5.f);
-		}
-
+		//POINTS
+		glGenVertexArrays(1, &VAO_pnts);
 		glBindVertexArray(VAO_pnts);
-		glDrawArrays(GL_POINTS, 0, pntCount);
-
-		glPointSize(originalPointSize);
-		if (!pointSizeEnabled)
-		{
-			glDisable(GL_POINT_SIZE);
-		}
+		glGenBuffers(1, &VBO_pnts);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_pnts);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * localPoints.size(), &localPoints[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(0));
+		glEnableVertexAttribArray(0);
+		pntCount = localPoints.size();
 		glBindVertexArray(0);
 	}
+
+	ShapeRender::~ShapeRender()
+	{
+		glDeleteVertexArrays(1, &VAO_tris);
+		glDeleteVertexArrays(1, &VAO_pnts);
+
+		glDeleteBuffers(1, &VBO_tris);
+		glDeleteBuffers(1, &VBO_normals);
+		glDeleteBuffers(1, &VBO_pnts);
+	}
+
+	void ShapeRender::render(bool bRenderPnts /*= true*/, bool bRenderUniqueTris /*= true*/)
+	{
+		if (bRenderUniqueTris)
+		{
+			glBindVertexArray(VAO_tris);
+			glDrawArrays(GL_TRIANGLES, 0, vertCount);
+			glBindVertexArray(0);
+		}
+
+		if (bRenderPnts)
+		{
+			bool pointSizeEnabled = glIsEnabled(GL_POINT_SIZE);
+			float originalPointSize = 1.0f;
+			glGetFloatv(GL_POINT_SIZE, &originalPointSize);
+			if (!pointSizeEnabled)
+			{
+				glEnable(GL_POINT_SIZE);
+				glPointSize(5.f);
+			}
+
+			glBindVertexArray(VAO_pnts);
+			glDrawArrays(GL_POINTS, 0, pntCount);
+
+			glPointSize(originalPointSize);
+			if (!pointSizeEnabled)
+			{
+				glDisable(GL_POINT_SIZE);
+			}
+			glBindVertexArray(0);
+		}
+	}
+
+	const float capsuleVertices[] = {
+		//positions                 normals
+
+		//bottom cone face with x and z
+		0.0f, -1.5f, 0.0f,		0.57735f,-0.57735f,0.57735f,//0.0f, -1.0f, 0.0f,
+		1.0f, -0.5f, 0.0f,		0.57735f,-0.57735f,0.57735f,//1.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 1.0f,		0.57735f,-0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+
+		//bottom cone face with z and -x
+		0.0f, -1.5f, 0.0f,		-0.57735f,-0.57735f,0.57735f,//0.0f, -1.0f, 0.0f,
+		0.0f, -0.5f, 1.0f,		-0.57735f,-0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+		-1.0f, -0.5f, 0.0f,		-0.57735f,-0.57735f,0.57735f,//-1.0f, 0.0f, 0.0f,
+
+		//bottom cone with face -x and -z
+		0.0f, -1.5f, 0.0f,		-0.57735f,-0.57735f,-0.57735f,//0.0f, -1.0f, 0.0f,
+		-1.0f, -0.5f, 0.0f,		-0.57735f,-0.57735f,-0.57735f,//-1.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, -1.0f,		-0.57735f,-0.57735f,-0.57735f,//0.0f, 0.0f, -1.0f,
+
+		//bottom cone with face -z and x
+		0.0f, -1.5f, 0.0f,		0.57735f,-0.57735f, -0.57735f,//0.0f, -1.0f, 0.0f,
+		0.0f, -0.5f, -1.0f,		0.57735f,-0.57735f, -0.57735f,//0.0f, 0.0f, -1.0f,
+		1.0f, -0.5f, 0.0f,		0.57735f,-0.57735f, -0.57735f,//1.0f, 0.0f, 0.0f,
+
+
+
+
+
+		//side faces in x and z 
+		1.0f, -0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+		0.0f,  0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+		0.0f, -0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+		//----				 							   
+		1.0f, -0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+		1.0f, 0.5f, 0.0f,		0.707107f, -0.0f, 0.707107f,//1.0f, 0.0f, 0.0f,
+		0.0f,  0.5f, 1.0f,		0.707107f, -0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+
+		//side faces in z and -x
+		0.0f, -0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+		0.0f, 0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+		-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+		//----										  
+		0.0f, -0.5f, 1.0f,		-0.707107f, 0.0f, 0.707107f,//0.0f, 0.0f, 1.0f,
+		-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+		-1.0f, -0.5f, 0.0f,		-0.707107f, 0.0f, 0.707107f,//-1.0f, 0.0f, 0.0f,
+
+		//side faces in -x and -z
+		0.0f, -0.5f, -1.0f,		-0.707107f, -0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+		-1.0f, -0.5f, 0.0f,		-0.707107f, -0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+		-1.0f, 0.5f, 0.0f,		-0.707107f, -0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+		//----											   
+		0.0f, -0.5f, -1.0f,		-0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+		-1.0f, 0.5f, 0.0f,		-0.707107f, 0.0f, -0.707107f,//-1.0f, 0.0f, 0.0f,
+		0.0f, 0.5f, -1.0f,		-0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+
+		//side faces in -z and x
+		0.0f,  -0.5f, -1.0f,	0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+		0.0f,  0.5f, -1.0f,		0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+		1.0f, 0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f,
+		//----										   
+		0.0f,  -0.5f, -1.0f,	0.707107f, 0.0f, -0.707107f,//0.0f, 0.0f, -1.0f,
+		1.0f, 0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f,
+		1.0f, -0.5f, 0.0f,		0.707107f, 0.0f, -0.707107f,//1.0f, 0.0f, 0.0f, 
+
+
+
+		//top cone face with z and x
+		0.0f, 1.5f, 0.0f,		0.57735f,0.57735f,0.57735f,//0.0f, 1.0f, 0.0f,
+		0.0f, 0.5f, 1.0f,		0.57735f,0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+		1.0f, 0.5f, 0.0f,		0.57735f,0.57735f,0.57735f,//1.0f, 0.0f, 0.0f,
+
+		//top cone face with -x and z
+		0.0f, 1.5f, 0.0f,		-0.57735f,0.57735f,0.57735f,//0.0f, 1.0f, 0.0f,
+		-1.0f, 0.5f, 0.0f,		-0.57735f,0.57735f,0.57735f,//-1.0f, 0.0f, 0.0f,
+		0.0f, 0.5f, 1.0f,		-0.57735f,0.57735f,0.57735f,//0.0f, 0.0f, 1.0f,
+
+		//top cone with face -z and -x
+		0.0f, 1.5f, 0.0f,		-0.57735f,0.57735f,-0.57735f,//0.0f, 1.0f, 0.0f,
+		0.0f, 0.5f, -1.0f,		-0.57735f,0.57735f,-0.57735f,//0.0f, 0.0f, -1.0f,
+		-1.0f, 0.5f, 0.0f,		-0.57735f,0.57735f,-0.57735f,//-1.0f, 0.0f, 0.0f,
+
+		//top cone with face x and -z 
+		0.0f, 1.5f, 0.0f,		0.57735f,0.57735f,-0.57735f,//0.0f, 1.0f, 0.0f,
+		1.0f, 0.5f, 0.0f,		0.57735f,0.57735f,-0.57735f,//1.0f, 0.0f, 0.0f,
+		0.0f, 0.5f, -1.0f,		0.57735f,0.57735f,-0.57735f//0.0f, 0.0f, -1.0f
+	};
+
+
+	CapsuleRenderer::CapsuleRenderer()
+	{
+		glGenVertexArrays(1, &capsuleVAO);
+		glBindVertexArray(capsuleVAO);
+
+		glGenBuffers(1, &capsuleVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, capsuleVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(capsuleVertices), capsuleVertices, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0));
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		glBindVertexArray(0);
+	}
+
+	CapsuleRenderer::~CapsuleRenderer()
+	{
+		glDeleteVertexArrays(1, &capsuleVAO);
+		glDeleteBuffers(1, &capsuleVBO);
+	}
+
+	void CapsuleRenderer::render()
+	{
+		glBindVertexArray(capsuleVAO);
+		constexpr GLuint numCapsuleVerts = sizeof(capsuleVertices) / (sizeof(float) * 6);
+		glDrawArrays(GL_TRIANGLES, 0, numCapsuleVerts);
+		glBindVertexArray(0);
+	}
+
 }
+
+

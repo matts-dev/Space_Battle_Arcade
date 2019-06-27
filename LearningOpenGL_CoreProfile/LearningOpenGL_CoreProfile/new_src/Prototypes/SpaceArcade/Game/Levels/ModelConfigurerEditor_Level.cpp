@@ -18,6 +18,7 @@
 #include "../SAPrimitiveShapeRenderer.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
+#include "../../Rendering/OpenGLHelpers.h"
 
 namespace
 {
@@ -56,8 +57,7 @@ namespace SA
 			polyShape = new_sp<SAT::PolygonCapsuleShape>();
 			cubeShape = new_sp<SAT::CubeShape>();
 		}
-		cubeRenderer = new_sp<SAT::ShapeRender>(*cubeShape);
-		polyRenderer = new_sp<SAT::ShapeRender>(*polyShape);
+		capsuleRenderer = new_sp<SAT::CapsuleRenderer>();
 	}
 
 	void ModelConfigurerEditor_Level::endLevel_v()
@@ -69,8 +69,7 @@ namespace SA
 		model3DShader = nullptr;
 		collisionShapeShader = nullptr;
 		shapeRenderer = nullptr;
-		cubeRenderer = nullptr;
-		polyRenderer = nullptr;
+		capsuleRenderer = nullptr;
 	}
 
 	void ModelConfigurerEditor_Level::handleUIFrameStarted()
@@ -392,7 +391,7 @@ namespace SA
 			////////////////////////////////////////////////////////
 			ImGui::Text("Model Transform Configuration");
 			ImGui::InputFloat3("Scale", &activeConfig->modelScale.x);
-			ImGui::InputFloat3("Rotation", &activeConfig->modelRotationDegress.x);
+			ImGui::InputFloat3("Rotation", &activeConfig->modelRotationDegrees.x);
 			ImGui::InputFloat3("Translation", &activeConfig->modelPosition.x);
 			ImGui::Dummy(ImVec2(0, 20));
 			////////////////////////////////////////////////////////
@@ -446,7 +445,7 @@ namespace SA
 						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].scale.x);
 
 						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Rotation Shape %d", selectedShapeIdx);
-						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].rotationDegress.x);
+						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].rotationDegrees.x);
 
 						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Translation Shape %d", selectedShapeIdx);
 						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].position.x);
@@ -524,7 +523,7 @@ namespace SA
 			Transform rootXform;
 			rootXform.position = activeConfig->modelPosition;
 			rootXform.scale = activeConfig->modelScale;
-			rootXform.rotQuat = getRotQuatForDegrees(activeConfig->modelRotationDegress);
+			rootXform.rotQuat = getRotQuatForDegrees(activeConfig->modelRotationDegrees);
 			mat4 rootModelMat = rootXform.getModelMatrix();
 
 			const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
@@ -565,31 +564,18 @@ namespace SA
 
 				if (bRenderCollisionShapes)
 				{
+					GLenum renderMode = bRenderCollisionShapesLines ? GL_LINE : GL_FILL;
+					ec(glPolygonMode(GL_FRONT_AND_BACK, renderMode)); 
+
 					int shapeIdx = 0;
 					for (CollisionShapeConfig shape : activeConfig->shapes)
 					{
 						Transform xform;
 						xform.position = shape.position;
 						xform.scale = shape.scale;
-						xform.rotQuat = getRotQuatForDegrees(shape.rotationDegress);
+						xform.rotQuat = getRotQuatForDegrees(shape.rotationDegrees);
 						mat4 shapeModelMatrix = rootModelMat * xform.getModelMatrix();
 						
-						SAT::Shape* shapeObj = nullptr;
-						SAT::ShapeRender* shapeObjRenderer = nullptr;
-						switch (static_cast<ECollisionShape>(shape.shape))
-						{
-							case ECollisionShape::CUBE:
-								shapeObj = cubeShape.get();
-								shapeObjRenderer = cubeRenderer.get();
-								break;
-							case ECollisionShape::POLYCAPSULE:
-							default:
-								shapeObj = polyShape.get();
-								shapeObjRenderer = polyRenderer.get();
-								break;
-						}
-
-						shapeObj->updateTransform(shapeModelMatrix);
 						vec3 color = shapeIdx == selectedShapeIdx ? vec3(1.f, 1.f, 0.25f) : vec3(1, 0, 0);
 						collisionShapeShader->use();
 						collisionShapeShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
@@ -597,9 +583,27 @@ namespace SA
 						collisionShapeShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(shapeModelMatrix));
 						collisionShapeShader->setUniform3f("color", color);
 
-						shapeObjRenderer->render();
+						ECollisionShape shapeType = static_cast<ECollisionShape>(shape.shape);
+						switch (shapeType)
+						{
+							case ECollisionShape::CUBE:
+								{
+									//doesn't actually use collision shader above, but other collision shapes will
+									shapeRenderer->renderUnitCube({ shapeModelMatrix, view, projection, color, renderMode, /*will correct after loop*/renderMode });
+									break;
+								}
+							case ECollisionShape::POLYCAPSULE:
+							default:
+								{
+									capsuleRenderer->render();
+									break;
+								}
+								break;
+						}
+
 						++shapeIdx;
 					}
+					ec(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 				}
 			}
 		}

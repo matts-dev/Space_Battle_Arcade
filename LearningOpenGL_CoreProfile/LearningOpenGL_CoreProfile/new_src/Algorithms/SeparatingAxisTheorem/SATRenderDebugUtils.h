@@ -73,7 +73,27 @@ namespace SAT
 		GLsizei vertCount;
 	};
 
+	extern const float capsuleVertices[288];
+	class CapsuleRenderer final
+	{
+	public:
+		CapsuleRenderer();
+		~CapsuleRenderer();
 
+		/** assumes a pre-configure shader and polygon mode */
+		void render();
+
+		//deleted special functions due to VAO/VBO copying complexity
+		CapsuleRenderer(const CapsuleRenderer& copy) = delete;
+		CapsuleRenderer(CapsuleRenderer&& move) = delete;
+		CapsuleRenderer& operator=(const CapsuleRenderer& copy) = delete;
+		CapsuleRenderer& operator=(CapsuleRenderer&& move) = delete;
+
+	private:
+		//RAII clean up
+		GLuint capsuleVAO;
+		GLuint capsuleVBO; 
+	};
 
 
 

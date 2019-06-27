@@ -18,8 +18,13 @@ namespace SAT
 
 		Model(const char* path);
 		~Model();
+
+		template <typename Shader>
 		void draw(Shader& shader);
+
+		template <typename Shader>
 		void drawInstanced(Shader& shader, unsigned int instanceCount);
+
 		void setInstancedModelMatricesData(glm::mat4* modelMatrices, unsigned int count);
 
 		inline const std::vector<LoadedMesh>& getMeshes() const { return meshes; }
@@ -36,4 +41,36 @@ namespace SAT
 		LoadedMesh processMesh(aiMesh* mesh, const aiScene* scene);
 		std::vector<MaterialTexture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 	};
+
+
+
+
+
+
+
+
+
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Template Bodies
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	template <typename Shader>
+	void Model::draw(Shader& shader)
+	{
+		for (unsigned int i = 0; i < meshes.size(); ++i)
+		{
+			meshes[i].draw(shader);
+		}
+	}
+
+	template <typename Shader>
+	void Model::drawInstanced(Shader& shader, unsigned int instanceCount)
+	{
+		for (unsigned int i = 0; i < meshes.size(); ++i)
+		{
+			meshes[i].drawInstanced(shader, instanceCount);
+		}
+	}
 }

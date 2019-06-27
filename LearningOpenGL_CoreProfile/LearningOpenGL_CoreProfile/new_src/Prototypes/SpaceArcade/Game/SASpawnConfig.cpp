@@ -13,13 +13,34 @@ namespace SA
 {
 	std::string SpawnConfig::serialize()
 	{
+
 		json outData = 
 		{
 			{"name", name},
 			{"fullModelFilePath", fullModelFilePath},
-			{"bIsDeleteable", bIsDeleteable}
-
+			{"bIsDeleteable", bIsDeleteable},
+			{"modelAABB", { {"modelScale", {modelScale.x, modelScale.y, modelScale.z}},
+							{ "modelRotationDegrees", {modelRotationDegrees.x, modelRotationDegrees.y, modelRotationDegrees.z}},
+							{ "modelPosition" , {modelPosition.x, modelPosition.y, modelPosition.z}}
+						}
+			},
+			{ "shapes", {} }
 		};
+
+		
+		for (CollisionShapeConfig& shapeCFG : shapes)
+		{
+			json s =
+			{ 
+				{"scale", {shapeCFG.scale.x, shapeCFG.scale.y, shapeCFG.scale.z}},
+				{"rotationDegrees", {shapeCFG.rotationDegrees.x, shapeCFG.rotationDegrees.y, shapeCFG.rotationDegrees.z}},
+				{"position" , {shapeCFG.position.x, shapeCFG.position.y, shapeCFG.position.z}},
+				{"shape", shapeCFG.shape }
+			};
+
+			outData["shapes"].push_back(s);
+		}
+
 		return outData.dump(4);
 	}
 
@@ -32,6 +53,47 @@ namespace SA
 			name = !inData["name"].is_null() ? inData["name"] : "";
 			fullModelFilePath = !inData["fullModelFilePath"].is_null() ? inData["fullModelFilePath"] : "";
 			bIsDeleteable = !inData["bIsDeleteable"].is_null() ? (bool)inData["bIsDeleteable"] : true;
+
+			////////////////////////////////////////////////////////
+			//MODEL AABB
+			////////////////////////////////////////////////////////
+			json modelAABB = inData["modelAABB"];
+			if (!modelAABB.is_null())
+			{
+				json scale = modelAABB["modelScale"];
+				if (!scale.is_null() && scale.is_array()) { modelScale = { scale[0], scale[1], scale[2] }; }
+
+				json rot = modelAABB["modelRotationDegrees"];
+				if (!rot.is_null() && rot.is_array()) { modelRotationDegrees = { rot[0], rot[1], rot[2] }; }
+
+				json pos = modelAABB["modelPosition"];
+				if (!pos.is_null() && pos.is_array()) { modelPosition = { pos[0], pos[1], pos[2] }; }
+			}
+
+			json loadedShapes = inData["shapes"];
+			if (!loadedShapes.is_null())
+			{
+				for (const json& shape : loadedShapes)
+				{
+					if (!shape.is_null())
+					{
+						CollisionShapeConfig shapeConfig;
+						json scale = shape["scale"];
+						if (!scale.is_null() && scale.is_array()) { shapeConfig.scale = { scale[0], scale[1], scale[2] }; }
+
+						json rot = shape["rotationDegrees"];
+						if (!rot.is_null() && rot.is_array()) { shapeConfig.rotationDegrees = { rot[0], rot[1], rot[2] }; }
+
+						json pos = shape["position"];
+						if (!pos.is_null() && pos.is_array()) { shapeConfig.position = { pos[0], pos[1], pos[2] }; }
+
+						json shapeIdx = shape["shape"];
+						if (!shapeIdx.is_null() && shapeIdx.is_number_integer()) { shapeConfig.shape = shape["shape"]; }
+
+						shapes.push_back(shapeConfig);
+					}
+				}
+			}
 		}
 		else
 		{

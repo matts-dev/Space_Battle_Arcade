@@ -8,6 +8,7 @@ namespace SAT
 	class CubeShape;
 	class PolygonCapsuleShape;
 	class ShapeRender;
+	class CapsuleRenderer;
 }
 
 namespace SA
@@ -51,7 +52,7 @@ namespace SA
 	private: 
 		bool bRenderAABB = true;
 		bool bRenderCollisionShapes = true;
-		bool bRenderCollisionShapesLines = true;
+		bool bRenderCollisionShapesLines = false;
 		int selectedShapeIdx = -1;
 
 	private:
@@ -65,8 +66,7 @@ namespace SA
 		sp<SAT::CubeShape> cubeShape;
 		sp<SAT::PolygonCapsuleShape> polyShape;
 
-		sp<SAT::ShapeRender> cubeRenderer;
-		sp<SAT::ShapeRender> polyRenderer;
+		sp<SAT::CapsuleRenderer> capsuleRenderer;
 
 		bool bAutoSave = true;
 	public:

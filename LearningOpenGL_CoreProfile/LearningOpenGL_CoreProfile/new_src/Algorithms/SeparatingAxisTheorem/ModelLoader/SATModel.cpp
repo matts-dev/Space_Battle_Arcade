@@ -13,22 +13,6 @@ namespace SAT
 
 	}
 
-	void Model::draw(Shader& shader)
-	{
-		for (unsigned int i = 0; i < meshes.size(); ++i)
-		{
-			meshes[i].draw(shader);
-		}
-	}
-
-	void Model::drawInstanced(Shader& shader, unsigned int instanceCount)
-	{
-		for (unsigned int i = 0; i < meshes.size(); ++i)
-		{
-			meshes[i].drawInstanced(shader, instanceCount);
-		}
-	}
-
 
 	/* must be called after ctor creates vao*/
 	void Model::setInstancedModelMatricesData(glm::mat4* modelMatrices, unsigned int count)
