@@ -7,6 +7,7 @@ namespace SAT
 	//forward declarations outside of SA namespace
 	class CubeShape;
 	class PolygonCapsuleShape;
+	class ShapeRender;
 }
 
 namespace SA
@@ -63,6 +64,9 @@ namespace SA
 
 		sp<SAT::CubeShape> cubeShape;
 		sp<SAT::PolygonCapsuleShape> polyShape;
+
+		sp<SAT::ShapeRender> cubeRenderer;
+		sp<SAT::ShapeRender> polyRenderer;
 
 		bool bAutoSave = true;
 	public:

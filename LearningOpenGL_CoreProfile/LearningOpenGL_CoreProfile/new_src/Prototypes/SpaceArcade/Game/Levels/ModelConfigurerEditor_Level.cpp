@@ -56,6 +56,8 @@ namespace SA
 			polyShape = new_sp<SAT::PolygonCapsuleShape>();
 			cubeShape = new_sp<SAT::CubeShape>();
 		}
+		cubeRenderer = new_sp<SAT::ShapeRender>(*cubeShape);
+		polyRenderer = new_sp<SAT::ShapeRender>(*polyShape);
 	}
 
 	void ModelConfigurerEditor_Level::endLevel_v()
@@ -63,9 +65,12 @@ namespace SA
 		SpaceArcade& game = SpaceArcade::get();
 		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
 
+		//cleaning up OpenGL resources immediately, these should get cleaned up with their dtors when this dtor is hit; so probably unecessary to do here
 		model3DShader = nullptr;
 		collisionShapeShader = nullptr;
 		shapeRenderer = nullptr;
+		cubeRenderer = nullptr;
+		polyRenderer = nullptr;
 	}
 
 	void ModelConfigurerEditor_Level::handleUIFrameStarted()
@@ -424,15 +429,28 @@ namespace SA
 				snprintf(tempTextBuffer, sizeof(tempTextBuffer), "shape %d : %s", shapeIdx, shapeToStr((ECollisionShape) shapeConfig.shape));
 				if (ImGui::Selectable(tempTextBuffer, shapeIdx == selectedShapeIdx))
 				{
-					selectedShapeIdx = shapeIdx;
+					if (selectedShapeIdx != shapeIdx)
+					{
+						selectedShapeIdx = shapeIdx;
+					}
+					else
+					{
+						selectedShapeIdx = -1;
+					}
 				}
 				if (shapeIdx == selectedShapeIdx)
 				{
 					if (selectedShapeIdx >= 0 && selectedShapeIdx < (int)activeConfig->shapes.size())
 					{
-						ImGui::InputFloat3("Scale", &activeConfig->shapes[selectedShapeIdx].scale.x);
-						ImGui::InputFloat3("Rotation", &activeConfig->shapes[selectedShapeIdx].rotationDegress.x);
-						ImGui::InputFloat3("Translation", &activeConfig->shapes[selectedShapeIdx].position.x);
+						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Scale Shape %d", selectedShapeIdx);
+						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].scale.x);
+
+						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Rotation Shape %d", selectedShapeIdx);
+						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].rotationDegress.x);
+
+						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Translation Shape %d", selectedShapeIdx);
+						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].position.x);
+
 						ImGui::RadioButton("Cube", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::CUBE);
 						ImGui::SameLine(); ImGui::RadioButton("PolyCapsule", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::POLYCAPSULE);
 					}
@@ -533,17 +551,15 @@ namespace SA
 				if (bRenderAABB)
 				{
 					std::tuple<vec3, vec3> aabbRange = renderModel->getAABB();
-					vec3 aabbScale = std::get<1>(aabbRange) - std::get<0>(aabbRange); //max - min
-					mat4 aabbModel = glm::scale(rootModelMat, aabbScale);
-					//struct RenderParameters
-					//{
-					//	const glm::mat4& model;
-					//	const glm::mat4& view;
-					//	const glm::mat4& projection;
-					//	const glm::vec3 color;
-					//	const uint32_t renderMode = GL_FILL;
-					//	const uint32_t restoreToRenderMode = GL_FILL;
-					//};
+					vec3 aabbMinToMax = std::get<1>(aabbRange) - std::get<0>(aabbRange); //max - min
+
+					//correct for model center mis-alignments; this should be cached in game so it isn't calculated each frame
+					vec3 aabbCenterPnt = std::get</*min*/0>(aabbRange) + (0.5f * aabbMinToMax);
+					//we can now use aabbCenter as a translation vector for the aabb!
+
+					mat4 aabbModel = glm::translate(rootModelMat, aabbCenterPnt);
+					aabbModel = glm::scale(aabbModel, aabbMinToMax);
+
 					shapeRenderer->renderUnitCube({ aabbModel, view, projection, glm::vec3(0,0,1), GL_LINE, GL_FILL });
 				}
 
@@ -559,20 +575,29 @@ namespace SA
 						mat4 shapeModelMatrix = rootModelMat * xform.getModelMatrix();
 						
 						SAT::Shape* shapeObj = nullptr;
+						SAT::ShapeRender* shapeObjRenderer = nullptr;
 						switch (static_cast<ECollisionShape>(shape.shape))
 						{
 							case ECollisionShape::CUBE:
 								shapeObj = cubeShape.get();
+								shapeObjRenderer = cubeRenderer.get();
 								break;
 							case ECollisionShape::POLYCAPSULE:
 							default:
 								shapeObj = polyShape.get();
+								shapeObjRenderer = polyRenderer.get();
 								break;
 						}
-						shapeObj->updateTransform(shapeModelMatrix);
-						vec3 color = shapeIdx == selectedShapeIdx ? vec3(0.2f, 1.f, 0.f) : vec3(1, 0, 0);
 
-						//SAT::drawDebugCollisionShape(*collisionShapeShader, *shapeObj, color, 1.f, true, true, view, projection);
+						shapeObj->updateTransform(shapeModelMatrix);
+						vec3 color = shapeIdx == selectedShapeIdx ? vec3(1.f, 1.f, 0.25f) : vec3(1, 0, 0);
+						collisionShapeShader->use();
+						collisionShapeShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+						collisionShapeShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+						collisionShapeShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(shapeModelMatrix));
+						collisionShapeShader->setUniform3f("color", color);
+
+						shapeObjRenderer->render();
 						++shapeIdx;
 					}
 				}
