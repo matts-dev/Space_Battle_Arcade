@@ -7,16 +7,11 @@
 #include <gtx/quaternion.hpp>
 
 #include "..\GameFramework\SAGameEntity.h"
+#include "SACollisionShapes.h"
 #include <vector>
 
 namespace SA
 {
-	enum class ECollisionShape : int
-	{
-		CUBE, POLYCAPSULE
-	};
-	const char* const shapeToStr(ECollisionShape value);
-
 	struct CollisionShapeConfig
 	{
 		int shape;		//avoiding strict alias violation, this is int type rather than enum

@@ -20,7 +20,7 @@ namespace SAT
 		~Model();
 
 		template <typename Shader>
-		void draw(Shader& shader);
+		void draw(Shader& shader) const;
 
 		template <typename Shader>
 		void drawInstanced(Shader& shader, unsigned int instanceCount);
@@ -57,7 +57,7 @@ namespace SAT
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	template <typename Shader>
-	void Model::draw(Shader& shader)
+	void Model::draw(Shader& shader) const
 	{
 		for (unsigned int i = 0; i < meshes.size(); ++i)
 		{

@@ -19,6 +19,9 @@
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
 #include "../../Rendering/OpenGLHelpers.h"
+#include "../SACollisionShapes.h"
+#include "../../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
+
 
 namespace
 {
@@ -91,6 +94,16 @@ namespace SA
 
 			std::string activeConfigText = activeConfig ? activeConfig->getName() : "None";
 			ImGui::Text("Loaded Config: "); ImGui::SameLine(); ImGui::Text(activeConfigText.c_str());
+
+			if (activeConfig)
+			{
+				ImGui::SameLine(); 
+				if (ImGui::Button("Save Model"))
+				{
+					activeConfig->save();
+				}
+			}
+
 			ImGui::Separator();
 
 			/////////////////////////////////////
@@ -450,15 +463,56 @@ namespace SA
 						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Translation Shape %d", selectedShapeIdx);
 						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].position.x);
 
-						ImGui::RadioButton("Cube", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::CUBE);
-						ImGui::SameLine(); ImGui::RadioButton("PolyCapsule", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::POLYCAPSULE);
+						ImGui::RadioButton("Cube (3e 3f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::CUBE);
+						ImGui::SameLine(); ImGui::RadioButton("PolyCapsule (7e 6f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::POLYCAPSULE);
+						if (bShowCustomShapes)
+						{
+							ImGui::RadioButton("Wedge (12e 5f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::WEDGE);
+							ImGui::SameLine(); ImGui::RadioButton("Pyramid (8e 5f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::PYRAMID);
+							if (bShowSlowShapes)
+							{
+								ImGui::RadioButton("Icosphere (15e 10f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::ICOSPHERE);
+								ImGui::SameLine(); ImGui::RadioButton("UVSphere (36e 16f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::UVSPHERE);
+							}
+						}
 					}
 				}
 				++shapeIdx;
 			}
 			ImGui::Dummy(ImVec2(0, 20));
+			ImGui::Checkbox("Show Custom Shapes", &bShowCustomShapes);
+			ImGui::SameLine(); ImGui::Checkbox("Show Slow Shapes", &bShowSlowShapes);
 			ImGui::Checkbox("Render Collision Shapes", &bRenderCollisionShapes);
 			ImGui::Checkbox("Render With Lines", &bRenderCollisionShapesLines);
+
+			ImGui::Dummy(ImVec2(0, 20));
+			if (ImGui::TreeNode("What's (3e 3f) mean?"))
+			{
+				const char* msg_3f3e = R"(
+The collision uses the "Separating Axis Theorem" (SAT) to determine if two objects are colliding. Without going into the specifics, SAT can test if two shapes are colliding via a set of tests. These tests involve the shape's faces and edges between faces. 3e 3f means this shape as 3 edges and 3 faces
+)";
+				ImGui::TextWrapped(msg_3f3e);
+				ImGui::Dummy(ImVec2(0, 20));
+
+				const char* msg_howtouse = R"(
+How is this useful? Collision is an expensive test. SAT works by generating a set axes (think a group of lines). It then casts shadows of the shapes onto the axes to see if there is any place where the shape's shadows doesn't overlap. If there exists a place where the shadow's don't overlap, then the shapes are not colliding. Where the 3e 3f is relevant is in how those axes are generated. Each face has an axis following its normal. Each edge from shape 'A' must be combined with every edge in the other shape 'B' to generate an axis (for the math junkies, the axis is the result of a cross product). Casting A's shadow onto a single axis is also a slow operation; each vertex in 'A' must be projected onto the axis. So, the less axes needing testing the better!
+)";
+				ImGui::TextWrapped(msg_howtouse);
+				ImGui::Dummy(ImVec2(0, 20));
+
+				const char* msg_example = R"(
+As an example, say we do a collision test between two cubes, A and B; that is testing (3e3f) with (3e3f). Since each cube has 3 faces, that's 6 total axes from the faces (3 + 3). However, we must multiply the edges together, not add. So that is 3e * 3e = 9 axes from the edges. That totals 15 axes to test (6 + 9). So, it is much better to have less edges. Testing a pyramid(8e5f) with a cube(3e3f) results in 8e*3e + 5f+3f = 24axes + 8axes = 32axes; yikes. So, prefer cubes if possible!
+)";
+				ImGui::TextWrapped(msg_example);
+				ImGui::Dummy(ImVec2(0, 20));
+
+				const char* msg_whatShouldIDo = R"(
+So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as few shapes as possible. In regards to point 2: if each model has 3 collision shapes, then that is 3x3=9 tests that need to happen. Each of those tests entails what was described above. There is a general pre-test that uses 2 cubes (AABB pretest optimization) that does a quick filter at the expense of 2 cube tests. But if that test fails, then all the collision shapes will be tested. Which means you may see drops in framerate when objects get really close to colliding if you use a lot of shapes.
+)";
+				ImGui::TextWrapped(msg_whatShouldIDo);
+				ImGui::TreePop();
+			}
+
 			ImGui::Dummy(ImVec2(0, 20));
 
 		}
@@ -583,6 +637,13 @@ namespace SA
 						collisionShapeShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(shapeModelMatrix));
 						collisionShapeShader->setUniform3f("color", color);
 
+
+						SpaceArcade& game = SpaceArcade::get();
+						static auto renderShape = [](ECollisionShape shape, const sp<Shader>& shader) {
+							const sp<const SAT::Model>& modelForShape = SpaceArcade::get().getCollisionShapeFactoryRef().getModelForShape(shape);
+							modelForShape->draw(*shader);
+						};
+
 						ECollisionShape shapeType = static_cast<ECollisionShape>(shape.shape);
 						switch (shapeType)
 						{
@@ -593,12 +654,36 @@ namespace SA
 									break;
 								}
 							case ECollisionShape::POLYCAPSULE:
-							default:
 								{
 									capsuleRenderer->render();
 									break;
 								}
-								break;
+							case ECollisionShape::WEDGE:
+								{
+									renderShape(ECollisionShape::WEDGE, collisionShapeShader);
+									break;
+								}
+							case ECollisionShape::PYRAMID:
+								{
+									renderShape(ECollisionShape::PYRAMID, collisionShapeShader);
+									break;
+								}
+							case ECollisionShape::UVSPHERE:
+								{
+									renderShape(ECollisionShape::UVSPHERE, collisionShapeShader);
+									break;
+								}
+							case ECollisionShape::ICOSPHERE:
+								{
+									renderShape(ECollisionShape::ICOSPHERE, collisionShapeShader);
+									break;
+								}
+							default:
+								{
+									//show a cube if something went wrong
+									shapeRenderer->renderUnitCube({ shapeModelMatrix, view, projection, color, renderMode, /*will correct after loop*/renderMode });
+									break;
+								}
 						}
 
 						++shapeIdx;

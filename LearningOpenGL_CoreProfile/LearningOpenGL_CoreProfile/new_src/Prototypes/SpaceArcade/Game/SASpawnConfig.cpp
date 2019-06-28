@@ -165,18 +165,6 @@ namespace SA
 		return nullptr;
 	}
 
-	const char* const shapeToStr(ECollisionShape value)
-	{
-		switch (value)
-		{
-			case ECollisionShape::CUBE:
-				return "Cube";
-			case ECollisionShape::POLYCAPSULE:
-				return "PolyCapsule";
-			default:
-				return "invalid";
-		}
-	}
 
 }
 

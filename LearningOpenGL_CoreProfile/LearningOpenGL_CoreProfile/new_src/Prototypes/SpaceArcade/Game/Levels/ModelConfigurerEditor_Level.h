@@ -53,6 +53,8 @@ namespace SA
 		bool bRenderAABB = true;
 		bool bRenderCollisionShapes = true;
 		bool bRenderCollisionShapesLines = false;
+		bool bShowCustomShapes = false;
+		bool bShowSlowShapes = false;
 		int selectedShapeIdx = -1;
 
 	private:

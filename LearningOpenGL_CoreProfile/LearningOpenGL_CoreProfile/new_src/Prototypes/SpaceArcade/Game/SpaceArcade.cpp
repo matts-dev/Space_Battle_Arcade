@@ -33,6 +33,7 @@
 #include "UI/SAUIRootWindow.h"
 #include "SAPlayer.h"
 #include "../GameFramework/SAPlayerSystem.h"
+#include "SACollisionShapes.h"
 
 namespace SA
 {
@@ -54,6 +55,8 @@ namespace SA
 		debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false);
 
 		sp<Player> playerZero = getPlayerSystem().createPlayer<Player>();
+
+		collisionShapeFactory = new_sp<CollisionShapeFactory>();
 
 		////set up unit cube
 		//ec(glGenVertexArrays(1, &cubeVAO));

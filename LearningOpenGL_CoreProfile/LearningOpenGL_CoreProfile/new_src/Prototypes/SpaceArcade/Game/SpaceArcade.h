@@ -21,6 +21,8 @@ namespace SA
 	class UISystem;
 	class ModSystem;
 	
+	class CollisionShapeFactory;
+
 	class UIRootWindow;
 
 	class SpaceArcade : public GameBase
@@ -29,7 +31,7 @@ namespace SA
 		static SpaceArcade& get();
 
 	private:
-		virtual sp<SA::Window> startUp() override;
+		virtual sp<SA::Window> startUp() override; 
 		virtual void shutDown() override;
 		virtual void tickGameLoop(float deltaTimeSecs) override;
 		virtual void renderLoop(float deltaTimeSecs) override;
@@ -54,6 +56,17 @@ namespace SA
 		sp<UISystem> uiSystem;
 		sp<ModSystem> modSystem;
 		/////////////////////////////////////////////////////////////////////////////////////
+
+		//////////////////////////////////////////////////////////////////////////////////////
+		//  Persistent Storage
+		/////////////////////////////////////////////////////////////////////////////////////
+	public:
+		CollisionShapeFactory& getCollisionShapeFactoryRef() { return *collisionShapeFactory; }
+		/** provided for easy caching */
+		sp<CollisionShapeFactory> getCollisionShapeFactory() { return collisionShapeFactory; }
+	private:
+		sp<CollisionShapeFactory> collisionShapeFactory = nullptr;
+		////////////////////////////////////////////////////////////////////////////////////
 
 	public:
 		UniformResourceLocators URLs;

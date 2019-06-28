@@ -46,7 +46,7 @@ namespace SAT
 		~LoadedMesh();
 
 		template <typename Shader>
-		void draw(Shader& shader);
+		void draw(Shader& shader) const;
 
 		template <typename Shader>
 		void drawInstanced(Shader& shader, unsigned int instanceCount) const;
@@ -73,7 +73,7 @@ namespace SAT
 
 
 	template <typename Shader>
-	void LoadedMesh::draw(Shader& shader)
+	void LoadedMesh::draw(Shader& shader) const
 	{
 		using std::string;
 
