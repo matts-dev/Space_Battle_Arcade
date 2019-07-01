@@ -177,7 +177,7 @@ namespace SA
 
 	sp<SA::ModelCollisionInfo> SpawnConfig::toCollisionInfo()
 	{
-		//@optimize: cache some of these matrix operations so that they're not calculated every time
+		//#optimize: cache some of these matrix operations so that they're not calculated every time
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
 		sp<ModelCollisionInfo> collisionInfo = new_sp<ModelCollisionInfo>();
