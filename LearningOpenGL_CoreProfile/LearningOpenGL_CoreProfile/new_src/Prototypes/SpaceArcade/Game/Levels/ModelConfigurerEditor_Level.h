@@ -1,6 +1,6 @@
 #pragma once
 #include "..\..\GameFramework\SALevel.h"
-#include "SABaseLevel.h"
+#include "SASpaceLevelBase.h"
 
 namespace SAT
 {
@@ -67,7 +67,6 @@ namespace SA
 
 		sp<SAT::CubeShape> cubeShape;
 		sp<SAT::PolygonCapsuleShape> polyShape;
-
 		sp<SAT::CapsuleRenderer> capsuleRenderer;
 
 		bool bAutoSave = true;

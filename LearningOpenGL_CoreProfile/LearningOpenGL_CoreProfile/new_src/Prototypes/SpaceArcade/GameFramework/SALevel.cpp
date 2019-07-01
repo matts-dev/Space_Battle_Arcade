@@ -36,6 +36,14 @@ namespace SA
 	{
 	}
 
+	void LevelBase::onEntitySpawned_v(const sp<WorldEntity>& spawned)
+	{
+	}
+
+	void LevelBase::onEntityUnspawned_v(const sp<WorldEntity>& unspawned)
+	{
+	}
+
 	void LevelBase::tick(float dt_sec)
 	{
 		float dialated_dt_sec = dt_sec * timeDialationFactor;

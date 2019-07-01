@@ -7,15 +7,23 @@
 
 namespace SA
 {
+	class SpawnConfig;
+	class ModelCollisionInfo;
+
 	class Ship : public RenderModelEntity
 	{
 	public:
+		/*deprecated*/
 		Ship(
 			const sp<Model3D>& model,
 			const Transform& spawnTransform,
 			const sp<ModelCollisionInfo>& inCollisionData
 			);
 
+		/*preferred method of construction*/
+		Ship(const sp<SpawnConfig>& spawnConfig, const Transform& spawnTransform);
+
+		const sp<const ModelCollisionInfo>& getCollisionInfo() const;
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
@@ -28,8 +36,9 @@ namespace SA
 		std::vector<sp<SH::GridNode<WorldEntity>>> overlappingNodes_SH;
 
 	private:
-		const sp<ModelCollisionInfo> collisionData;
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
+		const sp<ModelCollisionInfo> collisionData;
+		const sp<const ModelCollisionInfo> constViewCollisionData;
 
 		glm::vec3 velocity;
 	};

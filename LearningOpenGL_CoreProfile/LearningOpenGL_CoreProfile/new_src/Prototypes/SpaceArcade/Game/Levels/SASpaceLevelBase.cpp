@@ -1,4 +1,4 @@
-#include "SABaseLevel.h"
+#include "SASpaceLevelBase.h"
 #include "..\..\Rendering\BuiltInShaders.h"
 #include "..\..\GameFramework\SAPlayerSystem.h"
 #include "..\..\GameFramework\SAGameBase.h"
@@ -10,11 +10,11 @@
 namespace SA
 {
 
-	BaseSpaceLevel::BaseSpaceLevel()
+	SpaceLevelBase::SpaceLevelBase()
 	{
 	}
 
-	void BaseSpaceLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
+	void SpaceLevelBase::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		using glm::vec3; using glm::mat4;
 
@@ -44,7 +44,7 @@ namespace SA
 		}
 	}
 
-	void BaseSpaceLevel::startLevel_v()
+	void SpaceLevelBase::startLevel_v()
 	{
 		LevelBase::startLevel_v();
 
@@ -52,7 +52,7 @@ namespace SA
 
 	}
 
-	void BaseSpaceLevel::endLevel_v()
+	void SpaceLevelBase::endLevel_v()
 	{
 		//this means that we're going to generate a new shader between each level transition.
 		//this can be avoided with static members or by some other mechanism, but I do not see 

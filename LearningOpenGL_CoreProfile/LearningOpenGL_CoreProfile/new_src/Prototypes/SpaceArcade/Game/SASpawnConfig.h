@@ -12,15 +12,19 @@
 
 namespace SA
 {
+	class SpawnConfig;
+	class Model3D;
+	class ModelCollisionInfo;
+
 	struct CollisionShapeConfig
 	{
-		int shape;		//avoiding strict alias violation, this is int type rather than enum
+		int shape;		//avoiding strict alias violation, this is int type rather than enum;
 		glm::vec3 scale{ 1,1,1 };
 		glm::vec3 rotationDegrees{ 0,0,0 };
 		glm::vec3 position{ 0,0,0 };
 	};
 
-	class SpawnConfig
+	class SpawnConfig final
 	{
 		friend class ModelConfigurerEditor_Level;
 		class PrivateKey
@@ -38,6 +42,11 @@ namespace SA
 		void deserialize(const std::string& str);
 
 		std::string getRepresentativeFilePath();
+
+	public: //utility functions
+		sp<SA::ModelCollisionInfo> toCollisionInfo();
+		sp<Model3D> getModel() const;
+
 
 	public:
 		static sp<SpawnConfig> load(std::string filePathCopy);
@@ -59,8 +68,9 @@ namespace SA
 		
 		//color/material
 		//team
-	private: //nonserialized properites
+	private: //non serialized properties
 		std::string owningModDir;      //do not serialize this, spawn configs should be copy-and-pastable to other mods; set on loading
 	};
+
 
 }

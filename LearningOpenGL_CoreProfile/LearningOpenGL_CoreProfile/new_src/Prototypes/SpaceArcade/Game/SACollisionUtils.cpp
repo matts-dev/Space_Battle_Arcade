@@ -3,6 +3,8 @@
 #include "..\..\..\Algorithms\SpatialHashing\SHDebugUtils.h"
 #include "..\Rendering\OpenGLHelpers.h"
 #include "..\GameFramework\SAWorldEntity.h"
+#include "..\Tools\ModelLoading\SAModel.h"
+#include "SASpawnConfig.h"
 
 namespace SA
 {
@@ -14,16 +16,23 @@ namespace SA
 	{
 		/** axis aligned bounding box(AABB); transform each point to get OBB */
 		sp<ModelCollisionInfo> defaultInfo = new_sp<ModelCollisionInfo>();
-		defaultInfo->configuredCollisionShapes.push_back(new_sp<SAT::CubeShape>());
-		defaultInfo->configuredCollisionShapeTransforms.push_back(Transform{});
-		defaultInfo->localAABB[0] = SH::AABB[0];
-		defaultInfo->localAABB[1] = SH::AABB[1];
-		defaultInfo->localAABB[2] = SH::AABB[2];
-		defaultInfo->localAABB[3] = SH::AABB[3];
-		defaultInfo->localAABB[4] = SH::AABB[4];
-		defaultInfo->localAABB[5] = SH::AABB[5];
-		defaultInfo->localAABB[6] = SH::AABB[6];
-		defaultInfo->localAABB[7] = SH::AABB[7];
+
+		ModelCollisionInfo::ShapeData shapeData;
+		shapeData.shapeType = ECollisionShape::CUBE;
+		shapeData.shape = new_sp<SAT::CubeShape>();
+		shapeData.localXform = glm::mat4{1.f};
+		defaultInfo->addNewCollisionShape(shapeData);
+
+		std::array<glm::vec4, 8>& defaultInfoAABB = defaultInfo->getLocalAABB();
+		defaultInfoAABB[0] = SH::AABB[0];
+		defaultInfoAABB[1] = SH::AABB[1];
+		defaultInfoAABB[2] = SH::AABB[2];
+		defaultInfoAABB[3] = SH::AABB[3];
+		defaultInfoAABB[4] = SH::AABB[4];
+		defaultInfoAABB[5] = SH::AABB[5];
+		defaultInfoAABB[6] = SH::AABB[6];
+		defaultInfoAABB[7] = SH::AABB[7];
+
 		return defaultInfo;
 	}
 

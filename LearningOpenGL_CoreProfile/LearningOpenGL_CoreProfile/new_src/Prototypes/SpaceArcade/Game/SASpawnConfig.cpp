@@ -5,6 +5,10 @@
 #include "SpaceArcade.h"
 #include <fstream>
 #include <sstream>
+#include "..\Tools\ModelLoading\SAModel.h"
+#include "..\GameFramework\SAAssetSystem.h"
+#include <detail\type_mat.hpp>
+#include "SACollisionUtils.h"
 
 
 using json = nlohmann::json;
@@ -165,6 +169,80 @@ namespace SA
 		return nullptr;
 	}
 
+	sp<SA::Model3D> SpawnConfig::getModel() const
+	{
+		static SpaceArcade& game = SpaceArcade::get();
+		return game.getAssetSystem().loadModel(fullModelFilePath.c_str());
+	}
+
+	sp<SA::ModelCollisionInfo> SpawnConfig::toCollisionInfo()
+	{
+		//@optimize: cache some of these matrix operations so that they're not calculated every time
+		using glm::vec3; using glm::vec4; using glm::mat4;
+
+		sp<ModelCollisionInfo> collisionInfo = new_sp<ModelCollisionInfo>();
+
+		Transform rootXform;
+		rootXform.position = modelPosition;
+		rootXform.scale = modelScale;
+		rootXform.rotQuat = getRotQuatFromDegrees(modelRotationDegrees);
+		mat4 rootModelMat = rootXform.getModelMatrix();
+
+		collisionInfo->setRootXform(rootModelMat);
+
+		////////////////////////////////////////////////////////
+		//SHAPES
+		////////////////////////////////////////////////////////
+		CollisionShapeFactory& shapeFactory = SpaceArcade::get().getCollisionShapeFactoryRef();
+		for (const CollisionShapeConfig& shapeConfig : shapes)
+		{
+			Transform xform;
+			xform.position = shapeConfig.position;
+			xform.scale = shapeConfig.scale;
+			xform.rotQuat = getRotQuatFromDegrees(shapeConfig.rotationDegrees);
+			mat4 shapeXform = rootModelMat * xform.getModelMatrix();
+
+			ModelCollisionInfo::ShapeData shapeData;
+			shapeData.shapeType = static_cast<ECollisionShape>(shapeConfig.shape);
+			shapeData.shape = shapeFactory.generateShape(static_cast<ECollisionShape>(shapeConfig.shape));
+			shapeData.localXform = shapeXform;
+			collisionInfo->addNewCollisionShape(shapeData);
+		}
+
+		////////////////////////////////////////////////////////
+		//AABB / OBB
+		////////////////////////////////////////////////////////
+		if (sp<Model3D> model = getModel())
+		{
+			std::tuple<vec3, vec3> aabbRange = model->getAABB();
+			vec3 aabbSize = std::get<1>(aabbRange) - std::get<0>(aabbRange); //max - min
+
+			//correct for model center mis-alignments; this should be cached in game so it isn't calculated each frame
+			vec3 aabbCenterPnt = std::get</*min*/0>(aabbRange) + (0.5f * aabbSize);
+
+			//we can now use aabbCenter as a translation vector for the aabb!
+			mat4 aabbModel = glm::translate(rootModelMat, aabbCenterPnt);
+			aabbModel = glm::scale(aabbModel, aabbSize);
+			std::array<glm::vec4, 8>& collisionLocalAABB = collisionInfo->getLocalAABB();
+			collisionLocalAABB[0] = aabbModel * SH::AABB[0];
+			collisionLocalAABB[1] = aabbModel * SH::AABB[1];
+			collisionLocalAABB[2] = aabbModel * SH::AABB[2];
+			collisionLocalAABB[3] = aabbModel * SH::AABB[3];
+			collisionLocalAABB[4] = aabbModel * SH::AABB[4];
+			collisionLocalAABB[5] = aabbModel * SH::AABB[5];
+			collisionLocalAABB[6] = aabbModel * SH::AABB[6];
+			collisionLocalAABB[7] = aabbModel * SH::AABB[7];
+
+			collisionInfo->setAABBLocalXform(aabbModel);
+			collisionInfo->setOBBShape(shapeFactory.generateShape(ECollisionShape::CUBE));
+		}
+		else
+		{
+			log("SpawnConfig", LogLevel::LOG_WARNING, "No model available when creating collision info!" __FUNCTION__);
+		}
+
+		return collisionInfo;
+	}
 
 }
 

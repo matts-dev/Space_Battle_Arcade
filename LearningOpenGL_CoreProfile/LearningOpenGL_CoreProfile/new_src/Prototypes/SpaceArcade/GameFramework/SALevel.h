@@ -45,6 +45,8 @@ namespace SA
 	protected: //virtuals; protected indicates that sub-classes may need to call super::virtual_method
 		virtual void startLevel_v() = 0;
 		virtual void endLevel_v() = 0;
+		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned);
+		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned);
 	private: //virtuals; private indicates subclasses inherit when function called, but now how function is completed.
 		virtual void tick(float dt_sec);
 	public:
@@ -71,6 +73,7 @@ namespace SA
 			sp<T> entity = new_sp<T>(std::forward<Args>(args)...);
 			worldEntities.insert(entity);
 			renderEntities.insert(entity);
+			onEntitySpawned_v(entity);
 			return entity;
 		}
 
@@ -81,6 +84,8 @@ namespace SA
 			bool foundInAllLocations = renderEntities.find(entity) != renderEntities.end() && worldEntities.find(entity) != worldEntities.end();
 			worldEntities.erase(entity);
 			renderEntities.erase(entity);
+
+			onEntityUnspawned_v(entity);
 			return foundInAllLocations;
 		}
 }

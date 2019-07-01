@@ -537,9 +537,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\SABaseLevel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -586,6 +583,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionShapes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\SASpaceLevelBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SACollisionDebugRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1511,9 +1514,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SABaseLevel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1557,6 +1557,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionShapes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SASpaceLevelBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SACollisionDebugRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

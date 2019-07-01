@@ -8,7 +8,7 @@ namespace SA
 	class InputProcessor;
 	class CameraBase;
 
-	class PlayerBase : GameEntity
+	class PlayerBase : public GameEntity
 	{
 	private:
 		virtual void postConstruct() override;

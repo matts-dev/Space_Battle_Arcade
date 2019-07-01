@@ -48,6 +48,8 @@ namespace SA
 		virtual ~GameEntity(){}
 
 	protected:
+		//new_sp will call this function after the object has been created, allowing GameEntities to subscribe to delegates immediately after construction
+		virtual void postConstruct() {};
 
 		/** Not intended to be called directl; please use macro "sp_this" to avoid specifying template types*/
 		template<typename T>
@@ -61,8 +63,6 @@ namespace SA
 		template<typename T, typename... Args>
 		friend sp<T> new_sp(Args&&... args);
 		 
-		//new_sp will call this function after the object has been created, allowing GameEntities to subscribe to delegates immediately after construction
-		virtual void postConstruct() {};
 	};
 }
 
@@ -104,7 +104,7 @@ namespace SA
 		{
 			sp<T> newObj = std::make_shared<T>(std::forward<Args>(args)...);
 			//safe cast because of type-trait
-			GameEntity* newGameEntity = reinterpret_cast<GameEntity*>(newObj.get());
+			GameEntity* newGameEntity = static_cast<GameEntity*>(newObj.get());
 			newGameEntity->postConstruct();
 			return newObj;
 		}

@@ -1,25 +1,28 @@
 #include "ModelConfigurerEditor_Level.h"
+
+#include <filesystem>
+
+#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+
 #include "../SpaceArcade.h"
 #include "../SAUISystem.h"
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
-#include "../../Rendering/Camera/SACameraBase.h"
+#include "../SAModSystem.h"
+#include "../SASpawnConfig.h"
+#include "../SAPrimitiveShapeRenderer.h"
+#include "../SACollisionShapes.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/Input/SAInput.h"
 #include "../../GameFramework/SAPlayerSystem.h"
-#include "../SAModSystem.h"
-#include "../SASpawnConfig.h"
-#include <filesystem>
 #include "../../GameFramework/SAGameBase.h"
 #include "../../GameFramework/SAAssetSystem.h"
 #include "../../GameFramework/SALog.h"
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../Rendering/BuiltInShaders.h"
 #include "../../Tools/DataStructures/SATransform.h"
-#include "../SAPrimitiveShapeRenderer.h"
+#include "../../Rendering/OpenGLHelpers.h"
+#include "../../Rendering/Camera/SACameraBase.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
-#include "../../Rendering/OpenGLHelpers.h"
-#include "../SACollisionShapes.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
 
 
@@ -572,12 +575,14 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
+		//TODO refactor this to use the CollisionDebugRenderer class
+
 		if (renderModel && shapeRenderer && activeConfig)
 		{
 			Transform rootXform;
 			rootXform.position = activeConfig->modelPosition;
 			rootXform.scale = activeConfig->modelScale;
-			rootXform.rotQuat = getRotQuatForDegrees(activeConfig->modelRotationDegrees);
+			rootXform.rotQuat = getRotQuatFromDegrees(activeConfig->modelRotationDegrees);
 			mat4 rootModelMat = rootXform.getModelMatrix();
 
 			const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
@@ -627,7 +632,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						Transform xform;
 						xform.position = shape.position;
 						xform.scale = shape.scale;
-						xform.rotQuat = getRotQuatForDegrees(shape.rotationDegrees);
+						xform.rotQuat = getRotQuatFromDegrees(shape.rotationDegrees);
 						mat4 shapeModelMatrix = rootModelMat * xform.getModelMatrix();
 						
 						vec3 color = shapeIdx == selectedShapeIdx ? vec3(1.f, 1.f, 0.25f) : vec3(1, 0, 0);

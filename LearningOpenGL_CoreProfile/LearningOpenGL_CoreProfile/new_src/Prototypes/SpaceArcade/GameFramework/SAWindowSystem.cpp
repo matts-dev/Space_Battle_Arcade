@@ -12,11 +12,16 @@ namespace SA
 		if (window)
 		{
 			glfwMakeContextCurrent(window->get());
+
+			focusedWindow = window; //make sure assignment happens before event broadcast
+
 			onWindowAcquiredOpenglContext.broadcast(window);
 		}
+		else
+		{
+			focusedWindow = nullptr;
+		}
 
-
-		focusedWindow = window;
 	}
 
 	void WindowSystem::tick(float deltaSec)
