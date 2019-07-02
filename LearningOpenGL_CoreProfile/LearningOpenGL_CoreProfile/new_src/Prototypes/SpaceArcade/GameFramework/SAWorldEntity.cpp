@@ -11,5 +11,11 @@ namespace SA
 		return game.getLevelSystem().getCurrentLevel().get();
 	}
 
+	const sp<const ModelCollisionInfo>& WorldEntity::getCollisionInfo() const
+	{
+		static sp<const ModelCollisionInfo> nullCollision = nullptr;
+		return nullCollision;
+	}
+
 }
 

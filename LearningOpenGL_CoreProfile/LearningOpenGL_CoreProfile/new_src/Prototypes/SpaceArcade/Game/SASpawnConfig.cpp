@@ -1,14 +1,14 @@
 #include "SASpawnConfig.h"
-#include "..\..\..\..\Libraries\nlohmann\json.hpp"
-#include "..\GameFramework\SALog.h"
+#include "../../../../Libraries/nlohmann/json.hpp"
+#include "../GameFramework/SALog.h"
 #include "SAModSystem.h"
 #include "SpaceArcade.h"
 #include <fstream>
 #include <sstream>
-#include "..\Tools\ModelLoading\SAModel.h"
-#include "..\GameFramework\SAAssetSystem.h"
-#include <detail\type_mat.hpp>
-#include "SACollisionUtils.h"
+#include "../Tools/ModelLoading/SAModel.h"
+#include "../GameFramework/SAAssetSystem.h"
+#include <detail/type_mat.hpp>
+#include "../GameFramework/SACollisionUtils.h"
 
 
 using json = nlohmann::json;
@@ -128,7 +128,7 @@ namespace SA
 		//replace windows filepath separators with unix separators
 		for (uint32_t charIdx = 0; charIdx < filePath.size(); ++charIdx)
 		{
-			if (filePath[charIdx] == '\\')
+			if (filePath[charIdx] == '//')
 			{
 				filePath[charIdx] = '/';
 			}

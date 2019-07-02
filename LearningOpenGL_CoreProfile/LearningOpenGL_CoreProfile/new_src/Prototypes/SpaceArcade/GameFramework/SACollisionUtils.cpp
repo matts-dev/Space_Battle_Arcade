@@ -1,9 +1,23 @@
-#include "SACollisionShapes.h"
-#include "..\GameFramework\SALog.h"
-#include "..\..\..\Algorithms\SeparatingAxisTheorem\ModelLoader\SATModel.h"
-#include "..\..\..\Algorithms\SeparatingAxisTheorem\SATComponent.h"
+#include "SACollisionUtils.h"
+#include "../Rendering/SAShader.h"
+#include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
+#include "../Rendering/OpenGLHelpers.h"
+#include "../Tools/ModelLoading/SAModel.h"
+#include "../GameFramework/SAWorldEntity.h"
+//#include "SASpawnConfig.h"
+
+#include "../GameFramework/SALog.h"
+#include "../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
+#include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
 
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// data local to this cpp
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 using TriangleCCW = SAT::DynamicTriangleMeshShape::TriangleProcessor::TriangleCCW;
 using TriangleProcessor = SAT::DynamicTriangleMeshShape::TriangleProcessor;
 
@@ -21,6 +35,186 @@ namespace
 	SA::sp<TriangleProcessor> icosphereTriProc = nullptr;
 	SA::sp<TriangleProcessor> uvsphereTriProc = nullptr;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace SA
+{
+
+	//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	sp<SA::ModelCollisionInfo> createUnitCubeCollisionInfo()
+	{
+		/** axis aligned bounding box(AABB); transform each point to get OBB */
+		sp<ModelCollisionInfo> defaultInfo = new_sp<ModelCollisionInfo>();
+
+		ModelCollisionInfo::ShapeData shapeData;
+		shapeData.shapeType = ECollisionShape::CUBE;
+		shapeData.shape = new_sp<SAT::CubeShape>();
+		shapeData.localXform = glm::mat4{1.f};
+		defaultInfo->addNewCollisionShape(shapeData);
+
+		std::array<glm::vec4, 8>& defaultInfoAABB = defaultInfo->getLocalAABB();
+		defaultInfoAABB[0] = SH::AABB[0];
+		defaultInfoAABB[1] = SH::AABB[1];
+		defaultInfoAABB[2] = SH::AABB[2];
+		defaultInfoAABB[3] = SH::AABB[3];
+		defaultInfoAABB[4] = SH::AABB[4];
+		defaultInfoAABB[5] = SH::AABB[5];
+		defaultInfoAABB[6] = SH::AABB[6];
+		defaultInfoAABB[7] = SH::AABB[7];
+
+		return defaultInfo;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	// Spatial hashing debug information
+	/////////////////////////////////////////////////////////////////////////////////////////////
+
+	/*static*/ void SpatialHashCellDebugVisualizer::clearCells(SH::SpatialHashGrid<WorldEntity>& grid)
+	{
+		auto& gridCells = gridNameToCells[&grid];
+		gridCells.clear();
+	}
+
+	/*static*/ void SpatialHashCellDebugVisualizer::appendCells(SH::SpatialHashGrid<WorldEntity>& grid, SH::HashEntry<WorldEntity>& collisionHandle)
+	{
+		auto& gridCellLocs = gridNameToCells[&grid];
+
+		static std::vector<std::shared_ptr<const SH::HashCell<WorldEntity>>> cells;
+		static std::vector<glm::ivec3> cellLocs;
+		static int oneTimeStaticLocalSetup = [&]() -> int {
+			cells.reserve(500);
+			cellLocs.reserve(500);
+			return 0;
+		}();
+
+		//clear contents from previous call
+		cells.clear();
+		cellLocs.clear();
+
+		grid.lookupCellsForEntry(collisionHandle, cells);
+
+		cellLocs.reserve(cells.size());
+		for (const std::shared_ptr<const SH::HashCell<WorldEntity>>& cell : cells)
+		{
+			cellLocs.push_back(cell->location);
+		}
+
+		gridCellLocs.insert(std::end(gridCellLocs), std::begin(cellLocs), end(cellLocs));
+	}
+
+	/*static*/ void SpatialHashCellDebugVisualizer::render(
+		SH::SpatialHashGrid<WorldEntity>& grid,
+		const glm::mat4& view,
+		const glm::mat4& projection,
+		glm::vec3 color /*= glm::vec3(1,1,1)*/)
+	{
+		static Shader debugLineShader{ SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false };
+		auto& gridCells = gridNameToCells[&grid];
+
+		ec(glDepthFunc(GL_ALWAYS));
+		SH::drawCells(gridCells, grid.gridCellSize, color, debugLineShader, glm::mat4(1.0f), view, projection);
+		ec(glDepthFunc(GL_LESS));
+
+		gridCells.reserve(gridCells.size());
+		gridCells.clear();
+	}
+
+	std::map<
+		SH::SpatialHashGrid<WorldEntity>*,
+		std::vector<glm::ivec3>
+	> SpatialHashCellDebugVisualizer::gridNameToCells;
+
+
+
+	ModelCollisionInfo::ModelCollisionInfo()
+	{
+		setOBBShape(new_sp<SAT::CubeShape>());
+	}
+
+	void ModelCollisionInfo::updateToNewWorldTransform(glm::mat4 worldXform)
+	{
+		for (const ModelCollisionInfo::ShapeData& shapeData : shapeData)
+		{
+			shapeData.shape->updateTransform(worldXform * shapeData.localXform);
+		}
+
+		obbShape->updateTransform(worldXform * aabbLocalXform);
+		
+		worldOBB[0] = worldXform * localAABB[0];
+		worldOBB[1] = worldXform * localAABB[1];
+		worldOBB[2] = worldXform * localAABB[2];
+		worldOBB[3] = worldXform * localAABB[3];
+		worldOBB[4] = worldXform * localAABB[4];
+		worldOBB[5] = worldXform * localAABB[5];
+		worldOBB[6] = worldXform * localAABB[6];
+		worldOBB[7] = worldXform * localAABB[7];
+
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 namespace SA
@@ -91,12 +285,12 @@ namespace SA
 			}
 			return nullptr;
 		};
-		
+
 		::pyramidTriProc = getTriProcessor(pyramidModel);
 		::wedgeTriProc = getTriProcessor(wedgeModel);
 		::icosphereTriProc = getTriProcessor(icosphereModel);
 		::uvsphereTriProc = getTriProcessor(uvsphereModel);
-		
+
 	}
 
 
@@ -168,5 +362,4 @@ namespace SA
 				}
 		}
 	}
-
 }

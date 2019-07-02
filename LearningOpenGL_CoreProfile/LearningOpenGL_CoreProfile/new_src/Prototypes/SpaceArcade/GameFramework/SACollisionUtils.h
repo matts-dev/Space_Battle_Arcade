@@ -8,13 +8,21 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "..\..\..\Algorithms\SpatialHashing\SpatialHashingComponent.h"
-#include "..\..\..\Algorithms\SeparatingAxisTheorem\SATComponent.h"
+#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
-#include "..\GameFramework\SASystemBase.h"
-#include "..\Tools\DataStructures\SATransform.h"
-#include "..\Tools\RemoveSpecialMemberFunctionUtils.h"
-#include "..\Rendering\SAShader.h"
+#include "../GameFramework/SASystemBase.h"
+#include "../Tools/DataStructures/SATransform.h"
+#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "../Rendering/SAShader.h"
+
+namespace SAT
+{
+	//forward declarations
+	class Model;
+	class Shape;
+}
+
 
 namespace SA
 {
@@ -23,15 +31,27 @@ namespace SA
 	class SpawnConfig;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
+	// The available collision shapes
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	enum class ECollisionShape : int
+	{
+		CUBE, POLYCAPSULE, WEDGE, PYRAMID, ICOSPHERE, UVSPHERE
+	};
+	const char* const shapeToStr(ECollisionShape value);
+
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Collision information configured for a model; includes shapes for separating axis theorem 
 	// and bounding box for spatial hashing
 	//
 	// This class is designed to be strictly const-correct. Const objects have much access restricted,
 	// but enough access to be usable. Non-const objects are essentially modifiable like a struct
+	// #TODO refactor name to just collision info
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	class ModelCollisionInfo : public RemoveMoves, public RemoveCopies
 	{
 	public:
+
 		/** code duplication isn't great, but this is an easy way to provide a const-view 
 			of the shape data that is also cache coherent friendly*/
 		struct ShapeData
@@ -52,6 +72,9 @@ namespace SA
 
 
 	public: //take a look at data members, these are accesses that provide struct-like access to non-const objs
+
+		ModelCollisionInfo();
+
 		const glm::mat4& getRootXform() const { return rootXform; }
 		void setRootXform(const glm::mat4& newXform) { rootXform = newXform; }
 
@@ -60,12 +83,18 @@ namespace SA
 		const std::array<glm::vec4, 8>& getLocalAABB() const { return localAABB; }
 		std::array<glm::vec4, 8>& getLocalAABB() { return localAABB; }
 
+		const std::array<glm::vec4, 8>& getWorldOBB() const { return worldOBB; }
+		
 		const glm::mat4& getAABBLocalXform() const { return aabbLocalXform; }
 		void setAABBLocalXform(const glm::mat4& newLocalAABBXform) { aabbLocalXform = newLocalAABBXform; }
 
-		const sp<const SAT::Shape>& getOBBShape() const {return obbShape;}
+		const sp<const SAT::Shape>& getOBBShape() const {return obbShape_constView;}
 		const sp<SAT::Shape>& getOBBShape(){ return obbShape; }
-		void setOBBShape(sp<SAT::Shape> inShape) { obbShape = inShape; }
+		void setOBBShape(sp<SAT::Shape> inShape) { 
+			obbShape = inShape;
+			obbShape_constView = inShape; 
+		}
+		
 
 		/** const version returns an immutable SAT::Shape object
 			non-const version is mostly immutable, but the shape object can be manipulated (but not changed to a new shape)
@@ -79,18 +108,28 @@ namespace SA
 			constShapeData.push_back(cShapeData);
 		}
 
+	public:
+		void updateToNewWorldTransform(glm::mat4 worldXform);
+
+
 	private:
 		/** local transform that moves the model so the origin is correctly positioned for pivoting */
 		glm::mat4 rootXform = glm::mat4(1.f);
 
-		/** AABB that has been transformed relative to local model transform; it is used by spatial hashing for cell calculationsl */
+		/** AABB that has been transformed relative to local model transform; it is used by spatial hashing for cell calculations */
 		std::array<glm::vec4, 8> localAABB;
+
+		/** AABB => OBB in world space; this is only updated after a call to "updateToNewWorldTransform"; used in spatial hash calculations */
+		std::array<glm::vec4, 8> worldOBB;
 
 		/** OBB pretest optimization; #aabbLocalXform a scales unit cube AABB, then translates to center
 			typically column mat usage should be something like: obbMat = worldEntityModalMat * aabbLocalXform; 
-			obbShape will need its transform updated with the matrix above*/
+			obbShape will need its transform updated with the matrix above.
+			This is used for SAT pretest calculations */
 		glm::mat4 aabbLocalXform = glm::mat4{ 1.f };
 		sp<SAT::Shape> obbShape;
+		sp<const SAT::Shape> obbShape_constView;
+
 
 		/** SAT collision shapes and their local transforms; see ShapeData documentation about code duplication
 		 Grouping data into structs *may* help with cache coherency*/
@@ -124,4 +163,17 @@ namespace SA
 
 		static sp<Shader> debugShader;
 	};
+
+	class CollisionShapeFactory : public GameEntity
+	{
+	public:
+		CollisionShapeFactory();
+
+	public:
+		sp<SAT::Shape> generateShape(ECollisionShape shape) const;
+
+		/* For debug rendering*/
+		sp<const SAT::Model> getModelForShape(ECollisionShape shape) const;
+	};
+
 }

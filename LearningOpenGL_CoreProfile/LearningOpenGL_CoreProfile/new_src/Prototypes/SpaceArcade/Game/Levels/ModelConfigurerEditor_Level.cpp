@@ -9,7 +9,6 @@
 #include "../SAModSystem.h"
 #include "../SASpawnConfig.h"
 #include "../SAPrimitiveShapeRenderer.h"
-#include "../SACollisionShapes.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/Input/SAInput.h"
 #include "../../GameFramework/SAPlayerSystem.h"
@@ -24,6 +23,7 @@
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
+#include "../../GameFramework/SACollisionUtils.h"
 
 
 namespace

@@ -1,6 +1,6 @@
 #pragma once
 #include "SAGameEntity.h"
-#include "Interfaces\SATickable.h"
+#include "Interfaces/SATickable.h"
 
 #include <set>
 
@@ -11,7 +11,7 @@
 
 #include "RenderModelEntity.h"
 #include "SAWorldEntity.h"
-#include "..\..\..\Algorithms\SpatialHashing\SpatialHashingComponent.h"
+#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 
 namespace SA
 {

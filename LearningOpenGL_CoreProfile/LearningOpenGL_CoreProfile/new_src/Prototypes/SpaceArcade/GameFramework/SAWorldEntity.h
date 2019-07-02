@@ -6,6 +6,7 @@
 namespace SA
 {
 	class LevelBase;
+	class ModelCollisionInfo;
 
 	/**
 		A world entity is a game entity that has a physical presence in the game world.
@@ -28,6 +29,11 @@ namespace SA
 
 		inline const Transform& getTransform() const noexcept				{ return transform; }
 		inline void				setTransform(const Transform& inTransform)	{ transform = inTransform; }
+
+		/* returns reference for speed, to opt out of containing collision data, override hasCollisionData to false and
+		 use the default implementation WorldEntity::getCollisionInfo() to return nullptr;*/
+		virtual const sp<const ModelCollisionInfo>& getCollisionInfo() const = 0;
+		virtual bool hasCollisionInfo() const = 0;
 
 	protected:
 		/** World returns a raw pointer because caching a world sp will often result cyclic references. 

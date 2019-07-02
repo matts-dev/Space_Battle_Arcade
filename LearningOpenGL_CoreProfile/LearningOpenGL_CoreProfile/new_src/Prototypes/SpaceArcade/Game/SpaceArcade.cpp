@@ -19,7 +19,7 @@
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
 
-#include "SACollisionUtils.h"
+#include "../GameFramework/SACollisionUtils.h"
 #include "SAProjectileSystem.h"
 #include "SAUISystem.h"
 #include "SAModSystem.h"
@@ -33,7 +33,6 @@
 #include "UI/SAUIRootWindow.h"
 #include "SAPlayer.h"
 #include "../GameFramework/SAPlayerSystem.h"
-#include "SACollisionShapes.h"
 
 namespace SA
 {

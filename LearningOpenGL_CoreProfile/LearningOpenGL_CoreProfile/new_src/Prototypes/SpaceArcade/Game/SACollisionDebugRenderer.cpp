@@ -2,11 +2,11 @@
 #include "SpaceArcade.h"
 #include "../GameFramework/SAWindowSystem.h"
 #include "../Rendering/SAWindow.h"
-#include "SACollisionShapes.h"
 #include "../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
 #include "../Rendering/OpenGLHelpers.h"
 #include "../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
 #include "SAPrimitiveShapeRenderer.h"
+#include "../GameFramework/SACollisionUtils.h"
 
 namespace SA
 {

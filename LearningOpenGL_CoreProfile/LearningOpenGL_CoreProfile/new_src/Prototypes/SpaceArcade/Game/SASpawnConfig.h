@@ -6,8 +6,7 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "..\GameFramework\SAGameEntity.h"
-#include "SACollisionShapes.h"
+#include "../GameFramework/SAGameEntity.h"
 #include <vector>
 
 namespace SA

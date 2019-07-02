@@ -1,8 +1,9 @@
 #include "SAShip.h"
 #include "SpaceArcade.h"
-#include "..\GameFramework\SALevel.h"
+#include "../GameFramework/SALevel.h"
 #include "SASpawnConfig.h"
-#include "..\GameFramework\SAGameEntity.h"
+#include "../GameFramework/SAGameEntity.h"
+#include "SAProjectileSystem.h"
 
 
 namespace SA
@@ -13,7 +14,8 @@ namespace SA
 		const sp<ModelCollisionInfo>& inCollisionData
 	)
 		: RenderModelEntity(model, spawnTransform),
-		collisionData(inCollisionData)
+		collisionData(inCollisionData),
+		constViewCollisionData(collisionData)
 	{
 		overlappingNodes_SH.reserve(10);
 
@@ -57,7 +59,8 @@ namespace SA
 		{
 			Transform xform = getTransform();
 			glm::mat4 xform_m = xform.getModelMatrix();
-			collisionHandle = world->getWorldGrid().insert(*this, getWorldOBB(xform_m));
+			//collisionHandle = world->getWorldGrid().insert(*this, getWorldOBB(xform_m));
+			collisionHandle = world->getWorldGrid().insert(*this, collisionData->getWorldOBB()); 
 		}
 		else
 		{
@@ -71,16 +74,15 @@ namespace SA
 		xform.position += velocity * deltaTimeSecs;
 		glm::mat4 movedXform_m = xform.getModelMatrix();
 
-		for (const ModelCollisionInfo::ShapeData& shapeData : collisionData->getShapeData())
-		{
-			shapeData.shape->updateTransform(movedXform_m * shapeData.localXform);
-		}
+		//update collision data
+		collisionData->updateToNewWorldTransform(movedXform_m);
 
 		//update the spatial hash
 		if (LevelBase* world = getWorld())
 		{
 			SH::SpatialHashGrid<WorldEntity>& worldGrid = world->getWorldGrid();
-			worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));
+			//worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));
+			worldGrid.updateEntry(collisionHandle, collisionData->getWorldOBB());
 
 			//test if collisions occurred
 			overlappingNodes_SH.clear();
@@ -100,21 +102,26 @@ namespace SA
 
 	} 
 
-	const std::array<glm::vec4, 8> Ship::getWorldOBB(const glm::mat4 xform) const
+	//const std::array<glm::vec4, 8> Ship::getWorldOBB(const glm::mat4 xform) const
+	//{
+	//	const std::array<glm::vec4, 8>& localAABB = collisionData->getLocalAABB();
+	//	const std::array<glm::vec4, 8> OBB =
+	//	{
+	//		xform * localAABB[0],
+	//		xform * localAABB[1],
+	//		xform * localAABB[2],
+	//		xform * localAABB[3],
+	//		xform * localAABB[4],
+	//		xform * localAABB[5],
+	//		xform * localAABB[6],
+	//		xform * localAABB[7],
+	//	};
+	//	return OBB;
+	//}
+
+	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
-		const std::array<glm::vec4, 8>& localAABB = collisionData->getLocalAABB();
-		const std::array<glm::vec4, 8> OBB =
-		{
-			xform * localAABB[0],
-			xform * localAABB[1],
-			xform * localAABB[2],
-			xform * localAABB[3],
-			xform * localAABB[4],
-			xform * localAABB[5],
-			xform * localAABB[6],
-			xform * localAABB[7],
-		};
-		return OBB;
+		
 	}
 
 }

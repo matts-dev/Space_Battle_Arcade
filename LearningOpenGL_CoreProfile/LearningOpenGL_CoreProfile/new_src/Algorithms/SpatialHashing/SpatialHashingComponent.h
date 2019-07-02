@@ -956,8 +956,8 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			float cZ = std::ceil(intersectPoint.z / gridCellSize.z)  * gridCellSize.z;
 
 			//account for when intersection point lies exactly on grid value; 
-			// direct float comparisions should be okay -- if are slightly different '
-			//then logic above deterining cX will have worked.
+			// direct float comparisions should be okay -- if they're slightly different 
+			//then logic above determining cX will have worked.
 			if (fX == cX) { cX += fX < 0 ? -gridCellSize.x : gridCellSize.x; };
 			if (fY == cY) { cY += fY < 0 ? -gridCellSize.y : gridCellSize.y; };
 			if (fZ == cZ) { cZ += fZ < 0 ? -gridCellSize.z : gridCellSize.z; };
@@ -997,7 +997,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 				}
 			}
 
-			bool intersects = enterTs[2] < exitTs[0];
+			bool intersects = enterTs[2] <= exitTs[0];
 			if (intersects)
 			{
 				//collision is that of the enter values
