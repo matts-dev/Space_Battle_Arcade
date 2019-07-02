@@ -107,6 +107,7 @@ namespace SA
 		if(const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{
 			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleLeftMouseButton);
+			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleRightMouseButton);
 		}
 
 		sp<Model3D> laserBoltModel = assetSS.getModel(game.URLs.laserURL);
@@ -156,6 +157,33 @@ namespace SA
 						glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
 						glm::vec3 direction = camera->getFront();
 						projectileSys->spawnProjectile(start, direction, *laserBoltHandle);
+
+						if (bFreezeTimeOnClick)
+						{
+							getWorldTimeManager()->setTimeFreeze(true);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	void BasicTestSpaceLevel::handleRightMouseButton(int state, int modifier_keys)
+	{
+		if (state == GLFW_PRESS)
+		{
+			SpaceArcade& game = SpaceArcade::get();
+			if (const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
+			{
+				if (const sp<CameraBase>& camera = player->getCamera())
+				{
+					if (!camera->isInCursorMode())
+					{
+						const sp<TimeManager>& worldTime = getWorldTimeManager();
+						if (worldTime->isTimeFrozen())
+						{
+							getWorldTimeManager()->setFramesToStep(1);
+						}
 					}
 				}
 			}
@@ -180,6 +208,8 @@ namespace SA
 		}
 		if (!bInCursorMode) { return; }
 
+		const sp<TimeManager>& timeManager = getWorldTimeManager();
+
 
 		ImGui::SetNextWindowPos(ImVec2{ 25, 25 });
 		//ImGui::SetNextWindowSize(ImVec2{ 400, 600 });
@@ -199,6 +229,31 @@ namespace SA
 			ImGui::Checkbox("Render Spatial Hash Cells", &game.bRenderDebugCells);
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 			ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
+
+			////////////////////////////////////////////////////////
+			// TIME 
+			////////////////////////////////////////////////////////
+			ImGui::Separator();
+			if (ImGui::Button("ToggleTimeFreeze")) 
+			{ 
+				timeManager->setTimeFreeze(!timeManager->isTimeFrozen());
+			}
+			if (ImGui::Button("Step Time 1 Frame"))
+			{
+				timeManager->setFramesToStep(1);
+			}
+			ImGui::Checkbox("Freeze Time On Click", &bFreezeTimeOnClick);
+			if (ImGui::SliderFloat("Time Dilation", &timeDilationFactor, 0.001f, 4.f))
+			{
+				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("reset"))
+			{
+				timeDilationFactor = 1.f;
+				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor);
+			}
+
 		}
 		ImGui::End();
 	}

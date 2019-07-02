@@ -1,6 +1,7 @@
 #pragma once
-#include "..\GameFramework\SASystemBase.h"
-#include "..\Tools\DataStructures\MultiDelegate.h"
+#include "../GameFramework/SASystemBase.h"
+#include "../Tools/DataStructures/MultiDelegate.h"
+#include "SATimeManagementSystem.h"
 //#include "SALevel.h"
 
 namespace SA
@@ -30,6 +31,7 @@ namespace SA
 
 	private:
 		sp<LevelBase> loadedLevel = nullptr;
+		sp<TimeManager> levelTimeManager = nullptr;
 	};
 
 

@@ -117,7 +117,7 @@ namespace SA
 		glm::mat4 rootXform = glm::mat4(1.f);
 
 		/** AABB that has been transformed relative to local model transform; it is used by spatial hashing for cell calculations */
-		std::array<glm::vec4, 8> localAABB;
+		std::array<glm::vec4, 8> localAABB; //TODO remove this in favor of worldOBB?
 
 		/** AABB => OBB in world space; this is only updated after a call to "updateToNewWorldTransform"; used in spatial hash calculations */
 		std::array<glm::vec4, 8> worldOBB;

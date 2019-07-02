@@ -148,6 +148,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASystemBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.h" />
@@ -404,6 +405,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_MultipleInstantiation.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.cpp" />

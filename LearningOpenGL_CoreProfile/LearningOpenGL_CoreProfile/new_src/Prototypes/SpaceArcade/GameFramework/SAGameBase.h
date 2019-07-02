@@ -2,8 +2,9 @@
 #include <set>
 
 #include "SAGameEntity.h"
-#include "..\Tools\RemoveSpecialMemberFunctionUtils.h"
-#include "..\Tools\DataStructures\MultiDelegate.h"
+#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "../Tools/DataStructures/MultiDelegate.h"
+#include "SATimeManagementSystem.h"
 
 namespace SA
 {
@@ -103,15 +104,14 @@ namespace SA
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Time
 	//////////////////////////////////////////////////////////////////////////////////////
+	public:
+		TimeSystem& getTimeSystem() { return timeSystem; }
+		TimeManager& getSystemTimeManager(){ return *systemTimeManager; }
 
 	private: //time management 
 		/** Time management needs to be separate from systems since their tick relies on its results. */
-		void updateTime();
-		float currentTime = 0; 
-		float lastFrameTime = 0;
-		float rawDeltaTimeSecs = 0;
-		float deltaTimeSecs = 0.f;
-		float MAX_DELTA_TIME_SECS = 0.5f;
+		TimeSystem timeSystem;
+		sp<TimeManager> systemTimeManager;
 	};
 
 }

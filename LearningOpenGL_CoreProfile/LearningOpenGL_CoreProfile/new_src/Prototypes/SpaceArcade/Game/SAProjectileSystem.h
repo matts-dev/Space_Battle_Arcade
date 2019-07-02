@@ -52,11 +52,11 @@ namespace SA
 		float speed;
 		float lifetimeSec;
 		float timeAlive;
-		int ticksSinceHit;
+		bool forceRelease;
+		bool bHit;
 		sp<const Model3D> model;
-		bool bHit = false;
 
-		void tick(float dt_sec);
+		void tick(float dt_sec, LevelBase&);
 		void stretchToDistance(float distance, float bDoCollisionTest, LevelBase& currentLevel);
 	};
 

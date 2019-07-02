@@ -7,7 +7,7 @@
 #include "SAAssetSystem.h"
 #include "SALevelSystem.h"
 
-#include "..\Rendering\SAWindow.h"
+#include "../Rendering/SAWindow.h"
 #include "SALog.h"
 #include "SAPlayerSystem.h"
 
@@ -25,6 +25,10 @@ namespace SA
 		{
 			throw std::runtime_error("Only a single instance of the game can be created.");
 		}
+
+		//initialize time management systems
+		systemTimeManager = timeSystem.createManager();
+		timeSystem.markManagerCritical(TimeSystem::PrivateKey{}, systemTimeManager);
 		
 		//create and register systems
 		windowSystem = new_sp<WindowSystem>();
@@ -96,8 +100,10 @@ namespace SA
 
 	void GameBase::TickGameloop_GameBase()
 	{
-		updateTime();
+		timeSystem.updateTime(TimeSystem::PrivateKey{});
+		float deltaTimeSecs = systemTimeManager->getDeltaTimeSecs();
 
+		//#consider having system pass a reference to the system time manager, rather than a float; That way critical systems can ignore manipulation time effects or choose to use time affects. Passing raw time means systems will be forced to use time effects (such as dilation)
 		for (const sp<SystemBase>& system : systems) { system->tick(deltaTimeSecs);	}
 
 		//NOTE: there probably needs to be a priority based pre/post loop; but not needed yet so it is not implemented (priorities should probably be defined in a single file via template specliazations)
@@ -128,14 +134,6 @@ namespace SA
 		}
 	}
 
-	void GameBase::updateTime()
-	{
-		float currentTime = static_cast<float>(glfwGetTime());
-		rawDeltaTimeSecs = currentTime - lastFrameTime;
-		rawDeltaTimeSecs = rawDeltaTimeSecs > MAX_DELTA_TIME_SECS ? MAX_DELTA_TIME_SECS : rawDeltaTimeSecs;
-		deltaTimeSecs = rawDeltaTimeSecs;
-		lastFrameTime = currentTime;
-	}
 
 }
 

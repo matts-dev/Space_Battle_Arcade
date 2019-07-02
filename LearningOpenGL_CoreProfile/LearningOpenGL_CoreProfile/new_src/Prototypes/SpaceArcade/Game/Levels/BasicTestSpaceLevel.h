@@ -27,6 +27,7 @@ namespace SA
 		virtual void endLevel_v() override;
 
 		void handleLeftMouseButton(int state, int modifier_keys);
+		void handleRightMouseButton(int state, int modifier_keys);
 		void handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active);
 		void handleUIFrameStarted();
 
@@ -35,6 +36,8 @@ namespace SA
 		bool bRenderCollisionOBB = false;
 		bool bRenderCollisionShapes = false;
 #endif SA_RENDER_DEBUG_INFO
+		bool bFreezeTimeOnClick = false;
+		float timeDilationFactor = 1.f;
 
 	private:
 		//std::multimap<RenderModelEntity*, wp<RenderModelEntity>> cachedSpawnEntities;

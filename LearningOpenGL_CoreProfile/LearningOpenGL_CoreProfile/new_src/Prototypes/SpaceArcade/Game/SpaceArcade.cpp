@@ -33,6 +33,7 @@
 #include "UI/SAUIRootWindow.h"
 #include "SAPlayer.h"
 #include "../GameFramework/SAPlayerSystem.h"
+#include "../GameFramework/SATimeManagementSystem.h"
 
 namespace SA
 {
@@ -118,8 +119,11 @@ namespace SA
 				glm::vec3 color{ 0.5f, 0.f, 0.f };
 				SpatialHashCellDebugVisualizer::render(worldGrid, view, projection, color);
 			}
-			//TODO: this is a candidate for a ticker and a ticker system
-			SpatialHashCellDebugVisualizer::clearCells(worldGrid);
+			const sp<TimeManager>& worldTM = world->getWorldTimeManager();
+			if (!worldTM->isTimeFrozen())
+			{
+				SpatialHashCellDebugVisualizer::clearCells(worldGrid);
+			} 
 		}
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 		if (bRenderProjectileOBBs)

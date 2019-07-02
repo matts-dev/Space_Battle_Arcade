@@ -130,7 +130,6 @@ namespace SA
 		ec(glDepthFunc(GL_LESS));
 
 		gridCells.reserve(gridCells.size());
-		gridCells.clear();
 	}
 
 	std::map<

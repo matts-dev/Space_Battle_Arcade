@@ -16,12 +16,14 @@
 namespace SA
 {
 	class LevelSystem;
+	class TimeManager;
 
 	/** Base class for a level object */
 	class LevelBase : public GameEntity, public Tickable
 	{
 		friend LevelSystem;
 	public:
+		LevelBase();
 		virtual ~LevelBase();
 
 	public:
@@ -36,7 +38,8 @@ namespace SA
 
 		/** Get this level's collision grid */
 		inline SH::SpatialHashGrid<WorldEntity>& getWorldGrid() { return worldCollisionGrid; }
-		float getTimeDialationFactor() { return timeDialationFactor; }
+
+		inline const sp<TimeManager>& getWorldTimeManager() { return worldTimeManager; }
 
 	private:
 		void startLevel();
@@ -59,8 +62,10 @@ namespace SA
 
 		SH::SpatialHashGrid<WorldEntity> worldCollisionGrid{ glm::vec3(4,4,4) };
 
+		sp<TimeManager> worldTimeManager;
+
 	private:
-		float timeDialationFactor = 1.f;
+		bool bLevelStarted = false;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////

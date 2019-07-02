@@ -52,7 +52,7 @@ namespace SA
 	{
 		if (loadedLevel)
 		{
-			loadedLevel = nullptr;
+			unloadLevel(loadedLevel);
 		}
 	}
 

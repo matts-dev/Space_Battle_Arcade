@@ -1,9 +1,13 @@
 #include "SAProjectileSystem.h"
+
 #include "../Tools/SAUtilities.h"
 #include "../GameFramework/SAGameBase.h"
 #include "../GameFramework/SALevelSystem.h"
 #include "../GameFramework/SALevel.h"
 #include "../GameFramework/SACollisionUtils.h"
+#include "../GameFramework/SAGameBase.h"
+#include "../GameFramework/SATimeManagementSystem.h"
+
 #include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
 namespace SA
@@ -34,7 +38,7 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Actual Projectile Instances; these system is responsible for creating these instances
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	void Projectile::tick(float dt_sec)
+	void Projectile::tick(float dt_sec, LevelBase& currentLevel)
 	{
 		//////////////////////////////////////////////////////////////
 //#ifdef _DEBUG
@@ -48,18 +52,12 @@ namespace SA
 
 		using glm::mat4; using glm::vec3; using glm::quat; using glm::vec4;
 
-		float timeDialationFactor = 1.f;
 		//#optimize perhaps cache level system in local static for perf; profiler may cacn help to determine if this is worth it
-		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
-		{
-			timeDialationFactor = currentLevel->getTimeDialationFactor();
+		timeAlive += dt_sec;
 
-			timeAlive += dt_sec;
+		float dt_distance = dt_sec * speed;
 
-			float dt_distance = dt_sec * speed;
-
-			stretchToDistance(dt_distance, true, *currentLevel);
-		}
+		stretchToDistance(dt_distance, true, currentLevel);
 	}
 
 	void Projectile::stretchToDistance(float dt_distance, float bDoCollisionTest, LevelBase& currentLevel)
@@ -69,9 +67,8 @@ namespace SA
 		//if the projectile hit its target, change logic so it just stretches to hit location
 		if (bHit)
 		{
-			vec3 toHit = hitLocation - xform.position;
-			dt_distance = glm::length(toHit);
-			++ticksSinceHit;
+			forceRelease = true;
+			return;
 		}
 
 		//#optimize investigate whether some of the matrices below can be cached once (eg fire rotation? offsetDirection?)
@@ -172,11 +169,12 @@ namespace SA
 				}
 
 				//recalculate end point etc so visuals don't go through
+				xform.position = start;
 				stretchToDistance(hitDistance, false, currentLevel);
 
 				//make sure this projectile will expire on next tick!
 				hitLocation = hit;
-				ticksSinceHit = 0;
+				bHit = true;
 			}
 		}
 	}
@@ -185,32 +183,40 @@ namespace SA
 	// Projectile system
 	///////////////////////////////////////////////////////////////////////////////////////////////
 
-	void ProjectileSystem::postGameLoopTick(float dt_sec)
+	void ProjectileSystem::postGameLoopTick(float system_dt_sec)
 	{
-		auto iter = std::begin(activeProjectiles);
-		auto end = std::end(activeProjectiles);
-		while (iter != end)
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
 		{
-			//since projectiles may expire, we want need to remove them from the set of active projectiles
-			//we can do this while iterating over std::set, but we need to take care. Removing an interator
-			//only invalidates that iterator, but if it is invalidated we cannot get the next iterator from it.
-			//So, we copy the iterator and immediately get the next iterator; meaning removing the copy doesn't
-			//affect our ability to get the next iterator
-			auto iterCopy = iter;
-			++iter; 
+			const sp<TimeManager>& worldTM = currentLevel->getWorldTimeManager();
 
-			const sp<Projectile>& projectile = *iterCopy;
-			projectile->tick(dt_sec);
-
-			if (projectile->timeAlive > projectile->lifetimeSec || projectile->ticksSinceHit > 3)
+			if (!worldTM->isTimeFrozen())
 			{
-				
-				//note: this projectile will keep any sp alive, so clear before release if needed
-				objPool.releaseInstance(projectile);
+				auto iter = std::begin(activeProjectiles);
+				auto end = std::end(activeProjectiles);
+				while (iter != end)
+				{
+					//since projectiles may expire, we want need to remove them from the set of active projectiles
+					//we can do this while iterating over std::set, but we need to take care. Removing an interator
+					//only invalidates that iterator, but if it is invalidated we cannot get the next iterator from it.
+					//So, we copy the iterator and immediately get the next iterator; meaning removing the copy doesn't
+					//affect our ability to get the next iterator
+					auto iterCopy = iter;
+					++iter; 
 
-				//removing iterator from set does not invalidate other iterators; 
-				//IMPORANT: this must after releasing to pool, otherwise the smart pointer will be deleted
-				activeProjectiles.erase(iterCopy);
+					const sp<Projectile>& projectile = *iterCopy;
+					projectile->tick(worldTM->getDeltaTimeSecs(), *currentLevel);
+
+					if (projectile->timeAlive > projectile->lifetimeSec || projectile->forceRelease)
+					{
+				
+						//note: this projectile will keep any sp alive, so clear before release if needed
+						objPool.releaseInstance(projectile);
+
+						//removing iterator from set does not invalidate other iterators; 
+						//IMPORANT: this must after releasing to pool, otherwise the smart pointer will be deleted
+						activeProjectiles.erase(iterCopy);
+					}
+				}
 			}
 		}
 	}
@@ -240,9 +246,10 @@ namespace SA
 		//todo define an argument struct to pass for spawning projectiles
 		spawned->xform.position = start;
 		spawned->xform.rotQuat = spawnRotation;
+		spawned->renderXform = glm::scale(glm::mat4(1.f), { 0, 0, 0 });
 
 		spawned->bHit = false;
-		spawned->ticksSinceHit = 0;
+		spawned->forceRelease = false;
 
 		spawned->distanceStretchScale = 1;
 		spawned->direction_n = direction_n;
