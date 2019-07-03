@@ -10,6 +10,7 @@
 #include "../Rendering/SAWindow.h"
 #include "SALog.h"
 #include "SAPlayerSystem.h"
+#include "SAAutomatedTestSystem.h"
 
 namespace SA
 {
@@ -42,6 +43,10 @@ namespace SA
 
 		playerSystem = new_sp<PlayerSystem>();
 		systems.insert(playerSystem);
+
+		automatedTestSystem = new_sp<AutomatedTestSystem>();
+		systems.insert(automatedTestSystem);
+
 	}
 
 	GameBase* GameBase::RegisteredSingleton = nullptr;
@@ -76,6 +81,7 @@ namespace SA
 			}
 
 			//game loop processes
+			onGameloopBeginning.broadcast();
 			while (!bExitGame)
 			{
 				TickGameloop_GameBase();

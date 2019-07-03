@@ -1025,7 +1025,8 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			else
 			{
 #if SH_THROW_ERRORS
-				throw std::logic_error("Logic flaw: there was no intersect with cube during line trace -- this should never happen since cubes should surround");
+				//throw std::logic_error("Logic flaw: there was no intersect with cube during line trace -- this should never happen since cubes should surround");
+				std::cerr << "Logic flaw : there was no intersect with cube during line trace -- this should never happen since cubes should surround" << std::endl;
 #endif //SH_THROW_ERRORS
 				break;
 			}

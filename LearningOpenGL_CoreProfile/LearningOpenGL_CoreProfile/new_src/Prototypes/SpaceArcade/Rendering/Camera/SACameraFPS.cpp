@@ -45,6 +45,11 @@ namespace SA
 			pitch = 89.f;
 		else if (pitch < -89.0f)
 			pitch = -89.f;
+	
+		if (std::isinf(yaw))
+		{
+			yaw = 0;
+		}
 
 		calculateEulerAngles();
 	}
@@ -102,12 +107,22 @@ namespace SA
 	void CameraFPS::setYaw(float inYaw)
 	{
 		yaw = inYaw;
+		if (std::isinf(yaw))
+		{
+			yaw = 0;
+		}
 		calculateEulerAngles();
 	}
 
 	void CameraFPS::setPitch(float inPitch)
 	{
 		pitch = inPitch;
+
+		if (pitch > 89.0f)
+			pitch = 89.f;
+		else if (pitch < -89.0f)
+			pitch = -89.f;
+
 		calculateEulerAngles();
 	}
 
@@ -170,6 +185,15 @@ namespace SA
 		//must do this last because yaw operations depend on pitch being in radians
 		pitch = glm::degrees(pitch);
 		yaw = glm::degrees(yaw);
+
+		if (std::isinf(yaw)) 
+		{ 
+			yaw = 0;
+		}
+		if (std::isinf(pitch))
+		{
+			pitch = 0;
+		}
 
 		calculateEulerAngles();
 	}

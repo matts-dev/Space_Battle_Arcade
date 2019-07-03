@@ -591,6 +591,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\IterableHashSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1566,6 +1572,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

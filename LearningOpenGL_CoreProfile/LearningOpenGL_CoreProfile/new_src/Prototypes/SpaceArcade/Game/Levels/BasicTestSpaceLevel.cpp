@@ -233,6 +233,7 @@ namespace SA
 			////////////////////////////////////////////////////////
 			// TIME 
 			////////////////////////////////////////////////////////
+			ImGui::Dummy(ImVec2(0, 20.f));
 			ImGui::Separator();
 			if (ImGui::Button("ToggleTimeFreeze")) 
 			{ 
@@ -247,8 +248,7 @@ namespace SA
 			{
 				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor);
 			}
-			ImGui::SameLine();
-			if (ImGui::Button("reset"))
+			if (ImGui::Button("reset dilation"))
 			{
 				timeDilationFactor = 1.f;
 				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor);

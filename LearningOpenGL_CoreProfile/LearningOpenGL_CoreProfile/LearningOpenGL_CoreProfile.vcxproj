@@ -140,6 +140,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.h" />
@@ -173,6 +174,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAShader.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\IterableHashSet.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ObjectPools.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
@@ -398,6 +400,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\GameBaseTesting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_Callbacks.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />

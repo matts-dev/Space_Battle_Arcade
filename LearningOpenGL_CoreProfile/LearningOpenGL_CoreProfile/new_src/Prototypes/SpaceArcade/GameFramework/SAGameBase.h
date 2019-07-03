@@ -14,6 +14,7 @@ namespace SA
 	class AssetSystem;
 	class LevelSystem;
 	class PlayerSystem;
+	class AutomatedTestSystem;
 
 	class Window;
 
@@ -32,7 +33,6 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////
 	public:
 		GameBase();
-
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Base Class Singleton
@@ -64,6 +64,7 @@ namespace SA
 	//  GAME LOOP
 	//////////////////////////////////////////////////////////////////////////////////////
 	public:
+		MultiDelegate<> onGameloopBeginning;
 		MultiDelegate<float /*deltaSec*/> PreGameloopTick;
 		MultiDelegate<float /*deltaSec*/> PostGameloopTick;
 
@@ -84,6 +85,7 @@ namespace SA
 		inline AssetSystem& getAssetSystem() noexcept { return *assetSystem; }
 		inline LevelSystem& getLevelSystem() noexcept { return *levelSystem; }
 		inline PlayerSystem& getPlayerSystem() noexcept { return *playerSystem; }
+		inline AutomatedTestSystem& getAutomatedTestSystem() noexcept { return *automatedTestSystem;  };
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
 		void SubscribePostRender(const sp<SystemBase>& system);
@@ -98,6 +100,8 @@ namespace SA
 		sp<AssetSystem> assetSystem;
 		sp<LevelSystem> levelSystem;
 		sp<PlayerSystem> playerSystem;
+		sp<AutomatedTestSystem> automatedTestSystem;
+
 		std::set< sp<SystemBase> > systems;
 		std::set< sp<SystemBase> > postRenderNotifys;
 
@@ -112,6 +116,7 @@ namespace SA
 		/** Time management needs to be separate from systems since their tick relies on its results. */
 		TimeSystem timeSystem;
 		sp<TimeManager> systemTimeManager;
+
 	};
 
 }

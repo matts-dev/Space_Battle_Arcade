@@ -2,15 +2,56 @@
 
 #include "SAGameEntity.h"
 #include <set>
+#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "../Tools/DataStructures/MultiDelegate.h"
+#include "../Tools/DataStructures/IterableHashSet.h"
+#include <unordered_map>
 
 namespace SA
 {
+	//forward declarations
+	template<typename T>
+	class IterableHashSet;
+
+	//#consider this may be better suited as bit vector for masking operations (eg SUCCESS = DEFERRED | REMOVED | ADDED) 
+	enum class ETimerOperationResult : char
+	{
+		SUCCESS = 0,
+		FAILURE_TIMER_FOR_DELEGATE_EXISTS,
+		FAILURE_TIMER_NOT_FOUND,
+		FAILURE_NEGATIVE_DURATION,
+		DEFER_FAILURE_TIMER_FOR_DELEGATE_EXISTS,
+		DEFER_FAILURE_DELEGATE_ALREDY_PENDING_ADD,
+		DEFERRED
+
+	};
+
+	struct Timer
+	{
+	public:
+		/* @returns true when timer is complete and should be removed */
+		bool update(float dt_sec_dilated);
+		void reset();
+		void set(const sp<MultiDelegate<>>& callbackDelegate, float duration, bool bLoop);
+		const sp<MultiDelegate<>>& getUserCallback() { return userCallback; }
+
+	private:
+		float durationSecs = 0.f;
+		float currentTime = 0.f;
+		bool bLoop = false;
+		sp<MultiDelegate<>> userCallback;
+	};
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//An object that manipulates time; this allows creating time systems based on the true time, but with effects like 
 	//time dilation and time stepping and setting timers influenced on those effects
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	class TimeManager
+	class TimeManager final : public RemoveCopies, public RemoveMoves
 	{
+	public:
+		TimeManager();
+		virtual ~TimeManager() = default;
+		 
 	public:
 		/* Private key only allows friends to call ctor */
 		struct PrivateKey { private: friend class TimeSystem; PrivateKey() {}; };
@@ -29,6 +70,13 @@ namespace SA
 		inline bool isTimeFrozen() const { return bFreezeTime && framesToStep == 0; }
 		inline bool isFrameStepping() { return bFreezeTime && framesToStep > 0; }
 
+		/** timer functions returning bool indicate success/failure */
+		ETimerOperationResult createTimer(const sp<MultiDelegate<>>& callbackDelegate, float durationSec, bool bLoop = false);
+
+		/* notes: will if timer is going to tick this frame, the timer will tick regardless of if timer is removed */
+		ETimerOperationResult removeTimer(const sp<MultiDelegate<>>& callbackDelegate);
+		bool hasTimerForDelegate(const sp<MultiDelegate<>>& timerBoundDelegate);
+
 	private:
 		//next frame pattern prevents affects from happening mid-frame
 		float dt_undilatedSecs = 0.f;
@@ -40,6 +88,22 @@ namespace SA
 
 		float timeDilationFactor = 1.f;
 		float DilationFactor_nextFrame = 1.f;
+
+		bool bTickingTimers = false;
+
+		IterableHashSet<sp<Timer>> timers;
+		std::unordered_map<MultiDelegate<>*, sp<Timer>> delegateToTimerMap;
+
+		////////////////////////////////////////////////////////
+		//various helper data structures; 
+		////////////////////////////////////////////////////////
+		//helpers to add timers if user attempts to set timer while the timers are ticking
+		IterableHashSet<sp<Timer>> deferredTimersToAdd;
+		std::unordered_map<MultiDelegate<>*, sp<Timer>> deferredTimerDelegatesToAdd;
+		//deferred removes
+		std::vector<sp<Timer>> timersToRemoveWhenTickingOver;
+		uint32_t removeTimerReservationSpace = 20;
+
 	};
 
 
