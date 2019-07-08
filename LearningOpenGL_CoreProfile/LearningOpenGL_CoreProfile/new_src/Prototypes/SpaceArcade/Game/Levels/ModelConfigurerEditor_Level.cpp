@@ -414,7 +414,7 @@ namespace SA
 			// AABB
 			////////////////////////////////////////////////////////
 			ImGui::Checkbox("Show Model AABB collision", &bRenderAABB);
-			ImGui::Checkbox("Use Model AABB pretest optimization", &activeConfig->bUseModelAABBTest);
+			//ImGui::Checkbox("Use Model AABB pretest optimization", &activeConfig->bUseModelAABBTest);
 			ImGui::Dummy(ImVec2(0, 20));
 
 			////////////////////////////////////////////////////////

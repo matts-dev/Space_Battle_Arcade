@@ -80,7 +80,7 @@ namespace SA
 	//////////////////////////////////////////////////////////////////////////////////////
 	public:
 		//System getters (to prevent circular dependencies, be sure to use forward declared references)
-		// REFACTOR: returning raw reference like this allows for assignment; returning const sp<>& may be better, but may imply they're null (be impossible)
+		// REFACTOR: returning raw reference like this allows for assignment; returning const sp<>& may be better, but may imply they're null (be impossible); Perhaps add shared_ref feature, that's sref<>, and return const sref<system>
 		inline WindowSystem& getWindowSystem() noexcept { return *windowSystem; }
 		inline AssetSystem& getAssetSystem() noexcept { return *assetSystem; }
 		inline LevelSystem& getLevelSystem() noexcept { return *levelSystem; }

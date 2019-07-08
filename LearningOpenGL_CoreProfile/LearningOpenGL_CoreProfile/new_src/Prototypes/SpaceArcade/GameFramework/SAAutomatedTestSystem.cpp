@@ -456,40 +456,41 @@ namespace SA
 	void TimerTest::handleTestTimeOver()
 	{
 		char msg[2048];
+		constexpr size_t msgSize = sizeof(msg) / sizeof(msg[0]);
 
 		bAllPasing = true;
 
 		bAllPasing &= bBasicTimerTestPass;
-			snprintf(msg, sizeof(msg), "\t %s : Basic Timer Test", bBasicTimerTestPass ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize , "\t %s : Basic Timer Test", bBasicTimerTestPass ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
 		bAllPasing &= bRemoveTestPass;
-			snprintf(msg, sizeof(msg), "\t %s : Basic Remove Test", bRemoveTestPass ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize , "\t %s : Basic Remove Test", bRemoveTestPass ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
 		bAllPasing &= bLoopTestPassed;
-			snprintf(msg, sizeof(msg), "\t %s : Looping Timer Test", bLoopTestPassed ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize , "\t %s : Looping Timer Test", bLoopTestPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
 		bAllPasing &= bDuplicateTimerTestPassed;
-			snprintf(msg, sizeof(msg), "\t %s : Prevent Add Duplicate Timer Test", bDuplicateTimerTestPassed ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize , "\t %s : Prevent Add Duplicate Timer Test", bDuplicateTimerTestPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
 		bAllPasing &= bTimerFromTimerPassed;
-			snprintf(msg, sizeof(msg), "\t %s : Add non-same timer from timer callback test", bTimerFromTimerPassed ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize , "\t %s : Add non-same timer from timer callback test", bTimerFromTimerPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
 		//remove timer from timer
 		bAllPasing &= bRemoveTimerFromTimerPassed;
-			snprintf(msg, sizeof(msg), "\t %s : Remove non-same timer from timer callback test", bRemoveTimerFromTimerPassed ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize , "\t %s : Remove non-same timer from timer callback test", bRemoveTimerFromTimerPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
 		//timer clear test
 		bAllPasing &= bNonLoopTimersClearedPassed;
-			snprintf(msg, sizeof(msg), "\t %s : Non-loop timers cleared test", bNonLoopTimersClearedPassed ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize , "\t %s : Non-loop timers cleared test", bNonLoopTimersClearedPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
-		snprintf(msg, sizeof(msg), "%s : Ending Timer Tests", bAllPasing ? "PASSED" : "FAILED");
+		snprintf(msg, msgSize , "%s : Ending Timer Tests", bAllPasing ? "PASSED" : "FAILED");
 		log("TimerTest", LogLevel::LOG, msg);
 
 		bComplete = true; 

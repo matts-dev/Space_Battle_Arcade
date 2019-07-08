@@ -189,21 +189,21 @@ namespace SA
 
 		glm::vec3 getDifferentVector(glm::vec3 vec)
 		{
-			if (vec.x < vec.y && vec.z)
+			if (vec.x < vec.y && vec.x < vec.z)
 			{
 				vec.x = 1.f;
 			}
-			else if (vec.y < vec.x && vec.z)
+			else if (vec.y < vec.x && vec.y < vec.z)
 			{
 				vec.y = 1.f;
 			}
-			else if (vec.z < vec.x && vec.y)
+			else if (vec.z < vec.x && vec.z < vec.y)
 			{
 				vec.z = 1.f;
 			}
 			else //all are equal
 			{
-				if (vec.x == 1.f)
+				if (vec.x > 0.f)
 				{
 					vec.x = -1.f;
 				}
