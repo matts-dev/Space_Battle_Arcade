@@ -32,7 +32,7 @@ namespace SA
 		/* @returns true when timer is complete and should be removed */
 		bool update(float dt_sec_dilated);
 		void reset();
-		void set(const sp<MultiDelegate<>>& callbackDelegate, float duration, bool bLoop);
+		void set(const sp<MultiDelegate<>>& callbackDelegate, float duration, bool bLoop, float delaySecs);
 		const sp<MultiDelegate<>>& getUserCallback() { return userCallback; }
 
 	private:
@@ -71,7 +71,7 @@ namespace SA
 		inline bool isFrameStepping() { return bFreezeTime && framesToStep > 0; }
 
 		/** timer functions returning bool indicate success/failure */
-		ETimerOperationResult createTimer(const sp<MultiDelegate<>>& callbackDelegate, float durationSec, bool bLoop = false);
+		ETimerOperationResult createTimer(const sp<MultiDelegate<>>& callbackDelegate, float durationSec, bool bLoop = false, float delaySecs = 0.f);
 
 		/* notes: will if timer is going to tick this frame, the timer will tick regardless of if timer is removed */
 		ETimerOperationResult removeTimer(const sp<MultiDelegate<>>& callbackDelegate);

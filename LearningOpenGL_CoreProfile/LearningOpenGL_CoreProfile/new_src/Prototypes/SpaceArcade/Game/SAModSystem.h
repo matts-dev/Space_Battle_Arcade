@@ -10,7 +10,7 @@ namespace SA
 {
 	//forward declarations
 	class SpawnConfig;
-
+	class ProjectileConfig;
 
 	////////////////////////////////////////////////////////////////////
 	// Constants
@@ -46,13 +46,28 @@ namespace SA
 		std::string getModDirectoryPath();
 		bool isDeletable() { return bIsDeletable; }
 
+		////////////////////////////////////////////////////////
+		//SPAWN CONFIGS
+		////////////////////////////////////////////////////////
 		/** WARNING: Care must be taken not to call functions modify the return obj while iterating */
 		const std::map<std::string, sp<SpawnConfig>>& getSpawnConfigs() { return spawnConfigsByName; }
 		void addSpawnConfig(sp<SpawnConfig>& spawnConfig);
 		void removeSpawnConfig(sp<SpawnConfig>& spawnConfig);
 
-		/** WARNING: this will delete teh spawn config from the file system!*/
+		/** WARNING: this will delete the spawn config from the file system! */
 		void deleteSpawnConfig(sp<SpawnConfig>& spawnConfig);
+
+		////////////////////////////////////////////////////////
+		//PROJECTILE CONFIGS
+		////////////////////////////////////////////////////////
+		/** WARNING: Care must be taken not to call functions that modify the return obj while iterating */
+		const std::map<std::string, sp<ProjectileConfig>>& getProjectileConfigs() { return projectileConfigsByName; }
+		void addProjectileConfig(sp<ProjectileConfig>& projectileConfig);
+		void removeProjectileConfig(sp<ProjectileConfig>& projectileConfig);
+
+		/** WARNING: this will delete the Projectile config from the file system! */
+		void deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig);
+
 
 		////////////////////////////////////////////////////////////////////
 		// Serialization
@@ -68,6 +83,7 @@ namespace SA
 		bool bIsDeletable = true;
 
 		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;
+		std::map<std::string, sp<ProjectileConfig>> projectileConfigsByName;
 	};
 
 	////////////////////////////////////////////////////////////////////

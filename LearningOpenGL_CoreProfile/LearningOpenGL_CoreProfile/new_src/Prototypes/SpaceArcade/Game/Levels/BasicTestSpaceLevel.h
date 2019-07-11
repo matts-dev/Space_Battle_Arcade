@@ -11,6 +11,7 @@ namespace SA
 	class Mod;
 	class SpawnConfig;
 	class CollisionDebugRenderer;
+	class ProjectileTweakerWidget;
 
 	class BasicTestSpaceLevel : public SpaceLevelBase
 	{
@@ -31,19 +32,26 @@ namespace SA
 		void handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active);
 		void handleUIFrameStarted();
 
+
+		void refreshShipContinuousFireState();
+
 	private: //debug variables
-#ifdef SA_RENDER_DEBUG_INFO
-		bool bRenderCollisionOBB = false;
-		bool bRenderCollisionShapes = false;
-#endif SA_RENDER_DEBUG_INFO
-		bool bFreezeTimeOnClick = false;
-		float timeDilationFactor = 1.f;
+#if SA_RENDER_DEBUG_INFO
+		bool bRenderCollisionOBB_ui = false;
+		bool bRenderCollisionShapes_ui = false;
+#endif //SA_RENDER_DEBUG_INFO
+		bool bForceShipsToFire_ui = false;
+		float forceFireRateSecs_ui = 1.0;
+		bool bFreezeTimeOnClick_ui = false;
+		float timeDilationFactor_ui = 1.f;
+		bool bShowProjectileTweaker_ui = false;
 
 	private:
 		//std::multimap<RenderModelEntity*, wp<RenderModelEntity>> cachedSpawnEntities;
 		sp<SpawnConfig> fighterSpawnConfig;
 		sp<ProjectileClassHandle> laserBoltHandle;
 		sp<CollisionDebugRenderer> collisionDebugRenderer;
+		sp<ProjectileTweakerWidget> projectileWidget;
 
 		//needs to potentially have O(n) iteration
 		std::set<sp<Ship>> spawnedShips;

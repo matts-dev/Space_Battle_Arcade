@@ -10,6 +10,7 @@ namespace SA
 {
 	class SpawnConfig;
 	class ModelCollisionInfo;
+	class ShipAIBrain;
 
 	class Ship : public RenderModelEntity, public IProjectileHitNotifiable
 	{
@@ -24,8 +25,34 @@ namespace SA
 		/*preferred method of construction*/
 		Ship(const sp<SpawnConfig>& spawnConfig, const Transform& spawnTransform);
 
+	public: 
+		////////////////////////////////////////////////////////
+		// Functions for AI/Player brains
+		////////////////////////////////////////////////////////
+		void fireProjectile(class BrainKey privateKey);
+
+		////////////////////////////////////////////////////////
+		//AI
+		////////////////////////////////////////////////////////
+		template <typename BrainType>
+		void spawnNewBrain()
+		{
+			static_assert(std::is_base_of<ShipAIBrain, BrainType>::value, "BrainType must be derived from ShipAIBrain");
+			setNewBrain(new_sp<BrainType>(sp_this()));
+		}
+		void setNewBrain(const sp<ShipAIBrain> newBrain, bool bStartNow = true);
+
+		////////////////////////////////////////////////////////
+		//Collision
+		////////////////////////////////////////////////////////
 		virtual bool hasCollisionInfo() const override { return true; }
 		virtual const sp<const ModelCollisionInfo>& getCollisionInfo() const override ;
+
+		////////////////////////////////////////////////////////
+		// Kinematics
+		////////////////////////////////////////////////////////
+		glm::vec4 getForwardDir();
+		void setVelocity(glm::vec3 inVelocity) { velocity = inVelocity; }
 
 	protected:
 		virtual void postConstruct() override;
@@ -43,7 +70,7 @@ namespace SA
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
 		const sp<ModelCollisionInfo> collisionData;
 		const sp<const ModelCollisionInfo> constViewCollisionData;
-
+		sp<ShipAIBrain> brain; 
 		glm::vec3 velocity;
 	};
 }

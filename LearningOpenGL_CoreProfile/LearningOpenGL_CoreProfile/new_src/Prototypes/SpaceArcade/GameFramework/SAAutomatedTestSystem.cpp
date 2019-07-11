@@ -56,6 +56,9 @@ namespace SA
 		sp<MultiDelegate<>> timersClearTestDelegate;
 		void handleTimerClearedTest();
 
+		bool bDelayedTimerPassed = false;
+		void handleDelayedTimer();
+
 		bool bContainsTimerPassed = false;
 
 	private:
@@ -299,9 +302,10 @@ namespace SA
 		////////////////////////////////////////////////////////
 
 		//	add timer, callback fires
+		float basicTestTime = 1.f;
 		sp<MultiDelegate<>> basicCallbackTestDelegate = new_sp<MultiDelegate<>>();
 		basicCallbackTestDelegate->addWeakObj(sp_this(), &TimerTest::handleBasicTimerTest);
-		worldTM->createTimer(basicCallbackTestDelegate, 1.f, false);
+		worldTM->createTimer(basicCallbackTestDelegate, basicTestTime, false);
 
 
 		//  add timer, remove timer, callback never fires
@@ -343,6 +347,11 @@ namespace SA
 		timersClearTestDelegate = new_sp<MultiDelegate<>>();
 		timersClearTestDelegate->addWeakObj(sp_this(), &TimerTest::handleTimerClearedTest);
 		worldTM->createTimer(timersClearTestDelegate, 0.25F, false); //NOTE: time must be shorter than delegate that will re-add it
+
+		// test delay
+		sp<MultiDelegate<>> delayTimerDelegate = new_sp<MultiDelegate<>>();
+		delayTimerDelegate->addWeakObj(sp_this(), &TimerTest::handleDelayedTimer);
+		worldTM->createTimer(delayTimerDelegate, basicTestTime - 0.2f, false, 0.5f); //delay half a sec, this should mean it fires after basicTestTime
 
 	}
 
@@ -448,6 +457,14 @@ namespace SA
 		bNonLoopTimersClearedPassed = timerClearedIncrement == 2;
 	}
 
+	void TimerTest::handleDelayedTimer()
+	{
+		//if the basic time test passed, then the delay worked because this timer has a quicker callback than the basic test
+		//but is delayed so that it will end up firing after the first basic test. So if basic test has already passed, then
+		// this test was successfully delayed.
+		bDelayedTimerPassed = bBasicTimerTestPass;
+	}
+
 	void TimerTest::handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
 	{
 		startTest(*newCurrentLevel);
@@ -489,6 +506,13 @@ namespace SA
 		bAllPasing &= bNonLoopTimersClearedPassed;
 			snprintf(msg, msgSize , "\t %s : Non-loop timers cleared test", bNonLoopTimersClearedPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
+
+		//delay timer test
+		bAllPasing &= bDelayedTimerPassed;
+			snprintf(msg, msgSize, "\t %s :Delayed Timer Test", bDelayedTimerPassed ? "PASSED" : "FAILED");
+			log("TimerTest", LogLevel::LOG, msg);
+
+		
 
 		snprintf(msg, msgSize , "%s : Ending Timer Tests", bAllPasing ? "PASSED" : "FAILED");
 		log("TimerTest", LogLevel::LOG, msg);

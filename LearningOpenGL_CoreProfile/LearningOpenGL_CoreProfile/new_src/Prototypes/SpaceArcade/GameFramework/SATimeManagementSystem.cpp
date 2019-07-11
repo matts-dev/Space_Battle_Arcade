@@ -22,13 +22,15 @@ namespace SA
 		userCallback = nullptr;
 	}
 
-	void Timer::set(const sp<MultiDelegate<>>& inCallbackDelegate, float inDurationSecs, bool inbLoop)
+	void Timer::set(const sp<MultiDelegate<>>& inCallbackDelegate, float inDurationSecs, bool inbLoop, float delaySecs)
 	{
 		reset();
-
 		userCallback = inCallbackDelegate;
 		durationSecs = inDurationSecs;
 		bLoop = inbLoop;
+
+		//set the timer into negative region for the delay
+		currentTime = -delaySecs; 
 	}
 
 	bool Timer::update(float dt_dilatedSecs)
@@ -141,7 +143,7 @@ namespace SA
 		return false;
 	}
 
-	SA::ETimerOperationResult TimeManager::createTimer(const sp<MultiDelegate<>>& callbackDelegate, float durationSec, bool bLoop /* = false*/)
+	SA::ETimerOperationResult TimeManager::createTimer(const sp<MultiDelegate<>>& callbackDelegate, float durationSec, bool bLoop /* = false*/, float delaySecs /*= 0.f*/)
 	{
 		if (durationSec < 0) //setting duration equal to 0 is like a "next tick" timer
 		{
@@ -160,8 +162,9 @@ namespace SA
 			{
 				return ETimerOperationResult::DEFER_FAILURE_DELEGATE_ALREDY_PENDING_ADD;
 			}
+
 			sp<SA::Timer> timerInstance = timerPool.getInstance();
-			timerInstance->set(callbackDelegate, durationSec, bLoop);
+			timerInstance->set(callbackDelegate, durationSec, bLoop, delaySecs);
 
 			deferredTimerDelegatesToAdd.insert({ callbackDelegate.get(), timerInstance });
 			deferredTimersToAdd.insert(timerInstance);
@@ -174,7 +177,7 @@ namespace SA
 			}
 
 			sp<SA::Timer> timerInstance = timerPool.getInstance();
-			timerInstance->set(callbackDelegate, durationSec, bLoop);
+			timerInstance->set(callbackDelegate, durationSec, bLoop, delaySecs);
 
 			delegateToTimerMap.insert({ callbackDelegate.get(), timerInstance });
 			timers.insert(timerInstance);

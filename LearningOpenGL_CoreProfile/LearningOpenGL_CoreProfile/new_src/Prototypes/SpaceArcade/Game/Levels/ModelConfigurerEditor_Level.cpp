@@ -7,7 +7,7 @@
 #include "../SpaceArcade.h"
 #include "../SAUISystem.h"
 #include "../SAModSystem.h"
-#include "../SASpawnConfig.h"
+#include "../AssetConfigs/SASpawnConfig.h"
 #include "../SAPrimitiveShapeRenderer.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/Input/SAInput.h"

@@ -28,7 +28,7 @@ namespace SA
 	public:
 		sp<Model3D> model;
 		float speed = 250.0f;
-		float lifeTimeSec = 1.f;
+		float lifeTimeSec = 0.5f;
 	private:
 		glm::vec3 aabbSize;
 	};

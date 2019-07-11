@@ -7,7 +7,8 @@
 #include "..\GameFramework\SAGameBase.h"
 #include "..\..\..\..\Libraries\nlohmann\json.hpp"
 #include <sstream>
-#include "SASpawnConfig.h"
+#include "AssetConfigs/SASpawnConfig.h"
+#include "AssetConfigs/SAProjectileConfig.h"
 
 using json = nlohmann::json;
 
@@ -63,6 +64,60 @@ namespace SA
 
 				std::error_code ec;
 				std::filesystem::remove(filepath, ec);
+
+				if (ec)
+				{
+					log("Mod", LogLevel::LOG_ERROR, "failed to remove file");
+				}
+			}
+		}
+	}
+
+	void Mod::addProjectileConfig(sp<ProjectileConfig>& projectileConfig)
+	{
+		if (projectileConfigsByName.find(projectileConfig->getName()) == projectileConfigsByName.end())
+		{
+			std::string configName = projectileConfig->getName();
+			sp<ProjectileConfig> copyprojectileConfig = projectileConfig;
+
+			projectileConfigsByName.insert({ configName, copyprojectileConfig });
+		}
+		else
+		{
+			log("Mod", LogLevel::LOG_ERROR, "Attempting to add duplicate projectile config");
+		}
+	}
+
+	void Mod::removeProjectileConfig(sp<ProjectileConfig>& projectileConfig)
+	{
+		std::string name = projectileConfig->getName();
+		projectileConfigsByName.erase(name);
+	}
+
+	void Mod::deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig)
+	{
+		if (projectileConfig)
+		{
+			std::string filepath = projectileConfig->getRepresentativeFilePath();
+
+			//validation before deleting a file
+			bool bContainsProjectileConfigs = filepath.find("projectileConfigs") != std::string::npos;
+			bool bBeginsWithGameData = filepath.find("GameData") == 0;
+			bool bContainsModPath = filepath.find(getModDirectoryPath()) != std::string::npos;
+			bool bIsDeletable = projectileConfig->isDeletable();
+
+			if (bContainsProjectileConfigs && bBeginsWithGameData && bContainsModPath)
+			{
+				removeProjectileConfig(projectileConfig);
+
+				char deleteMsg[1024];
+				//will clip files larger than 1024
+				snprintf(deleteMsg, 1024, "Deleting file %s", filepath.c_str());
+
+				log("Mod", LogLevel::LOG, deleteMsg);
+
+				std::error_code ec;
+				//std::filesystem::remove(filepath, ec); 
 
 				if (ec)
 				{
@@ -295,6 +350,12 @@ namespace SA
 		}
 
 		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/GameSaves"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create game saves folder");
+		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/ProjectileConfigs"), mkModFolderEC);
 		if (mkModFolderEC)
 		{
 			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create game saves folder");

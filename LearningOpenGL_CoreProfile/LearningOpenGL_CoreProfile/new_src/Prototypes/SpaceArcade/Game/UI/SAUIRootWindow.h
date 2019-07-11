@@ -12,6 +12,7 @@ namespace SA
 		MAIN_MENU,
 		DEV_MENU,
 		MOD_MENU,
+		SETTINGS_MENU,
 	};
 
 	class UIRootWindow : public GameEntity, public Tickable
@@ -29,8 +30,10 @@ namespace SA
 		void buildMainMenu();
 		void buildDevMenu();
 		void buildModMenu();
+		void buildSettingsMenu();
 
 		bool bInUIMode = false;
+		bool bFPSOverlay = true;
 		UIMenuState menuState = UIMenuState::MAIN_MENU;
 	};
 }

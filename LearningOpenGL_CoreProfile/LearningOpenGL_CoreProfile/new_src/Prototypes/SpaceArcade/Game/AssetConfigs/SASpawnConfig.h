@@ -1,13 +1,14 @@
 #pragma once
 #include <string>
+#include <vector>
 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "../GameFramework/SAGameEntity.h"
-#include <vector>
+#include "../../GameFramework/SAGameEntity.h"
+#include "SAConfigBase.h"
 
 namespace SA
 {
@@ -23,7 +24,7 @@ namespace SA
 		glm::vec3 position{ 0,0,0 };
 	};
 
-	class SpawnConfig final
+	class SpawnConfig final : public ConfigBase
 	{
 		friend class ModelConfigurerEditor_Level;
 		class PrivateKey
@@ -40,19 +41,18 @@ namespace SA
 		std::string serialize();
 		void deserialize(const std::string& str);
 
-		std::string getRepresentativeFilePath();
+		virtual std::string getRepresentativeFilePath() override;
 
 	public: //utility functions
 		sp<SA::ModelCollisionInfo> toCollisionInfo();
 		sp<Model3D> getModel() const;
-
 
 	public:
 		static sp<SpawnConfig> load(std::string filePathCopy);
 	private:
 		void save(); //access restricted, only allow certain classes to save this.
 
-	private: //serialized properities
+	private: //serialized properties
 		std::string name;
 		std::string fullModelFilePath;
 		bool bIsDeleteable = true;
@@ -67,8 +67,6 @@ namespace SA
 		
 		//color/material
 		//team
-	private: //non serialized properties
-		std::string owningModDir;      //do not serialize this, spawn configs should be copy-and-pastable to other mods; set on loading
 	};
 
 

@@ -1,14 +1,14 @@
 #include "SASpawnConfig.h"
-#include "../../../../Libraries/nlohmann/json.hpp"
-#include "../GameFramework/SALog.h"
-#include "SAModSystem.h"
-#include "SpaceArcade.h"
+#include "../../../../../Libraries/nlohmann/json.hpp"
+#include "../../GameFramework/SALog.h"
+#include "../SAModSystem.h"
+#include "../SpaceArcade.h"
 #include <fstream>
 #include <sstream>
-#include "../Tools/ModelLoading/SAModel.h"
-#include "../GameFramework/SAAssetSystem.h"
+#include "../../Tools/ModelLoading/SAModel.h"
+#include "../../GameFramework/SAAssetSystem.h"
 #include <detail/type_mat.hpp>
-#include "../GameFramework/SACollisionUtils.h"
+#include "../../GameFramework/SACollisionUtils.h"
 
 
 using json = nlohmann::json;

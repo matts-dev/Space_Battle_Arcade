@@ -7,7 +7,7 @@
 #include "../SAProjectileSystem.h"
 #include "../SAModSystem.h"
 #include "../SAUISystem.h"
-#include "../SASpawnConfig.h"
+#include "../AssetConfigs/SASpawnConfig.h"
 #include "../SAShip.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../GameFramework/RenderModelEntity.h"
@@ -20,6 +20,9 @@
 
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 #include "../SACollisionDebugRenderer.h"
+#include "../../GameFramework/SAShipAIBrain.h"
+#include "../../GameFramework/SAGameEntity.h"
+#include "../UI/SAProjectileTweakerWidget.h"
 
 namespace SA
 {
@@ -35,6 +38,7 @@ namespace SA
 		}
 
 		collisionDebugRenderer = new_sp<CollisionDebugRenderer>();
+		projectileWidget = new_sp<ProjectileTweakerWidget>();
 	}
 
 	void BasicTestSpaceLevel::startLevel_v()
@@ -58,6 +62,12 @@ namespace SA
 
 		const sp<ModSystem>& modSystem = game.getModSystem();
 		sp<Mod> activeMod = modSystem->getActiveMod();
+		if (!activeMod)
+		{
+			log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "No active mod");
+			return;
+		}
+
 		const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
 		if (const auto& iter = spawnConfigs.find("Fighter"); iter != spawnConfigs.end())
 		{
@@ -94,6 +104,7 @@ namespace SA
 			//sp<Ship> fighter = spawnEntity<Ship>(fighterModel, fighterXform, createUnitCubeCollisionInfo()); //deprecated?
 			//sp<Ship> fighter = spawnEntity<Ship>(fighterModel, fighterXform, fighterSpawnConfig->toCollisionInfo()); //also not ideal
 			sp<Ship> fighter = spawnEntity<Ship>(fighterSpawnConfig, fighterXform);
+			fighter->spawnNewBrain<FlyInDirectionBrain>();
 		}
 
 		carrierTransform.position.y += 50;
@@ -113,6 +124,7 @@ namespace SA
 		sp<Model3D> laserBoltModel = assetSS.getModel(game.URLs.laserURL);
 		Transform projectileAABBTransform;
 		projectileAABBTransform.scale.z = 4.5;
+		//#TODO the creation of projectiles needs changing
 		laserBoltHandle = game.getProjectileSystem()->createProjectileType(laserBoltModel, projectileAABBTransform);
 	}
 
@@ -158,7 +170,7 @@ namespace SA
 						glm::vec3 direction = camera->getFront();
 						projectileSys->spawnProjectile(start, direction, *laserBoltHandle);
 
-						if (bFreezeTimeOnClick)
+						if (bFreezeTimeOnClick_ui)
 						{
 							getWorldTimeManager()->setTimeFreeze(true);
 						}
@@ -221,11 +233,11 @@ namespace SA
 		{
 			ImGui::TextWrapped("Debug Variables; if option is not visible it may not be compiled if specific debug macro is not defined. Check defined macros. ");
 			ImGui::Separator();
-#ifdef SA_RENDER_DEBUG_INFO
-			ImGui::Checkbox("Render entity OBB pretests", &bRenderCollisionOBB);
-			ImGui::Checkbox("Render entity collision shapes", &bRenderCollisionShapes);
+#if SA_RENDER_DEBUG_INFO
+			ImGui::Checkbox("Render entity OBB pretests", &bRenderCollisionOBB_ui);
+			ImGui::Checkbox("Render entity collision shapes", &bRenderCollisionShapes_ui);
 #endif //SA_RENDER_DEBUG_INFO
-#ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
+#if SA_CAPTURE_SPATIAL_HASH_CELLS
 			ImGui::Checkbox("Render Spatial Hash Cells", &game.bRenderDebugCells);
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
 			ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
@@ -243,19 +255,69 @@ namespace SA
 			{
 				timeManager->setFramesToStep(1);
 			}
-			ImGui::Checkbox("Freeze Time On Click", &bFreezeTimeOnClick);
-			if (ImGui::SliderFloat("Time Dilation", &timeDilationFactor, 0.001f, 4.f))
+			ImGui::Checkbox("Freeze Time On Click", &bFreezeTimeOnClick_ui);
+			if (ImGui::SliderFloat("Time Dilation", &timeDilationFactor_ui, 0.001f, 4.f))
 			{
-				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor);
+				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor_ui);
 			}
 			if (ImGui::Button("reset dilation"))
 			{
-				timeDilationFactor = 1.f;
-				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor);
+				timeDilationFactor_ui = 1.f;
+				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor_ui);
 			}
 
+			////////////////////////////////////////////////////////
+			// Projectiles Optimization
+			////////////////////////////////////////////////////////
+			ImGui::Dummy(ImVec2(0, 20.f));
+			ImGui::Separator();
+			if (ImGui::Checkbox("Enable All Ships Continuous Fire", &bForceShipsToFire_ui))
+			{
+				refreshShipContinuousFireState();
+			}
+			if (ImGui::InputFloat("Ship Fire Rate Seconds", &forceFireRateSecs_ui))
+			{
+				bForceShipsToFire_ui = false;
+				refreshShipContinuousFireState();
+			}
+
+			////////////////////////////////////////////////////////
+			// Projectile Tweaker
+			////////////////////////////////////////////////////////
+			ImGui::Dummy(ImVec2(0, 20.f));
+			ImGui::Separator();
+			ImGui::Checkbox("Show Projectile Tweaker", &bShowProjectileTweaker_ui);
+			if (bShowProjectileTweaker_ui && projectileWidget)
+			{
+				projectileWidget->renderInCurrentUIWindow();
+			}
 		}
 		ImGui::End();
+	}
+
+	void BasicTestSpaceLevel::refreshShipContinuousFireState()
+	{
+
+		std::random_device rng;
+		std::seed_seq seed{ 7 };
+		std::mt19937 rng_eng = std::mt19937(seed);
+		std::uniform_real_distribution<float> fireDelayDistribution(0.f, forceFireRateSecs_ui); //[a, b)
+
+		for (const sp<Ship>& ship : spawnedShips)
+		{
+			if (bForceShipsToFire_ui)
+			{
+				sp<ContinuousFireBrain> cfBrain = new_sp<ContinuousFireBrain>(ship);
+				cfBrain->setDelayStartFire(fireDelayDistribution(rng_eng));
+				cfBrain->setFireRateSecs(forceFireRateSecs_ui);
+				ship->setNewBrain(cfBrain);
+			}
+			else
+			{
+				sp<FlyInDirectionBrain> singleDirectionBrain = new_sp<FlyInDirectionBrain>(ship);
+				ship->setNewBrain(singleDirectionBrain);
+			}
+		}
 	}
 
 	void BasicTestSpaceLevel::onEntitySpawned_v(const sp<WorldEntity>& spawned)
@@ -280,8 +342,8 @@ namespace SA
 	void BasicTestSpaceLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		SpaceLevelBase::render(dt_sec, view, projection);
-#ifdef SA_RENDER_DEBUG_INFO
-		bool bShouldLoopOverShips = bRenderCollisionOBB || bRenderCollisionShapes;
+#if SA_RENDER_DEBUG_INFO
+		bool bShouldLoopOverShips = bRenderCollisionOBB_ui || bRenderCollisionShapes_ui;
 		if (bShouldLoopOverShips)
 		{
 			for (const sp<Ship> ship : spawnedShips)
@@ -291,14 +353,14 @@ namespace SA
 				{
 					glm::mat4 shipModelMat = ship->getTransform().getModelMatrix();
 
-					if (bRenderCollisionOBB)
+					if (bRenderCollisionOBB_ui)
 					{
 						const glm::mat4& aabbLocalXform = collisionInfo->getAABBLocalXform();
 						collisionDebugRenderer->renderOBB(shipModelMat, aabbLocalXform, view, projection,
 							glm::vec3(0, 0, 1), GL_LINE, GL_FILL);
 					}
 
-					if (bRenderCollisionShapes)
+					if (bRenderCollisionShapes_ui)
 					{
 						using ConstShapeData = ModelCollisionInfo::ConstShapeData;
 						for (const ConstShapeData shapeData : collisionInfo->getConstShapeData())

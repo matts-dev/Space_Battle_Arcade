@@ -109,7 +109,7 @@ namespace SA
 
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
 	{
-#ifdef SA_CAPTURE_SPATIAL_HASH_CELLS
+#if SA_CAPTURE_SPATIAL_HASH_CELLS
 		const sp<LevelBase>& world = getLevelSystem().getCurrentLevel();
 		if (world)
 		{

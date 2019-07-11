@@ -37,9 +37,33 @@ namespace SA
 					break;
 				case UIMenuState::MOD_MENU:
 					buildModMenu();
+					break;
+				case UIMenuState::SETTINGS_MENU:
+					buildSettingsMenu();
+					break;
 				default:
 					break;
 			}
+		}
+		
+		bool bDebugOverlapShouldDisplay = bFPSOverlay /*|| bOtherOverlay*/;
+		if (bDebugOverlapShouldDisplay)
+		{
+			//begin debug stats
+			ImGui::SetNextWindowPos(ImVec2{ 0, 0 });
+			//ImGui::SetNextWindowSize({ 300,300 });
+			ImGuiWindowFlags flags = 0;
+			flags |= ImGuiWindowFlags_NoMove;
+			flags |= ImGuiWindowFlags_NoResize;
+			flags |= ImGuiWindowFlags_NoCollapse;
+			ImGui::Begin("Dev Stats!", nullptr, flags);
+			{
+				if (bFPSOverlay)
+				{
+					ImGui::Text("%.3f ms | (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+				}
+			}
+			ImGui::End();
 		}
 	}
 
@@ -56,6 +80,10 @@ namespace SA
 			if (ImGui::Button("Mod Selection"))
 			{
 				menuState = UIMenuState::MOD_MENU;
+			}
+			if (ImGui::Button("Settings"))
+			{
+				menuState = UIMenuState::SETTINGS_MENU;
 			}
 			if (ImGui::Button("Dev Menu"))
 			{
@@ -208,6 +236,25 @@ namespace SA
 			ImGui::Dummy(ImVec2(0, 25)); 
 			ImGui::Separator();
 			if (ImGui::Button("Back to Main Menu"))
+			{
+				menuState = UIMenuState::MAIN_MENU;
+			}
+		}
+		ImGui::End();
+	}
+
+	void UIRootWindow::buildSettingsMenu()
+	{
+		ImGui::SetNextWindowPosCenter();
+		ImGui::SetNextWindowSize({ 300,300 });
+		ImGuiWindowFlags flags = 0;
+		flags |= ImGuiWindowFlags_NoMove;
+		flags |= ImGuiWindowFlags_NoResize;
+		flags |= ImGuiWindowFlags_NoCollapse;
+		ImGui::Begin("Settings", nullptr, flags);
+		{
+			ImGui::Checkbox("Display FPS", &bFPSOverlay);
+			if (ImGui::Button("Back"))
 			{
 				menuState = UIMenuState::MAIN_MENU;
 			}
