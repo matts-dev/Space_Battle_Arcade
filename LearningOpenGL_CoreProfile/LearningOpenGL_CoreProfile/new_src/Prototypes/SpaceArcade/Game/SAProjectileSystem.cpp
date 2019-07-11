@@ -85,7 +85,7 @@ namespace SA
 		collisionBoxScaleStretch.z = dt_distance;
 
 		mat4 transToEnd_rotToFireDir_zOffset = glm::translate(glm::mat4(1.f), end);
-		transToEnd_rotToFireDir_zOffset = transToEnd_rotToFireDir_zOffset * glm::toMat4(directionQuat); //TODO this could also be xform.rot... which to use?
+		transToEnd_rotToFireDir_zOffset = transToEnd_rotToFireDir_zOffset * glm::toMat4(directionQuat); //#TODO this could also be xform.rot... which to use?
 		transToEnd_rotToFireDir_zOffset = glm::translate(transToEnd_rotToFireDir_zOffset, zOffset);
 
 		//model matrix composition: translateToEnd * rotateToFireDirection * OffsetZValueSoTipAtPoint * StretchToFitDistance
@@ -136,7 +136,7 @@ namespace SA
 					glm::vec4 obbMTV;
 					if (SAT::Shape::CollisionTest(*projectileShape, *OBBShape, obbMTV))
 					{
-						//TODO perhaps this shouldn't find the closest shape it collided with? will be redundant
+						//#TODO perhaps this shouldn't find the closest shape it collided with? will be redundant
 						for (const ModelCollisionInfo::ConstShapeData& shapeData : colisionData->getConstShapeData())
 						{
 							glm::vec4 mtv;
@@ -243,7 +243,7 @@ namespace SA
 		glm::vec3 projectileSystemForward(0, 0, -1);
 		glm::quat spawnRotation = Utils::getRotationBetween(projectileSystemForward, direction_n);
 
-		//todo define an argument struct to pass for spawning projectiles
+		//#todo define an argument struct to pass for spawning projectiles
 		spawned->xform.position = start;
 		spawned->xform.rotQuat = spawnRotation;
 		spawned->renderXform = glm::scale(glm::mat4(1.f), { 0, 0, 0 });
@@ -273,7 +273,7 @@ namespace SA
 	void ProjectileSystem::renderProjectiles(Shader& projectileShader) const
 	{
 		//#optimize potential optimization is to use instanced rendering to reduce draw call number
-		//TODO perhaps projectile should be made a full class and encapsulate this logic
+		//#TODO perhaps projectile should be made a full class and encapsulate this logic
 
 		//invariant: shader uniforms pre-configured
 		for (const sp<Projectile>& projectile : activeProjectiles)

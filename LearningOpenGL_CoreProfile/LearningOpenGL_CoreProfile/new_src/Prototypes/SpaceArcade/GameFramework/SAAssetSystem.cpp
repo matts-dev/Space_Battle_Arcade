@@ -26,7 +26,7 @@ namespace SA
 		{
 			try //eat failures to load models here and signal failure by returning nullptr
 			{
-				sp<Model3D> loadedModel = new_sp<Model3D>(relative_filepath); //may fail; TODO handling failures at model level would be nice
+				sp<Model3D> loadedModel = new_sp<Model3D>(relative_filepath); //may fail; #TODO handling failures at model level would be nice
 				loadedModel3Ds[relative_filepath] = loadedModel;
 				return loadedModel;
 			}
@@ -55,7 +55,7 @@ namespace SA
 
 	bool AssetSystem::loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
 	{
-		//TODO upgrade 3d model class to use this; but care will need to be taken so that textures are deleted after models
+		//# TODO upgrade 3d model class to use this; but care will need to be taken so that textures are deleted after models
 		int img_width, img_height, img_nrChannels;
 		unsigned char* textureData = stbi_load(relative_filepath, &img_width, &img_height, &img_nrChannels, 0);
 		if (!textureData)

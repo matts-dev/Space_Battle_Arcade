@@ -349,7 +349,7 @@ namespace SA
 			for (const sp<Ship> ship : spawnedShips)
 			{
 				sp<const ModelCollisionInfo> collisionInfo = ship->getCollisionInfo();
-				if (collisionInfo) //TODO this should always be valid, but until I migrate large ships over to new system it may not be valid
+				if (collisionInfo) //#TODO this should always be valid, but until I migrate large ships over to new system it may not be valid
 				{
 					glm::mat4 shipModelMat = ship->getTransform().getModelMatrix();
 

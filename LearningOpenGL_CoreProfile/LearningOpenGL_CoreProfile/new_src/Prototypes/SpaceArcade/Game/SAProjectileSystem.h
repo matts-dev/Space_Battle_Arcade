@@ -44,7 +44,7 @@ namespace SA
 		Transform xform; 
 		glm::vec3 direction_n;
 		glm::vec3 hitLocation;
-		glm::quat directionQuat; //TODO maybe? duplicate info in xform
+		glm::quat directionQuat; //#TODO maybe? duplicate info in xform
 		glm::vec3 aabbSize;
 		glm::mat4 collisionXform;
 		glm::mat4 renderXform;

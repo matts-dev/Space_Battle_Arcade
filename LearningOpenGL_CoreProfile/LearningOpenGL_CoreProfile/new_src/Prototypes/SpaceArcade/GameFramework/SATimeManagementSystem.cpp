@@ -122,7 +122,7 @@ namespace SA
 			}
 			else
 			{
-				//TODO log when logging has been refactored and isn't so expensive; actually this really should be an assertion failure
+				//#TODO log when logging has been refactored and isn't so expensive; actually this really should be an assertion failure
 			}
 		}
 		deferredTimersToAdd.clear();

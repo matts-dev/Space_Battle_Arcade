@@ -11,6 +11,6 @@ namespace SA
 		LOG_ERROR
 	};
 
-	/** TODO Logging system will probably need more fleshing out*/
+	/** #TODO Logging system will probably need more fleshing out*/
 	void log(const char* LogName, LogLevel level, const char* msg);
 }

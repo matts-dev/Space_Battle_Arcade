@@ -575,7 +575,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
-		//TODO refactor this to use the CollisionDebugRenderer class
+		//#TODO refactor this to use the CollisionDebugRenderer class
 
 		if (renderModel && shapeRenderer && activeConfig)
 		{

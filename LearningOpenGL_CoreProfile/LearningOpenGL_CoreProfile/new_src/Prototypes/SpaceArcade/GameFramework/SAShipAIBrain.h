@@ -20,7 +20,7 @@ namespace SA
 
 		
 	protected:
-		//TODO use a softPtr rather than weakpointer, so that not "locking" every tick. but those don't exist yet
+		//#TODO use a softPtr rather than weakpointer, so that not "locking" every tick. but those don't exist yet
 		wp<Ship> controlledTarget;
 		wp<LevelBase> wpLevel;
 	};

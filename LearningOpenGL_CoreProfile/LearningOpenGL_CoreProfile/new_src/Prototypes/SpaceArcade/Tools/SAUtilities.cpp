@@ -222,7 +222,7 @@ namespace SA
 			float cosTheta = glm::dot(from_n, to_n);
 
 			bool bVectorsAre180 = Utils::float_equals(cosTheta, -1.0f);
-			bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f) && !bVectorsAre180; //TODO, don't want to change this mid-refactor; but second check seems unecessary and impossible
+			bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f) && !bVectorsAre180; //#TODO, don't want to change this mid-refactor; but second check seems unecessary and impossible
 
 			if (!bVectorsAreSame)
 			{

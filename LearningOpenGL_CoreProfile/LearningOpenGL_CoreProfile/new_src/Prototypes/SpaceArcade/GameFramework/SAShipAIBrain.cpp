@@ -70,7 +70,6 @@ namespace SA
 			fireDelegate = new_sp<MultiDelegate<>>();
 			fireDelegate->addWeakObj(sp_this(), &ContinuousFireBrain::handleTimeToFire);
 
-			//#TODO create unit test for delayed fire!
 			worldTM->createTimer(fireDelegate, fireRateSec, true, timerDelay);
 		}
 		else

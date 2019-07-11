@@ -3,7 +3,7 @@
 
 namespace SA
 {
-	//TODO this probably needs to exist separately in another header, so  player can do pattern of having protected member return a key
+	//#TODO this probably needs to exist separately in another header, so  player can do pattern of having protected member return a key
 	/** Special key to allows brains (ai/player) to access methods 
 		Only friend classes can construct these, giving the friend
 		classes unique access to methods requiring an instance as

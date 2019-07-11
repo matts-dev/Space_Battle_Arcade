@@ -70,7 +70,7 @@ namespace SA
 
 		if (cachedScene && cachedScene->HasAnimations() && inOut_AnimationData.animId < cachedScene->mNumAnimations)
 		{
-			auto currentTimePoint = std::chrono::system_clock::now(); //TODO: this may should be handled externally so we only make this system call once
+			auto currentTimePoint = std::chrono::system_clock::now(); //#TODO: this may should be handled externally so we only make this system call once
 			auto duration = duration_cast<milliseconds>(currentTimePoint - inOut_AnimationData.startTime); //use miliseconds to get milisecond precision
 			float animCurSeconds = static_cast<float>(duration.count()) / 1000.0f;
 
@@ -511,7 +511,7 @@ namespace SA
 					vertexBoneData[vertId].currentBone++;
 				}
 
-				//todo: may need to switch these over the shared pointers since each data structure has its own copy of its bone
+				//#todo: may need to switch these over the shared pointers since each data structure has its own copy of its bone
 				if (nameToBoneMap.find(cacheBone.name) == nameToBoneMap.end())
 					nameToBoneMap[cacheBone.name] = cacheBone;
 				else

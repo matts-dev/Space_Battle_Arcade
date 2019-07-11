@@ -147,7 +147,7 @@ namespace
 
 			int width = 1000, height = 500;
 			sp<SA::Window> window = new_sp<SA::Window>(width, height);
-			ec(glViewport(0,0, width, height)); //TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
+			ec(glViewport(0,0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
 
 			litObjShader = new_sp<SA::Shader>(litObjectShaderVertSrc, litObjectShaderFragSrc, false);
 			lampObjShader = new_sp<SA::Shader>(lightLocationShaderVertSrc, lightLocationShaderFragSrc, false);

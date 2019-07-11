@@ -17,7 +17,7 @@ namespace //translation unit statics
 	sp<ProjectileClassHandle> laserBoltHandle = nullptr;
 
 
-	void staticInitCheck() //TODO remove this function if completely refactored out
+	void staticInitCheck() //#TODO remove this function if completely refactored out
 	{
 		SpaceArcade& game = SpaceArcade::get();
 
@@ -91,7 +91,7 @@ namespace SA
 		//Currently there is no system for parent/child scene nodes for these. But if there were/ever is, it should
 		//get the parent transform and use that like : parentXform * rotMatrix * pointingDir; but I believe non-unfirom scaling will cause
 		//issues with vectors (like normals) and some care (normalMatrix, ie inverse transform), or (no non-uniform scales) may be needed to make sure vectors are correct
-		glm::vec4 pointingDir{ 0, 0, 1, 0 }; //TODO this should could from spawn config in case models are not aligned properly
+		glm::vec4 pointingDir{ 0, 0, 1, 0 }; //#TODO this should could from spawn config in case models are not aligned properly
 		glm::mat4 rotMatrix = glm::toMat4(transform.rotQuat);
 		glm::vec4 rotDir = rotMatrix * pointingDir;
 
@@ -104,8 +104,8 @@ namespace SA
 		const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
 		glm::vec3 direction = glm::normalize(velocity);
 		//#TODO below doesn't account for parent transforms
-		glm::vec3 start = direction * 5.0f + getTransform().position; //TODO make this work by not colliding with src ship; for now spawning in front of the ship
-		projectileSys->spawnProjectile(start, direction, *laserBoltHandle); //TODO needs to get laser bolt handler from somewhere official
+		glm::vec3 start = direction * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
+		projectileSys->spawnProjectile(start, direction, *laserBoltHandle); //#TODO needs to get laser bolt handler from somewhere official
 	}
 
 	void Ship::setNewBrain(const sp<ShipAIBrain> newBrain, bool bStartNow /*= true*/)
@@ -160,9 +160,9 @@ namespace SA
 			worldGrid.lookupNodesInCells(*collisionHandle, overlappingNodes_SH);
 			for (sp <SH::GridNode<WorldEntity>> node : overlappingNodes_SH)
 			{
-				//TODO make sure this object's shape has been updated to transform! this should be done before the loop
-				//TODO for each node, get their shape and do a collision tests
-				//TODO if collision, make sure this object's SAT::Shapes are updated
+				//#TODO make sure this object's shape has been updated to transform! this should be done before the loop
+				//#TODO for each node, get their shape and do a collision tests
+				//#TODO if collision, make sure this object's SAT::Shapes are updated
 			}
 #if SA_CAPTURE_SPATIAL_HASH_CELLS
 			SpatialHashCellDebugVisualizer::appendCells(worldGrid, *collisionHandle);

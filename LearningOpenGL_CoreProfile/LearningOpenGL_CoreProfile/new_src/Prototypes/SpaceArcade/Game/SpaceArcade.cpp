@@ -47,7 +47,7 @@ namespace SA
 	{
 		int width = 1500, height = 900;
 		sp<SA::Window> window = new_sp<SA::Window>(width, height);
-		ec(glViewport(0, 0, width, height)); //TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
+		ec(glViewport(0, 0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
 
 		litObjShader = new_sp<SA::Shader>(litObjectShader_VertSrc, litObjectShader_FragSrc, false);
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);
@@ -219,7 +219,7 @@ namespace SA
 		{
 			GLFWwindow* window = windowObj->get();
 
-			//TODO need a proper input system that has input bubbling/capturing and binding support from player down to entities
+			//#TODO need a proper input system that has input bubbling/capturing and binding support from player down to entities
 			static InputTracker input;
 			input.updateState(window);
 
