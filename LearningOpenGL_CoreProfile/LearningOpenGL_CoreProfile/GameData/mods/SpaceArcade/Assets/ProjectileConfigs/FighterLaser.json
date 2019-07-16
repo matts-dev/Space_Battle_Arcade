@@ -1,0 +1,15 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "FighterLaser"
+    },
+    "ProjectileConfig": {
+        "color": [
+            1.0,
+            1.0,
+            1.0
+        ],
+        "lifetimeSecs": 0.5,
+        "speed": 250.0
+    }
+}

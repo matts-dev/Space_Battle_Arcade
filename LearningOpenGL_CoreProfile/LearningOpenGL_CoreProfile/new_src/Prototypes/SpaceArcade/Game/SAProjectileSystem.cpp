@@ -9,32 +9,10 @@
 #include "../GameFramework/SATimeManagementSystem.h"
 
 #include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "AssetConfigs/SAProjectileConfig.h"
 
 namespace SA
 {
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	// Handle defining spawn properties for projectile
-	///////////////////////////////////////////////////////////////////////////////////////////////
-
-	ProjectileClassHandle::ProjectileClassHandle(const Transform& inTransform, const sp<Model3D>& inModel) : model(inModel)
-	{
-		using glm::vec3;
-
-		if (inModel)
-		{
-			std::tuple<glm::vec3, glm::vec3> modelAABB = inModel->getAABB();
-
-			const vec3& aabbMin = std::get<0>(modelAABB);
-			const vec3& aabbMax = std::get<1>(modelAABB);
-			aabbSize = aabbMax - aabbMin;
-
-			//Below potentially supports models not aligned with z axis; see ProjectileEditor_Level::renderDeltaTimeSimulation
-			//Utils::getRotationBetween(modelForward_n, { 0,0,1 })
-			//const vec3 aabb = vec3(vec4(aabb, 0.f) * modelAdjustmentMat);
-		}
-		else { throw std::runtime_error("No model provided when creating projectile class handle"); }
-	}
-
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Actual Projectile Instances; these system is responsible for creating these instances
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,15 +205,7 @@ namespace SA
 		GameBase::get().PostGameloopTick.addStrongObj(sp_this(), &ProjectileSystem::postGameLoopTick);
 	}
 
-	sp<ProjectileClassHandle> ProjectileSystem::createProjectileType(const sp<Model3D>& model, const Transform& AABB_unitCubeTransform)
-	{
-		//this method met not be necessary after all; clients should be free to just create projectile handles when ever
-		sp<ProjectileClassHandle> projectileType = new_sp<ProjectileClassHandle>(AABB_unitCubeTransform, model);
-
-		return projectileType;
-	}
-
-	void ProjectileSystem::spawnProjectile(const glm::vec3& start, const glm::vec3& direction_n, const ProjectileClassHandle& projectileTypeHandle)
+	void ProjectileSystem::spawnProjectile(const glm::vec3& start, const glm::vec3& direction_n, const ProjectileConfig& projectileTypeHandle)
 	{
 		sp<Projectile> spawned = objPool.getInstance();
 
@@ -255,10 +225,10 @@ namespace SA
 		spawned->direction_n = direction_n;
 		spawned->directionQuat = spawnRotation;
 
-		spawned->speed = projectileTypeHandle.speed;
-		spawned->model = projectileTypeHandle.model;
-		spawned->lifetimeSec = projectileTypeHandle.lifeTimeSec;
-		spawned->aabbSize = projectileTypeHandle.aabbSize;
+		spawned->speed = projectileTypeHandle.getSpeed();
+		spawned->model = projectileTypeHandle.getModel();
+		spawned->lifetimeSec = projectileTypeHandle.getLifetimeSecs();
+		spawned->aabbSize = projectileTypeHandle.getAABBsize();
 
 		spawned->timeAlive = 0.f;
 

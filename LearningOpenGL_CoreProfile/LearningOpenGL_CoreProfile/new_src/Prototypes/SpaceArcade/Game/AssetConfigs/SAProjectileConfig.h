@@ -2,24 +2,45 @@
 
 #include "SAConfigBase.h"
 
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+#include <gtx/quaternion.hpp>
 
 namespace SA
 {
+	class Model3D;
+	class Window;
+
 	class ProjectileConfig final : public ConfigBase
 	{
-	public:
-		std::string getName() { return name; }
-		bool isDeletable() { return bIsDeletable; }
+		friend class ProjectileTweakerWidget;
 
+	public:
 		virtual std::string getRepresentativeFilePath() override;
+		
+		//accessors
+		const sp<Model3D>& getModel() const { return model; }
+		glm::vec3 getAABBsize() const { return aabbSize; }
+		float getSpeed() const { return speed; }
+		float getLifetimeSecs() const { return lifetimeSecs; }
+		glm::vec3 getColor() const {return color;}
+
+	protected:
+		virtual void postConstruct() override;
+		virtual void onSerialize(json& outData) override;
+		virtual void onDeserialize(const json& inData) override;
 
 	private:
-		//#todo this is code duplication with spawnConfig, thinking about moving to base class but since these classes
-		//entirely manage their serialization, it might be weird for subclasses to have to "remember" to serialize base class members
-		//so perhaps a serialization scheme that passes a json to the child classes to append their data. But I don't want to do that
-		//right now as I am working on something else and this isn't critical (very little code duplication and this is only the second config so far) 
-		std::string name;
-		bool bIsDeletable = true;
+		void handleOnWindowAquiredOpenglContext(const sp<Window>& window);
 
+	private: //non-serialized properties
+		sp<Model3D> model;
+		glm::vec3 aabbSize;
+
+	private: //serialized properties
+		float speed;
+		float lifetimeSecs;
+		glm::vec3 color{1,1,1};
 	};
 }

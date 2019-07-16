@@ -197,10 +197,8 @@ namespace SA
 						{
 							activeConfig = kvPair.second;
 							selectedSpawnConfigIdx = curConfigIdx;
-							std::string modelPath = activeConfig->getModelFilePath();
 
-							//may fail to load model if user provided bad path, either way we need to set to null or valid model
-							renderModel = SpaceArcade::get().getAssetSystem().loadModel(modelPath.c_str());
+							onActiveConfigSet(*activeConfig);
 						}
 						++curConfigIdx;
 					}
@@ -525,11 +523,30 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 	void ModelConfigurerEditor_Level::renderUI_Projectiles()
 	{
-		ImGui::Separator();
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
+		ImGui::Separator(); //separate out this section of UI
+
+		static sp<ModSystem> modSys = SpaceArcade::get().getModSystem();
+
+		if (const sp<Mod>& activeMod = modSys->getActiveMod())
+		{
+			ImGui::Text("Primary Fire Projectile");
+			const std::map<std::string, sp<ProjectileConfig>>& projectileConfigs = activeMod->getProjectileConfigs();
+
+			for (const auto& kvPair : projectileConfigs)
+			{
+				if (ImGui::Selectable(kvPair.first.c_str(), kvPair.second == primaryProjectileConfig))
+				{
+					primaryProjectileConfig = kvPair.second;
+
+					if (activeConfig)
+					{
+						activeConfig->primaryFireProjectile = primaryProjectileConfig;
+					}
+				}
+			}
+			ImGui::Dummy({ 0, 10.f });
+		}
+
 		ImGui::Separator();
 	}
 
@@ -569,6 +586,18 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 			activeConfig = newConfig;
 		}
+	}
+
+	void ModelConfigurerEditor_Level::onActiveConfigSet(const SpawnConfig& newConfig)
+	{
+
+		std::string modelPath = activeConfig->getModelFilePath();
+
+		//may fail to load model if user provided bad path, either way we need to set to null or valid model
+		renderModel = SpaceArcade::get().getAssetSystem().loadModel(modelPath.c_str());
+
+		primaryProjectileConfig = activeConfig->getPrimaryProjectileConfig();
+
 	}
 
 	void ModelConfigurerEditor_Level::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)

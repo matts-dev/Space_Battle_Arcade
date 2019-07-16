@@ -10,6 +10,7 @@ namespace SA
 	class ProjectileClassHandle;
 	class Mod;
 	class SpawnConfig;
+	class ProjectileConfig;
 	class CollisionDebugRenderer;
 	class ProjectileTweakerWidget;
 
@@ -34,6 +35,7 @@ namespace SA
 
 
 		void refreshShipContinuousFireState();
+		void refreshProjectiles();
 
 	private: //debug variables
 #if SA_RENDER_DEBUG_INFO
@@ -46,10 +48,13 @@ namespace SA
 		float timeDilationFactor_ui = 1.f;
 		bool bShowProjectileTweaker_ui = false;
 
+	private: //testing projectile
+		sp<ProjectileConfig> testProjectileConfig = nullptr;
+		int selectedProjectileConfigIdx = 0;
+
 	private:
 		//std::multimap<RenderModelEntity*, wp<RenderModelEntity>> cachedSpawnEntities;
 		sp<SpawnConfig> fighterSpawnConfig;
-		sp<ProjectileClassHandle> laserBoltHandle;
 		sp<CollisionDebugRenderer> collisionDebugRenderer;
 		sp<ProjectileTweakerWidget> projectileWidget;
 

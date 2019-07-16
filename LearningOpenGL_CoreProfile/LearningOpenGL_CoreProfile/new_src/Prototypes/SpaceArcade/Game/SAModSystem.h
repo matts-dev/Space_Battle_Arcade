@@ -68,6 +68,7 @@ namespace SA
 		/** WARNING: this will delete the Projectile config from the file system! */
 		void deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig);
 
+		//#TODO templatize modifying configs so there isn't code duplication for each config type
 
 		////////////////////////////////////////////////////////////////////
 		// Serialization
@@ -116,7 +117,8 @@ namespace SA
 
 		void rebuildModArrayView();
 
-		void loadSpawnConfigs(sp<Mod>& mod);
+		void loadConfigs(sp<Mod>& mod);
+		//void loadSpawnConfigs(sp<Mod>& mod);
 	private:
 		sp<Mod> activeMod = nullptr;
 
@@ -124,6 +126,51 @@ namespace SA
 		std::map<std::string, sp<Mod>> loadedMods;
 		std::vector<sp<Mod>> modArrayView;
 	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

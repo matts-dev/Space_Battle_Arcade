@@ -17,6 +17,7 @@ namespace SA
 	class Model3D;
 	class Mod;
 	class SpawnConfig;
+	class ProjectileConfig;
 	class Shader;
 	class PrimitiveShapeRenderer;
 
@@ -49,10 +50,13 @@ namespace SA
 		/** INVARIANT: filepath has been checked to be a valid model file path */
 		void createNewSpawnConfig(const std::string& name, const std::string& fullModelPath);
 
+
+		void onActiveConfigSet(const SpawnConfig& newConfig);
+
 	private: 
 		bool bRenderAABB = true;
 		bool bRenderCollisionShapes = true;
-		bool bRenderCollisionShapesLines = false;
+		bool bRenderCollisionShapesLines = true;
 		bool bShowCustomShapes = false;
 		bool bShowSlowShapes = false;
 		int selectedShapeIdx = -1;
@@ -60,6 +64,8 @@ namespace SA
 	private:
 		sp<Model3D> renderModel = nullptr;
 		sp<SpawnConfig> activeConfig = nullptr;
+		sp<ProjectileConfig> primaryProjectileConfig = nullptr;
+		
 
 		sp<Shader> model3DShader;
 		sp<Shader> collisionShapeShader;

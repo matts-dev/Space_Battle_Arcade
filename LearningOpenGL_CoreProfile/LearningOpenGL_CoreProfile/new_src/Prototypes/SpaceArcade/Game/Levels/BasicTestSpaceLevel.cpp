@@ -121,11 +121,20 @@ namespace SA
 			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleRightMouseButton);
 		}
 
-		sp<Model3D> laserBoltModel = assetSS.getModel(game.URLs.laserURL);
-		Transform projectileAABBTransform;
-		projectileAABBTransform.scale.z = 4.5;
-		//#TODO the creation of projectiles needs changing
-		laserBoltHandle = game.getProjectileSystem()->createProjectileType(laserBoltModel, projectileAABBTransform);
+		//pick a projectile to test with
+		if (const sp<Mod>& activeMod = game.getModSystem()->getActiveMod())
+		{
+			int idx = 0;
+			for (auto projectileConfigIter : activeMod->getProjectileConfigs())
+			{
+				if (idx == selectedProjectileConfigIdx)
+				{
+					testProjectileConfig = projectileConfigIter.second;
+					break;
+				}
+				idx++;
+			}
+		}
 	}
 
 	void BasicTestSpaceLevel::endLevel_v()
@@ -164,11 +173,14 @@ namespace SA
 				{
 					if (!camera->isInCursorMode())
 					{
-						const sp<ProjectileSystem>& projectileSys = game.getProjectileSystem();
+						if (testProjectileConfig)
+						{
+							const sp<ProjectileSystem>& projectileSys = game.getProjectileSystem();
 
-						glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
-						glm::vec3 direction = camera->getFront();
-						projectileSys->spawnProjectile(start, direction, *laserBoltHandle);
+							glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
+							glm::vec3 direction = camera->getFront();
+							projectileSys->spawnProjectile(start, direction, *testProjectileConfig);
+						}
 
 						if (bFreezeTimeOnClick_ui)
 						{
@@ -218,81 +230,120 @@ namespace SA
 			const sp<CameraBase>& camera = player->getCamera();
 			bInCursorMode = camera->isInCursorMode();
 		}
-		if (!bInCursorMode) { return; }
+		if (bInCursorMode) 
+		{ 
+			const sp<TimeManager>& timeManager = getWorldTimeManager();
 
-		const sp<TimeManager>& timeManager = getWorldTimeManager();
-
-
-		ImGui::SetNextWindowPos(ImVec2{ 25, 25 });
-		//ImGui::SetNextWindowSize(ImVec2{ 400, 600 });
-		ImGuiWindowFlags flags = 0;
-		flags |= ImGuiWindowFlags_NoMove;
-		flags |= ImGuiWindowFlags_NoResize;
-		//flags |= ImGuiWindowFlags_NoCollapse;
-		ImGui::Begin("Space Test Level!", nullptr, flags);
-		{
-			ImGui::TextWrapped("Debug Variables; if option is not visible it may not be compiled if specific debug macro is not defined. Check defined macros. ");
-			ImGui::Separator();
+			ImGui::SetNextWindowPos(ImVec2{ 25, 25 });
+			//ImGui::SetNextWindowSize(ImVec2{ 400, 600 });
+			ImGuiWindowFlags flags = 0;
+			flags |= ImGuiWindowFlags_NoMove;
+			flags |= ImGuiWindowFlags_NoResize;
+			//flags |= ImGuiWindowFlags_NoCollapse;
+			ImGui::Begin("Space Test Level!", nullptr, flags);
+			{
+				ImGui::TextWrapped("Debug Variables; if option is not visible it may not be compiled if specific debug macro is not defined. Check defined macros. ");
+				ImGui::Separator();
 #if SA_RENDER_DEBUG_INFO
-			ImGui::Checkbox("Render entity OBB pretests", &bRenderCollisionOBB_ui);
-			ImGui::Checkbox("Render entity collision shapes", &bRenderCollisionShapes_ui);
+				ImGui::Checkbox("Render entity OBB pretests", &bRenderCollisionOBB_ui);
+				ImGui::Checkbox("Render entity collision shapes", &bRenderCollisionShapes_ui);
 #endif //SA_RENDER_DEBUG_INFO
 #if SA_CAPTURE_SPATIAL_HASH_CELLS
-			ImGui::Checkbox("Render Spatial Hash Cells", &game.bRenderDebugCells);
+				ImGui::Checkbox("Render Spatial Hash Cells", &game.bRenderDebugCells);
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
-			ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
+				ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
 
-			////////////////////////////////////////////////////////
-			// TIME 
-			////////////////////////////////////////////////////////
-			ImGui::Dummy(ImVec2(0, 20.f));
-			ImGui::Separator();
-			if (ImGui::Button("ToggleTimeFreeze")) 
-			{ 
-				timeManager->setTimeFreeze(!timeManager->isTimeFrozen());
-			}
-			if (ImGui::Button("Step Time 1 Frame"))
-			{
-				timeManager->setFramesToStep(1);
-			}
-			ImGui::Checkbox("Freeze Time On Click", &bFreezeTimeOnClick_ui);
-			if (ImGui::SliderFloat("Time Dilation", &timeDilationFactor_ui, 0.001f, 4.f))
-			{
-				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor_ui);
-			}
-			if (ImGui::Button("reset dilation"))
-			{
-				timeDilationFactor_ui = 1.f;
-				timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor_ui);
-			}
+				////////////////////////////////////////////////////////
+				// TIME 
+				////////////////////////////////////////////////////////
+				ImGui::Dummy(ImVec2(0, 20.f));
+				ImGui::Separator();
+				if (ImGui::Button("ToggleTimeFreeze")) 
+				{ 
+					timeManager->setTimeFreeze(!timeManager->isTimeFrozen());
+				}
+				if (ImGui::Button("Step Time 1 Frame"))
+				{
+					timeManager->setFramesToStep(1);
+				}
+				ImGui::Checkbox("Freeze Time On Click", &bFreezeTimeOnClick_ui);
+				if (ImGui::SliderFloat("Time Dilation", &timeDilationFactor_ui, 0.001f, 4.f))
+				{
+					timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor_ui);
+				}
+				if (ImGui::Button("reset dilation"))
+				{
+					timeDilationFactor_ui = 1.f;
+					timeManager->setTimeDilationFactor_OnNextFrame(timeDilationFactor_ui);
+				}
 
-			////////////////////////////////////////////////////////
-			// Projectiles Optimization
-			////////////////////////////////////////////////////////
-			ImGui::Dummy(ImVec2(0, 20.f));
-			ImGui::Separator();
-			if (ImGui::Checkbox("Enable All Ships Continuous Fire", &bForceShipsToFire_ui))
-			{
-				refreshShipContinuousFireState();
-			}
-			if (ImGui::InputFloat("Ship Fire Rate Seconds", &forceFireRateSecs_ui))
-			{
-				bForceShipsToFire_ui = false;
-				refreshShipContinuousFireState();
-			}
+				////////////////////////////////////////////////////////
+				// Projectiles Optimization
+				////////////////////////////////////////////////////////
+				ImGui::Dummy(ImVec2(0, 20.f));
+				ImGui::Separator();
+				if (ImGui::Checkbox("Enable All Ships Continuous Fire", &bForceShipsToFire_ui))
+				{
+					refreshShipContinuousFireState();
+				}
+				if (ImGui::InputFloat("Ship Fire Rate Seconds", &forceFireRateSecs_ui))
+				{
+					bForceShipsToFire_ui = false;
+					refreshShipContinuousFireState();
+				}
 
-			////////////////////////////////////////////////////////
-			// Projectile Tweaker
-			////////////////////////////////////////////////////////
-			ImGui::Dummy(ImVec2(0, 20.f));
-			ImGui::Separator();
-			ImGui::Checkbox("Show Projectile Tweaker", &bShowProjectileTweaker_ui);
-			if (bShowProjectileTweaker_ui && projectileWidget)
-			{
-				projectileWidget->renderInCurrentUIWindow();
+				////////////////////////////////////////////////////////
+				// Projectile Tweaker
+				////////////////////////////////////////////////////////
+				ImGui::Dummy(ImVec2(0, 20.f));
+				ImGui::Separator();
+				ImGui::Checkbox("Show Projectile Tweaker", &bShowProjectileTweaker_ui);
+				if (ImGui::CollapsingHeader("Test Projectile", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+					if (!activeMod)
+					{
+						ImGui::Text("No active mode");
+
+					}
+					else
+					{
+						const std::map<std::string, sp<ProjectileConfig>>& projectileConfigs = activeMod->getProjectileConfigs();
+						int curConfigIdx = 0;
+						for (const auto& kvPair : projectileConfigs)
+						{
+							if (ImGui::Selectable(kvPair.first.c_str(), curConfigIdx == selectedProjectileConfigIdx))
+							{
+								testProjectileConfig = kvPair.second;
+								selectedProjectileConfigIdx = curConfigIdx;
+								refreshProjectiles();
+							}
+							++curConfigIdx;
+						}
+					}
+				}
 			}
+			ImGui::End();
 		}
-		ImGui::End();
+
+		////////////////////////////////////////////////////////
+		// Windows persistent without cursor mode
+		////////////////////////////////////////////////////////
+
+		////////////////////////////////////////////////////////
+		// Projectile Tweaker
+		////////////////////////////////////////////////////////
+		if (bShowProjectileTweaker_ui)
+		{
+			ImGuiWindowFlags projWindowFlags = 0;
+			//flags |= ImGuiWindowFlags_NoMove;
+			//flags |= ImGuiWindowFlags_NoResize;
+			projWindowFlags |= ImGuiWindowFlags_NoCollapse;
+			ImGui::Begin("Projectile Tweaker!", nullptr, projWindowFlags);
+				projectileWidget->renderInCurrentUIWindow();
+			ImGui::End();
+
+		}
 	}
 
 	void BasicTestSpaceLevel::refreshShipContinuousFireState()
@@ -316,6 +367,17 @@ namespace SA
 			{
 				sp<FlyInDirectionBrain> singleDirectionBrain = new_sp<FlyInDirectionBrain>(ship);
 				ship->setNewBrain(singleDirectionBrain);
+			}
+		}
+	}
+
+	void BasicTestSpaceLevel::refreshProjectiles()
+	{
+		if (testProjectileConfig)
+		{
+			for (const sp<Ship>& ship : spawnedShips)
+			{
+				ship->setPrimaryProjectile(testProjectileConfig);
 			}
 		}
 	}

@@ -11,6 +11,7 @@ namespace SA
 	class SpawnConfig;
 	class ModelCollisionInfo;
 	class ShipAIBrain;
+	class ProjectileConfig;
 
 	class Ship : public RenderModelEntity, public IProjectileHitNotifiable
 	{
@@ -54,6 +55,12 @@ namespace SA
 		glm::vec4 getForwardDir();
 		void setVelocity(glm::vec3 inVelocity) { velocity = inVelocity; }
 
+
+		////////////////////////////////////////////////////////
+		// Projectiles 
+		////////////////////////////////////////////////////////
+		void setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig);
+
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
@@ -72,6 +79,8 @@ namespace SA
 		const sp<const ModelCollisionInfo> constViewCollisionData;
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocity;
+
+		sp<ProjectileConfig> primaryProjectile;
 	};
 }
 

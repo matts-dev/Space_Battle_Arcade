@@ -101,12 +101,12 @@ namespace SA
 			std::string filepath = projectileConfig->getRepresentativeFilePath();
 
 			//validation before deleting a file
-			bool bContainsProjectileConfigs = filepath.find("projectileConfigs") != std::string::npos;
+			bool bContainsProjectileConfigs = filepath.find("ProjectileConfigs") != std::string::npos;
 			bool bBeginsWithGameData = filepath.find("GameData") == 0;
 			bool bContainsModPath = filepath.find(getModDirectoryPath()) != std::string::npos;
 			bool bIsDeletable = projectileConfig->isDeletable();
 
-			if (bContainsProjectileConfigs && bBeginsWithGameData && bContainsModPath)
+			if (bContainsProjectileConfigs && bBeginsWithGameData && bContainsModPath && bIsDeletable)
 			{
 				removeProjectileConfig(projectileConfig);
 
@@ -117,7 +117,7 @@ namespace SA
 				log("Mod", LogLevel::LOG, deleteMsg);
 
 				std::error_code ec;
-				//std::filesystem::remove(filepath, ec); 
+				std::filesystem::remove(filepath, ec); 
 
 				if (ec)
 				{
@@ -228,7 +228,7 @@ namespace SA
 							if(loadedMods.find(modName) == loadedMods.end())
 							{
 								loadedMods.insert({ modName, mod });
-								loadSpawnConfigs(mod);
+								loadConfigs(mod);
 							}
 							else
 							{
@@ -489,27 +489,72 @@ namespace SA
 		}
 	}
 
-
-	void ModSystem::loadSpawnConfigs(sp<Mod>& mod)
+	/* 
+		@param assetLocation - should be relative to the mod directory; eg "Assets/SpawnConfigs/"
+	*/
+	template<typename T>
+	static void loadConfig(sp<Mod>& mod,
+		const std::string& assetLocation,
+		void(Mod::*addConfig)(sp<T>&),
+		const std::function<sp<ConfigBase>()>& factoryMethod
+	)
 	{
-		const std::string SPAWN_CONFIG_DIR = mod->getModDirectoryPath() + std::string("Assets/SpawnConfigs/");
+		const std::string CONFIG_DIR = mod->getModDirectoryPath() + assetLocation;  
 
 		std::error_code dir_iter_ec;
-		for (const std::filesystem::directory_entry& directory_entry : std::filesystem::directory_iterator(SPAWN_CONFIG_DIR, dir_iter_ec))
+		for (const std::filesystem::directory_entry& directory_entry : std::filesystem::directory_iterator(CONFIG_DIR, dir_iter_ec))
 		{
-			const std::filesystem::path& pathObj = directory_entry.path();
-			if (pathObj.has_extension() && pathObj.extension().string() == ".json")
+			const std::filesystem::path& filePathObj = directory_entry.path();
+			if (filePathObj.has_extension() && filePathObj.extension().string() == ".json")
 			{
-				if (sp<SpawnConfig> spawnConfig = SpawnConfig::load(pathObj.string()))
+				sp<ConfigBase> baseConfig = ConfigBase::load(filePathObj.string(), factoryMethod);
+
+				//while I am trying dynamic casts, this should NOT be happening every tick and is probably okay; 
+				//alternatively ConfigBase could be a template, but that requires it to expose a lot to header (filesystem, etc).
+				if (sp<T> derivedConfig = std::dynamic_pointer_cast<T>(baseConfig))
 				{
-					mod->addSpawnConfig(spawnConfig);
+					((*mod).*addConfig)(derivedConfig);
+				}
+				else
+				{
+					log("ModSystem", LogLevel::LOG_ERROR, "Failed to typecast loaded config");
 				}
 			}
 		}
 		if (dir_iter_ec)
 		{
-			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create a directory iterator over spawn configs");
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create a directory iterator over files in loadConfig.");
 		}
 	}
+
+
+	void ModSystem::loadConfigs(sp<Mod>& mod)
+	{
+		loadConfig<SpawnConfig>(mod, "Assets/SpawnConfigs/", &Mod::addSpawnConfig, [](){ return new_sp<SpawnConfig>(); });
+		loadConfig<ProjectileConfig>(mod, "Assets/ProjectileConfigs/", &Mod::addProjectileConfig, []() { return new_sp<ProjectileConfig>(); });
+		//loadSpawnConfigs(mod);
+	}
+
+	//void ModSystem::loadSpawnConfigs(sp<Mod>& mod)
+	//{
+	//	const std::string SPAWN_CONFIG_DIR = mod->getModDirectoryPath() + std::string("Assets/SpawnConfigs/");
+
+	//	std::error_code dir_iter_ec;
+	//	for (const std::filesystem::directory_entry& directory_entry : std::filesystem::directory_iterator(SPAWN_CONFIG_DIR, dir_iter_ec))
+	//	{
+	//		const std::filesystem::path& pathObj = directory_entry.path();
+	//		if (pathObj.has_extension() && pathObj.extension().string() == ".json")
+	//		{
+	//			if (sp<SpawnConfig> spawnConfig = SpawnConfig::load(pathObj.string()))
+	//			{
+	//				mod->addSpawnConfig(spawnConfig);
+	//			}
+	//		}
+	//	}
+	//	if (dir_iter_ec)
+	//	{
+	//		log("ModSystem", LogLevel::LOG_ERROR, "Failed to create a directory iterator over files.");
+	//	}
+	//}
 
 }

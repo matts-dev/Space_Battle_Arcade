@@ -9,30 +9,6 @@
 #include "../GameFramework/SAAssetSystem.h"
 #include "../GameFramework/SAShipAIBrain.h"
 
-namespace //translation unit statics
-{
-	using namespace SA;
-	//temporary below, better to be stored in an official location and cached on spawn, that way
-	//we don't have to check if this is created at spawn every time in every ctor
-	sp<ProjectileClassHandle> laserBoltHandle = nullptr;
-
-
-	void staticInitCheck() //#TODO remove this function if completely refactored out
-	{
-		SpaceArcade& game = SpaceArcade::get();
-
-		if (!laserBoltHandle)
-		{
-			AssetSystem& assetSystem = game.getAssetSystem();
-			if(sp<Model3D> laserBoltModel = assetSystem.getModel(game.URLs.laserURL))
-			{
-				//#TODO projectile handle creation code needs refactoring! function may not even be necessary anymore
-				laserBoltHandle = game.getProjectileSystem()->createProjectileType(laserBoltModel, Transform{});
-			}
-		}
-	}
-}
-
 namespace SA
 {
 	Ship::Ship(
@@ -54,7 +30,7 @@ namespace SA
 		const float speed = 1.0f;
 		velocity = rotDir * speed;
 
-		staticInitCheck();
+		//staticInitCheck();
 	}
 
 	Ship::Ship(const sp<SpawnConfig>& inSpawnConfig, const Transform& spawnTransform)
@@ -63,16 +39,8 @@ namespace SA
 		constViewCollisionData(collisionData)
 	{
 		overlappingNodes_SH.reserve(10);
+		primaryProjectile = inSpawnConfig->getPrimaryProjectileConfig();
 
-		//glm::vec4 pointingDir{ 0,0,1,0 };
-		//glm::mat4 rotMatrix = glm::toMat4(spawnTransform.rotQuat);
-
-		//glm::vec4 rotDir = rotMatrix * pointingDir;
-
-		//const float speed = 1.0f;
-		//velocity = rotDir * speed;
-
-		staticInitCheck();
 	}
 
 	const sp<const ModelCollisionInfo>& Ship::getCollisionInfo() const
@@ -98,14 +66,22 @@ namespace SA
 		return rotDir;
 	}
 
+	void Ship::setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig)
+	{
+		primaryProjectile = projectileConfig;
+	}
+
 	void Ship::fireProjectile(BrainKey privateKey)
 	{
-		//#optimize: cache any of this at spawn?
-		const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
-		glm::vec3 direction = glm::normalize(velocity);
-		//#TODO below doesn't account for parent transforms
-		glm::vec3 start = direction * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
-		projectileSys->spawnProjectile(start, direction, *laserBoltHandle); //#TODO needs to get laser bolt handler from somewhere official
+		//#optimize: set a default projectile configso this doesn't have to be checked every time a ship fires? reduce branch divergence
+		if (primaryProjectile)
+		{
+			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
+			glm::vec3 direction = glm::normalize(velocity);
+			//#TODO below doesn't account for parent transforms
+			glm::vec3 start = direction * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
+			projectileSys->spawnProjectile(start, direction, *primaryProjectile); 
+		}
 	}
 
 	void Ship::setNewBrain(const sp<ShipAIBrain> newBrain, bool bStartNow /*= true*/)

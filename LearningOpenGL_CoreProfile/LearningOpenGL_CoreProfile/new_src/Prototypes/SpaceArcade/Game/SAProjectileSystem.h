@@ -13,25 +13,9 @@
 namespace SA
 {
 	class ProjectileSystem;
+	class ProjectileConfig;
 	class LevelBase;
 
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	// User Configured projectile specification
-	///////////////////////////////////////////////////////////////////////////////////////////////
-	class ProjectileClassHandle
-	{
-		friend ProjectileSystem;
-	public: //std::make_shared requires public ctor, friend declarations of scope calling std::make_shared isn't enough for std::make_shared
-		ProjectileClassHandle(const Transform& inTransform, const sp<Model3D>& inModel);
-
-		glm::vec3 getAABBSize() { return aabbSize; }
-	public:
-		sp<Model3D> model;
-		float speed = 250.0f;
-		float lifeTimeSec = 0.5f;
-	private:
-		glm::vec3 aabbSize;
-	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Actual Projectile Instances; these system is responsible for creating these instances
@@ -89,8 +73,7 @@ namespace SA
 		friend class ProjectileEditor_Level;
 
 	public:
-		sp<ProjectileClassHandle> createProjectileType(const sp<Model3D>& model, const Transform& AABB_unitCubeTransform);
-		void spawnProjectile(const glm::vec3& start, const glm::vec3& direction, const ProjectileClassHandle& projectileTypeHandle);
+		void spawnProjectile(const glm::vec3& start, const glm::vec3& direction, const ProjectileConfig& projectileTypeHandle);
 		void unspawnAllProjectiles();
 
 		void renderProjectiles(Shader& projectileShader) const;

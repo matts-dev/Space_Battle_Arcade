@@ -1,60 +1,65 @@
 {
-    "bIsDeleteable": false,
-    "fullModelFilePath": "GameData/mods/SpaceArcade/Assets/Models3D/Fighter/SGFighter.obj",
-    "modelAABB": {
-        "modelPosition": [
-            0.0,
-            0.0,
-            0.0
-        ],
-        "modelRotationDegrees": [
-            0.0,
-            0.0,
-            0.0
-        ],
-        "modelScale": [
-            1.0,
-            1.0,
-            1.0
-        ]
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "Fighter"
     },
-    "name": "Fighter",
-    "shapes": [
-        {
-            "position": [
-                0.0,
-                0.0,
-                0.30000001192092896
-            ],
-            "rotationDegrees": [
+    "SpawnConfig": {
+        "fullModelFilePath": "GameData/mods/SpaceArcade/Assets/Models3D/Fighter/SGFighter.obj",
+        "modelAABB": {
+            "modelPosition": [
                 0.0,
                 0.0,
                 0.0
             ],
-            "scale": [
-                1.7000000476837158,
-                2.0,
-                11.550000190734863
+            "modelRotationDegrees": [
+                0.0,
+                0.0,
+                0.0
             ],
-            "shape": 0
+            "modelScale": [
+                1.0,
+                1.0,
+                1.0
+            ]
         },
-        {
-            "position": [
-                0.0,
-                -0.20000000298023224,
-                -0.25
-            ],
-            "rotationDegrees": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "scale": [
-                8.300000190734863,
-                1.2000000476837158,
-                7.5
-            ],
-            "shape": 0
-        }
-    ]
+        "primaryProjectileConfigName": "FighterLaser",
+        "shapes": [
+            {
+                "position": [
+                    0.0,
+                    0.0,
+                    0.30000001192092896
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.7000000476837158,
+                    2.0,
+                    11.550000190734863
+                ],
+                "shape": 0
+            },
+            {
+                "position": [
+                    0.0,
+                    -0.20000000298023224,
+                    -0.25
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    8.300000190734863,
+                    1.2000000476837158,
+                    7.5
+                ],
+                "shape": 0
+            }
+        ]
+    }
 }

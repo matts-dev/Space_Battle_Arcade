@@ -15,6 +15,7 @@ namespace SA
 	class SpawnConfig;
 	class Model3D;
 	class ModelCollisionInfo;
+	class ProjectileConfig;
 
 	struct CollisionShapeConfig
 	{
@@ -34,35 +35,29 @@ namespace SA
 		};
 
 	public:
-		const std::string& getName() const { return name; }
 		const std::string& getModelFilePath() const { return fullModelFilePath; };
-		bool isDeletable() const { return bIsDeleteable; }
-
-		std::string serialize();
-		void deserialize(const std::string& str);
 
 		virtual std::string getRepresentativeFilePath() override;
 
 	public: //utility functions
 		sp<SA::ModelCollisionInfo> toCollisionInfo();
 		sp<Model3D> getModel() const;
+		sp<ProjectileConfig>& getPrimaryProjectileConfig();
 
-	public:
-		static sp<SpawnConfig> load(std::string filePathCopy);
-	private:
-		void save(); //access restricted, only allow certain classes to save this.
+	protected:
+		virtual void onSerialize(json& outData) override;
+		virtual void onDeserialize(const json& inData) override;
+	
+	private: //non-serialized properties
+		sp<ProjectileConfig> primaryFireProjectile;
 
 	private: //serialized properties
-		std::string name;
 		std::string fullModelFilePath;
-		bool bIsDeleteable = true;
-
 		glm::vec3 modelScale = glm::vec3(1,1,1);
 		glm::vec3 modelRotationDegrees = glm::vec3(0,0,0);
 		glm::vec3 modelPosition = glm::vec3(0, 0, 0);
+		std::string primaryProjectileConfigName;
 
-		bool bUseModelAABBTest = true;
-		
 		std::vector<CollisionShapeConfig> shapes;
 		
 		//color/material
