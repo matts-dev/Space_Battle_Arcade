@@ -18,16 +18,6 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	void Projectile::tick(float dt_sec, LevelBase& currentLevel)
 	{
-		//////////////////////////////////////////////////////////////
-//#ifdef _DEBUG
-//		static bool freezeProjectiles = false;
-//		if (freezeProjectiles)
-//		{
-//			return;
-//		}
-//#endif // _DEBUG
-		//////////////////////////////////////////////////////////////
-
 		using glm::mat4; using glm::vec3; using glm::quat; using glm::vec4;
 
 		//#optimize perhaps cache level system in local static for perf; profiler may cacn help to determine if this is worth it
@@ -205,24 +195,26 @@ namespace SA
 		GameBase::get().PostGameloopTick.addStrongObj(sp_this(), &ProjectileSystem::postGameLoopTick);
 	}
 
-	void ProjectileSystem::spawnProjectile(const glm::vec3& start, const glm::vec3& direction_n, const ProjectileConfig& projectileTypeHandle)
+	void ProjectileSystem::spawnProjectile(const ProjectileSystem::SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle)
 	{
 		sp<Projectile> spawned = objPool.getInstance();
 
 		//#optimize note there may some optimized functions in glm to do this work
 		glm::vec3 projectileSystemForward(0, 0, -1);
-		glm::quat spawnRotation = Utils::getRotationBetween(projectileSystemForward, direction_n);
+		glm::quat spawnRotation = Utils::getRotationBetween(projectileSystemForward, spawnData.direction_n);
 
-		//#todo define an argument struct to pass for spawning projectiles
-		spawned->xform.position = start;
 		spawned->xform.rotQuat = spawnRotation;
+		spawned->xform.position = spawnData.start;
+		spawned->damage = spawnData.damage;
+		spawned->team = spawnData.team;
+		spawned->direction_n = spawnData.direction_n;
 		spawned->renderXform = glm::scale(glm::mat4(1.f), { 0, 0, 0 });
 
 		spawned->bHit = false;
 		spawned->forceRelease = false;
 
+
 		spawned->distanceStretchScale = 1;
-		spawned->direction_n = direction_n;
 		spawned->directionQuat = spawnRotation;
 
 		spawned->speed = projectileTypeHandle.getSpeed();

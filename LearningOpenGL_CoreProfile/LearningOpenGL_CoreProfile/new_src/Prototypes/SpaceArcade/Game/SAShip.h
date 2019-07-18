@@ -4,6 +4,7 @@
 #include "../GameFramework/RenderModelEntity.h"
 #include "../GameFramework/SACollisionUtils.h"
 #include "SAProjectileSystem.h"
+#include "../Tools/DataStructures/SATransform.h"
 
 
 namespace SA
@@ -13,8 +14,23 @@ namespace SA
 	class ShipAIBrain;
 	class ProjectileConfig;
 
+
+	struct HitPoints
+	{
+		int current;
+		int max;
+	};
+
 	class Ship : public RenderModelEntity, public IProjectileHitNotifiable
 	{
+	public:
+		struct SpawnData
+		{
+			sp<SpawnConfig> spawnConfig;
+			Transform spawnTransform;
+			int team = -1;
+		};
+
 	public:
 		/*deprecated*/
 		Ship(
@@ -24,7 +40,7 @@ namespace SA
 			);
 
 		/*preferred method of construction*/
-		Ship(const sp<SpawnConfig>& spawnConfig, const Transform& spawnTransform);
+		Ship(const SpawnData& spawnData);
 
 	public: 
 		////////////////////////////////////////////////////////
@@ -79,6 +95,8 @@ namespace SA
 		const sp<const ModelCollisionInfo> constViewCollisionData;
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocity;
+		HitPoints hp = { /*current*/100, /*max*/100 };
+		int team;
 
 		sp<ProjectileConfig> primaryProjectile;
 	};

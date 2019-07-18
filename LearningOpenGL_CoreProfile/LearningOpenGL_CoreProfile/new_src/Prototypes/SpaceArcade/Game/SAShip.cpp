@@ -33,14 +33,14 @@ namespace SA
 		//staticInitCheck();
 	}
 
-	Ship::Ship(const sp<SpawnConfig>& inSpawnConfig, const Transform& spawnTransform)
-		: RenderModelEntity(inSpawnConfig->getModel(), spawnTransform),
-		collisionData(inSpawnConfig->toCollisionInfo()), 
-		constViewCollisionData(collisionData)
+	Ship::Ship(const SpawnData& spawnData)
+		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
+		collisionData(spawnData.spawnConfig->toCollisionInfo()), 
+		constViewCollisionData(collisionData),
+		team(spawnData.team)
 	{
 		overlappingNodes_SH.reserve(10);
-		primaryProjectile = inSpawnConfig->getPrimaryProjectileConfig();
-
+		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
 	}
 
 	const sp<const ModelCollisionInfo>& Ship::getCollisionInfo() const
@@ -77,10 +77,14 @@ namespace SA
 		if (primaryProjectile)
 		{
 			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
-			glm::vec3 direction = glm::normalize(velocity);
+
+			ProjectileSystem::SpawnData spawnData;
+			spawnData.direction_n = glm::normalize(velocity);
+			
 			//#TODO below doesn't account for parent transforms
-			glm::vec3 start = direction * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
-			projectileSys->spawnProjectile(start, direction, *primaryProjectile); 
+			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
+			
+			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
 		}
 	}
 
@@ -168,7 +172,15 @@ namespace SA
 
 	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
-		
+		if (team != hitProjectile.team )
+		{
+			hp.current -= hitProjectile.damage;
+			if (hp.current <= 0)
+			{
+				//#TODO start particle effects; explosion at location with velocity?
+				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
+			}
+		}
 	}
 
 }

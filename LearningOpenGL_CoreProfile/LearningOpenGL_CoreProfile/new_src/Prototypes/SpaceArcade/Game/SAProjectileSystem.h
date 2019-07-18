@@ -28,14 +28,16 @@ namespace SA
 		Transform xform; 
 		glm::vec3 direction_n;
 		glm::vec3 hitLocation;
-		glm::quat directionQuat; //#TODO maybe? duplicate info in xform
 		glm::vec3 aabbSize;
+		glm::quat directionQuat; //#TODO maybe? duplicate info in xform
 		glm::mat4 collisionXform;
 		glm::mat4 renderXform;
 		float distanceStretchScale;
 		float speed;
 		float lifetimeSec;
 		float timeAlive;
+		int damage;
+		int team;
 		bool forceRelease;
 		bool bHit;
 		sp<const Model3D> model;
@@ -73,7 +75,14 @@ namespace SA
 		friend class ProjectileEditor_Level;
 
 	public:
-		void spawnProjectile(const glm::vec3& start, const glm::vec3& direction, const ProjectileConfig& projectileTypeHandle);
+		struct SpawnData
+		{
+			glm::vec3 start;
+			glm::vec3 direction_n;
+			int damage = 25;
+			int team = -1;
+		};
+		void spawnProjectile(const SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle);
 		void unspawnAllProjectiles();
 
 		void renderProjectiles(Shader& projectileShader) const;

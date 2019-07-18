@@ -91,6 +91,10 @@ namespace SA
 		std::mt19937 rng_eng = std::mt19937(seed);
 		std::uniform_real_distribution<float> startDist(-200.f, 200.f); //[a, b)
 
+		Ship::SpawnData fighterShipSpawnData;
+		fighterShipSpawnData.team = 1;
+		fighterShipSpawnData.spawnConfig = fighterSpawnConfig;
+
 		int numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		numFighterShipsToSpawn = 500;
@@ -100,10 +104,10 @@ namespace SA
 			glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
 			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
 			startPos += carrierTransform.position;
-			Transform fighterXform = Transform{ startPos, rot, {0.1,0.1,0.1} };
-			//sp<Ship> fighter = spawnEntity<Ship>(fighterModel, fighterXform, createUnitCubeCollisionInfo()); //deprecated?
-			//sp<Ship> fighter = spawnEntity<Ship>(fighterModel, fighterXform, fighterSpawnConfig->toCollisionInfo()); //also not ideal
-			sp<Ship> fighter = spawnEntity<Ship>(fighterSpawnConfig, fighterXform);
+
+			fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
+
+			sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
 			fighter->spawnNewBrain<FlyInDirectionBrain>();
 		}
 
@@ -177,9 +181,13 @@ namespace SA
 						{
 							const sp<ProjectileSystem>& projectileSys = game.getProjectileSystem();
 
-							glm::vec3 start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
-							glm::vec3 direction = camera->getFront();
-							projectileSys->spawnProjectile(start, direction, *testProjectileConfig);
+							ProjectileSystem::SpawnData spawnData;
+							spawnData.start = camera->getPosition() + glm::vec3(0, -0.25f, 0);
+							spawnData.direction_n = camera->getFront();
+							spawnData.team = -1; //#TODO get player's ship and get team
+							spawnData.damage = 25;
+
+							projectileSys->spawnProjectile(spawnData, *testProjectileConfig);
 						}
 
 						if (bFreezeTimeOnClick_ui)
@@ -346,6 +354,14 @@ namespace SA
 		}
 	}
 
+	void BasicTestSpaceLevel::handleEntityDestroyed(const sp<GameEntity>& entity)
+	{
+		if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(entity))
+		{
+			unspawnEntity<Ship>(ship);
+		}
+	}
+
 	void BasicTestSpaceLevel::refreshShipContinuousFireState()
 	{
 
@@ -387,6 +403,8 @@ namespace SA
 		if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(spawned))
 		{
 			spawnedShips.insert(ship);
+
+			ship->onDestroyedEvent->addWeakObj(sp_this(), &BasicTestSpaceLevel::handleEntityDestroyed);
 		}
 	}
 

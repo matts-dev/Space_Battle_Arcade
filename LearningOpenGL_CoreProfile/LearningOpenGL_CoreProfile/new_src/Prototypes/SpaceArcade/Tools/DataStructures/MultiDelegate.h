@@ -165,9 +165,13 @@ namespace SA
 	/**
 		MultiDelegate allows multiple objects to subscribe to the delegate's event and be notified.
 		Multidelegate is built for single threaded usage.
+
+		intentionally not a game entity; perhaps it should be but then all stack allocated versions will need to be updated to be shared_ptrs
+
+	#TODO remove moves/copies? why? *allow direct access to delegate for add/remove; *prevent accidental assignment to delegate reference
 	*/
 	template<typename... Args>
-	class MultiDelegate /*intentionally not a game entity; perhaps it should be but then all stack allocated versions will need to be updated*/
+	class MultiDelegate /*intentionally not a game entity; see documentation*/
 	{
 	public:
 		void broadcast(Args... args)

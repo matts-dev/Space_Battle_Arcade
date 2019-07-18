@@ -41,15 +41,32 @@ namespace SA
 /** Represents a top level object*/
 namespace SA
 {
+	//forward declarations
+	template<typename... Args>
+	class MultiDelegate;
+
+	/* Root level object that most classe should derive from to take advantage of the engine convenience structures
+		eg: new_sp post construction callbacks, multidelegate subscription, etc.
+	*/
 	class GameEntity : public std::enable_shared_from_this<GameEntity>
  	{
 	public:
 		/** Game entities will all have virtual destructors to avoid easy-to-miss mistakes*/
+		GameEntity();
 		virtual ~GameEntity(){}
 
+	public:
+		const sp< MultiDelegate<const sp<GameEntity>&> > onDestroyedEvent;
+		bool isPendingDestroy() { return bPendingDestroy; }
+
 	protected:
-		//new_sp will call this function after the object has been created, allowing GameEntities to subscribe to delegates immediately after construction
+		/* new_sp will call this function after the object has been created, allowing GameEntities 
+		   to subscribe to delegates immediately after construction*/
 		virtual void postConstruct() {};
+
+		/* Marks an entity for pending destroy */
+		void destroy();
+		virtual void onDestroyed();
 
 		/** Not intended to be called directl; please use macro "sp_this" to avoid specifying template types*/
 		template<typename T>
@@ -60,9 +77,15 @@ namespace SA
 			return std::static_pointer_cast<T>(shared_from_this());
 		}
 	private:
+		bool bPendingDestroy = false;
+
+	private:
 		template<typename T, typename... Args>
 		friend sp<T> new_sp(Args&&... args);
-		 
+
+	public:
+		struct CleanKey { friend class GameBase;  private: CleanKey() {} };
+		static void cleanupPendingDestroy(CleanKey);
 	};
 }
 

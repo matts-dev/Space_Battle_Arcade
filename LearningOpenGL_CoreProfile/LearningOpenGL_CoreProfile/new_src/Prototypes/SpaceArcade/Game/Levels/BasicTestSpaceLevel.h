@@ -32,6 +32,7 @@ namespace SA
 		void handleRightMouseButton(int state, int modifier_keys);
 		void handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active);
 		void handleUIFrameStarted();
+		void handleEntityDestroyed(const sp<GameEntity>& entity);
 
 
 		void refreshShipContinuousFireState();

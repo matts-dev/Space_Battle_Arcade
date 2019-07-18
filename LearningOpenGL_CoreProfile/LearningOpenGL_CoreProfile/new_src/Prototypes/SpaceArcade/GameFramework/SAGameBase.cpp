@@ -109,6 +109,8 @@ namespace SA
 		timeSystem.updateTime(TimeSystem::PrivateKey{});
 		float deltaTimeSecs = systemTimeManager->getDeltaTimeSecs();
 
+		GameEntity::cleanupPendingDestroy(GameEntity::CleanKey{});
+
 		//#consider having system pass a reference to the system time manager, rather than a float; That way critical systems can ignore manipulation time effects or choose to use time affects. Passing raw time means systems will be forced to use time effects (such as dilation)
 		for (const sp<SystemBase>& system : systems) { system->tick(deltaTimeSecs);	}
 
