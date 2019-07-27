@@ -8,6 +8,7 @@
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../GameFramework/SAAssetSystem.h"
 #include "../GameFramework/SAShipAIBrain.h"
+#include "../GameFramework/SAParticleSystem.h"
 
 namespace SA
 {
@@ -172,12 +173,20 @@ namespace SA
 
 	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
+		//#TODO move the particle code below to when the ship is destroyed
+		ParticleSystem::SpawnParams particleSpawnParams;
+		particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+		particleSpawnParams.xform.position = this->getTransform().position;
+		particleSpawnParams.velocity = this->velocity;
+		GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+
 		if (team != hitProjectile.team )
 		{
 			hp.current -= hitProjectile.damage;
 			if (hp.current <= 0)
 			{
 				//#TODO start particle effects; explosion at location with velocity?
+
 				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
 			}
 		}

@@ -6,11 +6,12 @@
 #include "SAWindowSystem.h"
 #include "SAAssetSystem.h"
 #include "SALevelSystem.h"
+#include "SAPlayerSystem.h"
+#include "SAParticleSystem.h"
+#include "SAAutomatedTestSystem.h"
 
 #include "../Rendering/SAWindow.h"
 #include "SALog.h"
-#include "SAPlayerSystem.h"
-#include "SAAutomatedTestSystem.h"
 
 namespace SA
 {
@@ -43,6 +44,9 @@ namespace SA
 
 		playerSystem = new_sp<PlayerSystem>();
 		systems.insert(playerSystem);
+
+		particleSystem = new_sp<ParticleSystem>();
+		systems.insert(particleSystem);
 
 		automatedTestSystem = new_sp<AutomatedTestSystem>();
 		systems.insert(automatedTestSystem);
@@ -125,7 +129,7 @@ namespace SA
 		for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}
 	}
 
-	void GameBase::SubscribePostRender(const sp<SystemBase>& system)
+	void GameBase::subscribePostRender(const sp<SystemBase>& system)
 	{
 		postRenderNotifys.insert(system);
 	}

@@ -57,7 +57,7 @@ namespace SA
 
 	void WindowSystem::initSystem()
 	{
-		GameBase::get().SubscribePostRender(sp_this());
+		GameBase::get().subscribePostRender(sp_this());
 	}
 }
 

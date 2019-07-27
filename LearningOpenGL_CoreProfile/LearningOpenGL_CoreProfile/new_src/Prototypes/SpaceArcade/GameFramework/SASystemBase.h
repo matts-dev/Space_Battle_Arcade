@@ -1,6 +1,6 @@
 #pragma once
 #include "SAGameEntity.h"
-#include "..\Tools\RemoveSpecialMemberFunctionUtils.h"
+#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
 
 
 namespace SA

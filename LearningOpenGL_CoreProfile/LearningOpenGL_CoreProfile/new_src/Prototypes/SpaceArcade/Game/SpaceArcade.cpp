@@ -169,7 +169,8 @@ namespace SA
 
  		mat4 view = fpsCamera->getView();
 
-		mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 500.0f);
+		//mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 500.0f);
+		mat4 projection = fpsCamera->getPerspective();
 
 		renderDebug(view, projection);
 

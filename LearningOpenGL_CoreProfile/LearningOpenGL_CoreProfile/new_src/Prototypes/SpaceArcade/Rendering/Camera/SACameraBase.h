@@ -33,6 +33,8 @@ namespace SA
 		const glm::vec3& getPosition() const { return cameraPosition; }
 		void setPosition(float x, float y, float z);
 		void setPosition(const glm::vec3& newPos);
+		void setNear(float newNear) { nearZ = newNear; }
+		void setFar(float newFar) { farZ = newFar; }
 
 		//camera axes/bases
 		const glm::vec3 getFront() const { return cameraFront_n; }
@@ -43,7 +45,10 @@ namespace SA
 
 		void setFOV(float inFOV);
 		float getFOV() const { return FOV; }
+		float getNear() const { return nearZ; }
+		float getFar() const { return farZ; }
 		glm::mat4 getView() const;
+		glm::mat4 getPerspective() const;
 
 		bool isInCursorMode() { return cursorMode; }
 		void setCursorMode(bool inCursorMode);
@@ -74,6 +79,8 @@ namespace SA
 		glm::vec3 cameraFront_n;
 		glm::vec3 worldUp_n = glm::vec3(0.f, 1.f, 0.f);
 		float FOV = 45.0f;
+		float nearZ = 1.f;
+		float farZ = 500.f;
 		bool cursorMode = false;
 		wp<SA::Window> registeredWindow;
 

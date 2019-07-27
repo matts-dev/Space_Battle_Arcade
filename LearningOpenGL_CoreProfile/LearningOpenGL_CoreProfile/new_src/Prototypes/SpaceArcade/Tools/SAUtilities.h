@@ -66,5 +66,6 @@ namespace SA
 
 		glm::vec3 getDifferentVector(glm::vec3 vec);
 		glm::quat getRotationBetween(const glm::vec3& a_n, const glm::vec3& b_n);
+		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees);
 	}
 }

@@ -14,6 +14,7 @@ namespace SA
 	class AssetSystem;
 	class LevelSystem;
 	class PlayerSystem;
+	class ParticleSystem;
 	class AutomatedTestSystem;
 
 	class Window;
@@ -85,10 +86,12 @@ namespace SA
 		inline AssetSystem& getAssetSystem() noexcept { return *assetSystem; }
 		inline LevelSystem& getLevelSystem() noexcept { return *levelSystem; }
 		inline PlayerSystem& getPlayerSystem() noexcept { return *playerSystem; }
+		inline ParticleSystem& getParticleSystem() noexcept { return *particleSystem;}
+		
 		inline AutomatedTestSystem& getAutomatedTestSystem() noexcept { return *automatedTestSystem;  };
 
 		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
-		void SubscribePostRender(const sp<SystemBase>& system);
+		void subscribePostRender(const sp<SystemBase>& system);
 	private:
 		bool bCustomSystemRegistrationAllowedTimeWindow = false;
 	protected:
@@ -100,6 +103,7 @@ namespace SA
 		sp<AssetSystem> assetSystem;
 		sp<LevelSystem> levelSystem;
 		sp<PlayerSystem> playerSystem;
+		sp<ParticleSystem> particleSystem;
 		sp<AutomatedTestSystem> automatedTestSystem;
 
 		std::set< sp<SystemBase> > systems;

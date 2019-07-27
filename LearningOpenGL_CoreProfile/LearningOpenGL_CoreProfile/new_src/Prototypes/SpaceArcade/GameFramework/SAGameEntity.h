@@ -35,6 +35,8 @@ namespace SA
 
 
 
+
+
 /** Automatically provide template type for convenience */
 #define sp_this() sp_this_impl<std::remove_reference<decltype(*this)>::type>()
 

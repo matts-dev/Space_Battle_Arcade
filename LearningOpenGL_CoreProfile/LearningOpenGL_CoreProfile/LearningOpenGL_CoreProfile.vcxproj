@@ -145,6 +145,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAParticleSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.h" />
@@ -183,6 +184,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ObjectPools.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\RemoveSpecialMemberFunctionUtils.h" />
@@ -411,6 +413,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAParticleSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
@@ -443,6 +446,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\SpaceArcadeModels\test_spacearcade_models.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\SAUtilities.cpp" />

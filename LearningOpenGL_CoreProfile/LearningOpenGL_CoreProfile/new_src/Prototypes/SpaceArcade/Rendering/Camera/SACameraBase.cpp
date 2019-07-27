@@ -5,6 +5,8 @@
 #include<GLFW/glfw3.h>
 #include "SACameraCallbackRegister.h"
 #include "../SAWindow.h"
+#include <gtc/matrix_transform.hpp>
+#include "../../GameFramework/SALog.h"
 
 namespace SA
 {
@@ -101,6 +103,25 @@ namespace SA
 		//glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, worldUp);
 
 		return view;
+	}
+
+	glm::mat4 CameraBase::getPerspective() const
+	{
+		//default aspect to a box; if we don't have a window it would be strange to call this, but return something sensible anyways.
+		float aspect = 1.f;
+
+		//#TODO this can be expensive since it is acquiring a weak pointer, perhaps listen to registered window delegates on when size changes and cache values
+		if (!registeredWindow.expired())
+		{
+			sp<Window> window = registeredWindow.lock();
+			aspect = window->getAspect();
+		}
+		else
+		{
+			log("CameraBase", LogLevel::LOG_WARNING, "camera getPerspective() called but no registered window");
+		}
+
+		return glm::perspective(FOV, aspect, nearZ, farZ);
 	}
 
 	void CameraBase::setCursorMode(bool inCursorMode)

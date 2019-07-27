@@ -242,6 +242,14 @@ namespace SA
 			return rot;
 		}
 
+		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees)
+		{
+			glm::quat x = glm::angleAxis(rotationInDegrees.x, glm::vec3(1, 0, 0));
+			glm::quat y = glm::angleAxis(rotationInDegrees.y, glm::vec3(0, 1, 0));
+			glm::quat z = glm::angleAxis(rotationInDegrees.z, glm::vec3(0, 0, 1));
+			return x * y * z;
+		}
+
 		const float cubeVerticesWithUVs[] = {
 			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
