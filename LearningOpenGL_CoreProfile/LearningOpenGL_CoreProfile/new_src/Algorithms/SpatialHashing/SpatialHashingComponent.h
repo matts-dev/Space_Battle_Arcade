@@ -987,7 +987,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			std::sort(exitTs, exitTs + numElements);
 
 			//handle cases where infinity is within enterT
-			for (int idx = numElements - 1; idx >= 0; ++idx)
+			for (int idx = numElements - 1; idx >= 0; --idx)
 			{
 				if (enterTs[idx] != std::numeric_limits<float>::infinity())
 				{
