@@ -115,7 +115,7 @@ namespace Pik
 			//-0.5 is an offset that transforms left-top points to center points (math works out)
 			//0.1 - 0.5f = -0.4; 0.6-0.5 = 0.1; 1.0 - 0.5f 0.5f; so this limits the range to [-0.5, 0.5]
 			ndcClick += glm::vec2(-0.5f);	//range [-0.5, 0.5]
-			ndcClick *=  2.0f;				//range [0,1]
+			ndcClick *=  2.0f;				//range [-1,1]
 			ndcClick.y *= -1.0f;
 			//       x
 			//______________   RENDER PLANE 

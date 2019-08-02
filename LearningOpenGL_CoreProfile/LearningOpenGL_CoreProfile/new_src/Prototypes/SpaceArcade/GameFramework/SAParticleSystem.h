@@ -1,16 +1,20 @@
 #pragma once
 #include "SASystemBase.h"
-#include "../Game/AssetConfigs/SAConfigBase.h"
+
 #include<optional>
+#include<cstdint>
+#include <stack>
 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
-#include "../Tools/DataStructures/SATransform.h"
-#include "SAGameEntity.h"
 
-#define DISABLE_PARTICLE_SYSTEM 1
+#include "SAGameEntity.h"
+#include "../Tools/DataStructures/SATransform.h"
+#include "../Game/AssetConfigs/SAConfigBase.h"
+
+#define DISABLE_PARTICLE_SYSTEM 0
 
 namespace SA
 {
@@ -42,30 +46,22 @@ namespace SA
 		sp<Particle::Effect> effectData; 
 
 		//order for which data is applied vertex attributes is the top-to-bottom order of this class.
-		size_t numMat4PerInstance = 2; //#TODO increment in customer steps
+		size_t numMat4PerInstance = 1; //#TODO increment in custom steps
 		std::vector<glm::mat4> mat4Data;
 
-		size_t numVec4PerInstance = 0; //#TODO increment in customer steps
+		size_t numVec4PerInstance = 1; //#TODO increment in custom steps
 		std::vector<glm::vec4> vec4Data;
-
-		size_t numVec3PerInstance = 0; //#TODO increment in customer steps
-		std::vector<glm::vec3> vec3Data;
-
-		size_t numFloatPerInstance = 0; //#TODO increment in customer steps
-		std::vector<float> floatData;
 
 		//#TODO #BEFORE_SUBMIT make sure these vectors get size reserved somewhere; before tick? after tick to see actual size? init?
 		std::vector<float> timeAlive;
 		size_t numInstancesThisFrame = 0;
-
+ 
 		void clearFrameData()
 		{
 			numInstancesThisFrame = 0;
 			timeAlive.clear();
 			mat4Data.clear();
 			vec4Data.clear();
-			vec3Data.clear();
-			floatData.clear();
 		}
 	};
 
@@ -101,6 +97,22 @@ namespace SA
 		};
 
 		/////////////////////////////////////////////////////////////////////////////////////
+		// Partical material; For the particle system this essentially that represents a texture
+		// with configured state. If the particle effect require multiple textures then it will
+		// use multiple materials.
+		/////////////////////////////////////////////////////////////////////////////////////
+		struct Material
+		{
+			//force user construct with required arguments for a valid material
+			Material(uint32_t inTextureId, std::string inSamplerName) 
+				: textureId(inTextureId), sampler2D_name(inSamplerName) 
+			{}
+			uint32_t textureId;
+			std::string sampler2D_name;
+			//#future fill with optionals for parameters that may need to be set
+		};
+
+		/////////////////////////////////////////////////////////////////////////////////////
 		// Particle Effects are a component of a particle. 
 		//		A particle may have many simultaneous effects going on. 
 		//		For example, an explosion may have multiple growing fire spheres
@@ -110,22 +122,28 @@ namespace SA
 		{
 			sp<Shader> shader;
 			sp<ShapeMesh> mesh;
-			//sp<material> material; //TODO
+			std::vector<Material> materials;
 
 			/** concurrent animation keyframes */
 			std::vector<KeyFrameChain> keyFrameChains;
 
-			//#TODO implement this
-			size_t numMat4sPerInstance = 0;
-			size_t numVec4sPerInstance = 0;
+			//#TODO implement non-uniform custom vertex attributes; don't have a use case yet but I imagine there will be one.
+			size_t numCustomMat4sPerInstance = 0;
+			size_t numCustomVec4sPerInstance = 0;
 
 		public: //perf helper fields
 			size_t estimateMaxSimultaneousEffects = 250;
 
+		public:
+			void updateEffectDuration();
+			std::optional<float> effectDuration;
+
 		private: //particle system managed data for efficient rendering
-			//#TODO this whole object probably needs copying to prevent it from being corrupted. :\ even still the user may recycle shaders and corrupt the particle system.
+			//#concerns this whole object probably needs copying disabled to prevent it from being corrupted. 
+			//#concerns even with copying disabled the user may recycle shaders and corrupt the particle system.
 			friend class ParticleSystem;
 			std::optional<size_t> assignedShaderIndex;
+
 		};
 	}
 
@@ -145,6 +163,9 @@ namespace SA
 
 		/* Generates data for the effect that can be manipulated over time */
 		void generateMutableEffectData(std::vector<MutableEffectData>& outEffectData) const;
+		float getDurationSecs();
+
+		void handleDirtyValues();
 
 	protected:
 		virtual void onSerialize(json& outData) override;
@@ -152,6 +173,9 @@ namespace SA
 
 	private:
 		std::vector<sp<Particle::Effect>> effects;
+		bool bLoop = false;
+		std::optional<int> numLoops;
+		std::optional<float> totalTime;
 	};
 
 	struct MutableEffectData
@@ -185,11 +209,25 @@ namespace SA
 		std::optional<glm::vec3> velocity;
 		Transform xform{};
 		float timeAlive = 0.f;
+		int bLoopCount = 0;
 	};
 
 	///////////////////////////////////////////////////////////////////////
 	// Particle System
 	//		responsible for efficiently managing and rendering particles.
+	//
+	// Usage:
+	//		Particles are spawned from this system. 
+	//		Particles are defined via ParticleConfigs
+	//		Particles are made up of particle effects.
+	//		Different particle effects MUST NOT share a single shader instance.
+	//			effect shaders are mapped by address in order to achieve instancing
+	//		Instanced particles only require 1 draw call and are highly efficient in that regard.
+	//			More specifically, particle effects are instanced.
+	//			this basically means all the different effect instances are batched together and rendered at once.
+	//			This requires that all effects share the same shader. In this context uniforms are global to all
+	//			instances of the effect; vertex attributes must be used to specify instance-specific data.
+	//		See the provided explosion effect in the particle factory for engineering an effect.
 	///////////////////////////////////////////////////////////////////////
 	class ParticleSystem : public SystemBase
 	{
@@ -198,7 +236,7 @@ namespace SA
 		{
 			sp<ParticleConfig> particle{nullptr};
 			glm::mat4 parentTransform{1.f};
-			std::optional<glm::vec3> velocity;
+			std::optional<glm::vec3> velocity{};
 			Transform xform{};
 		};
 
@@ -208,11 +246,10 @@ namespace SA
 		virtual void postConstruct() override;
 		virtual void initSystem() override;
 		virtual void tick(float deltaSec) override;
-		void updateActiveParticleGroup(ActiveParticleGroup& particleGroup, float dt_sec_world);
+		inline bool updateActiveParticleGroup(ActiveParticleGroup& particleGroup, float dt_sec_world);
 		virtual void handlePostRender() override;
 
 	private: //utility functions
-		int getNextInstancedShaderIndex();
 	
 	private:
 		void handlePostLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& /*newCurrentLevel*/);
@@ -223,10 +260,7 @@ namespace SA
 
 		//currently the active particle and its spawn params are identical; so just renaming the type
 		//#TODO #BEFORE_SUBMIT !!!!!!!!!!!!!!!!! change this data structure to be efficient
-		std::vector<ActiveParticleGroup> activeParticles;
-		std::size_t particleReserveSize = 10000;
-
-
+		std::map<ActiveParticleGroup*, sp<ActiveParticleGroup>> activeParticles; //#TODO perhaps hashmap will be better for inserts/removals, but suffers iteration
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Map from shader instance to index in array of EffectInstanceData
@@ -240,7 +274,8 @@ namespace SA
 		// frame and used for drawing a large number of particles. 
 		/////////////////////////////////////////////////////////////////////////////////////
 		std::vector<EffectInstanceData> instancedEffectsData;
-		std::optional<unsigned int> instanceMat4VBO_opt; //#TODO unset when losing glContext/ set when gaining glContext
+		std::optional<unsigned int> instanceMat4VBO_opt;
+		std::optional<unsigned int> instanceVec4VBO_opt;
 		int maxVertAttributes;
 	};
 

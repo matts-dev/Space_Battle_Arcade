@@ -13,6 +13,7 @@ namespace SA
 	class ProjectileConfig;
 	class CollisionDebugRenderer;
 	class ProjectileTweakerWidget;
+	class ParticleConfig;
 
 	class BasicTestSpaceLevel : public SpaceLevelBase
 	{
@@ -38,16 +39,35 @@ namespace SA
 		void refreshShipContinuousFireState();
 		void refreshProjectiles();
 
+		void toggleSpawnTestParticles();
+		void handleTestParticleSpawn();
+
 	private: //debug variables
 #if SA_RENDER_DEBUG_INFO
 		bool bRenderCollisionOBB_ui = false;
 		bool bRenderCollisionShapes_ui = false;
 #endif //SA_RENDER_DEBUG_INFO
 		bool bForceShipsToFire_ui = false;
+
+		//time dilation testing
 		float forceFireRateSecs_ui = 1.0;
 		bool bFreezeTimeOnClick_ui = false;
 		float timeDilationFactor_ui = 1.f;
+
+		//particle testing
 		bool bShowProjectileTweaker_ui = false;
+		bool bContinuousSpawns_ui = true;
+		int numParticleSpawns_ui = 10; //don't use directly, use this * multiplier
+		int numSpawnMultiplier_ui = 10; 
+		int numSpawnBatches = 5;
+		int numParticlesInBatch = 0;
+		int selectedTestParticleIdx = 0;
+		glm::vec2 particleSpawnBounds{ -200, 200 }; //x=min, y=max
+		glm::vec3 particleSpawnOffset;
+		std::map<std::string, sp<ParticleConfig>> testParticles;
+		sp<ParticleConfig> testParticleConfig = nullptr;
+		bool bSpawningParticles = false;
+		sp<MultiDelegate<>> particleSpawnDelegate = nullptr;
 
 	private: //testing projectile
 		sp<ProjectileConfig> testProjectileConfig = nullptr;

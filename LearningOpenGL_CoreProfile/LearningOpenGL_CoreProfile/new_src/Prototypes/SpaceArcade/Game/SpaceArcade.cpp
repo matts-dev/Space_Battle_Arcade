@@ -39,7 +39,7 @@ namespace SA
 {
 	/*static*/ SpaceArcade& SpaceArcade::get()
 	{
-		static sp<SpaceArcade > singleton = new_sp<SpaceArcade>();
+		static sp<SpaceArcade> singleton = new_sp<SpaceArcade>();
 		return *singleton;
 	}
 
@@ -85,7 +85,7 @@ namespace SA
 		sp<Model3D> carrierModel = assetSS.loadModel(URLs.carrierURL);
 
 		GLuint radialGradientTex = 0;
-		if (getAssetSystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex))
+		if (getAssetSystem().loadTexture("Textures/SpaceArcade/RadialGradient.png", radialGradientTex)) //#TODO change file path to use engine files
 		{
 			//loaded!
 		}

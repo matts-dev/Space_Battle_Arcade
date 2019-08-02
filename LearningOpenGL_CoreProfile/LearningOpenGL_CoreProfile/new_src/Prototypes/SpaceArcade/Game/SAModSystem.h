@@ -26,6 +26,9 @@ namespace SA
 
 	class Mod : public GameEntity
 	{
+		/*#TODO #cleancode create a map from config type to its instances. Either create a template type to be the access that has all the boilerplate code or
+			do something like this post to emulate reflection to remove code duplication https://stackoverflow.com/questions/9859390/use-data-type-class-type-as-key-in-a-map
+		*/
 	public:
 		//////////////////////////////////////////////////////////
 		// Grants Module System specific private functions 

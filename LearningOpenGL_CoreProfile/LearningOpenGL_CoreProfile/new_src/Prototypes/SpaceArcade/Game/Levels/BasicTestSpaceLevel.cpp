@@ -23,12 +23,13 @@
 #include "../../GameFramework/SAShipAIBrain.h"
 #include "../../GameFramework/SAGameEntity.h"
 #include "../UI/SAProjectileTweakerWidget.h"
+#include "../../GameFramework/SAParticleSystem.h"
 
 namespace SA
 {
 	void BasicTestSpaceLevel::postConstruct()
 	{
-		SpaceLevelBase::postConstruct(); 
+		SpaceLevelBase::postConstruct();
 
 		SpaceArcade& game = SpaceArcade::get();
 
@@ -39,6 +40,9 @@ namespace SA
 
 		collisionDebugRenderer = new_sp<CollisionDebugRenderer>();
 		projectileWidget = new_sp<ProjectileTweakerWidget>();
+
+		testParticleConfig = ParticleFactory::getSimpleExplosionEffect();
+		testParticles.insert({ "simple explosion", testParticleConfig});
 	}
 
 	void BasicTestSpaceLevel::startLevel_v()
@@ -86,6 +90,8 @@ namespace SA
 		sp<Ship> carrierShip1 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
 		//cachedSpawnEntities.insert({ carrierShip1.get(), carrierShip1 });
 
+		particleSpawnOffset = carrierTransform.position;
+
 		std::random_device rng;
 		std::seed_seq seed{ 28 };
 		std::mt19937 rng_eng = std::mt19937(seed);
@@ -100,7 +106,7 @@ namespace SA
 		numFighterShipsToSpawn = 500;
 #endif//NDEBUG 
 		for (int fighterShip = 0; fighterShip < numFighterShipsToSpawn; ++fighterShip)
-		{
+		{ 
 			glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
 			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
 			startPos += carrierTransform.position;
@@ -224,7 +230,10 @@ namespace SA
 
 	void BasicTestSpaceLevel::handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active)
 	{
-		
+		std::random_device rng;
+		std::seed_seq seed{ 28 };
+		std::mt19937 rng_eng = std::mt19937(seed);
+		std::uniform_real_distribution<float> startDist(-200.f, 200.f); //[a, b)
 	}
 
 	void BasicTestSpaceLevel::handleUIFrameStarted()
@@ -330,6 +339,40 @@ namespace SA
 						}
 					}
 				}
+
+				////////////////////////////////////////////////////////
+				// Particle Tests
+				////////////////////////////////////////////////////////
+				ImGui::Dummy(ImVec2(0, 20.f));
+				ImGui::Separator();
+
+				if (ImGui::CollapsingHeader("Particles", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::Text("Particle Spawning");
+					{
+						int curConfigIdx = 0;
+						for (const auto& kvPair : testParticles)
+						{
+							if (ImGui::Selectable(kvPair.first.c_str(), curConfigIdx == selectedTestParticleIdx))
+							{
+								testParticleConfig = kvPair.second;
+								selectedTestParticleIdx = curConfigIdx;
+							}
+							++curConfigIdx;
+						}
+					}
+					ImGui::Checkbox("Continuous Spawn", &bContinuousSpawns_ui); //TODO have this check that the particle isn't looping
+					if (ImGui::Button("Start/Stop spawn"))
+					{
+						toggleSpawnTestParticles();
+					}
+					ImGui::InputFloat2("spawn bounds", &particleSpawnBounds.x);
+					ImGui::InputFloat3("spawn offset", &particleSpawnOffset.x);
+					ImGui::SliderInt("#Particle Init Spawns", &numParticleSpawns_ui, 1, 10);
+					ImGui::SliderInt("Spawn Multiplier", &numSpawnMultiplier_ui, 1, 1000);
+					ImGui::SliderInt("#Batches", &numSpawnBatches, 1, 10);
+
+				}
 			}
 			ImGui::End();
 		}
@@ -394,6 +437,73 @@ namespace SA
 			for (const sp<Ship>& ship : spawnedShips)
 			{
 				ship->setPrimaryProjectile(testProjectileConfig);
+			}
+		}
+	}
+
+	void BasicTestSpaceLevel::toggleSpawnTestParticles()
+	{
+		bSpawningParticles = !bSpawningParticles;
+
+		const sp<TimeManager>& worldTM = getWorldTimeManager();
+		if (bSpawningParticles)
+		{
+			if (testParticleConfig)
+			{
+				//start spawning particles
+				if (bContinuousSpawns_ui)
+				{
+					float spawnInterval = testParticleConfig->getDurationSecs() / numSpawnBatches;
+					numParticlesInBatch = (numParticleSpawns_ui*numSpawnMultiplier_ui) / numSpawnBatches;
+					if (spawnInterval <= 0 || numParticlesInBatch  <= 0) { return; }
+
+					particleSpawnDelegate = new_sp<MultiDelegate<>>();
+					particleSpawnDelegate->addWeakObj(sp_this(), &BasicTestSpaceLevel::handleTestParticleSpawn);
+					worldTM->createTimer(particleSpawnDelegate, spawnInterval, true);
+
+					handleTestParticleSpawn();
+				}
+				else
+				{
+					numParticlesInBatch = static_cast<int>(numParticleSpawns_ui * numSpawnMultiplier_ui);
+					handleTestParticleSpawn();
+
+					//not continuous, so don't change state
+					bSpawningParticles = false;
+				}
+			}
+		}
+		else
+		{
+			//stop spawning particles
+			if (particleSpawnDelegate && worldTM->hasTimerForDelegate(particleSpawnDelegate))
+			{
+				worldTM->removeTimer(particleSpawnDelegate);
+			}
+		}
+
+		
+	}
+
+	void BasicTestSpaceLevel::handleTestParticleSpawn()
+	{
+		static std::random_device rng;
+		static std::seed_seq seed{ 28 };
+		static std::mt19937 rng_eng = std::mt19937(seed);
+		static std::uniform_real_distribution<float> startDist(particleSpawnBounds.x, particleSpawnBounds.y + 0.01f); //[a, b)
+
+		if(testParticleConfig)
+		{
+			ParticleSystem& particleSys = GameBase::get().getParticleSystem();
+			for (int particleIdx = 0; particleIdx < numParticlesInBatch; ++particleIdx)
+			{
+				glm::vec3 spawnLocation(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
+				
+				ParticleSystem::SpawnParams spawnParams;
+				spawnParams.particle = testParticleConfig;
+				spawnParams.xform.position = spawnLocation + particleSpawnOffset;
+
+				particleSys.spawnParticle(spawnParams);
 			}
 		}
 	}

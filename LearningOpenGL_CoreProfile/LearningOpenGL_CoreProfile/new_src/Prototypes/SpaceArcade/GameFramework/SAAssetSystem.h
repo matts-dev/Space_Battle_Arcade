@@ -22,6 +22,6 @@ namespace SA
 		virtual void tick(float deltaSec) {};
 	private:
 		std::map<std::string, sp<Model3D>> loadedModel3Ds;
-		std::set<GLuint> loadedTextureIds;
+		std::map<std::string, GLuint> loadedTextureIds;
 	};
 }

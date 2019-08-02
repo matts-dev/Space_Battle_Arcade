@@ -8,8 +8,9 @@ namespace SA
 {
 	void AssetSystem::shutdown()
 	{
-		for (GLuint textureId : loadedTextureIds)
+		for (const auto& textureMapIter : loadedTextureIds)
 		{
+			GLuint textureId = textureMapIter.second;
 			glDeleteTextures(1, &textureId);
 		}
 		loadedTextureIds.clear();
@@ -56,6 +57,13 @@ namespace SA
 	bool AssetSystem::loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
 	{
 		//# TODO upgrade 3d model class to use this; but care will need to be taken so that textures are deleted after models
+		auto previousLoadTextureIter = loadedTextureIds.find(relative_filepath);
+		if (previousLoadTextureIter != loadedTextureIds.end())
+		{
+			outTexId = previousLoadTextureIter->second;
+			return true;
+		}
+
 		int img_width, img_height, img_nrChannels;
 		unsigned char* textureData = stbi_load(relative_filepath, &img_width, &img_height, &img_nrChannels, 0);
 		if (!textureData)
@@ -108,7 +116,7 @@ namespace SA
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		stbi_image_free(textureData);
 
-		loadedTextureIds.insert(textureID);
+		loadedTextureIds.insert({ relative_filepath, textureID });
 
 		outTexId = textureID;
 		return true;
