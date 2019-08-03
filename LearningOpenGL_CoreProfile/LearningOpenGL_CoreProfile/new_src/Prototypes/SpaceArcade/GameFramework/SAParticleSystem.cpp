@@ -143,9 +143,9 @@ namespace SA
 			activeParticles.insert({ newParticlePtr.get(), newParticlePtr });
 			ActiveParticleGroup& newParticle = *newParticlePtr;
 			newParticle.particle = params.particle;
-			newParticle.parentTransform = params.parentTransform;
 			newParticle.velocity = params.velocity;
 			newParticle.xform = params.xform;
+			newParticle.durationDilation = params.durationDilation;
 			params.particle->generateMutableEffectData(newParticle.mutableEffectData);
 			assert(newParticle.mutableEffectData.size() == params.particle->effects.size());
 
@@ -212,7 +212,7 @@ namespace SA
 			MutableEffectData& meData = activeParticle.mutableEffectData[effectIdx];
 
 			///Let effects update particle data
-			activeParticle.timeAlive += dt_sec_world;
+			activeParticle.timeAlive += (dt_sec_world * activeParticle.durationDilation);
 
 			for (Particle::KeyFrameChain& KFChain : effect->keyFrameChains)
 			{
@@ -376,6 +376,7 @@ namespace SA
 					shader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
 					shader->setUniform3f("camPos", camPos.x, camPos.y, camPos.z);
 
+					//load material textures and parameters
 					uint32_t mat_glTextureSlot = GL_TEXTURE0;
 					for (Particle::Material& mat : eid.effectData->materials)
 					{
@@ -387,6 +388,12 @@ namespace SA
 
 						++mat_glTextureSlot;
 					}
+
+					//load custom uniforms
+					for (Particle::UniformData<float>& uniformData	   : eid.effectData->floatUniforms){ shader->setUniform1f(uniformData.uniformName.c_str(), uniformData.data);}
+					for (Particle::UniformData<glm::vec3>& uniformData : eid.effectData->vec3Uniforms){ shader->setUniform3f(uniformData.uniformName.c_str(), uniformData.data);}
+					for (Particle::UniformData<glm::vec4>& uniformData : eid.effectData->vec4Uniforms){ shader->setUniform4f(uniformData.uniformName.c_str(), uniformData.data);}
+					for (Particle::UniformData<glm::mat4>& uniformData : eid.effectData->mat4Uniforms){ shader->setUniformMatrix4fv(uniformData.uniformName.c_str(), 1, GL_FALSE, glm::value_ptr(uniformData.data));}
 					
 					//instanced render
 					eid.effectData->mesh->instanceRender(eid.numInstancesThisFrame);
@@ -495,42 +502,83 @@ namespace SA
 			)";
 
 	static char const* const SimpleExplosionFS_src = R"(
-				#version 330 core
-				out vec4 fragColor;
+	#version 330 core
+	out vec4 fragColor;
 
-				in vec2 uvCoords;
-				in float timeAlive;
-				in float fractionComplete;
+	in vec2 uvCoords;
+	in float timeAlive;
+	in float fractionComplete;
 
-				uniform vec3 color = vec3(1.f, 0.f, 1.f);
-				uniform vec3 camPos;
+	uniform vec3 debug_color = vec3(1.f, 0.f, 1.f);
+	uniform vec3 camPos;
 
-				uniform sampler2D tessellateTex;
+	uniform vec3 darkColor = vec3(1.f, 0.f, 1.f);
+	uniform vec3 medColor = vec3(1.f, 0.f, 1.f);
+	uniform vec3 brightColor = vec3(1.f, 0.f, 1.f);
 
-				void main(){
-					//----------------------------------------------
-					//render as a base color
-					//fragColor = vec4(color, 1.f);
+	uniform sampler2D tessellateTex;
 
-					//----------------------------------------------
-					//debug render time variables
-					//fragColor = vec4(vec3(1.f - fractionComplete), 1.f);
-					//fragColor = vec4(vec3(fractionComplete), 1.f);
+	void main(){
+		//----------------------------------------------
+		//render as a base color
+		//fragColor = vec4(debug_color, 1.f);
 
-					//----------------------------------------------
-					vec2 baseEffectUV = uvCoords * vec2(5,5);
+		//----------------------------------------------
+		//debug render time variables
+		//fragColor = vec4(vec3(1.f - fractionComplete), 1.f);
+		//fragColor = vec4(vec3(fractionComplete), 1.f);
 
-					//at this point, rgb should all be matching values
-					vec4 whiteBaseTexture = texture(tessellateTex, baseEffectUV);
+		//----------------------------------------------
+		vec2 preventAlignmentOffset = vec2(0.1, 0.2);
+		float medMove = 0.5f *fractionComplete;
+		float smallMove = 0.5f *fractionComplete;
 
-					if(whiteBaseTexture.r < fractionComplete)
-					{
-						discard;
-					}	
+		vec2 baseEffectUV = uvCoords * vec2(5,5);
+		vec2 mediumTessUV_UR = uvCoords * vec2(10,10) + vec2(medMove, medMove) + preventAlignmentOffset;
+		vec2 mediumTessUV_UL = uvCoords * vec2(10,10) + vec2(medMove, -medMove);
 
-					fragColor = whiteBaseTexture;
-				}
-			)";
+		vec2 smallTessUV_UR = uvCoords * vec2(20,20) + vec2(smallMove, smallMove) + preventAlignmentOffset;
+		vec2 smallTessUV_UL = uvCoords * vec2(20,20) + vec2(smallMove, -smallMove);
+
+		///////////////////////////////////////////////////////////////
+		//at this point, rgb should all be matching values (white color)
+		///////////////////////////////////////////////////////////////
+		vec4 largeTesselations = texture(tessellateTex, baseEffectUV);
+		vec4 mediumTesselations = 0.5f * texture(tessellateTex, mediumTessUV_UR)
+									+ 0.5f * texture(tessellateTex, mediumTessUV_UL);
+		vec4 smallTesselations = 0.5f * texture(tessellateTex, smallTessUV_UR)
+								+ 0.5f * texture(tessellateTex, smallTessUV_UL);
+		smallTesselations = (smallTesselations * -1) + vec4(vec3(1), 0);			//flip pattern
+
+		///////////////////////////////////////////////////////////////
+		// discard fragment logic
+		///////////////////////////////////////////////////////////////			
+
+		//easily disable in debugging these by setting to false
+		float startDisappearing = 0.5f;										//point at which fading should start in the particles lifetime [0, 1]
+		float fadeRegion = 1.f - startDisappearing;
+		float fadeThreshold = ((fractionComplete - startDisappearing) / fadeRegion);	//[0, 1]
+	
+		bool bPassColorThreshold = largeTesselations.r > fadeThreshold;
+		if(!bPassColorThreshold)
+		{
+			discard;
+		}
+
+		///////////////////////////////////////////////////////////////
+		//colorize white textures
+		///////////////////////////////////////////////////////////////
+						
+		float colorGrowth = clamp(fractionComplete*4, 0, 1);
+
+		fragColor = vec4(0,0,0,1);
+		fragColor += (largeTesselations * 1.0) * vec4(darkColor, 0.f);
+		fragColor += (mediumTesselations * 1.0f) * vec4(medColor, 0.f);
+		fragColor = fragColor *= max(0.1f, colorGrowth);	
+		
+		fragColor += (smallTesselations * 0.3f) * vec4(brightColor, 0.f);
+	}
+	)";
 
 
 	sp<ParticleConfig> ParticleFactory::getSimpleExplosionEffect()
@@ -584,15 +632,23 @@ namespace SA
 					Particle::KeyFrameChain& scaleEffectChain = sphereEffect->keyFrameChains.back();
 					{
 						//new effect key frame -- a step in the series
-						scaleEffectChain.vec3KeyFrames.emplace_back();
-						Particle::KeyFrame<vec3>& scaleFrame = scaleEffectChain.vec3KeyFrames.back();
 						{
-							scaleFrame.startValue = vec3(1, 1, 1);  //#TODO this should start at 0, but for debugging starting visible
-							scaleFrame.endValue = vec3(3, 3, 3); //#TODO this will need tweaking, perhaps put at 1?
-							//curve		//-x^(1/4)		//#TODO LUT for this curve as exponents would probably be more expensive than LUT cache hit?
-							scaleFrame.durationSec = 3.f;
+							scaleEffectChain.vec3KeyFrames.emplace_back();
+							Particle::KeyFrame<vec3>& scaleFrame = scaleEffectChain.vec3KeyFrames.back();
+							scaleFrame.startValue = vec3(0.25f);  
+							scaleFrame.endValue = vec3(3); 
+							//curve		//-x^(1/4)		//#TODO LUT (look up table) for this curve as exponents would probably be more expensive than LUT cache hit?
+							scaleFrame.durationSec = 1.5f;
 							scaleFrame.dataIdx = MutableEffectData::SCALE_VEC3_IDX;
 						}
+						//{
+						//	scaleEffectChain.vec3KeyFrames.emplace_back();
+						//	Particle::KeyFrame<vec3>& scaleFrame = scaleEffectChain.vec3KeyFrames.back();
+						//	scaleFrame.startValue = vec3(1);  
+						//	scaleFrame.endValue = vec3(3); 
+						//	scaleFrame.durationSec = 2.f;
+						//	scaleFrame.dataIdx = MutableEffectData::SCALE_VEC3_IDX;
+						//}
 					}
 					//new keyframe chain color
 						//new keyframe
@@ -604,6 +660,9 @@ namespace SA
 							//end		//color = red
 							//duration	//0.25 sec
 
+					sphereEffect->vec3Uniforms.emplace_back("darkColor",	glm::vec3(0xBB / 255.f, 0x5C / 255.f, 0x2B / 255.f));
+					sphereEffect->vec3Uniforms.emplace_back("medColor",		glm::vec3(0xEC / 255.f, 0x93 / 255.f, 0x4A / 255.f));
+					sphereEffect->vec3Uniforms.emplace_back("brightColor",	glm::vec3(0xF6 / 255.f, 0xAB / 255.f, 0x65 / 255.f));
 				}
 
 			}

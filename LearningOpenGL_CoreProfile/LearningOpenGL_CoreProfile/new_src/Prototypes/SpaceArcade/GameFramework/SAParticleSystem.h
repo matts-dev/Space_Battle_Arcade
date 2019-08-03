@@ -112,6 +112,16 @@ namespace SA
 			//#future fill with optionals for parameters that may need to be set
 		};
 
+		template<typename T>
+		struct UniformData
+		{
+			UniformData(const std::string& inName, const T& inData) 
+				: uniformName(inName), data(inData) {}
+
+			std::string uniformName;
+			T data;
+		};
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Particle Effects are a component of a particle. 
 		//		A particle may have many simultaneous effects going on. 
@@ -130,6 +140,11 @@ namespace SA
 			//#TODO implement non-uniform custom vertex attributes; don't have a use case yet but I imagine there will be one.
 			size_t numCustomMat4sPerInstance = 0;
 			size_t numCustomVec4sPerInstance = 0;
+
+			std::vector<UniformData<float>> floatUniforms;
+			std::vector<UniformData<glm::vec3>> vec3Uniforms;
+			std::vector<UniformData<glm::vec4>> vec4Uniforms;
+			std::vector<UniformData<glm::mat4>> mat4Uniforms;
 
 		public: //perf helper fields
 			size_t estimateMaxSimultaneousEffects = 250;
@@ -205,10 +220,10 @@ namespace SA
 		std::vector<MutableEffectData> mutableEffectData;
 
 		sp<ParticleConfig> particle{ nullptr };
-		glm::mat4 parentTransform{ 1.f };
 		std::optional<glm::vec3> velocity;
 		Transform xform{};
 		float timeAlive = 0.f;
+		float durationDilation = 1.0f;
 		int bLoopCount = 0;
 	};
 
@@ -235,8 +250,8 @@ namespace SA
 		struct SpawnParams
 		{
 			sp<ParticleConfig> particle{nullptr};
-			glm::mat4 parentTransform{1.f};
 			std::optional<glm::vec3> velocity{};
+			float durationDilation = 1.0f;
 			Transform xform{};
 		};
 

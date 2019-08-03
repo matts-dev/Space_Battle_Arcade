@@ -185,9 +185,11 @@ namespace SA
 			hp.current -= hitProjectile.damage;
 			if (hp.current <= 0)
 			{
-				//#TODO start particle effects; explosion at location with velocity?
-
 				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
+			}
+			else
+			{
+				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 			}
 		}
 	}
