@@ -82,10 +82,11 @@ namespace SA
 	// Particle System 
 	/////////////////////////////////////////////////////////////////////////////
 
-	void ParticleSystem::spawnParticle(const SpawnParams& params)
+	wp<ActiveParticleGroup> ParticleSystem::spawnParticle(const SpawnParams& params)
 	{
+		wp<ActiveParticleGroup> spawnResult;
 #if DISABLE_PARTICLE_SYSTEM
-		return;
+		return spawnResult;
 #endif //DISABLE_PARTICLE_SYSTEM
 
 		if (params.particle)
@@ -96,7 +97,7 @@ namespace SA
 				if (!effect->shader)
 				{
 					log("Particle System", LogLevel::LOG_ERROR, "Particle spawned with no shader");
-					return;
+					return spawnResult;
 				}
 			}
 
@@ -152,9 +153,11 @@ namespace SA
 			//update particle and populate add to effect instance data
 			updateActiveParticleGroup(newParticle, 0);
 
-			uint64_t particleId = reinterpret_cast<uint64_t>(newParticlePtr.get());//#TODO may not be great since we're having to do a reinterpret cast, casting back will probably not be safe
-			//#TODO return particleID and use that as a method for removal; cast it back for removal. This means the API doesn't allow user to have pointer to particle (wihtout coercion of int); needed for looping particles
+			//#concern perhaps particle alias? user can corrupt data with bad memory access. But user needs to modify transform directly and stop loops.
+			spawnResult = newParticlePtr;
+			return spawnResult;
 		}
+		return spawnResult;
 	}
 
 	void ParticleSystem::postConstruct()
@@ -164,35 +167,6 @@ namespace SA
 
 	void ParticleSystem::tick(float deltaSec)
 	{
-		using KeyFrameChain = Particle::KeyFrameChain;
-
-		static PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
-		const sp<PlayerBase>& player = playerSystem.getPlayer(0);
-		const sp<CameraBase> camera = player ? player->getCamera() : sp<CameraBase>(nullptr); //#TODO perhaps just listen to camera changing
-
-
-		static std::vector<sp<ActiveParticleGroup>> removeParticleContainer; 
-		static int oneTimeReserve = [](std::vector<sp<ActiveParticleGroup>> toRemoveContainer) { toRemoveContainer.reserve(100); return 0; }(removeParticleContainer);
-
-		if (currentLevel && camera)
-		{
-			float dt_sec_world = currentLevel->getWorldTimeManager()->getDeltaTimeSecs();
-			
-			for (auto& mapIter: activeParticles)
-			{
-				const sp<ActiveParticleGroup>& activeParticle = mapIter.second;
-				if (updateActiveParticleGroup(*activeParticle, dt_sec_world))
-				{
-					removeParticleContainer.push_back(activeParticle);
-				}
-			}
-		}
-
-		for (sp<ActiveParticleGroup>& particle : removeParticleContainer)
-		{
-			activeParticles.erase(particle.get());
-		}
-		removeParticleContainer.clear();
 	}
 
 	bool ParticleSystem::updateActiveParticleGroup(ActiveParticleGroup& activeParticle, float dt_sec_world)
@@ -290,7 +264,7 @@ namespace SA
 
 			for(EffectInstanceData& eid : instancedEffectsData)
 			{
-				if (eid.numInstancesThisFrame > 0)
+				if (eid.numInstancesThisFrame > 0 && eid.effectData->mesh->getVAOs().size() > 0)
 				{
 					//at least 16 attributes to use for vertices. (see glGet documentation). query GL_MAX_VERTEX_ATTRIBS
 					//assumed vertex attributes:
@@ -303,68 +277,74 @@ namespace SA
 					// attribute 7 = built-in vec4 where x=effectTimeAlive, y=reserved, z=reserved, w=reserved
 					// attribute 8-11 = built-in model matrix
 					// attribute 12-15 //last remaining attributes
-				
-					GLuint effectVAO = eid.effectData->mesh->getVAO();
-					ec(glBindVertexArray(effectVAO));
 
-					{ //set up mat4 buffer
+					// ---- BUFFER data ---- before binding it to all VAOs (model's may have multiple meshes, each with their own VAO)
+					//#TODO check sizes of EID data before trying to bind optional buffers
+					//#TODO investigate using glBufferSubData and glMapBuffer and GL_DYNAMIC_DRAW here; may be more efficient if we're not reallocating each time? It appears glBufferData will re-allocate
+					ec(glBindBuffer(GL_ARRAY_BUFFER, instanceMat4VBO));
+					ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * eid.mat4Data.size(), &eid.mat4Data[0], GL_STATIC_DRAW)); //#TODO this needs to go before binding of VAOs
 
-						//#TODO check sizes of EID data before trying to bind optional buffers
-						//#TODO investigate using glBufferSubData and glMapBuffer and GL_DYNAMIC_DRAW here; may be more efficient if we're not reallocating each time? It appears glBufferData will re-allocate
-						ec(glBindBuffer(GL_ARRAY_BUFFER, instanceMat4VBO));
-						ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * eid.mat4Data.size(), &eid.mat4Data[0], GL_STATIC_DRAW));
-						GLsizei numVec4AttribsInBuffer = 4 * eid.numMat4PerInstance;
-						size_t packagedVec4Idx_matbuffer = 0;
+					ec(glBindBuffer(GL_ARRAY_BUFFER, instanceVec4VBO));
+					ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * eid.vec4Data.size(), &eid.vec4Data[0], GL_STATIC_DRAW));
 
-						//pass built-in data into instanced array vertex attribute
-						{
-							//mat4 (these take 4 separate vec4s)
+					for (GLuint effectVAO : eid.effectData->mesh->getVAOs())
+					{
+						/*GLuint effectVAO = eid.effectData->mesh->getVAOs();*/
+						ec(glBindVertexArray(effectVAO));
+
+						{ //set up mat4 buffer
+
+							ec(glBindBuffer(GL_ARRAY_BUFFER, instanceMat4VBO));
+							GLsizei numVec4AttribsInBuffer = 4 * eid.numMat4PerInstance;
+							size_t packagedVec4Idx_matbuffer = 0;
+
+							//pass built-in data into instanced array vertex attribute
 							{
-								//model matrix
-								ec(glEnableVertexAttribArray(8));
-								ec(glEnableVertexAttribArray(9));
-								ec(glEnableVertexAttribArray(10));
-								ec(glEnableVertexAttribArray(11));
+								//mat4 (these take 4 separate vec4s)
+								{
+									//model matrix
+									ec(glEnableVertexAttribArray(8));
+									ec(glEnableVertexAttribArray(9));
+									ec(glEnableVertexAttribArray(10));
+									ec(glEnableVertexAttribArray(11));
 
-								ec(glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
-								ec(glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
-								ec(glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
-								ec(glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+									ec(glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+									ec(glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+									ec(glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+									ec(glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
 
-								ec(glVertexAttribDivisor(8, 1));
-								ec(glVertexAttribDivisor(9, 1));
-								ec(glVertexAttribDivisor(10, 1));
-								ec(glVertexAttribDivisor(11, 1));
+									ec(glVertexAttribDivisor(8, 1));
+									ec(glVertexAttribDivisor(9, 1));
+									ec(glVertexAttribDivisor(10, 1));
+									ec(glVertexAttribDivisor(11, 1));
+								}
+							}
+							//#TODO max instance variables check
+							//pass custom data into instanced array
+							{
+
 							}
 						}
-						//#TODO max instance variables check
-						//pass custom data into instanced array
-						{
 
-						}
-					}
+						{ //set up vec4 buffer
+							ec(glBindBuffer(GL_ARRAY_BUFFER, instanceVec4VBO));
 
-					{ //set up vec4 buffer
-						//#TODO check sizes of EID data before trying to bind optional buffers
-						//#TODO investigate using glBufferSubData and glMapBuffer and GL_DYNAMIC_DRAW here; may be more efficient if we're not reallocating each time? It appears glBufferData will re-allocate
-						ec(glBindBuffer(GL_ARRAY_BUFFER, instanceVec4VBO));
-						ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * eid.vec4Data.size(), &eid.vec4Data[0], GL_STATIC_DRAW));
+							//#TODO set num vec4s in stride based on custom data
+							GLsizei numVec4AttribsInBuffer = eid.numVec4PerInstance; 
 
-						//#TODO set num vec4s in stride based on custom data
-						GLsizei numVec4AttribsInBuffer = eid.numVec4PerInstance; 
+							size_t packagedVec4Idx_v4buffer = 0;
+							{
+								//package built-in vec4s
+								ec(glEnableVertexAttribArray(7));
+								ec(glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_v4buffer++ * sizeof(glm::vec4))));
+								ec(glVertexAttribDivisor(7, 1));
+							}
 
-						size_t packagedVec4Idx_v4buffer = 0;
-						{
-							//package built-in vec4s
-							ec(glEnableVertexAttribArray(7));
-							ec(glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_v4buffer++ * sizeof(glm::vec4))));
-							ec(glVertexAttribDivisor(7, 1));
-						}
+							//#TODO max instance variables check
+							//pass custom data into instanced array
+							{
 
-						//#TODO max instance variables check
-						//pass custom data into instanced array
-						{
-
+							}
 						}
 					}
 
@@ -381,7 +361,7 @@ namespace SA
 					for (Particle::Material& mat : eid.effectData->materials)
 					{
 						ec(glActiveTexture(mat_glTextureSlot));
-						glBindTexture(GL_TEXTURE_2D, mat.textureId);
+						ec(glBindTexture(GL_TEXTURE_2D, mat.textureId));
 						shader->setUniform1i(mat.sampler2D_name.c_str(), (mat_glTextureSlot - GL_TEXTURE0));
 
 						//#future set material optionals here
@@ -401,7 +381,41 @@ namespace SA
 				}
 			}
 		}
-		ec(glBindVertexArray(0));//unbindg VAO's
+		ec(glBindVertexArray(0));//unbind VAO's
+	}
+
+	void ParticleSystem::handlePostGameloopTick(float deltaSec)
+	{
+		using KeyFrameChain = Particle::KeyFrameChain;
+
+		static PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
+		const sp<PlayerBase>& player = playerSystem.getPlayer(0);
+		const sp<CameraBase> camera = player ? player->getCamera() : sp<CameraBase>(nullptr); //#TODO perhaps just listen to camera changing
+
+
+		static std::vector<sp<ActiveParticleGroup>> removeParticleContainer;
+		static int oneTimeReserve = [](std::vector<sp<ActiveParticleGroup>> toRemoveContainer) { toRemoveContainer.reserve(100); return 0; }(removeParticleContainer);
+
+		if (currentLevel && camera)
+		{
+			const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+			float dt_sec_world = worldTimeManager->isTimeFrozen() ? 0 : worldTimeManager->getDeltaTimeSecs();
+
+			for (auto& mapIter : activeParticles)
+			{
+				const sp<ActiveParticleGroup>& activeParticle = mapIter.second;
+				if (updateActiveParticleGroup(*activeParticle, dt_sec_world))
+				{
+					removeParticleContainer.push_back(activeParticle);
+				}
+			}
+		}
+
+		for (sp<ActiveParticleGroup>& particle : removeParticleContainer)
+		{
+			activeParticles.erase(particle.get());
+		}
+		removeParticleContainer.clear();
 	}
 
 	void ParticleSystem::initSystem()
@@ -416,8 +430,17 @@ namespace SA
 		{
 			handleAcquiredOpenglContext(primaryWindow);
 		}
+
+		GameBase& game = GameBase::get();
+		game.PostGameloopTick.addStrongObj(sp_this(), &ParticleSystem::handlePostGameloopTick);
 		
-		GameBase::get().subscribePostRender(sp_this());
+		game.subscribePostRender(sp_this());
+	}
+
+	void ParticleSystem::shutdown()
+	{
+		GameBase& game = GameBase::get();
+		game.PostGameloopTick.removeStrong(sp_this(), &ParticleSystem::handlePostGameloopTick);
 	}
 
 	void ParticleSystem::handlePostLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& newCurrentLevel)
@@ -476,7 +499,7 @@ namespace SA
                 //layout (location = 4) in vec3 bitangent; //may can get 1 more attribute back by calculating this cross(normal, tangent);
 					//layout (location = 5) in vec3 reserved;
 					//layout (location = 6) in vec3 reserved;
-				layout (location = 7) in vec3 effectData1; //x=timeAlive
+				layout (location = 7) in vec3 effectData1; //x=timeAlive,y=fractionComplete
 				layout (location = 8) in mat4 model; //consumes attribute locations 8,9,10,11
 					//layout (location = 12) in vec3 reserved;
 					//layout (location = 13) in vec3 reserved;

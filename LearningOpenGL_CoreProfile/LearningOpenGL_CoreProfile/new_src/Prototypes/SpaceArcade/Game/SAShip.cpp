@@ -9,6 +9,15 @@
 #include "../GameFramework/SAAssetSystem.h"
 #include "../GameFramework/SAShipAIBrain.h"
 #include "../GameFramework/SAParticleSystem.h"
+#include "../GameFramework/EngineParticles/BuiltInParticles.h"
+
+namespace
+{
+	using namespace SA;
+
+	sp<ShieldEffect::ParticleCache> shieldEffects = new_sp<ShieldEffect::ParticleCache>();
+}
+
 
 namespace SA
 {
@@ -42,6 +51,8 @@ namespace SA
 	{
 		overlappingNodes_SH.reserve(10);
 		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
+		shieldColor = spawnData.spawnConfig->getShieldColor();
+		shieldOffset = spawnData.spawnConfig->getShieldOffset();
 	}
 
 	const sp<const ModelCollisionInfo>& Ship::getCollisionInfo() const
@@ -67,6 +78,24 @@ namespace SA
 		return rotDir;
 	}
 
+	glm::vec4 Ship::getUpDir()
+	{
+		//#optimize follow optimizations done in getForwardDir if any are made
+		const Transform& transform = getTransform();
+		glm::vec4 upDir{ 0, 1, 0, 0 }; //#TODO this should could from spawn config in case models are not aligned properly
+		glm::mat4 rotMatrix = glm::toMat4(transform.rotQuat);
+		glm::vec4 rotDir = rotMatrix * upDir;
+		return rotDir;
+	}
+
+	glm::vec4 Ship::rotateLocalVec(const glm::vec4& localVec)
+	{
+		const Transform& transform = getTransform();
+		glm::mat4 rotMatrix = glm::toMat4(transform.rotQuat);
+		glm::vec4 rotDir = rotMatrix * localVec;
+		return rotDir;
+	}
+
 	void Ship::setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig)
 	{
 		primaryProjectile = projectileConfig;
@@ -74,7 +103,7 @@ namespace SA
 
 	void Ship::fireProjectile(BrainKey privateKey)
 	{
-		//#optimize: set a default projectile configso this doesn't have to be checked every time a ship fires? reduce branch divergence
+		//#optimize: set a default projectile config so this doesn't have to be checked every time a ship fires? reduce branch divergence
 		if (primaryProjectile)
 		{
 			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
@@ -152,6 +181,15 @@ namespace SA
 
 		setTransform(xform);
 
+		if (!activeShieldEffect.expired())
+		{
+			//locking wp may be slow as it requires atomic reference count increment; may need to use soft-ptrs if I make that system
+			sp<ActiveParticleGroup> activeShield_sp = activeShieldEffect.lock();
+			activeShield_sp->xform.rotQuat = xform.rotQuat;
+			activeShield_sp->xform.position = xform.position;
+			//offset for non-centered scaling issues
+			activeShield_sp->xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f))); //#optimize rotating dir is expensive; perhaps cache with dirty flag?
+		}
 	} 
 
 	//const std::array<glm::vec4, 8> Ship::getWorldOBB(const glm::mat4 xform) const
@@ -173,23 +211,37 @@ namespace SA
 
 	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
-		//#TODO move the particle code below to when the ship is destroyed
-		ParticleSystem::SpawnParams particleSpawnParams;
-		particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
-		particleSpawnParams.xform.position = this->getTransform().position;
-		particleSpawnParams.velocity = this->velocity;
-		GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-
-		if (team != hitProjectile.team )
+		if (team != hitProjectile.team)
 		{
 			hp.current -= hitProjectile.damage;
 			if (hp.current <= 0)
 			{
+				ParticleSystem::SpawnParams particleSpawnParams;
+				particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+				particleSpawnParams.xform.position = this->getTransform().position;
+				particleSpawnParams.velocity = this->velocity;
+				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
 			}
 			else
 			{
-				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+				if (!activeShieldEffect.expired())
+				{
+					sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
+					shieldEffect_sp->ResetTimeAlive();
+				}
+				else
+				{
+					ParticleSystem::SpawnParams particleSpawnParams;
+					particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), shieldColor);
+					const Transform& shipXform = this->getTransform(); 
+					particleSpawnParams.xform.position = shipXform.position;
+					particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
+					particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
+					particleSpawnParams.xform.scale = shipXform.scale * 1.1f;  //scale up to see effect around ship
+
+					activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+				}
 			}
 		}
 	}

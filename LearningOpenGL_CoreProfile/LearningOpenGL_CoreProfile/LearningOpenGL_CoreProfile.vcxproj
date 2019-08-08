@@ -138,6 +138,7 @@
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h" />
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
@@ -406,6 +407,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\DelegateTesting_MultiDelegate_Broadcasting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\GameBaseTesting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_Callbacks.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.cpp" />

@@ -31,7 +31,7 @@ namespace SA
 		Model3D(const char* path);
 		~Model3D();
 		void draw(Shader& shader) const;
-		void drawInstanced(Shader& shader, uint32_t instanceCount);
+		void drawInstanced(Shader& shader, uint32_t instanceCount, bool bBindMaterials = true);
 
 		void setInstancedModelMatricesData(glm::mat4* modelMatrices, uint32_t count);
 
@@ -48,6 +48,8 @@ namespace SA
 
 		/** min=std::get<0>(aabb); max=std::get<1>(aabb);*/
 		std::tuple<glm::vec3, glm::vec3> getAABB() const;
+
+		void getMeshVAOS(std::vector<unsigned int>& outVAOs);
 
 	private://model/mesh methods
 

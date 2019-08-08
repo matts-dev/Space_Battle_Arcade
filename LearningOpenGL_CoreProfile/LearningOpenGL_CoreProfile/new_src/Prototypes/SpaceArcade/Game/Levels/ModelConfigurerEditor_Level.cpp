@@ -563,10 +563,12 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 	void ModelConfigurerEditor_Level::renderUI_Team()
 	{
 		ImGui::Separator();
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
+		if (activeConfig)
+		{
+			//#TODO select team index and modify colors based onteam index
+			ImGui::InputFloat3("Shield Color", &activeConfig->shieldColor.r);
+			ImGui::InputFloat3("Shield Offset", &activeConfig->shieldOffset.r);
+		}
 		ImGui::Separator();
 	}
 

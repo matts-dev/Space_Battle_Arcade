@@ -16,6 +16,8 @@ namespace SA
 {
 	//forward declarations
 	class Window;
+	class Model3D;
+	class Shader;
 
 
 	///////////////////////////////////////////////////////////////////////
@@ -31,7 +33,7 @@ namespace SA
 
 		void handleWindowLosingOpenglContext(const sp<Window>& window);
 		void handleWindowAcquiredOpenglContext(const sp<Window>& window);
-		virtual unsigned int getVAO() = 0;
+		virtual const std::vector<unsigned int>& getVAOs() = 0;
 	private:
 		bool bAcquiredOpenglResources = false;
 		void releaseOpenGLResources();
@@ -59,7 +61,7 @@ namespace SA
 		virtual void render() override;
 		virtual void instanceRender(int instanceCount) override;
 
-		virtual unsigned int getVAO() override { return vao; }
+		virtual const std::vector<unsigned int>& getVAOs() override { return vaos; }
 
 	private:
 		virtual void onAcquireOpenGLResources() override;
@@ -83,6 +85,7 @@ namespace SA
 		std::vector<float> textureCoords;
 		std::vector<unsigned int> triangleElementIndices;
 
+		std::vector<unsigned int> vaos;
 		GLuint vao = 0;
 		GLuint vboPositions = 0;
 		GLuint vboNormals = 0;
@@ -91,7 +94,37 @@ namespace SA
 
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Model 3D Wrapper
+	//
+	// Warning, if you're wrapping a model to be used with the particle system: the particle
+	// system will iterate over the VAOs and inject vertex attributes for instanced rendering
+	// so, be sure not to use any of the reserved vertex array attributes for instanced
+	// particle rendering.
+	/////////////////////////////////////////////////////////////////////////////////////
 
+	class Model3DWrapper final : public ShapeMesh
+	{
+	public:
+		Model3DWrapper(const sp<Model3D>& inModel, const sp<Shader>& inShader);
+
+		virtual void render() override;
+		virtual void instanceRender(int instanceCount) override;
+
+		virtual const std::vector<unsigned int>& getVAOs() override;
+		virtual void onReleaseOpenGLResources() override;
+		virtual void onAcquireOpenGLResources() override;
+
+		//assert Ownership to prevent RAII clean up
+		sp<Model3D> modelOwnership;
+		sp<Shader> shaderOwnership;
+
+		std::vector<unsigned int> vaos;
+
+		//no copies/moves allowed for ShapeBase; so safe to hold these references
+		Model3D& model;
+		Shader& shader;
+	};
 }
 
 

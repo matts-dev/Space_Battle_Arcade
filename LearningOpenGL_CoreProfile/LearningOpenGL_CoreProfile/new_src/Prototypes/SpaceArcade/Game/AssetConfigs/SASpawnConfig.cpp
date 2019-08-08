@@ -104,7 +104,9 @@ namespace SA
 			{"fullModelFilePath", fullModelFilePath},
 			{"modelAABB", { {"modelScale", {modelScale.x, modelScale.y, modelScale.z}},
 							{ "modelRotationDegrees", {modelRotationDegrees.x, modelRotationDegrees.y, modelRotationDegrees.z}},
-							{ "modelPosition" , {modelPosition.x, modelPosition.y, modelPosition.z}}
+							{ "modelPosition" , {modelPosition.x, modelPosition.y, modelPosition.z}},
+							{ "shieldColor", {shieldColor.x, shieldColor.y, shieldColor.z}},
+							{ "shieldOffset", {shieldOffset.x, shieldOffset.y, shieldOffset.z} }
 						}
 			},
 			//#suggested perhaps rework this so primareFireProjectile has a setter to update the string name copy... this wouldn't follow the normal pattern of treating the config like a struct from within the editor
@@ -154,6 +156,18 @@ namespace SA
 
 					const json& pos = modelAABB["modelPosition"];
 					if (!pos.is_null() && pos.is_array()) { modelPosition = { pos[0], pos[1], pos[2] }; }
+
+					if (modelAABB.contains("shieldColor"))
+					{
+						const json& readShieldColor = modelAABB["shieldColor"];
+						if (!readShieldColor.is_null() && readShieldColor.is_array()) { shieldColor = { readShieldColor[0], readShieldColor[1], readShieldColor[2] }; }
+					}
+					if (modelAABB.contains("shieldOffset"))
+					{
+						const json& readShieldOffset = modelAABB["shieldOffset"];
+						if (!readShieldOffset.is_null() && readShieldOffset.is_array()) { shieldOffset = { readShieldOffset[0], readShieldOffset[1], readShieldOffset[2] }; }
+					}
+					
 				}
 
 				if (spawnData.contains("primaryProjectileConfigName") && spawnData["primaryProjectileConfigName"].is_string())

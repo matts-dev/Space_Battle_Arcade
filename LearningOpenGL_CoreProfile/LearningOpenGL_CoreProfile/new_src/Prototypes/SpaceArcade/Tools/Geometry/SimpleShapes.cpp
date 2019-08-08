@@ -3,6 +3,7 @@
 #include "..\..\GameFramework\SAWindowSystem.h"
 #include "..\..\Rendering\SAWindow.h"
 #include "..\..\Rendering\OpenGLHelpers.h"
+#include "..\ModelLoading\SAModel.h"
 
 namespace SA
 {
@@ -154,6 +155,7 @@ namespace SA
 		//You can use multiple VBOs within a single VAO. For simplicity that is what I am doing.
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
+		vaos.push_back(vao);
 
 		glGenBuffers(1, &vboPositions);
 		glBindBuffer(GL_ARRAY_BUFFER, vboPositions);
@@ -300,11 +302,64 @@ namespace SA
 
 	void SphereMeshTextured::onReleaseOpenGLResources()
 	{
+		vaos.clear();
 		glDeleteVertexArrays(1, &vao);
 		glDeleteBuffers(1, &vboPositions);
 		glDeleteBuffers(1, &vboNormals);
 		glDeleteBuffers(1, &vboTexCoords);
 		glDeleteBuffers(1, &ebo);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Model 3D Wrapper
+	/////////////////////////////////////////////////////////////////////////////////////
+
+	void Model3DWrapper::render()
+	{
+		model.draw(shader);
+	}
+
+	void Model3DWrapper::instanceRender(int instanceCount)
+	{
+		model.drawInstanced(shader, instanceCount, false);
+	}
+
+	const std::vector<unsigned int>& Model3DWrapper::getVAOs()
+	{
+		//#TODO model class needs to implement losing/acquiring OpenGL Context; when it does we no longer need 
+		// to lazy load VAOs, instead we can listen to an event off of the model when it is done setting up its meshes
+		if (vaos.size() == 0)
+		{
+			vaos.clear();
+			model.getMeshVAOS(vaos);
+		}
+
+		return vaos;
+	}
+
+	void Model3DWrapper::onReleaseOpenGLResources()
+	{
+		vaos.clear();
+	}
+
+	void Model3DWrapper::onAcquireOpenGLResources()
+	{
+		//model may not have got this event yet, we can either listen to an event on the model, or we can just be lazy about calculating vaos
+		//at time of writing Model3D doesn't support losing an opengl context.
+		model.getMeshVAOS(vaos);
+	}
+
+	Model3DWrapper::Model3DWrapper(const sp<Model3D>& inModel, const sp<Shader>& inShader) 
+		: modelOwnership(inModel), shaderOwnership(inShader), model(*inModel), shader(*inShader)
+	{
+		if (!modelOwnership)
+		{
+			throw std::runtime_error("ModelWrapper created without a model");
+		}
+		if (!shaderOwnership)
+		{
+			throw std::runtime_error("ModelWrapper created without a shader");
+		}
 	}
 
 }

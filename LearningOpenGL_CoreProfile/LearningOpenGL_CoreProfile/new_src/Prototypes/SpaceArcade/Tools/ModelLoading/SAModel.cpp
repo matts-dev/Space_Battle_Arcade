@@ -35,11 +35,11 @@ namespace SA
 		}
 	}
 
-	void Model3D::drawInstanced(Shader& shader, uint32_t instanceCount)
+	void Model3D::drawInstanced(Shader& shader, uint32_t instanceCount, bool bBindMaterials /*= true*/)
 	{
 		for (uint32_t i = 0; i < meshes.size(); ++i)
 		{
-			meshes[i].drawInstanced(shader, instanceCount);
+			meshes[i].drawInstanced(shader, instanceCount, bBindMaterials);
 		}
 	}
 
@@ -357,6 +357,19 @@ namespace SA
 	std::tuple<glm::vec3, glm::vec3> Model3D::getAABB() const
 	{
 		return cachedAABB;
+	}
+
+	void Model3D::getMeshVAOS(std::vector<unsigned int>& outVAOs)
+	{
+		outVAOs.clear();
+		for (Mesh3D& mesh : meshes)
+		{
+			GLuint meshVAO = mesh.getVAO();
+			if (meshVAO) //if it is zero, we don't have an active opengl context or not yet initialized
+			{
+				outVAOs.push_back(meshVAO);
+			}
+		}
 	}
 
 	void Model3D::loadModel(std::string path)

@@ -13,6 +13,7 @@ namespace SA
 	class ModelCollisionInfo;
 	class ShipAIBrain;
 	class ProjectileConfig;
+	class ActiveParticleGroup;
 
 
 	struct HitPoints
@@ -69,6 +70,8 @@ namespace SA
 		// Kinematics
 		////////////////////////////////////////////////////////
 		glm::vec4 getForwardDir();
+		glm::vec4 getUpDir();
+		glm::vec4 rotateLocalVec(const glm::vec4& localVec);
 		void setVelocity(glm::vec3 inVelocity) { velocity = inVelocity; }
 
 
@@ -95,10 +98,13 @@ namespace SA
 		const sp<const ModelCollisionInfo> constViewCollisionData;
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocity;
+		glm::vec3 shieldColor;
+		glm::vec3 shieldOffset = glm::vec3(0.f);
 		HitPoints hp = { /*current*/100, /*max*/100 };
 		int team;
 
 		sp<ProjectileConfig> primaryProjectile;
+		wp<ActiveParticleGroup> activeShieldEffect;
 	};
 }
 

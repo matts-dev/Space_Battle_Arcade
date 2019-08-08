@@ -14,6 +14,10 @@ namespace SA
 			constView(inModel)
 		{}
 		const sp<const Model3D>& getModel() const { return constView; }
+
+	protected:
+		const sp<Model3D>& getMyModel() const { return model; }
+
 	private:
 		sp<Model3D> model;
 		sp<const Model3D> constView;

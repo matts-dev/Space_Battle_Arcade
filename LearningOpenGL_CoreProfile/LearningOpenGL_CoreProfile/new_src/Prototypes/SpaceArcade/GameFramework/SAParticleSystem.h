@@ -23,7 +23,7 @@ namespace SA
 	class Shader;
 	class Window;
 
-	struct ActiveParticleGroup;
+	class ActiveParticleGroup;
 	struct MutableEffectData;
 	
 	namespace Particle
@@ -167,13 +167,16 @@ namespace SA
 	//		Instances of this object are intended to be shared. It defines 
 	//		the configuration of a particular effect.5
 	///////////////////////////////////////////////////////////////////////
-	class ParticleConfig : public ConfigBase
+	class ParticleConfig : public ConfigBase, public RemoveCopies, public RemoveMoves
 	{
 		friend class ParticleFactory;
 		friend class ParticleSystem;
 
 		//#FUTURE serialization of these are not currently supported; this will require a lot of work to make an editor
 	public:
+		ParticleConfig() = default;
+		ParticleConfig(std::vector<sp<Particle::Effect>>&& effectsToMove) : effects(std::move(effectsToMove)) {}
+
 		virtual std::string getRepresentativeFilePath() override;
 
 		/* Generates data for the effect that can be manipulated over time */
@@ -209,22 +212,27 @@ namespace SA
 		std::vector<glm::mat4> mat4Array;
 	};
 
-	//#TODO document after system gets fleshed out
-	struct ActiveParticleGroup
+	/* Represents a particle that is actively being rendered */
+	class ActiveParticleGroup : public RemoveCopies, public RemoveMoves
 	{
 		friend class ParticleSystem; //#TODO may not should be treated as a struct; will see when system fleshes out
+		
+	public:
+		void ResetTimeAlive() { timeAlive = 0.f; }
 
 		////////////////////////////////////////////////////////
 		// data
 		////////////////////////////////////////////////////////
+	private:
 		std::vector<MutableEffectData> mutableEffectData;
-
 		sp<ParticleConfig> particle{ nullptr };
 		std::optional<glm::vec3> velocity;
-		Transform xform{};
 		float timeAlive = 0.f;
 		float durationDilation = 1.0f;
 		int bLoopCount = 0;
+
+	public:  //spawner of particle is free to modify the transform
+		Transform xform{};
 	};
 
 	///////////////////////////////////////////////////////////////////////
@@ -255,14 +263,16 @@ namespace SA
 			Transform xform{};
 		};
 
-		void spawnParticle(const SpawnParams& params);
+		wp<ActiveParticleGroup> spawnParticle(const SpawnParams& params);
 
 	private:
 		virtual void postConstruct() override;
 		virtual void initSystem() override;
+		virtual void shutdown() override;
 		virtual void tick(float deltaSec) override;
 		inline bool updateActiveParticleGroup(ActiveParticleGroup& particleGroup, float dt_sec_world);
 		virtual void handlePostRender() override;
+		void handlePostGameloopTick(float deltaSec);
 
 	private: //utility functions
 	

@@ -43,6 +43,8 @@ namespace SA
 		sp<SA::ModelCollisionInfo> toCollisionInfo();
 		sp<Model3D> getModel() const;
 		sp<ProjectileConfig>& getPrimaryProjectileConfig();
+		inline glm::vec3 getShieldColor(){ return shieldColor; }
+		inline glm::vec3 getShieldOffset() { return shieldOffset; }
 
 	protected:
 		virtual void onSerialize(json& outData) override;
@@ -56,6 +58,8 @@ namespace SA
 		glm::vec3 modelScale = glm::vec3(1,1,1);
 		glm::vec3 modelRotationDegrees = glm::vec3(0,0,0);
 		glm::vec3 modelPosition = glm::vec3(0, 0, 0);
+		glm::vec3 shieldColor = glm::vec3(0.58, 0.51, 0.99);
+		glm::vec3 shieldOffset = glm::vec3(0.f);
 		std::string primaryProjectileConfigName;
 
 		std::vector<CollisionShapeConfig> shapes;
