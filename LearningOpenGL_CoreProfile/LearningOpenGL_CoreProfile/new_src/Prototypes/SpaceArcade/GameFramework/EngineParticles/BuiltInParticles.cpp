@@ -14,6 +14,7 @@ namespace SA
 
 	namespace ShieldEffect
 	{
+#if SA_RENDER_PARTICLES_INSTANCED
 		static char const* const ShieldShaderVS_src = R"(
 			#version 330 core
 			layout (location = 0) in vec3 position;			
@@ -23,7 +24,7 @@ namespace SA
             //layout (location = 4) in vec3 bitangent; //may can get 1 more attribute back by calculating this cross(normal, tangent);
 				//layout (location = 5) in vec3 reserved;
 				//layout (location = 6) in vec3 reserved;
-			layout (location = 7) in vec3 effectData1; //x=timeAlive, y=fractionComplete
+			layout (location = 7) in vec4 effectData1; //x=timeAlive, y=fractionComplete
 			layout (location = 8) in mat4 model; //consumes attribute locations 8,9,10,11
 				//layout (location = 12) in vec3 reserved;
 				//layout (location = 13) in vec3 reserved;
@@ -53,6 +54,39 @@ namespace SA
 				uvCoords = uv;
 			}	
 		)";
+#else	//not instanced
+		static char const* const ShieldShaderVS_src = R"(
+			#version 330 core
+			layout (location = 0) in vec3 position;			
+			layout (location = 1) in vec3 normal;	
+			layout (location = 2) in vec2 uv;
+			uniform vec4 effectData1; //x=timeAlive, y=fractionComplete
+			uniform mat4 model; 
+				
+			uniform mat4 projection_view;
+			uniform vec3 camPos;
+
+			//out vec3 fragNormal;
+			out vec3 fragPosition;
+			out vec2 uvCoords;
+			out float timeAlive;
+			out float fractionComplete;
+
+			void main(){
+				gl_Position = projection_view * model * vec4(position, 1);
+				fragPosition = vec3(model * vec4(position, 1));
+
+				timeAlive = effectData1.x;
+				float effectEndTime = effectData1.y;
+				fractionComplete = timeAlive / effectEndTime;
+
+				//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
+				//fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
+
+				uvCoords = uv;
+			}	
+		)";
+#endif
 
 		static char const* const ShieldShaderFS_src = R"(
 			#version 330 core

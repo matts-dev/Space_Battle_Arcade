@@ -30,7 +30,7 @@ namespace SA
 
 		Model3D(const char* path);
 		~Model3D();
-		void draw(Shader& shader) const;
+		void draw(Shader& shader, bool bBindMaterials = true) const;
 		void drawInstanced(Shader& shader, uint32_t instanceCount, bool bBindMaterials = true);
 
 		void setInstancedModelMatricesData(glm::mat4* modelMatrices, uint32_t count);

@@ -317,7 +317,7 @@ namespace SA
 
 	void Model3DWrapper::render()
 	{
-		model.draw(shader);
+		model.draw(shader, false);
 	}
 
 	void Model3DWrapper::instanceRender(int instanceCount)

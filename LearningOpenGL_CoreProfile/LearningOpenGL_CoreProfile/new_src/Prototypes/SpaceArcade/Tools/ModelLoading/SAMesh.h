@@ -86,7 +86,7 @@ namespace SA
 		);
 		~Mesh3D();
 
-		void draw(Shader& shader) const;
+		void draw(Shader& shader, bool bBindMaterials = true) const;
 		void drawInstanced(Shader& shader, unsigned int instanceCount, bool bBindTextures=true) const;
 		GLuint getVAO();
 		void setInstancedModelMatrixVBO(GLuint modelVBO);

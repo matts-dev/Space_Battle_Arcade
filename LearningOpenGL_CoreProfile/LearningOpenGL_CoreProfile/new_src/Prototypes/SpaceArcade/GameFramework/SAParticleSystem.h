@@ -16,6 +16,9 @@
 
 #define DISABLE_PARTICLE_SYSTEM 0
 
+//there's a bug where sometimes no instanced draw calls will work; providing method to disable instance rendering
+#define SA_RENDER_PARTICLES_INSTANCED 0	
+
 namespace SA
 {
 	class LevelBase;
@@ -272,6 +275,8 @@ namespace SA
 		virtual void tick(float deltaSec) override;
 		inline bool updateActiveParticleGroup(ActiveParticleGroup& particleGroup, float dt_sec_world);
 		virtual void handlePostRender() override;
+		void renderInstanced();
+		void renderNoninstanced();
 		void handlePostGameloopTick(float deltaSec);
 
 	private: //utility functions
@@ -284,8 +289,7 @@ namespace SA
 		void handleAcquiredOpenglContext(const sp<Window>& window);
 
 		//currently the active particle and its spawn params are identical; so just renaming the type
-		//#TODO #BEFORE_SUBMIT !!!!!!!!!!!!!!!!! change this data structure to be efficient
-		std::map<ActiveParticleGroup*, sp<ActiveParticleGroup>> activeParticles; //#TODO perhaps hashmap will be better for inserts/removals, but suffers iteration
+		std::map<ActiveParticleGroup*, sp<ActiveParticleGroup>> activeParticles;
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Map from shader instance to index in array of EffectInstanceData

@@ -27,11 +27,11 @@ namespace SA
 
 	}
 
-	void Model3D::draw(Shader& shader) const
+	void Model3D::draw(Shader& shader, bool bBindMaterials /*= true*/) const
 	{
 		for (uint32_t i = 0; i < meshes.size(); ++i)
 		{
-			meshes[i].draw(shader);
+			meshes[i].draw(shader, bBindMaterials);
 		}
 	}
 

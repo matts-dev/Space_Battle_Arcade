@@ -250,6 +250,15 @@ namespace SA
 
 	void ParticleSystem::handlePostRender()
 	{
+#if SA_RENDER_PARTICLES_INSTANCED
+		renderInstanced();
+#else 
+		renderNoninstanced();
+#endif
+	}
+
+	void ParticleSystem::renderInstanced()
+	{
 		static PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
 		const sp<PlayerBase>& player = playerSystem.getPlayer(0);
 		const sp<CameraBase> camera = player ? player->getCamera() : sp<CameraBase>(nullptr); //#TODO perhaps just listen to camera changing
@@ -257,12 +266,12 @@ namespace SA
 		if (instanceMat4VBO_opt.has_value() && instanceVec4VBO_opt.has_value() && camera)
 		{
 			const glm::mat4 projection_view = camera->getPerspective() * camera->getView(); //calculate early 
- 			const glm::vec3 camPos = camera->getPosition();
+			const glm::vec3 camPos = camera->getPosition();
 
 			GLuint instanceMat4VBO = *instanceMat4VBO_opt;
 			GLuint instanceVec4VBO = *instanceVec4VBO_opt;
 
-			for(EffectInstanceData& eid : instancedEffectsData)
+			for (EffectInstanceData& eid : instancedEffectsData)
 			{
 				if (eid.numInstancesThisFrame > 0 && eid.effectData->mesh->getVAOs().size() > 0)
 				{
@@ -330,7 +339,7 @@ namespace SA
 							ec(glBindBuffer(GL_ARRAY_BUFFER, instanceVec4VBO));
 
 							//#TODO set num vec4s in stride based on custom data
-							GLsizei numVec4AttribsInBuffer = eid.numVec4PerInstance; 
+							GLsizei numVec4AttribsInBuffer = eid.numVec4PerInstance;
 
 							size_t packagedVec4Idx_v4buffer = 0;
 							{
@@ -370,15 +379,78 @@ namespace SA
 					}
 
 					//load custom uniforms
-					for (Particle::UniformData<float>& uniformData	   : eid.effectData->floatUniforms){ shader->setUniform1f(uniformData.uniformName.c_str(), uniformData.data);}
-					for (Particle::UniformData<glm::vec3>& uniformData : eid.effectData->vec3Uniforms){ shader->setUniform3f(uniformData.uniformName.c_str(), uniformData.data);}
-					for (Particle::UniformData<glm::vec4>& uniformData : eid.effectData->vec4Uniforms){ shader->setUniform4f(uniformData.uniformName.c_str(), uniformData.data);}
-					for (Particle::UniformData<glm::mat4>& uniformData : eid.effectData->mat4Uniforms){ shader->setUniformMatrix4fv(uniformData.uniformName.c_str(), 1, GL_FALSE, glm::value_ptr(uniformData.data));}
-					
+					for (Particle::UniformData<float>& uniformData : eid.effectData->floatUniforms) { shader->setUniform1f(uniformData.uniformName.c_str(), uniformData.data); }
+					for (Particle::UniformData<glm::vec3>& uniformData : eid.effectData->vec3Uniforms) { shader->setUniform3f(uniformData.uniformName.c_str(), uniformData.data); }
+					for (Particle::UniformData<glm::vec4>& uniformData : eid.effectData->vec4Uniforms) { shader->setUniform4f(uniformData.uniformName.c_str(), uniformData.data); }
+					for (Particle::UniformData<glm::mat4>& uniformData : eid.effectData->mat4Uniforms) { shader->setUniformMatrix4fv(uniformData.uniformName.c_str(), 1, GL_FALSE, glm::value_ptr(uniformData.data)); }
+
 					//instanced render
 					eid.effectData->mesh->instanceRender(eid.numInstancesThisFrame);
 					eid.clearFrameData();
 				}
+			}
+		}
+		ec(glBindVertexArray(0));//unbind VAO's
+	}
+
+	void ParticleSystem::renderNoninstanced()
+	{
+		static PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
+		const sp<PlayerBase>& player = playerSystem.getPlayer(0);
+		const sp<CameraBase> camera = player ? player->getCamera() : sp<CameraBase>(nullptr); //#TODO perhaps just listen to camera changing
+
+		const glm::mat4 projection_view = camera->getPerspective() * camera->getView(); //calculate early 
+		const glm::vec3 camPos = camera->getPosition();
+
+
+		for (EffectInstanceData& eid : instancedEffectsData)
+		{
+			if (eid.numInstancesThisFrame > 0 && eid.effectData->mesh->getVAOs().size() > 0)
+			{
+				//activate shader
+				sp<Shader>& shader = eid.effectData->shader;
+				shader->use();
+
+				//supply uniforms (important that we use uniforms for shared data and not attributes as we do not want run out of attribute space)
+				shader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
+				shader->setUniform3f("camPos", camPos.x, camPos.y, camPos.z);
+
+				//load custom uniforms
+				for (Particle::UniformData<float>& uniformData : eid.effectData->floatUniforms) { shader->setUniform1f(uniformData.uniformName.c_str(), uniformData.data); }
+				for (Particle::UniformData<glm::vec3>& uniformData : eid.effectData->vec3Uniforms) { shader->setUniform3f(uniformData.uniformName.c_str(), uniformData.data); }
+				for (Particle::UniformData<glm::vec4>& uniformData : eid.effectData->vec4Uniforms) { shader->setUniform4f(uniformData.uniformName.c_str(), uniformData.data); }
+				for (Particle::UniformData<glm::mat4>& uniformData : eid.effectData->mat4Uniforms) { shader->setUniformMatrix4fv(uniformData.uniformName.c_str(), 1, GL_FALSE, glm::value_ptr(uniformData.data)); }
+
+				//load material textures and parameters
+				uint32_t mat_glTextureSlot = GL_TEXTURE0;
+				for (Particle::Material& mat : eid.effectData->materials)
+				{
+					ec(glActiveTexture(mat_glTextureSlot));
+					ec(glBindTexture(GL_TEXTURE_2D, mat.textureId));
+					shader->setUniform1i(mat.sampler2D_name.c_str(), (mat_glTextureSlot - GL_TEXTURE0));
+
+					++mat_glTextureSlot;
+				}
+
+				//non-instanced rendering will have a draw-call for each object
+				for (size_t instanceId = 0; instanceId < eid.numInstancesThisFrame; ++instanceId)
+				{
+					if (eid.numMat4PerInstance == 1)
+					{
+						const glm::mat4& model = eid.mat4Data[instanceId*eid.numMat4PerInstance];
+						shader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					}
+					else { throw std::runtime_error("non-instanced particles do not yet support custom matrices"); }
+
+					if (eid.numVec4PerInstance == 1)
+					{
+						const glm::vec4& effectData1 = eid.vec4Data[instanceId*eid.numVec4PerInstance];
+						shader->setUniform4f("effectData1", effectData1);
+					}
+					else { throw std::runtime_error("non-instanced particles do not yet support custom vec4s"); }
+					eid.effectData->mesh->render();
+				}
+				eid.clearFrameData();
 			}
 		}
 		ec(glBindVertexArray(0));//unbind VAO's
@@ -489,7 +561,7 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////
 	// particle factory
 	///////////////////////////////////////////////////////////////////////
-
+#if SA_RENDER_PARTICLES_INSTANCED
 	static char const* const SimpleExplosionVS_src = R"(
 				#version 330 core
 				layout (location = 0) in vec3 position;				
@@ -499,7 +571,7 @@ namespace SA
                 //layout (location = 4) in vec3 bitangent; //may can get 1 more attribute back by calculating this cross(normal, tangent);
 					//layout (location = 5) in vec3 reserved;
 					//layout (location = 6) in vec3 reserved;
-				layout (location = 7) in vec3 effectData1; //x=timeAlive,y=fractionComplete
+				layout (location = 7) in vec4 effectData1; //x=timeAlive,y=fractionComplete
 				layout (location = 8) in mat4 model; //consumes attribute locations 8,9,10,11
 					//layout (location = 12) in vec3 reserved;
 					//layout (location = 13) in vec3 reserved;
@@ -523,6 +595,36 @@ namespace SA
 					uvCoords = uv;
 				}
 			)";
+#else //non-instanced particles
+	static char const* const SimpleExplosionVS_src = R"(
+				#version 330 core
+
+				layout (location = 0) in vec3 position;				
+				layout (location = 1) in vec3 normal;
+				layout (location = 2) in vec2 uv;
+
+				//in non-instanced version these are passed as uniforms.
+				uniform vec4 effectData1; //x=timeAlive,y=fractionComplete
+				uniform mat4 model; 
+
+				uniform mat4 projection_view;
+				uniform vec3 camPos;
+
+				out vec2 uvCoords;
+				out float timeAlive;
+				out float fractionComplete;
+
+				void main(){
+					gl_Position = projection_view * model * vec4(position, 1.0f);
+
+					timeAlive = effectData1.x;
+					float effectEndTime = effectData1.y;
+					fractionComplete = timeAlive / effectEndTime;
+					
+					uvCoords = uv;
+				}
+			)";
+#endif
 
 	static char const* const SimpleExplosionFS_src = R"(
 	#version 330 core
