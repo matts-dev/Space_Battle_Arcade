@@ -150,17 +150,39 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//STATIC GLFW MANAGEMENT
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	void c_api_errorMsgCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
+
 	void Window::startUp()
 	{
 		if (windowStatics.getWindowInstances() == 0)
 		{
 			glfwInit();
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GAME_GL_MAJOR_VERSION);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GAME_GL_MINOR_VERSION);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
 		}
 	}
+
+	static void post_context_init_setup()
+	{
+		if (windowStatics.getWindowInstances() == 0)
+		{
+#if ENABLE_GL_DEBUG_OUTPUT_GL43
+			if (GAME_GL_MAJOR_VERSION >= 4 && GAME_GL_MINOR_VERSION >= 3)
+			{
+				ec(glEnable(GL_DEBUG_OUTPUT));
+				ec(glDebugMessageCallback(MessageCallback, 0));
+			}
+			else
+			{
+				log("LogWindowStatics", LogLevel::LOG_ERROR, "Attempted to set message callback, but gl version too low");
+			}
+#endif //ENABLE_GL_DEBUG_OUTPUT_GL43
+		}
+	}
+
 	void Window::tryShutDown()
 	{
 		if (windowStatics.getWindowInstances() == 0)
@@ -186,6 +208,7 @@ namespace SA
 
 		//must be done everytime something is rendered to this window
 		glfwMakeContextCurrent(window);
+		post_context_init_setup();
 		
 		//I believe GLAD proc address only needs to happen once
 		if (!gladLoaded)

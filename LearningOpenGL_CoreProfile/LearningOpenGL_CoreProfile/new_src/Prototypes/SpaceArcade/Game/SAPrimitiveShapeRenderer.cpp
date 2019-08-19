@@ -27,9 +27,9 @@ namespace SA
 		simpleShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(params.projection));
 		simpleShader->setUniform3f("color", params.color);
 
-		glPolygonMode(GL_FRONT_AND_BACK, params.renderMode);
+		ec(glPolygonMode(GL_FRONT_AND_BACK, params.renderMode));
 		renderUnitCube_CustomShader();
-		glPolygonMode(GL_FRONT_AND_BACK, params.restoreToRenderMode);
+		ec(glPolygonMode(GL_FRONT_AND_BACK, params.restoreToRenderMode));
 
 	}
 
@@ -77,6 +77,7 @@ namespace SA
 			registeredWindow = window;
 
 			//set up unit cube
+			ec(glBindVertexArray(0));
 			ec(glGenVertexArrays(1, &cubeVAO));
 			ec(glBindVertexArray(cubeVAO));
 			ec(glGenBuffers(1, &cubeVBO));

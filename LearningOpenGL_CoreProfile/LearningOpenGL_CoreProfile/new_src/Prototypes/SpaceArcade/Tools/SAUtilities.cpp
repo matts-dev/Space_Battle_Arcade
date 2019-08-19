@@ -2,10 +2,11 @@
 
 #include<fstream>
 #include<sstream>
-#include "..\..\..\..\Libraries\stb_image.h"
+#include "../../../../Libraries/stb_image.h"
 #include <complex>
 #include <vector>
-#include "..\Rendering\SAShader.h"
+#include "../Rendering/SAShader.h"
+#include "../Rendering/OpenGLHelpers.h"
 
 namespace SA
 {
@@ -76,13 +77,13 @@ namespace SA
 			}
 
 			GLuint textureID;
-			glGenTextures(1, &textureID);
+			ec(glGenTextures(1, &textureID));
 
 			if (texture_unit >= 0)
 			{
-				glActiveTexture(texture_unit);
+				ec(glActiveTexture(texture_unit));
 			}
-			glBindTexture(GL_TEXTURE_2D, textureID);
+			ec(glBindTexture(GL_TEXTURE_2D, textureID));
 
 			int mode = -1;
 			int dataFormat = -1;
@@ -107,14 +108,14 @@ namespace SA
 				exit(-1);
 			}
 
-			glTexImage2D(GL_TEXTURE_2D, 0, mode, img_width, img_height, 0, dataFormat, GL_UNSIGNED_BYTE, textureData);
-			glGenerateMipmap(GL_TEXTURE_2D);
-			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT); //causes issue with materials on models
-			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT); //causes issue with materials on models
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			ec(glTexImage2D(GL_TEXTURE_2D, 0, mode, img_width, img_height, 0, dataFormat, GL_UNSIGNED_BYTE, textureData));
+			ec(glGenerateMipmap(GL_TEXTURE_2D));
+			//ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT)); //causes issue with materials on models
+			//ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT)); //causes issue with materials on models
+			ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+			ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+			ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+			ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
 			stbi_image_free(textureData);
 
 			return textureID;
@@ -172,19 +173,20 @@ namespace SA
 
 			//basically immediate mode, should be very bad performance
 			GLuint tmpVAO, tmpVBO;
-			glGenVertexArrays(1, &tmpVAO);
-			glBindVertexArray(tmpVAO);
+			ec(glBindVertexArray(0));
+			ec(glGenVertexArrays(1, &tmpVAO));
+			ec(glBindVertexArray(tmpVAO));
 
-			glGenBuffers(1, &tmpVBO);
-			glBindBuffer(GL_ARRAY_BUFFER, tmpVBO);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * linesToDraw.size(), &linesToDraw[0], GL_STATIC_DRAW);
-			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(0));
-			glEnableVertexAttribArray(0);
+			ec(glGenBuffers(1, &tmpVBO));
+			ec(glBindBuffer(GL_ARRAY_BUFFER, tmpVBO));
+			ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * linesToDraw.size(), &linesToDraw[0], GL_STATIC_DRAW));
+			ec(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void*>(0)));
+			ec(glEnableVertexAttribArray(0));
 
-			glDrawArrays(GL_LINES, 0, linesToDraw.size());
+			ec(glDrawArrays(GL_LINES, 0, linesToDraw.size()));
 
-			glDeleteVertexArrays(1, &tmpVAO);
-			glDeleteBuffers(1, &tmpVBO);
+			ec(glDeleteVertexArrays(1, &tmpVAO));
+			ec(glDeleteBuffers(1, &tmpVBO));
 		}
 
 		glm::vec3 getDifferentVector(glm::vec3 vec)

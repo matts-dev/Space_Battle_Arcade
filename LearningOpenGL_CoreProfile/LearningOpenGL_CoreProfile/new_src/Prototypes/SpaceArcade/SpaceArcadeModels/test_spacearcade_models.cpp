@@ -17,6 +17,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "../../../ImportingModels/Models/Model.h"
+#include "../Rendering/OpenGLHelpers.h"
 
 namespace
 {
@@ -428,31 +429,32 @@ namespace
 //------------------------------------------------------------------------------------------------------------------
 
 		GLuint vao;
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
+		ec(glBindVertexArray(0));
+		ec(glGenVertexArrays(1, &vao));
+		ec(glBindVertexArray(vao));
 
 		GLuint vbo;
-		glGenBuffers(1, &vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
+		ec(glGenBuffers(1, &vbo));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(0));
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
+		ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))));
+		ec(glEnableVertexAttribArray(1));
 
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
+		ec(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float))));
+		ec(glEnableVertexAttribArray(2));
 
-		glBindVertexArray(0); //before unbinding any buffers, make sure VAO isn't recording state.
+		ec(glBindVertexArray(0)); //before unbinding any buffers, make sure VAO isn't recording state.
 
 		GLuint lampVAO;
-		glGenVertexArrays(1, &lampVAO);
-		glBindVertexArray(lampVAO);
+		ec(glGenVertexArrays(1, &lampVAO));
+		ec(glBindVertexArray(lampVAO));
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);//use same vertex data
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vbo));//use same vertex data
+		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(0));
 
 		//textures
 		GLuint diffuseMap = textureLoader("Textures/container2.png", GL_TEXTURE0);
@@ -467,7 +469,7 @@ namespace
 
 		Shader lampShader(lamp_vertex_shader_src, lamp_frag_shader_src, false);
 
-		glEnable(GL_DEPTH_TEST);
+		ec(glEnable(GL_DEPTH_TEST));
 
 		glm::vec3 lightcolor(1.0f, 1.0f, 1.0f);
 		glm::vec3 objectcolor(1.0f, 0.5f, 0.31f);
@@ -597,8 +599,8 @@ namespace
 
 			processInput(window);
 
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			ec(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
+			ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 			glm::mat4 view = camera.getView();
 			glm::mat4 projection = glm::perspective(glm::radians(FOV), static_cast<float>(width) / height, 0.1f, 100.0f);
@@ -621,8 +623,8 @@ namespace
 				lampShader.setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));  //since we don't update for each cube, it would be more efficient to do this outside of the loop.
 				lampShader.setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 				lampShader.setUniform3f("lightColor", lightcolor.x, lightcolor.y, lightcolor.z);
-				glBindVertexArray(lampVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+				ec(glBindVertexArray(lampVAO));
+				ec(glDrawArrays(GL_TRIANGLES, 0, 36));
 			}
 
 
@@ -694,10 +696,10 @@ namespace
 		}
 
 		glfwTerminate();
-		glDeleteVertexArrays(1, &vao);
-		glDeleteBuffers(1, &vbo);
+		ec(glDeleteVertexArrays(1, &vao));
+		ec(glDeleteBuffers(1, &vbo));
 
-		glDeleteVertexArrays(1, &lampVAO);
+		ec(glDeleteVertexArrays(1, &lampVAO));
 	}
 }
 

@@ -153,34 +153,35 @@ namespace SA
 	void SphereMeshTextured::configureDataForOpenGL()
 	{
 		//You can use multiple VBOs within a single VAO. For simplicity that is what I am doing.
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
+		ec(glBindVertexArray(0));
+		ec(glGenVertexArrays(1, &vao));
+		ec(glBindVertexArray(vao));
 		vaos.push_back(vao);
 
-		glGenBuffers(1, &vboPositions);
-		glBindBuffer(GL_ARRAY_BUFFER, vboPositions);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertPositions.size(), vertPositions.data(), GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
+		ec(glGenBuffers(1, &vboPositions));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vboPositions));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertPositions.size(), vertPositions.data(), GL_STATIC_DRAW));
+		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(0));
 
-		glGenBuffers(1, &vboNormals);
-		glBindBuffer(GL_ARRAY_BUFFER, vboNormals);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * normals.size(), normals.data(), GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(1);
+		ec(glGenBuffers(1, &vboNormals));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vboNormals));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * normals.size(), normals.data(), GL_STATIC_DRAW));
+		ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(1));
 
-		glGenBuffers(1, &vboTexCoords);
-		glBindBuffer(GL_ARRAY_BUFFER, vboTexCoords);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * textureCoords.size(), textureCoords.data(), GL_STATIC_DRAW);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(2);
+		ec(glGenBuffers(1, &vboTexCoords));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vboTexCoords));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * textureCoords.size(), textureCoords.data(), GL_STATIC_DRAW));
+		ec(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(2));
 
-		glGenBuffers(1, &ebo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triangleElementIndices.size(), triangleElementIndices.data(), GL_STATIC_DRAW);
+		ec(glGenBuffers(1, &ebo));
+		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+		ec(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triangleElementIndices.size(), triangleElementIndices.data(), GL_STATIC_DRAW));
 
 		//prevent other calls from corrupting this VAO state
-		glBindVertexArray(0);
+		ec(glBindVertexArray(0));
 	}
 
 	int SphereMeshTextured::calculateNumFacets(float tolerance)
@@ -303,11 +304,11 @@ namespace SA
 	void SphereMeshTextured::onReleaseOpenGLResources()
 	{
 		vaos.clear();
-		glDeleteVertexArrays(1, &vao);
-		glDeleteBuffers(1, &vboPositions);
-		glDeleteBuffers(1, &vboNormals);
-		glDeleteBuffers(1, &vboTexCoords);
-		glDeleteBuffers(1, &ebo);
+		ec(glDeleteVertexArrays(1, &vao));
+		ec(glDeleteBuffers(1, &vboPositions));
+		ec(glDeleteBuffers(1, &vboNormals));
+		ec(glDeleteBuffers(1, &vboTexCoords));
+		ec(glDeleteBuffers(1, &ebo));
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////

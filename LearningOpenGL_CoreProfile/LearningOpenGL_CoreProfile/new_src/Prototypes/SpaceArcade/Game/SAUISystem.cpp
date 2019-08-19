@@ -109,7 +109,7 @@ namespace SA
 
 	void UISystem::handleGameloopOver(float dt_sec)
 	{
-		if (!imguiBoundWindow.expired())
+		if (!imguiBoundWindow.expired() && bUIEnabled)
 		{
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
@@ -125,7 +125,7 @@ namespace SA
 
 	void UISystem::render()
 	{
-		if (!imguiBoundWindow.expired())
+		if (!imguiBoundWindow.expired() && bUIEnabled)
 		{
 			//UI will have set up widgets between frame
 			ImGui::Render();

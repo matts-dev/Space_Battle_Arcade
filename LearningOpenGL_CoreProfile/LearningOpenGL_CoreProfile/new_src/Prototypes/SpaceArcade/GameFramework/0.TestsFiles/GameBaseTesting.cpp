@@ -153,6 +153,7 @@ namespace
 			lampObjShader = new_sp<SA::Shader>(lightLocationShaderVertSrc, lightLocationShaderFragSrc, false);
 
 			//set up unit cube
+			ec(glBindVertexArray(0));
 			ec(glGenVertexArrays(1, &cubeVAO));
 			ec(glBindVertexArray(cubeVAO));
 			ec(glGenBuffers(1, &cubeVBO));

@@ -19,6 +19,9 @@ namespace SA
 		//would be a cleaner system if subclass didn't have to hook this into render loop manually
 		void render();
 
+		inline void setUIEnabled(bool bEnable) { bUIEnabled = bEnable; }
+		inline bool getUIEnabled() { return bUIEnabled; }
+
 	private:
 		virtual void tick(float deltaSec) {}
 		virtual void initSystem() override;
@@ -38,5 +41,6 @@ namespace SA
 
 	private:
 		wp<Window> imguiBoundWindow;
+		bool bUIEnabled = true;
 	};
 }

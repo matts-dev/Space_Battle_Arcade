@@ -1,8 +1,9 @@
 #include "SAAssetSystem.h"
 
 #include <iostream>
-#include "..\..\..\..\Libraries\stb_image.h"
-#include "..\Tools\ModelLoading\SAModel.h"
+#include "../../../../Libraries/stb_image.h"
+#include "../Tools/ModelLoading/SAModel.h"
+#include "../Rendering/OpenGLHelpers.h"
 
 namespace SA
 {
@@ -11,7 +12,7 @@ namespace SA
 		for (const auto& textureMapIter : loadedTextureIds)
 		{
 			GLuint textureId = textureMapIter.second;
-			glDeleteTextures(1, &textureId);
+			ec(glDeleteTextures(1, &textureId));
 		}
 		loadedTextureIds.clear();
 	}
@@ -73,13 +74,13 @@ namespace SA
 		}
 
 		GLuint textureID;
-		glGenTextures(1, &textureID);
+		ec(glGenTextures(1, &textureID));
 
 		if (texture_unit >= 0)
 		{
-			glActiveTexture(texture_unit);
+			ec(glActiveTexture(texture_unit));
 		}
-		glBindTexture(GL_TEXTURE_2D, textureID);
+		ec(glBindTexture(GL_TEXTURE_2D, textureID));
 
 		int mode = -1;
 		int dataFormat = -1;
@@ -102,18 +103,18 @@ namespace SA
 		{
 			std::cerr << "unsupported image format for texture at " << relative_filepath << " there are " << img_nrChannels << "channels" << std::endl;
 			stbi_image_free(textureData);
-			glDeleteTextures(1, &textureID);
+			ec(glDeleteTextures(1, &textureID));
 			return false;
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, mode, img_width, img_height, 0, dataFormat, GL_UNSIGNED_BYTE, textureData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT); //causes issue with materials on models
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT); //causes issue with materials on models
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		ec(glTexImage2D(GL_TEXTURE_2D, 0, mode, img_width, img_height, 0, dataFormat, GL_UNSIGNED_BYTE, textureData));
+		ec(glGenerateMipmap(GL_TEXTURE_2D));
+		//ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT)); //causes issue with materials on models
+		//ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT)); //causes issue with materials on models
+		ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+		ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+		ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+		ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
 		stbi_image_free(textureData);
 
 		loadedTextureIds.insert({ relative_filepath, textureID });
