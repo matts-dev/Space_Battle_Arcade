@@ -27,7 +27,7 @@ namespace SA
 		}
 
 		GameBase& game = GameBase::get();
-		game.PostGameloopTick.addStrongObj(sp_this(), &UISystem::handleGameloopOver);
+		game.PostGameloopTick.addStrongObj(sp_this(), &UISystem::handleGameloopOver); //#future this should be a render command that is sorted after post-processing. 
 	}
 
 	void UISystem::handleLosingOpenGLContext(const sp<Window>& window)

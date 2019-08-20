@@ -52,8 +52,13 @@ namespace SA
 		bool hasGeometryShader = geometryShaderFilePath != "";
 
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+		if (!vertexShader) { std::cerr << "failed create vertexShader" << std::endl; }
+
 		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		if (!fragmentShader) { std::cerr << "failed create fragmentShader" << std::endl; }
+
 		GLuint geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+		if (!geometryShader) { std::cerr << "failed create geometryShader" << std::endl; }
 
 		//LOAD SOURCES FROM FILE
 		std::string vertShaderSrc, fragShaderSrc, geoShaderSrc;
@@ -128,6 +133,7 @@ namespace SA
 
 		//ATTACH AND LINK SHADERS
 		linkedProgram = glCreateProgram();
+		if (!linkedProgram) { std::cerr << "failed create program" << std::endl; }
 		ec(glAttachShader(linkedProgram, vertexShader));
 		ec(glAttachShader(linkedProgram, fragmentShader));
 		if (hasGeometryShader)

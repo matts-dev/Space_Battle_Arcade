@@ -123,7 +123,8 @@ namespace SA
 		tickGameLoop(deltaTimeSecs);
 		PostGameloopTick.broadcast(deltaTimeSecs);
 
-		renderLoop(deltaTimeSecs);
+		renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
+		onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
 
 		//perhaps this should be a subscription service since few systems care about post render
 		for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}

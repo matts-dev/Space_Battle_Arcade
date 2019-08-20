@@ -14,7 +14,6 @@ namespace SA
 
 	namespace ShieldEffect
 	{
-#if SA_RENDER_PARTICLES_INSTANCED
 		static char const* const ShieldShaderVS_src = R"(
 			#version 330 core
 			layout (location = 0) in vec3 position;			
@@ -54,39 +53,6 @@ namespace SA
 				uvCoords = uv;
 			}	
 		)";
-#else	//not instanced
-		static char const* const ShieldShaderVS_src = R"(
-			#version 330 core
-			layout (location = 0) in vec3 position;			
-			layout (location = 1) in vec3 normal;	
-			layout (location = 2) in vec2 uv;
-			uniform vec4 effectData1; //x=timeAlive, y=fractionComplete
-			uniform mat4 model; 
-				
-			uniform mat4 projection_view;
-			uniform vec3 camPos;
-
-			//out vec3 fragNormal;
-			out vec3 fragPosition;
-			out vec2 uvCoords;
-			out float timeAlive;
-			out float fractionComplete;
-
-			void main(){
-				gl_Position = projection_view * model * vec4(position, 1);
-				fragPosition = vec3(model * vec4(position, 1));
-
-				timeAlive = effectData1.x;
-				float effectEndTime = effectData1.y;
-				fractionComplete = timeAlive / effectEndTime;
-
-				//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-				//fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
-
-				uvCoords = uv;
-			}	
-		)";
-#endif
 
 		static char const* const ShieldShaderFS_src = R"(
 			#version 330 core
@@ -140,6 +106,7 @@ namespace SA
 				// colorize grayscale
 				////////////////////////////////////////////
 				fragmentColor = grayScale * vec4(shieldColor, 1.f);
+				
 			}
 		)";
 

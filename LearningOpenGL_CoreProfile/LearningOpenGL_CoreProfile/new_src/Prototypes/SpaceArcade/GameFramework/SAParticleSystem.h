@@ -16,9 +16,6 @@
 
 #define DISABLE_PARTICLE_SYSTEM 0
 
-//there's a bug where sometimes no instanced draw calls will work; providing method to disable instance rendering
-#define SA_RENDER_PARTICLES_INSTANCED 0	
-
 namespace SA
 {
 	class LevelBase;
@@ -274,9 +271,7 @@ namespace SA
 		virtual void shutdown() override;
 		virtual void tick(float deltaSec) override;
 		inline bool updateActiveParticleGroup(ActiveParticleGroup& particleGroup, float dt_sec_world);
-		virtual void handlePostRender() override;
-		void renderInstanced();
-		void renderNoninstanced();
+		void handleRenderDispatch(float deltaSec);
 		void handlePostGameloopTick(float deltaSec);
 
 	private: //utility functions

@@ -146,6 +146,7 @@ namespace SA
 
 		//draw mesh
 		ec(glBindVertexArray(VAO));
+		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAO));
 		ec(glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0));
 		ec(glBindVertexArray(0));
 	}
