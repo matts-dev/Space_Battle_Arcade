@@ -25,6 +25,7 @@ namespace SA
 		wp<LevelBase> wpLevel;
 	};
 
+	/* Brain used for simple tests; just keeps firing and flying in direction */
 	class ContinuousFireBrain : public ShipAIBrain
 	{
 	public:
@@ -44,6 +45,7 @@ namespace SA
 		float timerDelay = 0.f;
 	};
 
+	/** Brain used for simple tests, just flys in an direction*/
 	class FlyInDirectionBrain : public ShipAIBrain
 	{
 	public:
@@ -51,6 +53,20 @@ namespace SA
 		virtual bool onAwaken() override;
 	private:
 		float speed = 1.f;
+	};
+
+	/** Brain that controls a fighter ship.*/
+	class FighterBrain : public ShipAIBrain
+	{
+		virtual bool onAwaken() override;
+
+	protected:
+		virtual void postConstruct() override;
+	private:
+		sp<BehaviorTree::Tree> behaviorTree;
+	public:
+		virtual void onSleep() override;
+
 	};
 
 }

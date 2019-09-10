@@ -103,10 +103,8 @@ namespace SA
 			if (removeTimer(timer->getUserCallback()) != ETimerOperationResult::SUCCESS)
 			{
 				//log failure when there exists a more performant logging system
+				log("TimeManagementSystem", LogLevel::LOG_ERROR, "Failed to remove timer; this should not happen.");
 			}
-
-			timer->reset();
-			timerPool.releaseInstance(timer);
 		}
 		timersToRemoveWhenTickingOver.clear();
 
@@ -197,6 +195,7 @@ namespace SA
 				timerPool.releaseInstance(findResult->second);
 
 				timers.remove(findResult->second);
+				findResult->second->reset();
 				delegateToTimerMap.erase(findResult);
 				return ETimerOperationResult::SUCCESS;
 			}

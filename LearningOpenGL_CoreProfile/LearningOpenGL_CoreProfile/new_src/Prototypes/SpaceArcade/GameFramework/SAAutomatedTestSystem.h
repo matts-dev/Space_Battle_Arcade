@@ -5,7 +5,7 @@
 #include "SASystemBase.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 
-#define SA_ENABLE_AUTOMATED_TESTS 0
+#define SA_ENABLE_AUTOMATED_TESTS 1
 
 namespace SA
 {
@@ -21,9 +21,10 @@ namespace SA
 
 	private:
 		void handleGameloopBeginning();
+		void handlePreLevelChange(const sp<LevelBase>& /*currentLevel*/, const sp<LevelBase>& /*newLevel*/);
 	private:
 		std::vector<sp<LiveTest>> liveTests;
-		bool bLiveTestingStarted = false;
+		bool bLiveTestingRunning = false;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,9 +33,15 @@ namespace SA
 	class LiveTest : public GameEntity
 	{
 	public:
-		virtual bool isComplete() = 0;
-		virtual bool passedTest() = 0;
+		virtual bool isComplete() { return bComplete;}
+		virtual bool passedTest() { return bAllPasing;}
+		virtual bool hasStarted() = 0;
 		virtual void tick() = 0;
+		virtual void beginTest() = 0;
+
+	protected:
+		bool bComplete;
+		bool bAllPasing;
 	};
 
 

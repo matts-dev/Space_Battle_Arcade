@@ -134,6 +134,64 @@ namespace SA
 		}
 		return false;
 	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Fighter Brain
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+	bool FighterBrain::onAwaken()
+	{
+		if (ShipAIBrain::onAwaken())
+		{
+			behaviorTree->start();
+			return true;
+		}
+		return false;
+	}
+
+	void FighterBrain::onSleep()
+	{
+		ShipAIBrain::onSleep();
+		behaviorTree->stop();
+	}
+
+	void FighterBrain::postConstruct()
+	{
+		/*
+			service_find_target
+			selector_has_target
+				decorator_hastarget
+				selector_hastarget
+					TaskMoveToTarget
+				decorator_notarget
+				sequence_randomLocation
+					task_findrandomloc
+					task_rotateTowardsLoc
+					task_moveToLoc
+		*/
+		using namespace BehaviorTree;
+		sp<Tree> bt = 
+			new_sp<Tree>("tree-root",
+				new_sp<Service>("service_find_target", 0.1f, true,
+					new_sp<Selector>("selector_hasTarget", std::vector<sp<NodeBase>>{
+						new_sp<Decorator>("decorator_hastarget", 
+							new_sp<Selector>("selector_hastarget", std::vector<sp<NodeBase>>{
+								new_sp<Task>("task_move")
+							})
+						),
+						new_sp<Decorator>("decorator_notarget",
+							new_sp<Sequence>("sequence_moveToRandomLoc", std::vector<sp<NodeBase>>{
+								new_sp<Task>("task_FindRandomLoc"),
+								new_sp<Task>("task_RotateTowardsLoc"),
+								new_sp<Task>("task_move")
+							})
+						)
+					})
+				)
+			);
+
+		behaviorTree = bt;
+	}
 }
 
