@@ -8,6 +8,7 @@ namespace SA
 	{
 		class Tree;
 		class Task;
+		class NodeBase;
 	}
 
 	//struct that keeps track of the tasks that should and shouldn't be hit. Designing a tree around these can test many feature
@@ -17,8 +18,8 @@ namespace SA
 		TestTreeStructureResults(size_t numRequiredTasks) : numRequiredCompletedTasks(numRequiredTasks) {}
 		size_t numRequiredCompletedTasks = 0;	//the expected number of tasks to update
 		bool bComplete = false;
-		std::set<sp<BehaviorTree::Task>> requiredCompletedTasks;
-		std::set<sp<BehaviorTree::Task>> forbiddenTasks;
+		std::set<sp<BehaviorTree::NodeBase>> requiredCompletedTasks;	//location for tasks that are required to pass
+		std::set<sp<BehaviorTree::NodeBase>> forbiddenTasks;			//location for tasks that should never be hit (or have failed)
 
 		bool passed() 
 		{ 
@@ -47,7 +48,8 @@ namespace SA
 		sp<BehaviorTree::Tree> memoryTaskTest;
 		sp<BehaviorTree::Tree> decoratorTest_basicFunctionality;
 		sp<BehaviorTree::Tree> decoratorTest_deferred_basicFunctionality;
-		sp<BehaviorTree::Tree> abortTest_basicFunctionality;
+		sp<BehaviorTree::Tree> memoryOperationsTestTree;
+		//sp<BehaviorTree::Tree> abortTest_basicFunctionality;
 
 		sp<BehaviorTree::Tree> treeTest_deferredSelection_ffsn;
 		sp<BehaviorTree::Tree> treeTest_deferredSequence_sss_n;
@@ -71,7 +73,8 @@ namespace SA
 			{"serviceTest_basicFeatures", 1 },
 			{"serviceTest_immediateExecute", 1},
 			{"decoratorTest_basicFunctionality", 1 },
-			{"decoratorTest_deferred_basicFunctionality", 1}
+			{"decoratorTest_deferred_basicFunctionality", 1},
+			{"memoryOperationsTestTree", 11}
 		};
 
 	};

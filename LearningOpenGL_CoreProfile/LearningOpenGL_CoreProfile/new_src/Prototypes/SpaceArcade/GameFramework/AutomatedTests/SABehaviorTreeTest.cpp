@@ -180,7 +180,7 @@ namespace SA
 				BehaviorTree::Memory& mem = getMemory();
 				if (!mem.hasValue(varKey))
 				{
-					mem.assignValue(varKey, new_sp<BehaviorTree::PrimitiveWrapper<int>>(0));
+					mem.replaceValue(varKey, new_sp<BehaviorTree::PrimitiveWrapper<int>>(0));
 				}
 			}
 		}
@@ -190,12 +190,14 @@ namespace SA
 		{
 			BehaviorTree::Memory& mem = getMemory();
 
-			if (int* toUpdate = mem.getValueAs<int>(varKey))
+			BehaviorTree::ScopedUpdateNotifier<int> writeValue;
+			if(mem.getWriteValueAs<int>(varKey, writeValue))
 			{
-				(*toUpdate)++;
-				evaluationResult = true;
+				int& toUpdate = writeValue.get();
 
-				if (*toUpdate == 3)
+				toUpdate++;
+				evaluationResult = true;
+				if (toUpdate == 3)
 				{
 					testLocation.requiredCompletedTasks.insert(sp_this());
 				}
@@ -240,7 +242,7 @@ namespace SA
 			{
 				if (!mem.hasValue(varKey))
 				{
-					mem.assignValue(varKey, new_sp<MemoryUpdateTester>(0));
+					mem.replaceValue(varKey, new_sp<MemoryUpdateTester>(0));
 				}
 			}
 		}
@@ -250,12 +252,14 @@ namespace SA
 		{
 			BehaviorTree::Memory& mem = getMemory();
 
-			if (MemoryUpdateTester* toUpdate = mem.getValueAs<MemoryUpdateTester>(varKey))
+			BehaviorTree::ScopedUpdateNotifier<MemoryUpdateTester> writeValue;
+			if (mem.getWriteValueAs<MemoryUpdateTester>(varKey, writeValue))
 			{
-				toUpdate->myValue++;
+				MemoryUpdateTester& toUpdate = writeValue.get();
+				toUpdate.myValue++;
 				evaluationResult = true;
 
-				if (toUpdate->myValue == 3)
+				if (toUpdate.myValue == 3)
 				{
 					testLocation.requiredCompletedTasks.insert(sp_this());
 				}
@@ -291,9 +295,11 @@ namespace SA
 		virtual void serviceTick() override
 		{ 
 			BehaviorTree::Memory& mem = getMemory();
-			if (int* myInt = mem.getValueAs<int>(intKeyName))
+
+			BehaviorTree::ScopedUpdateNotifier<int> writeValue;
+			if (mem.getWriteValueAs<int>(intKeyName, writeValue))
 			{
-				(*myInt)++;
+				writeValue.get()++;
 			}
 		}
 	private:
@@ -325,7 +331,7 @@ namespace SA
 			if (!evaluationResult.has_value())
 			{
 				BehaviorTree::Memory& mem = getMemory();
-				if (int* valueCheck = mem.getValueAs<int>(valKey))
+				if (const int* valueCheck = mem.getReadValueAs<int>(valKey))
 				{
 					if (*valueCheck >= 3)
 					{
@@ -378,9 +384,10 @@ namespace SA
 		virtual void serviceTick() override
 		{
 			BehaviorTree::Memory& mem = getMemory();
-			if (int* myInt = mem.getValueAs<int>(intKeyName))
+			BehaviorTree::ScopedUpdateNotifier<int> writeValue;
+			if (mem.getWriteValueAs<int>(intKeyName, writeValue))
 			{
-				(*myInt) = valueToSet;
+				writeValue.get() = valueToSet;
 			}
 		}
 	private:
@@ -399,7 +406,7 @@ namespace SA
 		virtual void beginTask() override
 		{
 			BehaviorTree::Memory& memory = getMemory();
-			if (int* readValue = memory.getValueAs<int>(valKey))
+			if (const int* readValue = memory.getReadValueAs<int>(valKey))
 			{
 				if (*readValue == goalValue)
 				{
@@ -432,7 +439,7 @@ namespace SA
 		{
 			BehaviorTree::Memory& memory = getMemory();
 
-			bool* memoryValue = memory.getValueAs<bool>(boolKeyValue);
+			const bool* memoryValue = memory.getReadValueAs<bool>(boolKeyValue);
 			assert(memoryValue);
 			if (memoryValue)
 			{
@@ -478,7 +485,7 @@ namespace SA
 		void handleDeferredCheckOver()
 		{
 			BehaviorTree::Memory& memory = getMemory();
-			bool* memoryValue = memory.getValueAs<bool>(boolKeyValue);
+			const bool* memoryValue = memory.getReadValueAs<bool>(boolKeyValue);
 			assert(memoryValue);
 			if (memoryValue)
 			{
@@ -495,6 +502,284 @@ namespace SA
 	};
 
 	/////////////////////////////////////////////////////////////////////////////////////
+	// testing behavior tree memory operations
+	/////////////////////////////////////////////////////////////////////////////////////
+
+		////////////////////////////////////////////////////////
+		// task that modifies memory
+		////////////////////////////////////////////////////////
+		class task_modify_memory : public BehaviorTree::Task
+		{
+		public:
+			task_modify_memory(const std::string& valueKey, TestTreeStructureResults& testResultLocation)
+				: BehaviorTree::Task("task_modify_memory"),
+				testLocation(testResultLocation), valueKey(valueKey)
+			{
+			}
+
+			virtual void beginTask() override
+			{
+				BehaviorTree::Memory& memory = getMemory();
+
+				BehaviorTree::ScopedUpdateNotifier<MemoryUpdateTester> write_obj;
+				if (memory.getWriteValueAs<MemoryUpdateTester>(valueKey, write_obj))
+				{
+					write_obj.get().myValue = 500;
+					testLocation.requiredCompletedTasks.insert(sp_this());
+					evaluationResult = true;
+				}
+				else
+				{
+					//can't find key value with expected type, the test isn't designed for this scenario to happen.
+					testLocation.forbiddenTasks.insert(sp_this()); //insert into forbidden tasks to make this kind of error as loud as possible.
+					evaluationResult = false;
+				}
+			}
+
+		private:
+			TestTreeStructureResults& testLocation;
+			std::string valueKey;
+		};
+
+		////////////////////////////////////////////////////////
+		// task that replaces memory
+		////////////////////////////////////////////////////////
+		class task_replace_memory : public BehaviorTree::Task
+		{
+		public:
+			task_replace_memory(const std::string& valueKey, TestTreeStructureResults& testResultLocation)
+				: BehaviorTree::Task("task_replace_memory"),
+				testLocation(testResultLocation), valueKey(valueKey)
+			{
+			}
+
+			virtual void beginTask() override
+			{
+				BehaviorTree::Memory& memory = getMemory();
+
+				sp<MemoryUpdateTester> newObj = new_sp<MemoryUpdateTester>(0);
+				memory.replaceValue(valueKey, newObj);
+
+				if (memory.hasValue(valueKey))
+				{
+					testLocation.requiredCompletedTasks.insert(sp_this());
+					evaluationResult = true;
+				}
+				else
+				{
+					testLocation.forbiddenTasks.insert(sp_this()); //insert into forbidden tasks to make this kind of error as loud as possible.
+					evaluationResult = false;
+				}
+			}
+
+		private:
+			TestTreeStructureResults& testLocation;
+			std::string valueKey;
+		};
+
+		////////////////////////////////////////////////////////
+		// decorator that gets notified on modification
+		////////////////////////////////////////////////////////
+		class Decorator_OnModifyPass : public BehaviorTree::Decorator
+		{
+		public:
+			Decorator_OnModifyPass(const std::string& name, const std::string keyValue, TestTreeStructureResults& testResultLocation, const sp<NodeBase>& child) :
+				BehaviorTree::Decorator(name, child), keyValue(keyValue), testLocation(testResultLocation)
+			{
+			}
+
+			virtual void startBranchConditionCheck()
+			{
+				conditionalResult = true;
+			}
+
+		private:
+			virtual void notifyTreeEstablished() override
+			{
+				//perhaps this should be a built-in feature of the decorators and you just specify what keys you want to listen to.
+				getMemory().getModifiedDelegate(keyValue).addWeakObj(sp_this(), &Decorator_OnModifyPass::handleValueModified);
+			}
+
+			void handleValueModified(const std::string& key, const GameEntity* value)
+			{
+				if (key == keyValue)
+				{
+					//!!!user cannot modify values in these delegates as it cause infinite recursion!!!
+					//modifying values will cause modified delegate to broadcast
+					//BehaviorTree::ScopedUpdateNotifier<MemoryUpdateTester> write_obj;
+					//if (getMemory().getWriteValueAs(keyValue, write_obj))
+					//{
+						//GameEntity* writableVersion = &write_obj.get();
+						//if (writableVersion == value)
+						//{
+							//testLocation.requiredCompletedTasks.insert(sp_this());
+							//return;
+						//}
+					//}
+					testLocation.requiredCompletedTasks.insert(sp_this());
+				}
+				else
+				{
+					testLocation.forbiddenTasks.insert(sp_this());
+				}
+			}
+		private:
+			std::string keyValue;
+			TestTreeStructureResults& testLocation;
+
+		};
+
+		////////////////////////////////////////////////////////
+		// decorator that gets notified on replace
+		////////////////////////////////////////////////////////
+		class Decorator_OnReplacePass : public BehaviorTree::Decorator
+		{
+		public:
+			Decorator_OnReplacePass(const std::string& name, const std::string keyValue, TestTreeStructureResults& testResultLocation, const sp<NodeBase>& child) :
+				BehaviorTree::Decorator(name, child), keyValue(keyValue), testLocation(testResultLocation)
+			{
+			}
+
+			virtual void startBranchConditionCheck()
+			{
+				conditionalResult = true;
+			}
+
+		private:
+			virtual void notifyTreeEstablished() override
+			{
+				//perhaps this should be a built-in feature of the decorators and you just specify what keys you want to listen to.
+				getMemory().getReplacedDelegate(keyValue).addWeakObj(sp_this(), &Decorator_OnReplacePass::handleValueReplaced);
+				cachedStartValue = getMemory().getReadValueAs<GameEntity>(keyValue);
+			}
+
+			void handleValueReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+			{
+				if (key == keyValue)
+				{
+					//make sure the replaced value is a different instance and it was the instance detected at start.
+					if (oldValue == cachedStartValue && newValue != cachedStartValue)
+					{
+						//make sure the user can get a writable value if they desire
+						BehaviorTree::ScopedUpdateNotifier<MemoryUpdateTester> write_obj;
+						if (getMemory().getWriteValueAs(keyValue, write_obj))
+						{
+							GameEntity* writableVersion = &write_obj.get();
+							if(writableVersion == newValue)
+							{
+								testLocation.requiredCompletedTasks.insert(sp_this());
+								return;
+							}
+						}
+					}
+				}
+				testLocation.forbiddenTasks.insert(sp_this());
+			}
+		private:
+			std::string keyValue;
+			const GameEntity* cachedStartValue = nullptr;
+			TestTreeStructureResults& testLocation;
+		};
+
+		////////////////////////////////////////////////////////
+		// Task that removes memory
+		////////////////////////////////////////////////////////
+		class task_remove_memory : public BehaviorTree::Task
+		{
+		public:
+			task_remove_memory(const std::string& valueKey, bool bKeepDelegateListeners, TestTreeStructureResults& testResultLocation)
+				: BehaviorTree::Task("task_remove_memory "),
+				testLocation(testResultLocation), valueKey(valueKey), bKeepDelegateListeners(bKeepDelegateListeners)
+			{
+			}
+
+			virtual void beginTask() override
+			{
+				BehaviorTree::Memory& memory = getMemory();
+				memory.getReplacedDelegate(valueKey).addWeakObj(sp_this(), &task_remove_memory::handleValueReplaced);
+
+				bHadMemoryAtleastOnce |= memory.hasValue(valueKey);
+
+				if (bKeepDelegateListeners)
+				{
+					memory.removeValue(valueKey);
+
+					//stop listening to changes
+					memory.getReplacedDelegate(valueKey).removeWeak(sp_this(), &task_remove_memory::handleValueReplaced);
+				}
+				else
+				{
+					memory.eraseEntry(valueKey);
+					//no need to erase subscription because this should clear out the delegate
+				}
+
+				evaluationResult = true;
+			}
+		private:
+			void handleValueReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+			{
+				if (bHadMemoryAtleastOnce)
+				{
+					testLocation.requiredCompletedTasks.insert(sp_this());
+				}
+			}
+
+		private:
+			TestTreeStructureResults& testLocation;
+			std::string valueKey;
+			bool bKeepDelegateListeners;
+			bool bHadMemoryAtleastOnce = false;
+		};
+
+		class task_verify_removed : public BehaviorTree::Task
+		{
+		public:
+			task_verify_removed(const std::string& valueKey, TestTreeStructureResults& testResultLocation)
+				: BehaviorTree::Task("task_verify_remove_memory"),
+				testLocation(testResultLocation), valueKey(valueKey)
+			{
+			}
+
+			virtual void beginTask() override
+			{
+				BehaviorTree::Memory& memory = getMemory();
+				const GameEntity* ptr = memory.getReadValueAs<GameEntity>(valueKey);
+
+				if (ptr == nullptr)
+				{
+					testLocation.requiredCompletedTasks.insert(sp_this());
+				}
+				evaluationResult = true;
+			}
+		private:
+			TestTreeStructureResults& testLocation;
+			std::string valueKey;
+		};
+
+
+		class task_make_key : public BehaviorTree::Task
+		{
+		public:
+			task_make_key(const std::string& valueKey, TestTreeStructureResults& testResultLocation)
+				: BehaviorTree::Task("task_make_key"),
+				testLocation(testResultLocation), valueKey(valueKey)
+			{
+			}
+
+			virtual void beginTask() override
+			{
+				BehaviorTree::Memory& memory = getMemory();
+				//normally you do not want to be doing this at runtime I would argue, perhaps setting
+				//a value, but not creating it. That data should probably be coming from somewhere externally.
+				memory.replaceValue(valueKey, new_sp<MemoryUpdateTester>(0));
+				testLocation.requiredCompletedTasks.insert(sp_this());
+				evaluationResult = true;
+			}
+		private:
+			TestTreeStructureResults& testLocation;
+			std::string valueKey;
+		};
+	/////////////////////////////////////////////////////////////////////////////////////
 	// Testing aborts
 	/////////////////////////////////////////////////////////////////////////////////////
 	class task_must_clear_target : public BehaviorTree::Task
@@ -509,23 +794,25 @@ namespace SA
 		virtual void beginTask() override
 		{
 			BehaviorTree::Memory& memory = getMemory();
-			if (bool* hasTarget = memory.getValueAs<bool>(valueKey)) //this may need to use a scoped auto-update-notifier
+
+			BehaviorTree::ScopedUpdateNotifier<bool> write_hasTarget;
+			if (memory.getWriteValueAs<bool>(valueKey, write_hasTarget))
 			{
-				hasTarget = false;
+				write_hasTarget.get() = false;
 				testLocation.requiredCompletedTasks.insert(sp_this());
 				evaluationResult = true;
 			}
 			else
 			{
+				//can't find key value with expected type, the test isn't designed for this scenario to happen.
+				testLocation.forbiddenTasks.insert(sp_this()); //insert into forbidden tasks to make this kind of error as loud as possible.
 				evaluationResult = false;
 			}
-
 		}
 
 		TestTreeStructureResults& testLocation;
 		std::string valueKey;
 	};
-
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Behavior Tree Test
@@ -831,6 +1118,50 @@ namespace SA
 		);
 		decoratorTest_deferred_basicFunctionality->start();
 		treesToTick.insert(decoratorTest_deferred_basicFunctionality);
+
+		////////////////////////////////////////////////////////
+		// Memory operations test
+		//		-memory reads
+		//		-memory writes
+		//		-memory replaced delegate
+		//		-memory updated delegate
+		//		-has value checks
+		//		-remove value and subscribers
+		//		-remove value leave subscribers
+		//		todo?-subscribing to memory entry that doesn't yet exist?
+		//
+		////////////////////////////////////////////////////////
+		memoryOperationsTestTree =
+			new_sp<Tree>("memory_op_test_tree",
+				new_sp<Sequence>("Sequence", MakeChildren{
+					new_sp<Decorator_OnModifyPass>("decorator_modify", "modifyValueKey", testResults.at("memoryOperationsTestTree"), 
+						new_sp<task_modify_memory>("modifyValueKey", testResults.at("memoryOperationsTestTree"))
+					),
+					new_sp<Decorator_OnReplacePass>("decorator_replace", "replaceValueKey", testResults.at("memoryOperationsTestTree"),
+						new_sp<task_replace_memory>("replaceValueKey", testResults.at("memoryOperationsTestTree"))
+					),
+					new_sp<Decorator_OnReplacePass>("decorator_replace_rt", "futureAdd", testResults.at("memoryOperationsTestTree"),
+						new_sp<Decorator_OnModifyPass>("decorator_modify_rt", "futureAdd", testResults.at("memoryOperationsTestTree"),
+							new_sp<task_make_key>("futureAdd", testResults.at("memoryOperationsTestTree"))
+						)
+					),
+					new_sp<task_remove_memory>("Remove_1", true, testResults.at("memoryOperationsTestTree")),
+					new_sp<task_verify_removed>("Remove_1", testResults.at("memoryOperationsTestTree")),
+					new_sp<task_remove_memory>("Remove_2", false, testResults.at("memoryOperationsTestTree")),
+					new_sp<task_verify_removed>("Remove_2", testResults.at("memoryOperationsTestTree")),
+				}),
+				MemoryInitializer{
+					{"modifyValueKey", new_sp<MemoryUpdateTester>(0)},
+					{"replaceValueKey", new_sp<MemoryUpdateTester>(0)},
+					{ "Remove_1", new_sp<PrimitiveWrapper<int>>(0) },
+					{ "Remove_2", new_sp<MemoryUpdateTester>(0) }
+					//note: future add will be added at runtime by a task, its decorators should respond to its add.
+				}
+			);
+		memoryOperationsTestTree->start();
+		memoryOperationsTestTree->tick(0.1f);
+		memoryOperationsTestTree->stop();
+		testResults.at("memoryOperationsTestTree").bComplete = true;
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Aborting deferred behavior test; basic funcitonality

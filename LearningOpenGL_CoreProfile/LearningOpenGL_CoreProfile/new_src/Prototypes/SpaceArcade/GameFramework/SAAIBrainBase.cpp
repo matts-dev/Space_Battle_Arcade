@@ -31,7 +31,7 @@ namespace SA
 			memory = new_sp<Memory>();
 			for (const auto& kv_pair : initializedMemory)
 			{
-				memory->assignValue(kv_pair.first, kv_pair.second);
+				memory->replaceValue(kv_pair.first, kv_pair.second);
 			}
 
 			//tree structure is now set; prioritize tree nodes (eg for aborting of lower priority sub-trees)
@@ -74,6 +74,10 @@ namespace SA
 			node->notifyTreeEstablished();
 		}
 
+		/*
+			Tip Debugging this method: I recommend putting the currentState and CurrentNode->nodeName in watch window
+			This will give a clear picture of the what the state machine is doing.
+		*/
 		void Tree::tick(float delta_sec)
 		{
 			/* 

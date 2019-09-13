@@ -5,6 +5,7 @@
 #include <optional>
 #include <unordered_map>
 #include <assert.h>
+#include "../Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {
@@ -253,6 +254,13 @@ namespace SA
 			virtual bool result() const;
 		};
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Tree Memory Utils
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		struct MemoryEntry;
+		template<typename T> struct PrimitiveWrapper;
+		template<typename T> class ScopedUpdateNotifier;
+
 		////////////////////////////////////////////////////////
 		// Grants ability to dynamic cast memory of primitive type
 		////////////////////////////////////////////////////////
@@ -263,103 +271,258 @@ namespace SA
 			T value;
 		};
 
+		////////////////////////////////////////////////////////
+		// The entry used for holding memory. This allows memory
+		// values to have auxiliary data such as update delegates 
+		// See Memory class for more information.
+		////////////////////////////////////////////////////////
+		using Modified_MemoryDelegate = MultiDelegate<const std::string& /*key*/, const GameEntity* /*value*/>;
+		using Replaced_MemoryDelegate = MultiDelegate<const std::string& /*key*/, const GameEntity* /*oldValue*/, const GameEntity* /*newValue*/>;
+		struct MemoryEntry : public GameEntity
+		{
+			std::string key;
+			sp<GameEntity> value;
+			Modified_MemoryDelegate onValueModified;
+			Replaced_MemoryDelegate onValueReplaced;
+		};
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// An RAII interface for automatically broadcasting a notify after a value has been replaced.
+		// This is used by tree memory to return writable values that will automatically notify decorators
+		// that values have been modified. This is done when the destructor is called.
+		/////////////////////////////////////////////////////////////////////////////////////
+		template<typename T>
+		class ScopedUpdateNotifier
+		{
+			friend Memory; //prevent user from being able to construct or cache copies of this; only memory has that privilege
+		public:
+			/* Allow users to create an out value. This means users don't need access to moves/copy ctors; those ctors will allow them to cache
+				scoped values which could break things.
+			*/
+			ScopedUpdateNotifier() = default; 
+
+		private:
+			//Forbid users from using any of these constructors; this prevents them from caching values (ie the dumb pointers) that are expected to be released
+			ScopedUpdateNotifier(T* castValue, MemoryEntry* memoryEntry)
+				: castValue(castValue), memoryEntry(memoryEntry)
+			{
+			}
+			ScopedUpdateNotifier(const ScopedUpdateNotifier& copy) = default;
+			ScopedUpdateNotifier(ScopedUpdateNotifier&& move) = default;
+			ScopedUpdateNotifier& operator= (const ScopedUpdateNotifier& copy) = default;
+			ScopedUpdateNotifier& operator= (ScopedUpdateNotifier&& move) = default;
+
+		public:
+			~ScopedUpdateNotifier()
+			{
+				//important that accesssed is checked; if copy-elision isn't used this will broadcast on returning copies
+				if (bAccessed && memoryEntry)
+				{
+					memoryEntry->onValueModified.broadcast(memoryEntry->key, memoryEntry->value.get());
+				}
+			}
+
+			bool hasValue() { return castValue != nullptr; }
+			operator bool() { return hasValue(); }
+
+			T& get()
+			{
+				assert(hasValue());
+				bAccessed = true;
+				return *castValue;
+			}
+		private:
+			//These are "raw" pointers because they should never outlive the scope of this object; if they do then this is being misused (which should be hard to do)
+			T* castValue;
+			MemoryEntry* memoryEntry;
+			bool bAccessed = false;
+		};
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// A behavior tree's memory. The shared state of the tree. All nodes have access
 		// to the tree's memory.
+		//
+		// Design concerns:
+		//		-memory that is accessed for write should broadcast updates to notes when write is done; this is for decorator aborting
+		//			-memory writes use RAII to broadcast when write is complete; 
+		//			-RAII structure uses raw pointers as an optimization
+		//			-RAII structure is designed to not be cachable by client code as it uses raw pointers rather than smart pointers
+		//		-reading values should be const correct if there will be no writing
+		//		-optimize access of arbitrary types; profiling suggested that dynamic_cast is more performant than caching type_index in set
+		//		-class is designed to be const correct; const operations will not modify memory entries, but may modify what is within those entries.
+		//		-"replace value" means the object in memory gets replaced
+		//		-"modify value" means the object in memory has its properties changed, but it is still the same object.
+		//		-users of delegates "modify" and "replace" may not want to resubscribe,
+		//			-hence many memory entries themselves are not replaced, only what they point to.
 		/////////////////////////////////////////////////////////////////////////////////////
 		class Memory : public GameEntity
 		{
 			//hashmap of keys to values
-			std::unordered_map<std::string, sp<GameEntity>> memory;
-
-			///* An RAII interface for automatically broadcasting a notify after a value has been written.*/
-			//template<typename T>
-			//class ScopedUpdateNotifier
-			//{
-			//	friend Memory; //prevent user from being able to construct or cache copies of this; only memory has that privilege
-			//private:
-			//	ScopedUpdateNotifier(T* value, MultiDelegate<>* updateDelegate) :
-			//		value(value)
-			//	{}
-			//	ScopedUpdateNotifier(const ScopedUpdateNotifier& copy) = default;
-			//	ScopedUpdateNotifier(ScopedUpdateNotifier&& move) = default;
-			//	ScopedUpdateNotifier& operator= (const ScopedUpdateNotifier& copy) = default;
-			//	ScopedUpdateNotifier& operator= (ScopedUpdateNotifier&& move) = default;
-			//	
-			//public:
-			//	~ScopedUpdateNotifier()
-			//	{
-			//		if (bAccessed)
-			//		{
-			//			updateDelegate->broadcast();
-			//		}
-			//	}
-			//	bool hasValue() { return value != nullptr; }
-			//	operator bool() { return hasValue(); }
-
-			//	T* get()
-			//	{
-			//		bAccessed = true;
-			//		return value;
-			//	}
-			//private:
-			//	//These are "dumb" pointers because they will never outlive the scope
-			//	T* value;
-			//	MultiDelegate<>* updateDelegate;
-			//	bool bAccessed = false;
-			//};
+			std::unordered_map<std::string, sp<MemoryEntry>> memory;
 
 		public:
 			template<typename T>
-			T* getValueAs(const std::string& key) 
-			{ 
-				auto findResult = memory.find(key);
-				if (findResult != memory.end())
+			const T* getReadValueAs(const std::string& key) const
+			{
+				if (MemoryEntry* memEntry = _getMemoryEntry(key))
 				{
-					sp<GameEntity>& rawResult = findResult->second;
-					if constexpr (std::is_base_of<GameEntity, T>())
+					if (T* castValue = _tryCast<T>(*memEntry))
 					{
-						//profiling suggests just using dynamic cast is faster than caching rtti info in hash_set<std::type_index> and bypassing with static casts. 
-						return dynamic_cast<T*>(rawResult.get());
-					}
-					else
-					{
-						if (PrimitiveWrapper<T>* wrappedObj = dynamic_cast<PrimitiveWrapper<T>*>(rawResult.get()))
-						{
-							return &(wrappedObj->value);
-						}
+						return castValue;
 					}
 				}
 				return nullptr;
 			}
 
-			//template<typename T>
-			//ScopedUpdateNotifier<T> getWriteValueAs(const std::string& key)
-			//{
-			//	T* value = getValueAs(key);
-			//	return ScopedUpdateNotifier<T>(value, nullptr);
-			//}
+			/* This does not return the scoped wrapper because that requires exposing move/copy ctor; which could accidently be 
+				abused to cache this value and hence allow dangling pointers */
+			template<typename T>
+			bool getWriteValueAs(const std::string& key, ScopedUpdateNotifier<T>& outWriteAccess)
+			{
+				if (MemoryEntry* memEntry = _getMemoryEntry(key))
+				{
+					if (T* castValue = _tryCast<T>(*memEntry))
+					{
+						outWriteAccess = ScopedUpdateNotifier<T>(castValue, memEntry);
+						return true;
+					}
+				}
+				
+				//default state of out variable is appropriate if we could not successfully get write value as type requested.
+				return false;
+			}
+
+			/** Warning: modifying values in response to this delegate will lead to infinite recursion; if required use next tick */
+			Modified_MemoryDelegate& getModifiedDelegate(const std::string& key)
+			{
+				MemoryEntry& memEntry =  _findOrMakeMemoryEntry(key);
+				return memEntry.onValueModified;
+			}
+
+			/** Warning: replacing values in response to this delegate will lead to infinite recursion; if required use next tick */
+			Replaced_MemoryDelegate& getReplacedDelegate(const std::string& key)
+			{
+				MemoryEntry& memEntry = _findOrMakeMemoryEntry(key);
+				return memEntry.onValueReplaced;
+			}
 
 			template<typename T>
-			T* assignValue(const std::string& key, const sp<T>& value)
+			T* replaceValue(const std::string& key, const sp<T>& newValue)
 			{
 				static_assert(std::is_base_of<GameEntity, T>(), "Value must be of GameEntity. For primitive/integral values, use provided PrimitiveWrapper");
-				memory.insert({ key, value });
-				return value.get();
+				
+				sp<MemoryEntry> memoryEntry = nullptr;
+				sp<GameEntity> oldValue = nullptr;
+
+				auto findResult = memory.find(key);
+				if (findResult != memory.end())
+				{
+					memoryEntry = findResult->second;
+					oldValue = memoryEntry->value;
+				}
+				else
+				{
+					memoryEntry = new_sp<MemoryEntry>();
+					memoryEntry->key = key;
+				}
+				memoryEntry->value = newValue;
+				memory.insert({ key, memoryEntry });
+
+				//must take care that old value is not ref collected before this; storing old value as shared pointer will do the trick
+				memoryEntry->onValueReplaced.broadcast(key, oldValue.get(), newValue.get());
+				memoryEntry->onValueModified.broadcast(key, memoryEntry->value.get());
+
+				return newValue.get();
 			}
 
 			bool hasValue(const std::string& key)
 			{
-				return memory.find(key) != memory.end();
+				auto findResult = memory.find(key);
+				if (findResult != memory.end())
+				{
+					return findResult->second->value.get() != nullptr;
+				}
+				return false;
 			}
 
+			/** 
+				Prefer this method for removing values; it will let listeners know that value has been replaced. 
+				It will also not corrupt listeners to memory entries.
+			*/
 			bool removeValue(const std::string& key)
 			{
+				//we do not want to clear subscribers to memory value modified/replaced. So insert a null.
+				MemoryEntry* MemEntry = _getMemoryEntry(key);
+				bool bHadMemValue = MemEntry ? (MemEntry->value != nullptr) : false;
+				bool bNewValueIsNull = replaceValue(key, sp<GameEntity>{nullptr}) == nullptr; //replace value this will broadcast events
+				return bHadMemValue && bNewValueIsNull;
+			}
+
+			/** 
+				Avoid using this method, prefer removeValue so delegates are not lost; this will have sideeffects on decorators
+				Removing entry will remove all delegate listeners; this option should NOT be checked generally.
+				It mostly exists in case a task wants to create new memory values at run time then clean them up.
+				The normal behavior tree workflow is to specify all the memory that will be used up front.
+				Then remove values as it sees fit, but leaving delegate listeners in tack so they can react
+			*/
+			bool eraseEntry(const std::string& key)
+			{
+				//this path should be avoided in 99% of cases
+				// /*onErasing.broadcast(key);*/	//I want to avoid making this a thing because then users will have to subscrib to it to be safe
+				//in reality removing they memory entry should be discouraged unless under very niche scenarios (task creates and them)
+				//in fact, this method should probably be removed. But then there is a way to create memory entries but no way to remove them, which seems strange.
+				removeValue(key);
 				return memory.erase(key) > 0;
+			}
+
+		private:
+			inline MemoryEntry* _getMemoryEntry(const std::string key) const
+			{
+				auto findResult = memory.find(key);
+				if (findResult != memory.end())
+				{
+					return findResult->second.get();
+				}
+				return nullptr;
+			}
+
+			template<typename T>
+			inline T* _tryCast(MemoryEntry& memoryEntry) const
+			{
+				if constexpr (std::is_base_of<GameEntity, T>())
+				{
+					//profiling suggests just using dynamic cast is faster than caching rtti info in hash_set<std::type_index> and bypassing with static casts. 
+					return dynamic_cast<T*>(memoryEntry.value.get());
+				}
+				else
+				{
+					if (PrimitiveWrapper<T>* wrappedObj = dynamic_cast<PrimitiveWrapper<T>*>(memoryEntry.value.get()))
+					{
+						return &(wrappedObj->value);
+					}
+				}
+				return nullptr;
+			}
+
+			MemoryEntry& _findOrMakeMemoryEntry(const std::string& key)
+			{
+				auto findResult = memory.find(key);
+				if (findResult != memory.end())
+				{
+					return *(findResult->second.get());
+				}
+				else
+				{
+					replaceValue<GameEntity>(key, sp <GameEntity>{ nullptr });
+					auto findNewValue = memory.find(key);
+					assert(findNewValue != memory.end());
+					return *(findNewValue->second.get());
+				}
 			}
 		};
 
 		using MemoryInitializer = std::vector<std::pair<std::string, sp<GameEntity>>>;
+		using MakeChildren = std::vector<sp<NodeBase>>;
 		enum class ExecutionState : uint32_t { STARTING, POPPED_CHILD, PUSHED_CHILD, CHILD_EXECUTING };
 		struct ResumeStateData
 		{
