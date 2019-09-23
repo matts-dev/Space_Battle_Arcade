@@ -57,9 +57,34 @@ namespace SA
 			{
 				bExecutingTree = false;
 				resumeData.reset();
+				abortPriority.reset();
 
 				//#TODO clean up and stop tree
+				//#todo reset all nodes and clear execution stack
+				
 			}
+		}
+
+		void Tree::abort(uint32_t priority)
+		{
+			//aborting is done in state machine tick. That will clear the optional.
+			// design considerations
+			//		-the outside world probably shouldn't be able to query current abort priority; that will allow some needlessly complex logic like "stop aborting if someone else decided to abort"; those kinds of things should be addressed with the tree structure.
+			//		-do not stomp previous aborts that have a higher priority (lower number is higher in priority)
+
+			if (abortPriority.has_value()
+				&& abortPriority.value() <= priority)	//short-circuit evaluation
+			{
+				return;									//already aborting a higher priority, do not stomp this value.
+			}
+
+			abortPriority = priority;
+		}
+
+		uint32_t Tree::getCurrentPriority()
+		{
+			assert(executionStack.size() > 0);
+			return executionStack.back()->getPriority();
 		}
 
 		void Tree::possessNodes(const sp<NodeBase>& node, uint32_t& currentPriority)
@@ -108,10 +133,13 @@ namespace SA
 					uint32_t nodesVisited = 0;
 					bool bReachedMaxNodesThisTick = false;
 
+					//process any aborts before we enter loop; covers case where aborts happened externally to tree execution.
+					processAborts(currentNode, currentState);
+
 					while(!currentNode->isProcessing() && !bReachedMaxNodesThisTick)
 					{
 						//USE PREVIOUS STATE
-						if (currentState == ExecutionState::POPPED_CHILD) 
+						if (currentState == ExecutionState::POPPED_CHILD)	//DEBUGGING: breakpoint here and watch "currentNode->nodeName" and "currentState" and continue to step through tree
 						{ 
 							currentNode->notifyCurrentChildResult(bNodeCompletedSuccessfully);
 						} 
@@ -126,6 +154,7 @@ namespace SA
 							if (NodeBase* child = currentNode->getNextChild())
 							{
 								executionStack.push_back(child);
+								child->bOnExecutionStack = true; //#suggested it may be worth-while to have a "onPushedToExecutionStack" and "onPopedFromStack" methods that do this and other things
 								currentState = ExecutionState::PUSHED_CHILD;
 								currentNode = child;
 								nodesVisited++;
@@ -146,6 +175,9 @@ namespace SA
 						{
 							currentState = ExecutionState::CHILD_EXECUTING;
 						}
+
+						//ABORT CHECK; this needs happen within loop because a "processing" node will sleep the loop.
+						processAborts(currentNode, currentState);
 					}
 					
 					resumeData = ResumeStateData{};
@@ -153,6 +185,27 @@ namespace SA
 					resumeData->bChildResult = bNodeCompletedSuccessfully;
 
 				}
+			}
+		}
+
+		void Tree::processAborts(NodeBase*& inOut_CurrentNode, ExecutionState& inOut_currentState)
+		{
+			assert(inOut_CurrentNode != nullptr);
+
+			if (abortPriority.has_value())
+			{
+				while (inOut_CurrentNode->getPriority() >= abortPriority.value()
+						&& executionStack.size() > 1)
+				{
+					inOut_CurrentNode->handleNodeAborted();
+					inOut_CurrentNode->resetNode();
+					if (executionStack.size() > 1) { executionStack.pop_back(); }
+					inOut_CurrentNode = executionStack.back();
+				}
+				abortPriority.reset();
+
+				inOut_CurrentNode->resetNode();
+				inOut_currentState = ExecutionState::PUSHED_CHILD; 
 			}
 		}
 
@@ -204,6 +257,7 @@ namespace SA
 		void MultiChildNode::resetMultiNode()
 		{
 			/* non virtual; intended to be safe to call within constructor; be careful adding virtual calls here*/
+			NodeBase::resetNode();
 			childIdx = 0;
 			childResults = std::vector<bool>(children.size(), false);
 			childHasReturned = std::vector<bool>(children.size(), false);
@@ -376,6 +430,7 @@ namespace SA
 
 		void Service::resetNode()
 		{
+			NodeBase::resetNode();
 			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
 
 			//remove binding from delegate to be extra sure this will not be called
@@ -432,6 +487,31 @@ namespace SA
 		{
 			assert(bStartedDecoratorEvaluation);
 			return SingleChildNode::hasPendingChildren() && conditionalResult.has_value() && conditionalResult.value();
+		}
+
+		void Decorator::abortTree(AbortType abortType)
+		{
+			Tree& tree = getTree();
+
+			if (abortType == AbortType::ChildTree || abortType == AbortType::ChildAndLowerPriortyTrees)
+			{
+				if (isOnExecutionStack())
+				{
+					tree.abort(getPriority());
+					return; //don't need to execute code to abort lower priorities because we're already aborting them
+				}
+			}
+			if (abortType == AbortType::LowerPriortyTrees || abortType == AbortType::ChildAndLowerPriortyTrees)
+			{
+				bool bIsOnChildTree = isOnExecutionStack();
+				bool bIsOnLowerPriorityTree = tree.getCurrentPriority() > getPriority();
+				if (!bIsOnChildTree && bIsOnLowerPriorityTree)
+				{
+					//checking if this node is on the execution path will prevent
+					//it from aborting its children, technically priority + 1 is its first child
+					tree.abort(getPriority() + 1);
+				}
+			}
 		}
 
 		void Decorator::resetNode()

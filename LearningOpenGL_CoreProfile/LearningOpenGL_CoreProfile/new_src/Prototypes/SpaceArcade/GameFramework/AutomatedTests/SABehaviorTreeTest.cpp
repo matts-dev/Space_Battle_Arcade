@@ -23,11 +23,19 @@ namespace SA
 			: BehaviorTree::Task("task_must_fail"),
 			testLocation(testResultLocation){}
 
+		virtual void notifyTreeEstablished() override
+		{
+			/*erase once passing, not all tests make use of this feature*/
+			testLocation.forbiddenTasks.insert(sp_this());
+		}
+
 		virtual void beginTask() override
 		{
 			evaluationResult = false;
 			testLocation.requiredCompletedTasks.insert(sp_this());
+			testLocation.forbiddenTasks.erase(sp_this());
 		}
+		virtual void handleNodeAborted() override {}
 
 		TestTreeStructureResults& testLocation;
 	};
@@ -43,11 +51,18 @@ namespace SA
 			: BehaviorTree::Task("task_must_succeed"), 
 			testLocation(testResultLocation) {}
 
+		virtual void notifyTreeEstablished() override  
+		{
+			/*erase once passing, not all tests make use of this feature*/
+			testLocation.forbiddenTasks.insert(sp_this());
+		}
 		virtual void beginTask() override
 		{
 			evaluationResult = true;
 			testLocation.requiredCompletedTasks.insert(sp_this());
+			testLocation.forbiddenTasks.erase(sp_this());
 		}
+		virtual void handleNodeAborted() override {}
 
 		TestTreeStructureResults& testLocation;
 	};
@@ -69,6 +84,7 @@ namespace SA
 			evaluationResult = true; //result doesn't really matter
 			testLocation.forbiddenTasks.insert(sp_this());
 		}
+		virtual void handleNodeAborted() override {}
 		TestTreeStructureResults& testLocation;
 	};
 
@@ -90,6 +106,7 @@ namespace SA
 			bHasFailedFirst = true;
 			testLocation.requiredCompletedTasks.insert(sp_this());
 		}
+		virtual void handleNodeAborted() override {}
 
 		bool bHasFailedFirst = false;
 		TestTreeStructureResults& testLocation;
@@ -133,6 +150,17 @@ namespace SA
 		{
 			evaluationResult = shouldSucceed;
 			testLocation.requiredCompletedTasks.insert(sp_this());
+		}
+		
+		virtual void handleNodeAborted() override 
+		{
+			//deferred tasks should clean up their timers
+			const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+			if (currentLevel)
+			{
+				const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+				worldTimeManager->removeTimer(timerDelegate);
+			}
 		}
 
 		float deferredTime = 2.0f;
@@ -207,6 +235,8 @@ namespace SA
 				}
 			}
 		}
+	private:
+		virtual void handleNodeAborted() override {}
 
 	private:
 		std::string varKey;
@@ -269,6 +299,8 @@ namespace SA
 				}
 			}
 		}
+	private:
+		virtual void handleNodeAborted() override {}
 
 	private:
 		std::string varKey;
@@ -344,7 +376,9 @@ namespace SA
 		}
 
 		//#todo depending on how aborts get implemented, this may need to be an abort method; probably better so super doesn't have to be called.
-		virtual void resetNode() override
+		//#todo there should probably be a an abort virtual; reseting bIsOnExeuctionStack is now down at node-base level and users must override call super to prevent breaking state machine
+		//virtual void resetNode() override
+		virtual void clearTimers()
 		{
 			const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
 			if (currentLevel)
@@ -354,6 +388,12 @@ namespace SA
 			}
 
 			BehaviorTree::Task::resetNode();
+		}
+
+	private:
+		virtual void handleNodeAborted() override 
+		{
+			clearTimers();
 		}
 
 	private:
@@ -417,12 +457,13 @@ namespace SA
 			}
 			evaluationResult = false;
 		}
+	private:
+		virtual void handleNodeAborted() override {}
 
 	private:
 		std::string valKey;
 		int goalValue = -1;
 		TestTreeStructureResults& testResultLocation;
-		sp<MultiDelegate<>> timerDelegate;
 	};
 
 	////////////////////////////////////////////////////////
@@ -450,6 +491,8 @@ namespace SA
 				conditionalResult = false;
 			}
 		}
+	private:
+		virtual void handleNodeAborted() override {}
 
 	private:
 		std::string boolKeyValue;
@@ -464,6 +507,13 @@ namespace SA
 		{
 		}
 
+	protected:
+		virtual void postConstruct() override
+		{
+			BehaviorTree::Decorator::postConstruct();
+			timerDelegate = new_sp<MultiDelegate<>>();
+		}
+
 		virtual void startBranchConditionCheck()
 		{
 			static LevelSystem& lvlSystem = GameBase::get().getLevelSystem();
@@ -471,7 +521,6 @@ namespace SA
 			if (currentLevel)
 			{
 				const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
-				sp<MultiDelegate<>> timerDelegate = new_sp<MultiDelegate<>>();
 				timerDelegate->addWeakObj(sp_this(), &Decorator_Deferred_BoolReader::handleDeferredCheckOver);
 				worldTimeManager->createTimer(timerDelegate, 0.25f);
 			}
@@ -498,7 +547,20 @@ namespace SA
 		}
 
 	private:
+		virtual void handleNodeAborted() override 
+		{
+			static LevelSystem& lvlSystem = GameBase::get().getLevelSystem();
+			const sp<LevelBase>& currentLevel = lvlSystem.getCurrentLevel();
+			if (currentLevel)
+			{
+				const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+				worldTimeManager->removeTimer(timerDelegate);
+			}
+		}
+
+	private:
 		std::string boolKeyValue;
+		sp<MultiDelegate<>> timerDelegate;
 	};
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -535,6 +597,8 @@ namespace SA
 					evaluationResult = false;
 				}
 			}
+		private:
+			virtual void handleNodeAborted() override {}
 
 		private:
 			TestTreeStructureResults& testLocation;
@@ -571,7 +635,8 @@ namespace SA
 					evaluationResult = false;
 				}
 			}
-
+		private:
+			virtual void handleNodeAborted() override {}
 		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
@@ -623,6 +688,8 @@ namespace SA
 					testLocation.forbiddenTasks.insert(sp_this());
 				}
 			}
+		private:
+			virtual void handleNodeAborted() override {}
 		private:
 			std::string keyValue;
 			TestTreeStructureResults& testLocation;
@@ -676,6 +743,8 @@ namespace SA
 				testLocation.forbiddenTasks.insert(sp_this());
 			}
 		private:
+			virtual void handleNodeAborted() override {}
+		private:
 			std::string keyValue;
 			const GameEntity* cachedStartValue = nullptr;
 			TestTreeStructureResults& testLocation;
@@ -723,7 +792,8 @@ namespace SA
 					testLocation.requiredCompletedTasks.insert(sp_this());
 				}
 			}
-
+		private:
+			virtual void handleNodeAborted() override {}
 		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
@@ -752,6 +822,8 @@ namespace SA
 				evaluationResult = true;
 			}
 		private:
+			virtual void handleNodeAborted() override {}
+		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
 		};
@@ -776,43 +848,236 @@ namespace SA
 				evaluationResult = true;
 			}
 		private:
+			virtual void handleNodeAborted() override {}
+		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
 		};
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Testing aborts
 	/////////////////////////////////////////////////////////////////////////////////////
-	class task_must_clear_target : public BehaviorTree::Task
+	//class task_must_clear_target : public BehaviorTree::Task
+	//{
+	//public:
+	//	task_must_clear_target(const std::string& valueKey, TestTreeStructureResults& testResultLocation)
+	//		: BehaviorTree::Task("task_must_clear_target"),
+	//		testLocation(testResultLocation), valueKey(valueKey)
+	//	{
+	//	}
+
+	//	virtual void beginTask() override
+	//	{
+	//		BehaviorTree::Memory& memory = getMemory();
+
+	//		BehaviorTree::ScopedUpdateNotifier<bool> write_hasTarget;
+	//		if (memory.getWriteValueAs<bool>(valueKey, write_hasTarget))
+	//		{
+	//			write_hasTarget.get() = false;
+	//			testLocation.requiredCompletedTasks.insert(sp_this());
+	//			evaluationResult = true;
+	//		}
+	//		else
+	//		{
+	//			//can't find key value with expected type, the test isn't designed for this scenario to happen.
+	//			testLocation.forbiddenTasks.insert(sp_this()); //insert into forbidden tasks to make this kind of error as loud as possible.
+	//			evaluationResult = false;
+	//		}
+	//	}
+
+	//	TestTreeStructureResults& testLocation;
+	//	std::string valueKey;
+	//};
+
+	enum TestAbortEvent : unsigned char { Modify, Replace};
+	class Decorator_AbortOn : public BehaviorTree::Decorator
 	{
 	public:
-		task_must_clear_target(const std::string& valueKey, TestTreeStructureResults& testResultLocation)
-			: BehaviorTree::Task("task_must_clear_target"),
-			testLocation(testResultLocation), valueKey(valueKey)
+		Decorator_AbortOn(TestAbortEvent abortEvent,const std::string& name,const std::string keyValue,
+			BehaviorTree::Decorator::AbortType abortType, const sp<NodeBase>& child) 
+			: BehaviorTree::Decorator(name, child), 
+			keyValue(keyValue), abortEvent(abortEvent), 
+			abortType(abortType)
 		{
 		}
 
-		virtual void beginTask() override
+	private:
+		virtual void startBranchConditionCheck()
 		{
-			BehaviorTree::Memory& memory = getMemory();
+			//once we've aborted, don't let this branch execute anymore. prevents cyclic aborting behavior and models what I believe the use cases of abort to be.
+			conditionalResult = !bHasAborted;
+		}
 
-			BehaviorTree::ScopedUpdateNotifier<bool> write_hasTarget;
-			if (memory.getWriteValueAs<bool>(valueKey, write_hasTarget))
+		virtual void notifyTreeEstablished() override
+		{
+			//#optimize decorators could start/stop listening to events if they are not relevant. But ATOW the abort
+			//function itself ignores aborts that are irrelevant (eg trying to abort self when not on execution stack).
+			//this seems simpler for the end user because they can always call with the type they care about and things
+			//will just work. Users can just subscribe the delegate they care about without worrying about managing it.
+			if (abortEvent == TestAbortEvent::Modify)
 			{
-				write_hasTarget.get() = false;
-				testLocation.requiredCompletedTasks.insert(sp_this());
-				evaluationResult = true;
+				getMemory().getModifiedDelegate(keyValue).addWeakObj(sp_this(), &Decorator_AbortOn::handleValueModified);
 			}
 			else
 			{
-				//can't find key value with expected type, the test isn't designed for this scenario to happen.
-				testLocation.forbiddenTasks.insert(sp_this()); //insert into forbidden tasks to make this kind of error as loud as possible.
-				evaluationResult = false;
+				getMemory().getReplacedDelegate(keyValue).addWeakObj(sp_this(), &Decorator_AbortOn::handleValueReplaced);
+			}
+			cachedStartValue = getMemory().getReadValueAs<GameEntity>(keyValue);
+
+		}
+		void handleValueModified(const std::string& key, const GameEntity* updatedValue)
+		{
+			if (key == keyValue) 
+			{
+				abortTree(abortType);
+				bHasAborted = true;
 			}
 		}
-
-		TestTreeStructureResults& testLocation;
-		std::string valueKey;
+		void handleValueReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+		{
+			if (key == keyValue)
+			{
+				abortTree(abortType);
+				bHasAborted = true;
+			}
+		}
+	private:
+		virtual void handleNodeAborted() override {}
+	private:
+		std::string keyValue;
+		const GameEntity* cachedStartValue = nullptr;
+		BehaviorTree::Decorator::AbortType abortType;
+		TestAbortEvent abortEvent;
+		bool bHasAborted = false;
 	};
+
+	// decorator that make sure the value on the memory tester object is not equal to 1; 
+	// this can be used to shut off paths you only want be taken once (eg breaking cycles of aborts in testing)
+	// use task_make_memory_one to change this memory value
+	class Decorator_is_not_one : public BehaviorTree::Decorator
+	{
+	public:
+		Decorator_is_not_one(const std::string& name, const std::string keyValue, const sp<NodeBase>& child)
+			: BehaviorTree::Decorator(name, child), keyValue(keyValue)
+		{}
+
+	private:
+		virtual void startBranchConditionCheck()
+		{
+			if (const MemoryUpdateTester* readValue = getMemory().getReadValueAs<MemoryUpdateTester>(keyValue))
+			{
+				conditionalResult = readValue->myValue != 1;
+			}
+			else
+			{
+				//shouldn't ever hit this; if so this is a test design issue; not a test failure issue
+				log("LogBehaviorTreeTests", LogLevel::LOG_ERROR, "Decorator_is_not_one cannot find its assigned memory! this should never happen");
+				log("LogBehaviorTreeTests", LogLevel::LOG_ERROR, keyValue.c_str());
+				conditionalResult = false;
+			}
+		}
+	private:
+		virtual void handleNodeAborted() override {}
+		
+	private:
+		std::string keyValue;
+	};
+
+	//task that sets memory to the value of 1 to direct a tree's path after this has been hit.
+	class task_make_memory_one : public BehaviorTree::Task
+	{
+	public:
+		task_make_memory_one(const std::string& key, TestTreeStructureResults& testResultLocation)
+			: BehaviorTree::Task("task_make_memory_one"),
+			varKey(key),
+			testLocation(testResultLocation)
+		{
+		}
+
+	private:
+		virtual void notifyTreeEstablished() override
+		{
+			//this will be removed once the task is executed; this will make it easy to identify that this task is failing
+			testLocation.forbiddenTasks.insert(sp_this());
+		}
+
+	public:
+		virtual void beginTask() override
+		{
+			BehaviorTree::Memory& mem = getMemory();
+
+			BehaviorTree::ScopedUpdateNotifier<MemoryUpdateTester> writeValue;
+			if (mem.getWriteValueAs<MemoryUpdateTester>(varKey, writeValue))
+			{
+				MemoryUpdateTester& toUpdate = writeValue.get();
+				toUpdate.myValue = 1;
+				testLocation.forbiddenTasks.erase(sp_this());
+				testLocation.requiredCompletedTasks.insert(sp_this());
+				evaluationResult = true;
+			}
+		}
+	private:
+		virtual void handleNodeAborted() override {}
+	private:
+		std::string varKey;
+		TestTreeStructureResults& testLocation;
+	};
+
+	class Decorator_AlwaysPass_AbortOn : public BehaviorTree::Decorator
+	{
+	public:
+		Decorator_AlwaysPass_AbortOn(TestAbortEvent abortEvent, const std::string& name, const std::string keyValue,
+			BehaviorTree::Decorator::AbortType abortType, const sp<NodeBase>& child)
+			: BehaviorTree::Decorator(name, child),
+			keyValue(keyValue), abortEvent(abortEvent),
+			abortType(abortType)
+		{
+		}
+
+	private:
+		virtual void startBranchConditionCheck()
+		{
+			conditionalResult = true;
+		}
+
+		virtual void notifyTreeEstablished() override
+		{
+			if (abortEvent == TestAbortEvent::Modify)
+			{
+				getMemory().getModifiedDelegate(keyValue).addWeakObj(sp_this(), &Decorator_AlwaysPass_AbortOn::handleValueModified);
+			}
+			else
+			{
+				getMemory().getReplacedDelegate(keyValue).addWeakObj(sp_this(), &Decorator_AlwaysPass_AbortOn::handleValueReplaced);
+			}
+			cachedStartValue = getMemory().getReadValueAs<GameEntity>(keyValue);
+
+		}
+		void handleValueModified(const std::string& key, const GameEntity* updatedValue)
+		{
+			if (key == keyValue)
+			{
+				abortTree(abortType);
+				bHasAborted = true;
+			}
+		}
+		void handleValueReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+		{
+			if (key == keyValue)
+			{
+				abortTree(abortType);
+				bHasAborted = true;
+			}
+		}
+	private:
+		virtual void handleNodeAborted() override {}
+	private:
+		std::string keyValue;
+		const GameEntity* cachedStartValue = nullptr;
+		BehaviorTree::Decorator::AbortType abortType;
+		TestAbortEvent abortEvent;
+		bool bHasAborted = false;
+	};
+
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Behavior Tree Test
@@ -1164,15 +1429,112 @@ namespace SA
 		testResults.at("memoryOperationsTestTree").bComplete = true;
 
 		/////////////////////////////////////////////////////////////////////////////////////
-		// Aborting deferred behavior test; basic funcitonality
+		// Aborting deferred behavior test; basic funcitonality. Aborts are not quite the same
+		//	as some other common behavior tree implementations. I may change this but these aborts
+		//	are far simpler to understand and work with; hopefully there will not be special cases
+		//	where they do not work like some other implementations. The primary difference (subject to change)
+		//  is that aborts will not skip to the node that cause the abort. If an abort happens, the execution
+		//  path will be wound back so that the node is aborted. The new node of the execution path will
+		//  restart from the beginning. So if this is a selector, it will start with its highest priority 
+		//  child first, not the child that caused the abort. Nor will it navigate through the tree to find
+		//  the child that caused the abort. If this behavior is desired, then I believe it can be achived 
+		//  with the use of decorator nodes on the higher priority nodes.
+		//		-tests that aborts cause nodes to return false
+		//		-tests that aborts allow parent node of the abortee to continue as if it returned false
+		//		-non-active decorator does not cause aborts
 		/////////////////////////////////////////////////////////////////////////////////////
-		//abortTest_basicFunctionality =
-		//	new_sp<Tree>("abort-basic-test-root",
-		//		new_sp<Decorator_BoolReader>("has_target_decorator", "bHasTargetKey",	//TODO this needs updating to use a decorator that aborts
-		//			new_sp<task_must_clear_target>("bHasTargetKey", testResults.at(""))
-		//		)
-		//		new_sp<
-		//	);
+		//comment out sections of this tree to test individual features
+		abortTest_basicFunctionality =
+			new_sp<Tree>("abort-basic-test-root",
+				new_sp<Selector>("Top-Selector", MakeChildren{
+					//test abort returns false so selector will continue going through its children
+					new_sp<Decorator_AbortOn>(TestAbortEvent::Modify, "decorator_simple_abort_return", "modify_A", Decorator::AbortType::ChildTree,
+						new_sp<Sequence>("sequence_aom", MakeChildren{
+							//new_sp<task_wait>("task_wait_aom", 0.25f),		//wait before modifying
+							new_sp<task_modify_memory>("modify_A", testResults.at("abortTest_basicFunctionality")),
+							new_sp<task_never_execute>(testResults.at("abortTest_basicFunctionality"))
+						})
+					),
+					//test that aborting works with deeply nested nodes
+					new_sp<Decorator_AbortOn>(TestAbortEvent::Modify, "decorator_deep_abort", "modify_B", Decorator::AbortType::ChildTree,
+						new_sp<Selector>("aom-deep-select-1", MakeChildren{
+							new_sp<task_must_fail>(testResults.at("abortTest_basicFunctionality")),
+							new_sp<Sequence>("aom-deep-sequence-1", MakeChildren{
+								new_sp<Selector>("aom-deep-select-2", MakeChildren{
+									new_sp<task_modify_memory>("modify_B", testResults.at("abortTest_basicFunctionality"))
+								}),
+								new_sp<task_never_execute>(testResults.at("abortTest_basicFunctionality")), //decorator_deep_abort abort should prevent this from being executing
+							})
+						})
+					),
+					//test that aborting on replace functions; this will use same abort behavior so if nesting work for abort on modify, it will work here.
+					new_sp<Decorator_AbortOn>(TestAbortEvent::Replace,"decorator_test_replaceAbort", "modify_C", Decorator::AbortType::ChildTree,
+						new_sp<Sequence>("sequence_abort_on_replace", MakeChildren{
+							new_sp<task_replace_memory>("modify_C", testResults.at("abortTest_basicFunctionality")),
+							new_sp<task_never_execute>(testResults.at("abortTest_basicFunctionality"))
+						})
+					),
+					//test that non-active aborts (ie those that abort only child) do not abort (may need tweaking with special decorator params, sometimes we may want this)
+					new_sp<Sequence>("sequence-nonactiveaborts", MakeChildren{
+						new_sp<Decorator_AbortOn>(TestAbortEvent::Modify, "decorator_AOM_should_not_abort", "modify_late_abort_test", Decorator::AbortType::ChildTree,
+							new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality"))
+						),
+						new_sp<task_modify_memory>("modify_late_abort_test", testResults.at("abortTest_basicFunctionality")), //will cause potential abort, but should not since this is not a subnode
+						new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")),
+						new_sp<task_must_fail>(testResults.at("abortTest_basicFunctionality")) // fail so the top-level selector will continue to further tests
+					}),
+					//test that lower priority aborts do not abort higher priority
+					new_sp<Sequence>("sequence_lowerpriority_abortinghigherpriority", MakeChildren{
+						//higher priority
+						new_sp<Sequence>("high_pri_sequence", MakeChildren{
+							new_sp<task_modify_memory>("high_pri_memory", testResults.at("abortTest_basicFunctionality")),
+							new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")) //make sure abort on lower priority doesn't prevent this
+						}),
+						//lower priority
+						new_sp<Decorator_AlwaysPass_AbortOn>(TestAbortEvent::Modify, "decorator_abort_in_low_pri", "high_pri_memory", Decorator::AbortType::ChildTree,
+							new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")) //#caution# always_pass decorator can cause abort cycles if you cause an abort here; always_pass decorator used to make this test simple because the decorator will try to abort... but it will not have the priority to cause an abort.
+						),
+						new_sp<task_must_fail>(testResults.at("abortTest_basicFunctionality")) //fail so sequence continues
+					}),
+					//test abort lower priority mode works and successfully will abort lower priority nodes
+					new_sp<Sequence>("sequence_abort_lower_pri", MakeChildren{
+						//higher priority
+						new_sp<Decorator_is_not_one>("dec_is_not_one_lowerPriTest1", "abort_gate_lowerPriTest", //stop abort cycle
+							new_sp<Decorator_AbortOn>(TestAbortEvent::Modify, "decorator_abort_lowerpri", "low_pri_memory", Decorator::AbortType::LowerPriortyTrees,
+								new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality"))
+							)
+						),
+						//lower priority
+						new_sp<Decorator_is_not_one>("dec_is_not_one_lowerPriTest2", "abort_gate_lowerPriTest", //stop abort cycle
+							new_sp<Sequence>("low_pri_sequence", MakeChildren{
+								new_sp<task_make_memory_one>("abort_gate_lowerPriTest", testResults.at("abortTest_basicFunctionality")), //set flag to stop abort cycle; must come before abort
+								new_sp<task_modify_memory>("low_pri_memory", testResults.at("abortTest_basicFunctionality")),
+								new_sp<task_never_execute>(testResults.at("abortTest_basicFunctionality")) //higher pri tree should  abort this
+							})
+						)
+					}),
+					//make sure that aborts are not preventing this selector from continuing, they should be aborting the decorated subtrees
+					new_sp<Sequence>("Sequence-abort-must-allow-selector-continue", MakeChildren{
+						new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")),	//aborting in sequence_aom should allow this to continue
+						new_sp<task_must_fail>(testResults.at("abortTest_basicFunctionality"))	// fail so the top-selector to continue at test other abort features.
+					})
+				}),
+				MemoryInitializer{
+					{"modify_A", new_sp<MemoryUpdateTester>(0)},
+					{"modify_B", new_sp<MemoryUpdateTester>(0)},
+					{"modify_C", new_sp<MemoryUpdateTester>(0)},
+					{"modify_late_abort_test", new_sp<MemoryUpdateTester>(0)},
+					{"high_pri_memory", new_sp<MemoryUpdateTester>(0) },
+					{"low_pri_memory", new_sp<MemoryUpdateTester>(0) },
+					{"abort_gate_lowerPriTest", new_sp<MemoryUpdateTester>(0) }
+				}
+			);
+		//#TODO TEST abort lower and child; should be same tests as above but just replace decorator type.
+		abortTest_basicFunctionality->start();
+		abortTest_basicFunctionality->tick(0.1f);
+		abortTest_basicFunctionality->tick(0.1f);
+		abortTest_basicFunctionality->stop();
+		testResults.at("abortTest_basicFunctionality").bComplete = true;
 
 	}
 

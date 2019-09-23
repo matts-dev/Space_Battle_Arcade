@@ -171,27 +171,26 @@ namespace SA
 					task_moveToLoc
 		*/
 		using namespace BehaviorTree;
-		sp<Tree> bt = 
-			new_sp<Tree>("tree-root",
-				new_sp<Service>("service_find_target", 0.1f, true,
-					new_sp<Selector>("selector_hasTarget", std::vector<sp<NodeBase>>{
-						new_sp<Decorator>("decorator_hastarget", 
-							new_sp<Selector>("selector_hastarget", std::vector<sp<NodeBase>>{
-								new_sp<Task>("task_move")
-							})
-						),
-						new_sp<Decorator>("decorator_notarget",
-							new_sp<Sequence>("sequence_moveToRandomLoc", std::vector<sp<NodeBase>>{
-								new_sp<Task>("task_FindRandomLoc"),
-								new_sp<Task>("task_RotateTowardsLoc"),
-								new_sp<Task>("task_move")
-							})
-						)
-					})
-				)
-			);
-
-		behaviorTree = bt;
+		//sp<Tree> bt = 
+		//	new_sp<Tree>("tree-root",
+		//		new_sp<Service>("service_find_target", 0.1f, true,
+		//			new_sp<Selector>("selector_hasTarget", std::vector<sp<NodeBase>>{
+		//				new_sp<Decorator>("decorator_hastarget", 
+		//					new_sp<Selector>("selector_hastarget", std::vector<sp<NodeBase>>{
+		//						new_sp<Task>("task_move")
+		//					})
+		//				),
+		//				new_sp<Decorator>("decorator_notarget",
+		//					new_sp<Sequence>("sequence_moveToRandomLoc", std::vector<sp<NodeBase>>{
+		//						new_sp<Task>("task_FindRandomLoc"),
+		//						new_sp<Task>("task_RotateTowardsLoc"),
+		//						new_sp<Task>("task_move")
+		//					})
+		//				)
+		//			})
+		//		)
+		//	);
+		//behaviorTree = bt;
 	}
 }
 

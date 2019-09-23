@@ -23,7 +23,8 @@ namespace SA
 
 		bool passed() 
 		{ 
-			return requiredCompletedTasks.size() == numRequiredCompletedTasks 
+			//make sure exact number of completed tasks happened, or if zero tasks assume test just relies on forbidden tasks set.
+			return ((requiredCompletedTasks.size() == numRequiredCompletedTasks) || (numRequiredCompletedTasks == 0))
 				&& forbiddenTasks.size() == 0;
 		}
 	};
@@ -49,7 +50,7 @@ namespace SA
 		sp<BehaviorTree::Tree> decoratorTest_basicFunctionality;
 		sp<BehaviorTree::Tree> decoratorTest_deferred_basicFunctionality;
 		sp<BehaviorTree::Tree> memoryOperationsTestTree;
-		//sp<BehaviorTree::Tree> abortTest_basicFunctionality;
+		sp<BehaviorTree::Tree> abortTest_basicFunctionality;
 
 		sp<BehaviorTree::Tree> treeTest_deferredSelection_ffsn;
 		sp<BehaviorTree::Tree> treeTest_deferredSequence_sss_n;
@@ -74,7 +75,8 @@ namespace SA
 			{"serviceTest_immediateExecute", 1},
 			{"decoratorTest_basicFunctionality", 1 },
 			{"decoratorTest_deferred_basicFunctionality", 1},
-			{"memoryOperationsTestTree", 11}
+			{"memoryOperationsTestTree", 11},
+			{ "abortTest_basicFunctionality", 0 /*uses forbidden set to avoid counting passing*/ }
 		};
 
 	};
