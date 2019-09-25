@@ -59,16 +59,17 @@ namespace SA
 		public:
 			NodeBase(const std::string& name) : nodeName(name) {}
 
-		public: //tree processing
-			//TODO tree-only methods private?
-			virtual bool hasPendingChildren() const { return false; }		//TODO make this pure virtual
-			virtual bool isProcessing() const { return false; };			//TODO make this pure virtual
-			virtual bool resultReady() const { return true; };				//TODO make this pure virtual
-			virtual bool result() const { return true; }					//TODO make this pure virtual
-			virtual void resetNode() { bOnExecutionStack = false; }			//TODO make this pure virtual
-			virtual void evaluate() {}										//TODO make this pure virtual
-			virtual void notifyCurrentChildResult(bool childResult) {}		//TODO make this pure virtual
+		private: //tree state machine methods. End users should not be calling these methods directly.
+			friend Tree;
+			virtual bool hasPendingChildren() const = 0; 
+			virtual bool isProcessing() const = 0; 
+			virtual bool resultReady() const = 0;
+			virtual bool result() const = 0;
+			virtual void evaluate() = 0;
+			virtual void notifyCurrentChildResult(bool childResult) = 0;
 			virtual NodeBase* getNextChild() { return nullptr; }
+		protected: //tree state machine methods where subclasses are required to call parent
+			virtual void resetNode() { bOnExecutionStack = false; }			
 
 			/* Notifies users that abort happened; cancel any pending timers in your override. */
 			virtual void handleNodeAborted() = 0;
@@ -145,10 +146,10 @@ namespace SA
 			/*resetNode will cover stopping service;. so overriding abort notifications is not required*/
 			virtual void handleNodeAborted() override {} 
 
-		private:
-			virtual void serviceTick() {}; //= 0 //#todo make pure virtual as these should be implemented by all services
-			virtual void startService() {};// = 0; create service subclasses to define this behavior; ideally should be a ticking timer. //#TODO make pure virtual
-			virtual void stopService() {};// = 0; //services will need to stop timers in an overload of this; be sure to call super if necessary //#TODO make pure virtual
+		private: //subclass required virtuals
+			virtual void serviceTick() = 0;		// the built-in update method for service subclasses. This ticks at the rate of `ticSecs` and will loop if specified at construction
+			virtual void startService() = 0;	// Tree has started service start; subclasses can initiate any extra timers here.
+			virtual void stopService() = 0;		// Tree has ended service; subclasses should clean up their custom timers here.
 		protected:
 			float tickSecs = 0.1f;
 			bool bLoop = true;
@@ -164,14 +165,14 @@ namespace SA
 		{
 		public:
 			enum class AbortType {ChildTree, LowerPriortyTrees, ChildAndLowerPriortyTrees};
-
-		public: //#TODO make private/protected? these public methods
 			Decorator(const std::string& name, const sp<NodeBase>& child) : SingleChildNode(name, child) {}
+
+		private: 
 			virtual bool isProcessing() const override;; // Decorators that may not complete immediately should overload this 
 			virtual void evaluate() override;
-			virtual void startBranchConditionCheck(){} // = 0; #TODO make pure virtual 
+			virtual void startBranchConditionCheck() = 0; //"start" because conditional check may take time. Fill conditionalResult when condition has been evaluated.
 			virtual bool hasPendingChildren() const override;
-			virtual bool resultReady() const override { return !isProcessing(); }; //#TODO this is mirroring a lot of stuff that is in task; investigate a common base class functionality or mixin
+			virtual bool resultReady() const override { return !isProcessing(); };
 
 		protected:
 			void abortTree(AbortType abortType);
@@ -195,13 +196,16 @@ namespace SA
 			Task(const std::string& name) : NodeBase(name) {}
 			virtual void resetNode() override;	//subclasses must override this if tasks track any state (it's not advised to track state on task; instead on tree instance's memory)
 			virtual bool isProcessing() const override;
-			virtual bool resultReady() const override;
+			virtual bool resultReady() const override{ return !isProcessing();}
 			virtual bool result() const override;
 			virtual void evaluate() override;
 
-			//#TODO make pure virtual!
 			/* Requires user fill out evaluationResult when task is complete. Otherwise tree will not proceed because task will appear to be incomplete.*/
-			virtual void beginTask() {}//= 0; //override this to start deferred tasks that will update the evaluationResult
+			virtual void beginTask() = 0; //override this to start deferred tasks that will update the evaluationResult
+
+		private: //required node methods
+			virtual bool hasPendingChildren() const override { return false; }			//tasks cannot have pending children
+			virtual void notifyCurrentChildResult(bool childResult) override {};		//tasks cannot have pending children
 
 		protected:
 			/** present of value in optional signals that task is completed*/
@@ -568,6 +572,7 @@ namespace SA
 			/* Aborts all nodes with this priority or larger magnitude values; note lower numbers mean higher priority in behavior trees */
 			void abort(uint32_t priority);
 			uint32_t getCurrentPriority();
+			Memory& getTreeMemory();
 
 		private:
 			void possessNodes(const sp<NodeBase>& node, uint32_t& currentPriority);
@@ -578,6 +583,11 @@ namespace SA
 			virtual bool resultReady() const override { return false; }
 			virtual NodeBase* getNextChild() override{ return root.get(); }
 			virtual void handleNodeAborted() override {}
+		private: //providing defaults for require node virtuals
+			virtual bool isProcessing() const override { return false; };
+			virtual bool result() const override { return true; }
+			virtual void evaluate() override {}										
+			virtual void notifyCurrentChildResult(bool childResult){};
 		private:
 			/** The root node; tree structure does not change once defined */
 			const sp<NodeBase> root;

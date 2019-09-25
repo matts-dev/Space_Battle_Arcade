@@ -51,6 +51,7 @@ namespace SA
 		sp<BehaviorTree::Tree> decoratorTest_deferred_basicFunctionality;
 		sp<BehaviorTree::Tree> memoryOperationsTestTree;
 		sp<BehaviorTree::Tree> abortTest_basicFunctionality;
+		sp<BehaviorTree::Tree> abortTest_externalAbort;
 
 		sp<BehaviorTree::Tree> treeTest_deferredSelection_ffsn;
 		sp<BehaviorTree::Tree> treeTest_deferredSequence_sss_n;
@@ -76,7 +77,8 @@ namespace SA
 			{"decoratorTest_basicFunctionality", 1 },
 			{"decoratorTest_deferred_basicFunctionality", 1},
 			{"memoryOperationsTestTree", 11},
-			{ "abortTest_basicFunctionality", 0 /*uses forbidden set to avoid counting passing*/ }
+			{ "abortTest_basicFunctionality", 0 /*uses forbidden set to avoid counting passing*/ },
+			{ "abortTest_externalAbort", 0}
 		};
 
 	};

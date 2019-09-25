@@ -55,13 +55,15 @@ namespace SA
 		{
 			if (bExecutingTree)
 			{
+				//clear execution stack using abort feature.
+				abort(0);
+				ExecutionState mockState;
+				NodeBase* mockCurrentNode = executionStack.back();
+				processAborts(mockCurrentNode, mockState);
+
 				bExecutingTree = false;
 				resumeData.reset();
 				abortPriority.reset();
-
-				//#TODO clean up and stop tree
-				//#todo reset all nodes and clear execution stack
-				
 			}
 		}
 
@@ -85,6 +87,12 @@ namespace SA
 		{
 			assert(executionStack.size() > 0);
 			return executionStack.back()->getPriority();
+		}
+
+		SA::BehaviorTree::Memory& Tree::getTreeMemory()
+		{
+			assert(memory.get() != nullptr);
+			return *memory;
 		}
 
 		void Tree::possessNodes(const sp<NodeBase>& node, uint32_t& currentPriority)
@@ -397,11 +405,6 @@ namespace SA
 		bool Task::isProcessing() const
 		{
 			return !evaluationResult.has_value() && bStartedTask;
-		}
-
-		bool Task::resultReady() const
-		{
-			return !isProcessing();
 		}
 
 		bool Task::result() const

@@ -1026,9 +1026,9 @@ namespace SA
 	{
 	public:
 		Decorator_AlwaysPass_AbortOn(TestAbortEvent abortEvent, const std::string& name, const std::string keyValue,
-			BehaviorTree::Decorator::AbortType abortType, const sp<NodeBase>& child)
+			BehaviorTree::Decorator::AbortType abortType, TestTreeStructureResults* optionalTestResultLoc, const sp<NodeBase>& child)
 			: BehaviorTree::Decorator(name, child),
-			keyValue(keyValue), abortEvent(abortEvent),
+			keyValue(keyValue), abortEvent(abortEvent), optionalTestResultLocation(optionalTestResultLoc),
 			abortType(abortType)
 		{
 		}
@@ -1051,6 +1051,11 @@ namespace SA
 			}
 			cachedStartValue = getMemory().getReadValueAs<GameEntity>(keyValue);
 
+			if (optionalTestResultLocation)
+			{
+				//will be removed when task completes
+				optionalTestResultLocation->forbiddenTasks.insert(sp_this());
+			}
 		}
 		void handleValueModified(const std::string& key, const GameEntity* updatedValue)
 		{
@@ -1058,6 +1063,11 @@ namespace SA
 			{
 				abortTree(abortType);
 				bHasAborted = true;
+				if (optionalTestResultLocation)
+				{
+					optionalTestResultLocation->requiredCompletedTasks.insert(sp_this());
+					optionalTestResultLocation->forbiddenTasks.erase(sp_this());
+				}
 			}
 		}
 		void handleValueReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
@@ -1066,6 +1076,11 @@ namespace SA
 			{
 				abortTree(abortType);
 				bHasAborted = true;
+				if (optionalTestResultLocation)
+				{
+					optionalTestResultLocation->requiredCompletedTasks.insert(sp_this());
+					optionalTestResultLocation->forbiddenTasks.erase(sp_this());
+				}
 			}
 		}
 	private:
@@ -1075,6 +1090,7 @@ namespace SA
 		const GameEntity* cachedStartValue = nullptr;
 		BehaviorTree::Decorator::AbortType abortType;
 		TestAbortEvent abortEvent;
+		TestTreeStructureResults* optionalTestResultLocation = nullptr;
 		bool bHasAborted = false;
 	};
 
@@ -1491,7 +1507,7 @@ namespace SA
 							new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")) //make sure abort on lower priority doesn't prevent this
 						}),
 						//lower priority
-						new_sp<Decorator_AlwaysPass_AbortOn>(TestAbortEvent::Modify, "decorator_abort_in_low_pri", "high_pri_memory", Decorator::AbortType::ChildTree,
+						new_sp<Decorator_AlwaysPass_AbortOn>(TestAbortEvent::Modify, "decorator_abort_in_low_pri", "high_pri_memory", Decorator::AbortType::ChildTree, nullptr,
 							new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")) //#caution# always_pass decorator can cause abort cycles if you cause an abort here; always_pass decorator used to make this test simple because the decorator will try to abort... but it will not have the priority to cause an abort.
 						),
 						new_sp<task_must_fail>(testResults.at("abortTest_basicFunctionality")) //fail so sequence continues
@@ -1513,6 +1529,42 @@ namespace SA
 							})
 						)
 					}),
+
+					//the following two sections are the same as above; just the abort type changed. if modifications are needed, make them above then copy and paste here and change Decorator::AbortType::ChildTree to all to Decorator::AbortType::ChildAndLowerPriortyTrees
+					//if copy and pasting new tree, update to be memory prefixed with "childandlower_"
+								//test that lower priority aborts do not abort higher priority
+								new_sp<Sequence>("childandlower_sequence_lowerpriority_abortinghigherpriority", MakeChildren{
+									//higher priority
+									new_sp<Sequence>("childandlower_high_pri_sequence", MakeChildren{
+										new_sp<task_modify_memory>("childandlower_high_pri_memory", testResults.at("abortTest_basicFunctionality")),
+										new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")) //make sure abort on lower priority doesn't prevent this
+									}),
+									//lower priority
+									new_sp<Decorator_AlwaysPass_AbortOn>(TestAbortEvent::Modify, "decorator_abort_in_low_pri", "childandlower_high_pri_memory", Decorator::AbortType::ChildAndLowerPriortyTrees, nullptr,
+										new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")) //#caution# always_pass decorator can cause abort cycles if you cause an abort here; always_pass decorator used to make this test simple because the decorator will try to abort... but it will not have the priority to cause an abort.
+									),
+									new_sp<task_must_fail>(testResults.at("abortTest_basicFunctionality")) //fail so sequence continues
+								}),
+								//test abort lower priority mode works and successfully will abort lower priority nodes
+								new_sp<Sequence>("sequence_abort_lower_pri", MakeChildren{
+									//higher priority
+									new_sp<Decorator_is_not_one>("dec_is_not_one_lowerPriTest1", "childandlower_abort_gate_lowerPriTest", //stop abort cycle
+										new_sp<Decorator_AbortOn>(TestAbortEvent::Modify, "decorator_abort_lowerpri", "childandlower_low_pri_memory", Decorator::AbortType::ChildAndLowerPriortyTrees,
+											new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality"))
+										)
+									),
+									//lower priority
+									new_sp<Decorator_is_not_one>("dec_is_not_one_lowerPriTest2", "childandlower_abort_gate_lowerPriTest", //stop abort cycle
+										new_sp<Sequence>("low_pri_sequence", MakeChildren{
+											new_sp<task_make_memory_one>("childandlower_abort_gate_lowerPriTest", testResults.at("abortTest_basicFunctionality")), //set flag to stop abort cycle; must come before abort
+											new_sp<task_modify_memory>("childandlower_low_pri_memory", testResults.at("abortTest_basicFunctionality")),
+											new_sp<task_never_execute>(testResults.at("abortTest_basicFunctionality")) //higher pri tree should  abort this
+										})
+									)
+								}),
+					//end nearly duplicate subtrees tree
+
+
 					//make sure that aborts are not preventing this selector from continuing, they should be aborting the decorated subtrees
 					new_sp<Sequence>("Sequence-abort-must-allow-selector-continue", MakeChildren{
 						new_sp<task_must_succeed>(testResults.at("abortTest_basicFunctionality")),	//aborting in sequence_aom should allow this to continue
@@ -1526,16 +1578,45 @@ namespace SA
 					{"modify_late_abort_test", new_sp<MemoryUpdateTester>(0)},
 					{"high_pri_memory", new_sp<MemoryUpdateTester>(0) },
 					{"low_pri_memory", new_sp<MemoryUpdateTester>(0) },
-					{"abort_gate_lowerPriTest", new_sp<MemoryUpdateTester>(0) }
+					{"abort_gate_lowerPriTest", new_sp<MemoryUpdateTester>(0) },
+					{"childandlower_high_pri_memory", new_sp<MemoryUpdateTester>(0) },
+					{"childandlower_low_pri_memory", new_sp<MemoryUpdateTester>(0) },
+					{"childandlower_abort_gate_lowerPriTest", new_sp<MemoryUpdateTester>(0) }
+
 				}
 			);
-		//#TODO TEST abort lower and child; should be same tests as above but just replace decorator type.
 		abortTest_basicFunctionality->start();
 		abortTest_basicFunctionality->tick(0.1f);
 		abortTest_basicFunctionality->tick(0.1f);
 		abortTest_basicFunctionality->stop();
 		testResults.at("abortTest_basicFunctionality").bComplete = true;
 
+
+		abortTest_externalAbort =
+			new_sp<Tree>("tree_externalAbortTest",
+				new_sp<Decorator_AlwaysPass_AbortOn>(TestAbortEvent::Modify, "decorator_root_abort", "external_abort", Decorator::AbortType::ChildTree, &testResults.at("abortTest_externalAbort"),
+					new_sp<Sequence>("sequence_deferred", MakeChildren{
+						new_sp<task_deferred>("deferred_task", testResults.at("abortTest_externalAbort"), true, 1.0f),
+						new_sp<task_must_succeed>(testResults.at("abortTest_externalAbort"))
+					})
+				),
+				MemoryInitializer
+				{
+					{"external_abort", new_sp<MemoryUpdateTester>(0)},
+				}
+			);
+		abortTest_externalAbort->start();
+		abortTest_externalAbort->tick(1.0f);
+		Memory& abortTreeMemory = abortTest_externalAbort->getTreeMemory();
+		{
+			ScopedUpdateNotifier<MemoryUpdateTester> externalAbortTest_ObjWriteAccess;
+			if (abortTreeMemory.getWriteValueAs("external_abort", externalAbortTest_ObjWriteAccess))
+			{
+				externalAbortTest_ObjWriteAccess.get().myValue = 5; //the RAII structure will flag event, which will cause root abort.
+			}
+		}
+		abortTest_externalAbort->tick(1.0f);
+		treesToTick.insert(abortTest_externalAbort); //let the ticker finish this tree up
 	}
 
 	void BehaviorTreeTest::tick()
