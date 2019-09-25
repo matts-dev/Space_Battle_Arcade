@@ -20,10 +20,10 @@
 
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 #include "../SACollisionDebugRenderer.h"
-#include "../../GameFramework/SAShipAIBrain.h"
 #include "../../GameFramework/SAGameEntity.h"
 #include "../UI/SAProjectileTweakerWidget.h"
 #include "../../GameFramework/SAParticleSystem.h"
+#include "../AI/SAShipAIBrain.h"
 
 namespace SA
 {

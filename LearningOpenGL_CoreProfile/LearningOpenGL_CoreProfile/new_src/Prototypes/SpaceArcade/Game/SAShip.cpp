@@ -7,9 +7,9 @@
 #include "../GameFramework/SAAIBrainBase.h"
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../GameFramework/SAAssetSystem.h"
-#include "../GameFramework/SAShipAIBrain.h"
 #include "../GameFramework/SAParticleSystem.h"
 #include "../GameFramework/EngineParticles/BuiltInParticles.h"
+#include "AI/SAShipAIBrain.h"
 
 namespace
 {

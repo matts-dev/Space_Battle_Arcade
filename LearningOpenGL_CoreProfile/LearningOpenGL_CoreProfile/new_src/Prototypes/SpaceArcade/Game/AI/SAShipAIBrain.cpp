@@ -1,11 +1,11 @@
 #include "SAShipAIBrain.h"
-#include "SALog.h"
-#include "SALevel.h"
-#include "..\Game\SpaceArcade.h"
-#include "SAGameBase.h"
-#include "SALevelSystem.h"
-#include "..\Game\SAShip.h"
-#include "..\Tools\DataStructures\MultiDelegate.h"
+#include "../../GameFramework/SALog.h"
+#include "../../GameFramework/SALevel.h"
+#include "../SpaceArcade.h"
+#include "../../GameFramework/SAGameBase.h"
+#include "../../GameFramework/SALevelSystem.h"
+#include "../SAShip.h"
+#include "../../Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {
@@ -134,13 +134,11 @@ namespace SA
 		}
 		return false;
 	}
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Fighter Brain
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-	bool FighterBrain::onAwaken()
+	/////////////////////////////////////////////////////////////////////////////////////
+	// behavior tree brain
+	/////////////////////////////////////////////////////////////////////////////////////
+	bool BehaviorTreeBrain::onAwaken()
 	{
 		if (ShipAIBrain::onAwaken())
 		{
@@ -150,11 +148,60 @@ namespace SA
 		return false;
 	}
 
-	void FighterBrain::onSleep()
+	void BehaviorTreeBrain::postConstruct()
+	{
+		// subclasses should set behavior tree in an override of this function
+		ShipAIBrain::postConstruct();
+	}
+
+	void BehaviorTreeBrain::onSleep()
 	{
 		ShipAIBrain::onSleep();
 		behaviorTree->stop();
 	}
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// wander brain
+	/////////////////////////////////////////////////////////////////////////////////////
+	void WanderBrain::postConstruct()
+	{
+		/*
+		service_find_target
+		selector_has_target
+			decorator_hastarget
+			selector_hastarget
+				TaskMoveToTarget
+			decorator_notarget
+			sequence_randomLocation
+				task_findrandomloc
+				task_rotateTowardsLoc
+				task_moveToLoc
+		*/
+		using namespace BehaviorTree;
+		//sp<Tree> bt = 
+		//	new_sp<Tree>("tree-root",
+		//		new_sp<Service>("service_find_target", 0.1f, true,
+		//			new_sp<Selector>("selector_hasTarget", std::vector<sp<NodeBase>>{
+		//				new_sp<Decorator>("decorator_hastarget", 
+		//					new_sp<Selector>("selector_hastarget", std::vector<sp<NodeBase>>{
+		//						new_sp<Task>("task_move")
+		//					})
+		//				),
+		//				new_sp<Decorator>("decorator_notarget",
+		//					new_sp<Sequence>("sequence_moveToRandomLoc", std::vector<sp<NodeBase>>{
+		//						new_sp<Task>("task_FindRandomLoc"),
+		//						new_sp<Task>("task_RotateTowardsLoc"),
+		//						new_sp<Task>("task_move")
+		//					})
+		//				)
+		//			})
+		//		)
+		//	);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Fighter Brain
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void FighterBrain::postConstruct()
 	{
@@ -192,5 +239,7 @@ namespace SA
 		//	);
 		//behaviorTree = bt;
 	}
+
+
 }
 

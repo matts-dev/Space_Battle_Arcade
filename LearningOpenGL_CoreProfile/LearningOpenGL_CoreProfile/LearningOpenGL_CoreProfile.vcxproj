@@ -152,7 +152,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAShipAIBrain.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASystemBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.h" />
@@ -423,7 +423,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAShipAIBrain.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_MultipleInstantiation.cpp" />
