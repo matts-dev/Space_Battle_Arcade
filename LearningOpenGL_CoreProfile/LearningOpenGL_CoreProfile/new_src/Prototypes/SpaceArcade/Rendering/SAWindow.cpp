@@ -150,7 +150,8 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//STATIC GLFW MANAGEMENT
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void c_api_errorMsgCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
+
+	//void APIENTRY c_api_errorMsgCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
 	void Window::startUp()
 	{

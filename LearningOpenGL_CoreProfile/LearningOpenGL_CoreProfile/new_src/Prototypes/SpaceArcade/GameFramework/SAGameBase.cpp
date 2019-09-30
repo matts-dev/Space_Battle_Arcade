@@ -12,6 +12,7 @@
 
 #include "../Rendering/SAWindow.h"
 #include "SALog.h"
+#include "SARandomNumberGenerationSystem.h"
 
 namespace SA
 {
@@ -47,6 +48,9 @@ namespace SA
 
 		particleSystem = new_sp<ParticleSystem>();
 		systems.insert(particleSystem);
+
+		systemRNG = new_sp<RNGSystem>();
+		systems.insert(systemRNG);
 
 		automatedTestSystem = new_sp<AutomatedTestSystem>();
 		systems.insert(automatedTestSystem);

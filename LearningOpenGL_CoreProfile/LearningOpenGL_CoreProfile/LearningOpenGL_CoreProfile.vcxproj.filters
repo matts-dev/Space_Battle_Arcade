@@ -627,6 +627,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipBehaviorTreeNodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1635,6 +1641,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipBehaviorTreeNodes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

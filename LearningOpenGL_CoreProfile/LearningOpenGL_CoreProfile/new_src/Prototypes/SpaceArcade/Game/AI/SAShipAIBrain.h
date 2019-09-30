@@ -22,6 +22,9 @@ namespace SA
 		virtual bool onAwaken() override;
 		virtual void onSleep() override;
 
+	public:
+		Ship* getControlledTarget();
+		const Ship* getControlledTarget() const;
 		
 	protected:
 		//#TODO use a softPtr rather than weakpointer, so that not "locking" every tick. but those don't exist yet

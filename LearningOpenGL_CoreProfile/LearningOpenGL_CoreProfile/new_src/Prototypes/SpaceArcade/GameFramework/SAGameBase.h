@@ -15,6 +15,7 @@ namespace SA
 	class LevelSystem;
 	class PlayerSystem;
 	class ParticleSystem;
+	class RNGSystem;
 	class AutomatedTestSystem;
 
 	class Window;
@@ -88,6 +89,7 @@ namespace SA
 		inline LevelSystem& getLevelSystem() noexcept { return *levelSystem; }
 		inline PlayerSystem& getPlayerSystem() noexcept { return *playerSystem; }
 		inline ParticleSystem& getParticleSystem() noexcept { return *particleSystem;}
+		inline RNGSystem& getRNGSystem() noexcept { return *systemRNG; }
 		
 		inline AutomatedTestSystem& getAutomatedTestSystem() noexcept { return *automatedTestSystem;  };
 
@@ -105,6 +107,7 @@ namespace SA
 		sp<LevelSystem> levelSystem;
 		sp<PlayerSystem> playerSystem;
 		sp<ParticleSystem> particleSystem;
+		sp<RNGSystem> systemRNG;
 		sp<AutomatedTestSystem> automatedTestSystem;
 
 		std::set< sp<SystemBase> > systems;
