@@ -39,6 +39,7 @@ namespace SA
 		/** Get this level's collision grid */
 		inline SH::SpatialHashGrid<WorldEntity>& getWorldGrid() { return worldCollisionGrid; }
 
+		//#SUGGESTED refactor this to just return reference, a level should always have a valid time manager.
 		inline const sp<TimeManager>& getWorldTimeManager() { return worldTimeManager; }
 
 	private:

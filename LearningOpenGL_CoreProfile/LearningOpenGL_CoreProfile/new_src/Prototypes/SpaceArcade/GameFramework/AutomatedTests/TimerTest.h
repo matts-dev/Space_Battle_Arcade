@@ -6,6 +6,30 @@
 
 namespace SA
 {
+	struct TickerTestResults
+	{
+		const uint32_t STOP_TICKING_AFTER_X_TICKS = 20;
+
+		bool bDeferredAdd = false;
+		bool bAttemptedDeferredRemove = false;
+		uint32_t startTickerTicks = 0;
+		uint32_t childTickerTicks = 0;
+		uint32_t removedTickerTicks = 0;
+		bool bEndOfTestChildTickerPresent = false;
+		bool bEndOfTestChildTickerRemoved = false;
+
+		bool hasPassed()
+		{
+			return bDeferredAdd
+				&& bAttemptedDeferredRemove
+				&& startTickerTicks == STOP_TICKING_AFTER_X_TICKS
+				&& childTickerTicks >= (STOP_TICKING_AFTER_X_TICKS / 2) //just needs to be some number less than the base ticker
+				&& removedTickerTicks == 1
+				&& bEndOfTestChildTickerPresent && bEndOfTestChildTickerRemoved;
+
+		}
+	};
+
 	class TimerTest : public LiveTest
 	{
 	public:
@@ -62,5 +86,7 @@ namespace SA
 
 	private: //state
 		bool bStarted = false;
+
+		TickerTestResults tickerResults;
 	};
 }

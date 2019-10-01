@@ -7,8 +7,8 @@ namespace SA
 {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Iterable hash set proides O(1) queries, and O(n) traversal.
-	// This is achived by managing 2 data structures underneath. The operation complexities are 
+	// Iterable hash set provides O(1) queries, and O(n) traversal.
+	// This is achieved by managing 2 data structures underneath. The operation complexities are 
 	//
 	//								 hash_set		tree_set
 	// insertion: o(log(n))		  max( o(1*)		o(log(n))

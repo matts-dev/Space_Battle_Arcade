@@ -9,6 +9,127 @@
 
 namespace SA
 {
+	////////////////////////////////////////////////////////
+	// child that keeps ticking; this tests deferred add.
+	////////////////////////////////////////////////////////
+	class TickTester_Child : public ITickable
+	{
+	public:
+		TickTester_Child(TickerTestResults& outResults) : results(outResults) {}
+
+	protected:
+		virtual bool tick(float dt_sec) override
+		{
+			results.bDeferredAdd = true;
+			results.childTickerTicks++;
+			return true;
+		}
+
+	private:
+		TickerTestResults& results;
+	};
+
+	////////////////////////////////////////////////////////
+	// removes itself from tickables, this tests deferred removal
+	////////////////////////////////////////////////////////
+	class TickTester_SelfRemove : public ITickable, public GameEntity
+	{
+	public:
+		TickTester_SelfRemove(TickerTestResults& outResults) : results(outResults) {}
+
+	protected:
+		virtual bool tick(float dt_sec) override
+		{
+			results.removedTickerTicks++;
+
+			const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+			assert(currentLevel);
+
+			if (currentLevel)
+			{
+				const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+				worldTimeManager->removeTicker(sp_this());
+				results.bAttemptedDeferredRemove = true;
+			}
+
+			return true; //NOTE: this is testing the "removeTicker" function; so tell the ticker to keep ticking this and see if the remove function works
+		}
+
+	private:
+		TickerTestResults& results;
+	};
+
+
+	////////////////////////////////////////////////////////
+	// tests ticker behavior
+	////////////////////////////////////////////////////////
+	class TickTester_Main : public ITickable, public GameEntity
+	{
+	public:
+		TickTester_Main(TickerTestResults& outResults) : results(outResults) {}
+
+	protected:
+		virtual bool tick(float dt_sec) override
+		{
+			results.startTickerTicks++;
+
+			////////////////////////////////////////////////////////
+			// Start testing ticker
+			////////////////////////////////////////////////////////
+			if (!bAddedChildTickers)
+			{
+				childAdd = new_sp<TickTester_Child>(results);
+				childSelfRemove = new_sp <TickTester_SelfRemove>(results);
+
+				const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+				assert(currentLevel);
+
+				if (currentLevel)
+				{
+					const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+					worldTimeManager->registerTicker(childAdd);
+					worldTimeManager->registerTicker(childSelfRemove);
+				}
+
+				bAddedChildTickers = true;
+			}
+
+			////////////////////////////////////////////////////////
+			// stop testing tickers
+			////////////////////////////////////////////////////////
+			if (results.startTickerTicks >= results.STOP_TICKING_AFTER_X_TICKS)
+			{
+				const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+				assert(currentLevel);
+
+				if (currentLevel)
+				{
+					const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+
+					bool bHasChildTicker = worldTimeManager->hasRegisteredTicker(childAdd);
+					bool bHasSelfRemoveTicker = worldTimeManager->hasRegisteredTicker(childSelfRemove);
+
+					assert(bHasChildTicker);	//note: this will trigger if this ticker did not remove itself!
+					assert(!bHasSelfRemoveTicker);
+
+					results.bEndOfTestChildTickerPresent = bHasChildTicker;
+					results.bEndOfTestChildTickerRemoved = !bHasSelfRemoveTicker;
+
+					worldTimeManager->removeTicker(childAdd);
+					worldTimeManager->removeTicker(childSelfRemove); //should already be removed; but testing removal of non-present ticker.
+					return false; //this tests to make sure the return type is respected.
+				}
+			}
+			return true; //keep ticking
+		}
+
+	private:
+		TickerTestResults& results;
+		bool bAddedChildTickers = false;
+		sp<ITickable> childAdd;
+		sp<ITickable> childSelfRemove;
+	};
+
 
 	////////////////////////////////////////////////////////
 	// Timer tests
@@ -137,6 +258,7 @@ namespace SA
 		delayTimerDelegate->addWeakObj(sp_this(), &TimerTest::handleDelayedTimer);
 		worldTM->createTimer(delayTimerDelegate, basicTestTime - 0.2f, false, 0.5f); //delay half a sec, this should mean it fires after basicTestTime
 
+		worldTM->registerTicker(new_sp<TickTester_Main>(tickerResults)); //note: the container of tickers will keep this test object alive
 	}
 
 	void TimerTest::handleBasicTimerTest()
@@ -293,10 +415,15 @@ namespace SA
 
 		//delay timer test
 		bAllPasing &= bDelayedTimerPassed;
-			snprintf(msg, msgSize, "\t %s :Delayed Timer Test", bDelayedTimerPassed ? "PASSED" : "FAILED");
+			snprintf(msg, msgSize, "\t %s : Delayed Timer Test", bDelayedTimerPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
-		
+		//basic ticker test
+		bool bPassedBasicTickerTest = tickerResults.hasPassed();
+		bAllPasing &= bPassedBasicTickerTest;
+			snprintf(msg, msgSize, "\t %s : Basic TICKER Test", bPassedBasicTickerTest ? "PASSED" : "FAILED");
+			log("TimerTest", LogLevel::LOG, msg);
+
 
 		snprintf(msg, msgSize , "%s : Ending Timer Tests", bAllPasing ? "PASSED" : "FAILED");
 		log("TimerTest", LogLevel::LOG, msg);

@@ -56,6 +56,10 @@ namespace SA
 		return false;
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Time Manager
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	void TimeManager::update(PrivateKey key, TimeSystem& timeSystem)
 	{
 		////////////////////////////////////////////////////////
@@ -125,11 +129,34 @@ namespace SA
 		}
 		deferredTimersToAdd.clear();
 		deferredTimerDelegatesToAdd.clear();
+
+		////////////////////////////////////////////////////////
+		// Tick Tickables
+		////////////////////////////////////////////////////////
+		bIsTickingTickables = true;
+		for (const sp<ITickable>& tickable : tickables)
+		{
+			bool bKeepTicking = tickable->tick(dt_dilatedSecs);
+			if (!bKeepTicking) { pendingRemovalTickables.push_back(tickable); }
+		}
+		bIsTickingTickables = false;
+		for (const sp<ITickable>& tickable : pendingAddTickables)
+		{
+			tickables.insert(tickable);
+		}
+		for (const sp<ITickable>& tickable : pendingRemovalTickables)
+		{
+			tickables.remove(tickable);
+		}
+		pendingAddTickables.clear();
+		pendingRemovalTickables.clear();
 	}
 
 	TimeManager::TimeManager()
 	{
 		timersToRemoveWhenTickingOver.reserve(removeTimerReservationSpace);
+		pendingAddTickables.reserve(tickerDeferredRegistrationMinBufferSize);
+		pendingRemovalTickables.reserve(tickerDeferredRegistrationMinBufferSize);
 	}
 
 	bool TimeManager::hasTimerForDelegate(const sp<MultiDelegate<>>& boundDelegate)
@@ -158,7 +185,7 @@ namespace SA
 			}
 			if (deferredTimerDelegatesToAdd.find(callbackDelegate.get()) != deferredTimerDelegatesToAdd.end())
 			{
-				return ETimerOperationResult::DEFER_FAILURE_DELEGATE_ALREDY_PENDING_ADD;
+				return ETimerOperationResult::DEFER_FAILURE_DELEGATE_ALREADY_PENDING_ADD;
 			}
 
 			sp<SA::Timer> timerInstance = timerPool.getInstance();
@@ -208,6 +235,39 @@ namespace SA
 		return ETimerOperationResult::FAILURE_TIMER_NOT_FOUND;
 
 	}
+
+	void TimeManager::registerTicker(const sp<ITickable>& tickable)
+	{
+		if (bIsTickingTickables)
+		{
+			pendingAddTickables.push_back(tickable);
+		}
+		else
+		{
+			tickables.insert(tickable);
+		}
+	}
+
+	void TimeManager::removeTicker(const sp<ITickable>& tickable)
+	{
+		if (bIsTickingTickables)
+		{
+			pendingRemovalTickables.push_back(tickable);
+		}
+		else
+		{
+			tickables.remove(tickable);
+		}
+	}
+
+	bool TimeManager::hasRegisteredTicker(const sp<ITickable>& tickable)
+	{
+		return tickables.contains(tickable);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Time System
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void TimeSystem::updateTime(PrivateKey key)
 	{
