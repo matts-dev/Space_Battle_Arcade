@@ -217,6 +217,19 @@ namespace SA
 			return vec;
 		}
 
+		float getRadianAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n)
+		{
+			float cosTheta = glm::dot(from_n, to_n);
+			float rotDegreesRadians = glm::acos(cosTheta);
+
+			return rotDegreesRadians;
+		}
+
+		float getDegreeAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n)
+		{
+			return (180.f / glm::pi<float>()) * getRadianAngleBetween(from_n, to_n);
+		}
+
 		glm::quat getRotationBetween(const glm::vec3& from_n, const glm::vec3& to_n)
 		{
 			glm::quat rot; //unit quaternion;

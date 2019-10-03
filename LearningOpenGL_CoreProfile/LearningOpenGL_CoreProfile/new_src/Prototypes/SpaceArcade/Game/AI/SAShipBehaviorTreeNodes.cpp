@@ -8,6 +8,8 @@
 #include "../../GameFramework/SALog.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../GameFramework/SALevel.h"
+#include <gtc/quaternion.hpp>
+#include "../../GameFramework/SADebugRenderSystem.h"
 //#include "../../GameFramework/SAGameBase.h"
 //#include "../../GameFramework/SALevelSystem.h"
 
@@ -86,7 +88,10 @@ namespace SA
 				}
 			}
 
-			evaluationResult = false;
+			if (!evaluationResult.has_value())
+			{
+				evaluationResult = false;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -98,10 +103,37 @@ namespace SA
 			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
 			if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
 			{
-				const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
-				// create ticker
-				//
+				Memory& memory = getMemory();
+				{
+					ScopedUpdateNotifier<ShipAIBrain> brain_writable;
+					if (memory.getWriteValueAs(shipBrain_MemoryKey, brain_writable))
+					{
+						wp<Ship> myWeakShip = brain_writable.get().getWeakControlledTarget();
+						if (myWeakShip.expired())
+						{
+							log("Task_Ship_MoveToLocation", LogLevel::LOG_ERROR, "could not find controlled ship");
+							evaluationResult = false;
+							return; //don't start ticking
+						}
+						else
+						{
+							//keep the ship alive while this task is working
+							myShip = myWeakShip.lock();
+						}
+					}
 
+					if (const glm::vec3* targetLoc = memory.getReadValueAs<glm::vec3>(targetLoc_MemoryKey))
+					{
+						moveLoc = *targetLoc;
+					}
+					else
+					{
+						evaluationResult = false;
+						return; //early out, cannot get the target location
+					}
+				}
+				currentLevel->getWorldTimeManager()->registerTicker(sp_this());
+				accumulatedTime = 0;
 			}
 			else
 			{
@@ -110,16 +142,91 @@ namespace SA
 			}
 		}
 
-		void Task_Ship_MoveToLocation::handleTick(float dt_sec)
+		bool Task_Ship_MoveToLocation::tick(float dt_sec)
 		{
-			//check if at location (or give up after certain time?)
+			using namespace glm;
+
+			const Transform& xform = myShip->getTransform();
+			accumulatedTime += dt_sec;
+
+			vec3 targetDir = moveLoc - xform.position;
+			
+			if (glm::length2(targetDir) < atLocThresholdLength2)
+			{
+				evaluationResult = true;
+			}
+			else if (accumulatedTime >= timeoutSecs)
+			{
+				evaluationResult = false;
+			}
+			else
+			{
+				vec3 forwardDir_n = glm::normalize(vec3(myShip->getForwardDir()));
+				vec3 targetDir_n = glm::normalize(targetDir);
+				bool bPointingTowardsMoveLoc = glm::dot(forwardDir_n, targetDir_n) >= 0.99f;
+
+				if (!bPointingTowardsMoveLoc)
+				{
+					vec3 rotationAxis_n = glm::cross(forwardDir_n, targetDir_n);
+
+					float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
+					float maxTurn_Rad = myShip->getMaxTurnAngle_PerSec() * dt_sec;
+					float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
+
+					quat completedRot = Utils::getRotationBetween(forwardDir_n, targetDir_n) * xform.rotQuat;
+					quat newRot = glm::slerp(xform.rotQuat, completedRot, possibleRotThisTick); 
+
+					//roll ship -- we want the ship's right (or left) vector to match this rotation axis to simulate it pivoting while turning
+					vec3 rightVec_n = newRot * vec3(1, 0, 0);
+					bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
+
+					vec3 newForwardVec_n = newRot * vec3(myShip->localForwardDir_n());
+					if (!bRollMatchesTurnAxis)
+					{
+						float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
+						float rollThisTick = glm::clamp(maxTurn_Rad / rollAngle_rad, 0.f, 1.f);
+						glm::quat roll = glm::angleAxis(rollThisTick, newForwardVec_n);
+						newRot = roll * newRot;
+					}
+
+					Transform newXform = xform;
+					newXform.rotQuat = newRot;
+					myShip->setTransform(newXform);
+
+					myShip->setVelocity(newForwardVec_n * myShip->getMaxSpeed());
+				}
+				else
+				{
+					myShip->setVelocity(forwardDir_n * myShip->getMaxSpeed());
+				}
+			}
+
+			if constexpr (ENABLE_DEBUG_LINES)
+			{
+				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+				debug.renderLine(vec4(xform.position, 1), vec4(moveLoc, 1), vec4(1, 0, 0, 1));
+			}
+
+			return !evaluationResult.has_value();
+		}
+
+
+		void Task_Ship_MoveToLocation::taskCleanup()
+		{
+			//ensure this task does not keep the ship it controls alive.
+			myShip = nullptr;
+
+			//cancel ticker
+			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+			if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
+			{
+				currentLevel->getWorldTimeManager()->removeTicker(sp_this());
+			}
 		}
 
 		void Task_Ship_MoveToLocation::handleNodeAborted()
 		{
-			//cancel ticker
 		}
-
 	}
 }
 

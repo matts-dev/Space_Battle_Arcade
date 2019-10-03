@@ -36,6 +36,7 @@ namespace SA
 			testLocation.forbiddenTasks.erase(sp_this());
 		}
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 
 		TestTreeStructureResults& testLocation;
 	};
@@ -63,6 +64,7 @@ namespace SA
 			testLocation.forbiddenTasks.erase(sp_this());
 		}
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 
 		TestTreeStructureResults& testLocation;
 	};
@@ -85,6 +87,7 @@ namespace SA
 			testLocation.forbiddenTasks.insert(sp_this());
 		}
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 		TestTreeStructureResults& testLocation;
 	};
 
@@ -107,6 +110,7 @@ namespace SA
 			testLocation.requiredCompletedTasks.insert(sp_this());
 		}
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 
 		bool bHasFailedFirst = false;
 		TestTreeStructureResults& testLocation;
@@ -162,6 +166,7 @@ namespace SA
 				worldTimeManager->removeTimer(timerDelegate);
 			}
 		}
+		virtual void taskCleanup() override {}
 
 		float deferredTime = 2.0f;
 		bool shouldSucceed = true;
@@ -237,6 +242,7 @@ namespace SA
 		}
 	private:
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 
 	private:
 		std::string varKey;
@@ -301,6 +307,7 @@ namespace SA
 		}
 	private:
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 
 	private:
 		std::string varKey;
@@ -387,7 +394,7 @@ namespace SA
 				worldTimeManager->removeTimer(timerDelegate);
 			}
 
-			BehaviorTree::Task::resetNode();
+			//BehaviorTree::Task::resetNode();
 		}
 
 	private:
@@ -395,6 +402,11 @@ namespace SA
 		{
 			clearTimers();
 		}
+		virtual void taskCleanup() override
+		{
+			clearTimers();
+		}
+
 
 	private:
 		std::string valKey;
@@ -459,6 +471,7 @@ namespace SA
 		}
 	private:
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 
 	private:
 		std::string valKey;
@@ -493,6 +506,7 @@ namespace SA
 		}
 	private:
 		virtual void handleNodeAborted() override {}
+
 
 	private:
 		std::string boolKeyValue;
@@ -599,7 +613,7 @@ namespace SA
 			}
 		private:
 			virtual void handleNodeAborted() override {}
-
+			virtual void taskCleanup() override {};
 		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
@@ -637,6 +651,7 @@ namespace SA
 			}
 		private:
 			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
 		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
@@ -794,6 +809,7 @@ namespace SA
 			}
 		private:
 			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
 		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
@@ -823,6 +839,7 @@ namespace SA
 			}
 		private:
 			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
 		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
@@ -849,6 +866,7 @@ namespace SA
 			}
 		private:
 			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
 		private:
 			TestTreeStructureResults& testLocation;
 			std::string valueKey;
@@ -1017,6 +1035,7 @@ namespace SA
 		}
 	private:
 		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
 	private:
 		std::string varKey;
 		TestTreeStructureResults& testLocation;

@@ -69,10 +69,14 @@ namespace SA
 		////////////////////////////////////////////////////////
 		// Kinematics
 		////////////////////////////////////////////////////////
+		inline glm::vec4 localForwardDir_n() const { return glm::vec4(0, 0, 1, 0); }
 		glm::vec4 getForwardDir();
 		glm::vec4 getUpDir();
 		glm::vec4 rotateLocalVec(const glm::vec4& localVec);
+		float getMaxTurnAngle_PerSec() const;
 		void setVelocity(glm::vec3 inVelocity) { velocity = inVelocity; }
+		glm::vec3 getVelocity() { return velocity; }
+		float getMaxSpeed() const { return maxSpeed; }
 
 
 		////////////////////////////////////////////////////////
@@ -100,6 +104,7 @@ namespace SA
 		glm::vec3 velocity;
 		glm::vec3 shieldColor;
 		glm::vec3 shieldOffset = glm::vec3(0.f);
+		float maxSpeed = 10.0f; //#TODO make part of spawn config
 		HitPoints hp = { /*current*/100, /*max*/100 };
 		int team;
 

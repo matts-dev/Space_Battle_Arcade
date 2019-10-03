@@ -24,6 +24,7 @@
 #include "../UI/SAProjectileTweakerWidget.h"
 #include "../../GameFramework/SAParticleSystem.h"
 #include "../AI/SAShipAIBrain.h"
+#include "../../GameFramework/SADebugRenderSystem.h"
 
 namespace SA
 {
@@ -104,6 +105,7 @@ namespace SA
 		int numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		numFighterShipsToSpawn = 250;
+		//numFighterShipsToSpawn = 1;
 #endif//NDEBUG 
 		for (int fighterShip = 0; fighterShip < numFighterShipsToSpawn; ++fighterShip)
 		{ 
@@ -114,7 +116,8 @@ namespace SA
 			fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
 
 			sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
-			fighter->spawnNewBrain<FlyInDirectionBrain>();
+			//fighter->spawnNewBrain<FlyInDirectionBrain>();
+			fighter->spawnNewBrain<WanderBrain>();
 		}
 
 		carrierTransform.position.y += 50;
@@ -532,7 +535,21 @@ namespace SA
 	void BasicTestSpaceLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		SpaceLevelBase::render(dt_sec, view, projection);
+
 #if SA_RENDER_DEBUG_INFO
+
+		/////////////////////////////////////////////
+		//new method of rendering debug information//
+		/////////////////////////////////////////////
+		DebugRenderSystem& debugRenderer = GameBase::get().getDebugRenderSystem();
+		//render x,y,z at origin
+		debugRenderer.renderLine(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0)); //x
+		debugRenderer.renderLine(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0)); //y
+		debugRenderer.renderLine(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, 0, 1)); //z
+
+		/////////////////////////////////////////////
+		//old method of rendering debug information//
+		/////////////////////////////////////////////
 		bool bShouldLoopOverShips = bRenderCollisionOBB_ui || bRenderCollisionShapes_ui;
 		if (bShouldLoopOverShips)
 		{

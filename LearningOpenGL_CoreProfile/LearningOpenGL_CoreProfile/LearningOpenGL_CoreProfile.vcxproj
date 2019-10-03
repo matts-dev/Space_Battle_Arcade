@@ -147,6 +147,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SADebugRenderSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAParticleSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.h" />
@@ -420,6 +421,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SADebugRenderSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SALog.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAParticleSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerBase.cpp" />
@@ -464,6 +466,7 @@
     <ClCompile Include="new_src\Tests\does_out_vars_undergoes_w_division.cpp" />
     <ClCompile Include="new_src\Tests\glm_matrix_data_row_vs_column.cpp" />
     <ClCompile Include="new_src\Tests\glm_vs_aimatrix4x4.cpp" />
+    <ClCompile Include="new_src\Tests\hello_normalized_device_coordinates.cpp" />
     <ClCompile Include="new_src\Tests\how_stbi_loads_colors.cpp" />
     <ClCompile Include="new_src\Tests\imgui\basic_gui.cpp" />
     <ClCompile Include="new_src\Tests\json\nlohmann_json_tests.cpp" />

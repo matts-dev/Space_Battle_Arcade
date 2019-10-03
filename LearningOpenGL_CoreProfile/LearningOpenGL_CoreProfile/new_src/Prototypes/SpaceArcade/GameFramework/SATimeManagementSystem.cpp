@@ -137,7 +137,7 @@ namespace SA
 		for (const sp<ITickable>& tickable : tickables)
 		{
 			bool bKeepTicking = tickable->tick(dt_dilatedSecs);
-			if (!bKeepTicking) { pendingRemovalTickables.push_back(tickable); }
+			if (!bKeepTicking) { pendingRemovalTickables.insert(tickable); }
 		}
 		bIsTickingTickables = false;
 		for (const sp<ITickable>& tickable : pendingAddTickables)
@@ -155,8 +155,8 @@ namespace SA
 	TimeManager::TimeManager()
 	{
 		timersToRemoveWhenTickingOver.reserve(removeTimerReservationSpace);
-		pendingAddTickables.reserve(tickerDeferredRegistrationMinBufferSize);
-		pendingRemovalTickables.reserve(tickerDeferredRegistrationMinBufferSize);
+		//pendingAddTickables.reserve(tickerDeferredRegistrationMinBufferSize);
+		//pendingRemovalTickables.reserve(tickerDeferredRegistrationMinBufferSize);
 	}
 
 	bool TimeManager::hasTimerForDelegate(const sp<MultiDelegate<>>& boundDelegate)
@@ -238,9 +238,12 @@ namespace SA
 
 	void TimeManager::registerTicker(const sp<ITickable>& tickable)
 	{
+		if (tickables.contains(tickable)) { return; }
+
 		if (bIsTickingTickables)
 		{
-			pendingAddTickables.push_back(tickable);
+			pendingAddTickables.insert(tickable);
+			pendingRemovalTickables.remove(tickable); //remove previous attempt to clear! Last operation will be the valid one.
 		}
 		else
 		{
@@ -252,7 +255,8 @@ namespace SA
 	{
 		if (bIsTickingTickables)
 		{
-			pendingRemovalTickables.push_back(tickable);
+			pendingRemovalTickables.insert(tickable);
+			pendingAddTickables.remove(tickable); //remove previous attempt to add this frame! Last operation will be the valid one.
 		}
 		else
 		{
@@ -262,7 +266,9 @@ namespace SA
 
 	bool TimeManager::hasRegisteredTicker(const sp<ITickable>& tickable)
 	{
-		return tickables.contains(tickable);
+		//return tickables.contains(tickable);
+		return (tickables.contains(tickable) || pendingAddTickables.contains(tickable)) 
+			&& !pendingRemovalTickables.contains(tickable); 
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

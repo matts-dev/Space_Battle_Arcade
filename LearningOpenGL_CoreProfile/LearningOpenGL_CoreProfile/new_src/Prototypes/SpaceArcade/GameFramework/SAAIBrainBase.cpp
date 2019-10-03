@@ -22,6 +22,8 @@ namespace SA
 
 	namespace BehaviorTree
 	{
+		Tree* volatile targetDebugTree = nullptr;
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Behavior tree
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +148,8 @@ namespace SA
 
 					while(!currentNode->isProcessing() && !bReachedMaxNodesThisTick)
 					{
+						if constexpr (LOG_TREE_STATE) { treeLog(currentState, currentNode, nodesVisited); }
+
 						//USE PREVIOUS STATE
 						if (currentState == ExecutionState::POPPED_CHILD)	//DEBUGGING: breakpoint here and watch "currentNode->nodeName" and "currentState" and continue to step through tree
 						{ 
@@ -215,6 +219,41 @@ namespace SA
 				inOut_CurrentNode->resetNode();
 				inOut_currentState = ExecutionState::PUSHED_CHILD; 
 			}
+		}
+
+		void Tree::treeLog(ExecutionState state, NodeBase* currentNode, uint32_t nodesVisited)
+		{
+			if (targetDebugTree && this != targetDebugTree)
+			{
+				return; //filter is present and this is the wrong instance; abort.
+			}
+
+			std::string stateString;
+			switch (state)
+			{
+				case ExecutionState::STARTING: 
+					stateString = "> STARTING"; 
+					break;
+				case ExecutionState::CHILD_EXECUTING:
+					stateString = "< EXECUTING";
+					break;
+				case ExecutionState::POPPED_CHILD:
+					stateString = "- POPPED_CHILD";
+					break;
+				case ExecutionState::PUSHED_CHILD:
+					stateString = "+ PUSHED_CHILD";
+					break;
+				default:
+					stateString = "? OTHER";
+			}
+			std::string treeInstance = std::to_string((uint64_t)this);
+			std::string numNodesStr = std::to_string(nodesVisited);
+			std::string nodeName = currentNode ? currentNode->nodeName : std::string("null-node");
+
+			std::string logStr = treeInstance + "\t state: " + stateString + "\t" + nodeName + "\t\t numNodes:" + numNodesStr;
+
+			log("BehaviorTreeLog", LogLevel::LOG, logStr.c_str());
+			
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -397,6 +436,8 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		void Task::resetNode()
 		{
+			taskCleanup();
+
 			NodeBase::resetNode();
 			evaluationResult.reset();
 			bStartedTask = false;

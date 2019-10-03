@@ -281,15 +281,15 @@ namespace SA
 		return result;
 	}
 
-	void SphereMeshTextured::render()
-	{
+	void SphereMeshTextured::render() const
+{
 		ec(glBindVertexArray(vao));
 		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)); //renderdoc flagged this draw call as an error without binding an ebo -- I thought the VAO captured the state of ebo, but renderdoc says otherwise. :) 
 
 		ec(glDrawElements(GL_TRIANGLES, triangleElementIndices.size(), GL_UNSIGNED_INT, reinterpret_cast<void*>(0)));
 	}
 
-	void SphereMeshTextured::instanceRender(int instanceCount)
+	void SphereMeshTextured::instanceRender(int instanceCount) const
 	{
 		ec(glBindVertexArray(vao));
 		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
@@ -315,12 +315,12 @@ namespace SA
 	// Model 3D Wrapper
 	/////////////////////////////////////////////////////////////////////////////////////
 
-	void Model3DWrapper::render()
-	{
+	void Model3DWrapper::render() const
+{
 		model.draw(shader, false);
 	}
 
-	void Model3DWrapper::instanceRender(int instanceCount)
+	void Model3DWrapper::instanceRender(int instanceCount) const
 	{
 		model.drawInstanced(shader, instanceCount, false);
 	}

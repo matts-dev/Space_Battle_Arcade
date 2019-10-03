@@ -1,11 +1,11 @@
 #include "SASpaceLevelBase.h"
-#include "..\..\Rendering\BuiltInShaders.h"
-#include "..\..\GameFramework\SAPlayerSystem.h"
-#include "..\..\GameFramework\SAGameBase.h"
-#include "..\..\Tools\DataStructures\SATransform.h"
-#include "..\..\GameFramework\SAPlayerBase.h"
-#include "..\..\Rendering\Camera\SACameraBase.h"
-#include "..\SAProjectileSystem.h"
+#include "../../Rendering/BuiltInShaders.h"
+#include "../../GameFramework/SAPlayerSystem.h"
+#include "../../GameFramework/SAGameBase.h"
+#include "../../Tools/DataStructures/SATransform.h"
+#include "../../GameFramework/SAPlayerBase.h"
+#include "../../Rendering/Camera/SACameraBase.h"
+#include "../SAProjectileSystem.h"
 
 namespace SA
 {
@@ -36,7 +36,7 @@ namespace SA
 			for (const sp<RenderModelEntity>& entity : renderEntities) 
 			{
 				mat4 model = glm::mat4(1.f);
-				model = glm::translate(model, vec3(5.f, 0.f, -5.f));
+				//model = glm::translate(model, vec3(5.f, 0.f, -5.f));
 				forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
 				entity->getModel()->draw(*forwardShadedModelShader);
 			}

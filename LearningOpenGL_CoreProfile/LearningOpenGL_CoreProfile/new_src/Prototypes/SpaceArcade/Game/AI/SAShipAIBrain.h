@@ -1,5 +1,6 @@
 #pragma once
 #include "../../GameFramework/SAAIBrainBase.h"
+#include "../../GameFramework/SATimeManagementSystem.h"
 
 namespace SA
 {
@@ -25,9 +26,10 @@ namespace SA
 	public:
 		Ship* getControlledTarget();
 		const Ship* getControlledTarget() const;
+		wp<Ship> getWeakControlledTarget() { return controlledTarget; }
 		
 	protected:
-		//#TODO use a softPtr rather than weakpointer, so that not "locking" every tick. but those don't exist yet
+		//#TODO use a softPtr rather than weak pointer, so that not "locking" every tick. but those don't exist yet
 		wp<Ship> controlledTarget;
 		wp<LevelBase> wpLevel;
 	};
@@ -70,15 +72,22 @@ namespace SA
 	// 	A brain that uses a behavior tree to make decisions
 	//		-expects behavior tree to be set in the postConstruct method
 	/////////////////////////////////////////////////////////////////////////////////////
-	class BehaviorTreeBrain : public ShipAIBrain
+	class BehaviorTreeBrain : public ShipAIBrain, public ITickable
 	{
+	public:
+		BehaviorTreeBrain(const sp<Ship>& controlledShip) : ShipAIBrain(controlledShip) {}
+
 		virtual bool onAwaken() override;
 	public:
 		virtual void onSleep() override;
 	protected:
 		virtual void postConstruct() override;
+
+		virtual bool tick(float dt_sec) override;
+
 	protected:
 		sp<BehaviorTree::Tree> behaviorTree;
+		wp<LevelBase> tickingOnLevel;
 	};
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +95,8 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////
 	class WanderBrain : public BehaviorTreeBrain
 	{
+	public:
+		WanderBrain(const sp<Ship>& controlledShip) : BehaviorTreeBrain(controlledShip) {}
 	protected:
 		virtual void postConstruct() override;
 	};
@@ -96,6 +107,9 @@ namespace SA
 	////////////////////////////////////////////////////////
 	class FighterBrain : public BehaviorTreeBrain
 	{
+	public:
+		FighterBrain(const sp<Ship>& controlledShip) : BehaviorTreeBrain(controlledShip) {}
+
 	protected:
 		virtual void postConstruct() override;
 	};

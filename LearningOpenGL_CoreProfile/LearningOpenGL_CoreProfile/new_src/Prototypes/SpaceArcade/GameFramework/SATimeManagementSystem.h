@@ -129,8 +129,8 @@ namespace SA
 		////////////////////////////////////////////////////////
 		bool bIsTickingTickables = false;
 		IterableHashSet<sp<ITickable>> tickables;
-		std::vector<sp<ITickable>> pendingRemovalTickables;
-		std::vector<sp<ITickable>> pendingAddTickables;
+		IterableHashSet<sp<ITickable>> pendingRemovalTickables;
+		IterableHashSet<sp<ITickable>> pendingAddTickables;
 	};
 
 

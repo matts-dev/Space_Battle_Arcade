@@ -64,14 +64,14 @@ namespace SA
 
 	glm::vec4 Ship::getForwardDir()
 	{
-		//#optimize cache per frame/move update; transforming vector 
+		//#optimize #todo cache per frame/move update; transforming vector (perhaps gameBase can track a framenumber with an inline call)
 		const Transform& transform = getTransform();
 
 		// #Warning this doesn't include any parent transformations #parentxform; those can also be cached per frame
 		//Currently there is no system for parent/child scene nodes for these. But if there were/ever is, it should
 		//get the parent transform and use that like : parentXform * rotMatrix * pointingDir; but I believe non-unfirom scaling will cause
 		//issues with vectors (like normals) and some care (normalMatrix, ie inverse transform), or (no non-uniform scales) may be needed to make sure vectors are correct
-		glm::vec4 pointingDir{ 0, 0, 1, 0 }; //#TODO this should could from spawn config in case models are not aligned properly
+		glm::vec4 pointingDir = localForwardDir_n();//#TODO this should could from spawn config in case models are not aligned properly
 		glm::mat4 rotMatrix = glm::toMat4(transform.rotQuat);
 		glm::vec4 rotDir = rotMatrix * pointingDir;
 
@@ -94,6 +94,12 @@ namespace SA
 		glm::mat4 rotMatrix = glm::toMat4(transform.rotQuat);
 		glm::vec4 rotDir = rotMatrix * localVec;
 		return rotDir;
+	}
+
+	float Ship::getMaxTurnAngle_PerSec() const
+	{
+		//this perhaps should be related to speed, but for now just returning a reasonable 
+		return glm::pi<float>();
 	}
 
 	void Ship::setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig)

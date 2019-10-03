@@ -52,7 +52,6 @@ namespace SA
 		return nullptr;
 	}
 
-
 	bool ContinuousFireBrain::onAwaken()
 	{
 		if (ShipAIBrain::onAwaken())
@@ -163,6 +162,11 @@ namespace SA
 		if (ShipAIBrain::onAwaken())
 		{
 			behaviorTree->start();
+
+			const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+			currentLevel->getWorldTimeManager()->registerTicker(sp_this());
+			tickingOnLevel = currentLevel;
+
 			return true;
 		}
 		return false;
@@ -174,10 +178,22 @@ namespace SA
 		ShipAIBrain::postConstruct();
 	}
 
+	bool BehaviorTreeBrain::tick(float dt_sec)
+	{
+		behaviorTree->tick(dt_sec);
+		return true;
+	}
+
 	void BehaviorTreeBrain::onSleep()
 	{
 		ShipAIBrain::onSleep();
 		behaviorTree->stop();
+
+		if (!tickingOnLevel.expired())
+		{
+			tickingOnLevel.lock()->getWorldTimeManager()->removeTicker(sp_this());
+		}
+
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -198,22 +214,22 @@ namespace SA
 				task_moveToLoc
 		*/
 		using namespace BehaviorTree;
-		//sp<Tree> bt =
-		//	new_sp<Tree>("tree-root",
-		//		new_sp<Selector>("RootSelector",
-		//			new_sp<Sequence>("Sequence_MoveToNewLocation",
-		//				new_sp<Task_Ship_SaveShipLocation>("ship_loc", "selfBrain"),
-		//				new_sp<Task_FindRandomLocationNearby>("target_loc", 10)
-
-		//			)
-		//		),
-		//		MemoryInitializer
-		//		{
-		//			{"selfBrain", sp_this() },
-		//			{ "ship_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
-		//			{ "target_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) }
-		//		}
-		//);
+		behaviorTree =
+			new_sp<Tree>("tree-root",
+				new_sp<Selector>("RootSelector", MakeChildren{
+					new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{
+						//new_sp<Task_Ship_SaveShipLocation>("ship_loc", "selfBrain"),
+						new_sp<Task_FindRandomLocationNearby>("target_loc", "ship_loc", 200.0f),
+						new_sp<Task_Ship_MoveToLocation>("selfBrain", "target_loc", 10.0f)
+					})
+				}),
+				MemoryInitializer
+				{
+					{"selfBrain", sp_this() },
+					{ "ship_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ "target_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) }
+				}
+			);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -21,15 +21,15 @@ namespace SA
 
 
 	///////////////////////////////////////////////////////////////////////
-	// Simple Shade Base Class
+	// Simple Shape Base Class
 	///////////////////////////////////////////////////////////////////////
 	class ShapeMesh : public GameEntity, public RemoveCopies, public RemoveMoves
 	{
 	public:
 		ShapeMesh() = default;
 		virtual ~ShapeMesh() = default;
-		virtual void render() = 0;
-		virtual void instanceRender(int instanceCount) = 0;
+		virtual void render() const = 0;
+		virtual void instanceRender(int instanceCount) const = 0;
 
 		void handleWindowLosingOpenglContext(const sp<Window>& window);
 		void handleWindowAcquiredOpenglContext(const sp<Window>& window);
@@ -58,8 +58,8 @@ namespace SA
 
 	public:
 		SphereMeshTextured(float tolerance = 0.014125375f);
-		virtual void render() override;
-		virtual void instanceRender(int instanceCount) override;
+		virtual void render() const override;
+		virtual void instanceRender(int instanceCount) const override;
 
 		virtual const std::vector<unsigned int>& getVAOs() override { return vaos; }
 
@@ -108,8 +108,8 @@ namespace SA
 	public:
 		Model3DWrapper(const sp<Model3D>& inModel, const sp<Shader>& inShader);
 
-		virtual void render() override;
-		virtual void instanceRender(int instanceCount) override;
+		virtual void render() const override;
+		virtual void instanceRender(int instanceCount) const override;
 
 		virtual const std::vector<unsigned int>& getVAOs() override;
 		virtual void onReleaseOpenGLResources() override;

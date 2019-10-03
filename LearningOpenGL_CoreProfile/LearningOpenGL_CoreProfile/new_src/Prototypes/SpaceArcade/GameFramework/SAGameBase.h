@@ -17,6 +17,7 @@ namespace SA
 	class ParticleSystem;
 	class RNGSystem;
 	class AutomatedTestSystem;
+	class DebugRenderSystem;
 
 	class Window;
 
@@ -70,6 +71,7 @@ namespace SA
 		MultiDelegate<float /*deltaSec*/> PreGameloopTick;
 		MultiDelegate<float /*deltaSec*/> PostGameloopTick;
 		MultiDelegate<float /*deltaSec*/> onRenderDispatch;
+		MultiDelegate<uint64_t /*endingFrameNumber*/> onFrameOver;
 
 		void startShutdown();
 	private: 
@@ -90,6 +92,7 @@ namespace SA
 		inline PlayerSystem& getPlayerSystem() noexcept { return *playerSystem; }
 		inline ParticleSystem& getParticleSystem() noexcept { return *particleSystem;}
 		inline RNGSystem& getRNGSystem() noexcept { return *systemRNG; }
+		inline DebugRenderSystem& getDebugRenderSystem() noexcept { return *debugRenderSystem; }
 		
 		inline AutomatedTestSystem& getAutomatedTestSystem() noexcept { return *automatedTestSystem;  };
 
@@ -108,10 +111,19 @@ namespace SA
 		sp<PlayerSystem> playerSystem;
 		sp<ParticleSystem> particleSystem;
 		sp<RNGSystem> systemRNG;
+		sp<DebugRenderSystem> debugRenderSystem;
 		sp<AutomatedTestSystem> automatedTestSystem;
 
 		std::set< sp<SystemBase> > systems;
 		std::set< sp<SystemBase> > postRenderNotifys;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// frame id
+	//////////////////////////////////////////////////////////////////////////////////////
+	public:
+		uint64_t getFrameNumber() const noexcept { return frameNumber; }
+	private:
+		uint64_t frameNumber = 0;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Time

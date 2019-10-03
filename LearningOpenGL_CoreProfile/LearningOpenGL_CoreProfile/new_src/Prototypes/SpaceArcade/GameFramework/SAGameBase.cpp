@@ -13,6 +13,7 @@
 #include "../Rendering/SAWindow.h"
 #include "SALog.h"
 #include "SARandomNumberGenerationSystem.h"
+#include "SADebugRenderSystem.h"
 
 namespace SA
 {
@@ -51,6 +52,9 @@ namespace SA
 
 		systemRNG = new_sp<RNGSystem>();
 		systems.insert(systemRNG);
+
+		debugRenderSystem = new_sp<DebugRenderSystem>();
+		systems.insert(debugRenderSystem);
 
 		automatedTestSystem = new_sp<AutomatedTestSystem>();
 		systems.insert(automatedTestSystem);
@@ -130,8 +134,11 @@ namespace SA
 		renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
 		onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
 
-		//perhaps this should be a subscription service since few systems care about post render
+		//perhaps this should be a subscription service since few systems care about post render //TODO this sytem should probably be removed and instead just subscribe to delegate
 		for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}
+
+		//broadcast current frame and increment the frame number.
+		onFrameOver.broadcast(frameNumber++);
 	}
 
 	void GameBase::subscribePostRender(const sp<SystemBase>& system)

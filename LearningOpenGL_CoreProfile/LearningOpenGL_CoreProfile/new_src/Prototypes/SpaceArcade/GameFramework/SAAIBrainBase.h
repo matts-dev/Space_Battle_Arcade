@@ -77,12 +77,12 @@ namespace SA
 			virtual void notifyTreeEstablished() {}; //override for memory value initialization
 
 		protected: //subclass helpers
-			Memory& getMemory() const
+			inline Memory& getMemory() const
 			{ 
 				assert(assignedMemory);
 				return *assignedMemory; 
 			}
-			Tree& getTree() const
+			inline Tree& getTree() const
 			{
 				assert(owningTree);
 				return *owningTree;
@@ -202,6 +202,8 @@ namespace SA
 
 			/* Requires user fill out evaluationResult when task is complete. Otherwise tree will not proceed because task will appear to be incomplete.*/
 			virtual void beginTask() = 0; //override this to start deferred tasks that will update the evaluationResult
+		protected:
+			virtual void taskCleanup() = 0; //override and clean up; be sure to call super if subclassing another task
 
 		private: //required node methods
 			virtual bool hasPendingChildren() const override { return false; }			//tasks cannot have pending children
@@ -560,6 +562,9 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		// The behavior tree composed of nodes.
 		/////////////////////////////////////////////////////////////////////////////////////
+		static constexpr bool LOG_TREE_STATE = false;	//if true, this will hit performance hard, but gives a stream of state changes.
+		extern Tree* volatile targetDebugTree;			//use a debugger to set this tree and logging will only print for this instance. hint: set by name "SA::BehaviorTree::targetDebugTree ptr_address_value"
+		/////////////////////////////////////////////////////////////////////////////////////
 		class Tree : public NodeBase
 		{
 		public:
@@ -577,6 +582,7 @@ namespace SA
 		private:
 			void possessNodes(const sp<NodeBase>& node, uint32_t& currentPriority);
 			void processAborts(NodeBase*& inOut_CurrentNode, ExecutionState& inOut_currentState);
+			void treeLog(ExecutionState state, NodeBase* currentNode, uint32_t nodesVisited);
 
 		private: //node interface
 			virtual bool hasPendingChildren() const override { return true; }

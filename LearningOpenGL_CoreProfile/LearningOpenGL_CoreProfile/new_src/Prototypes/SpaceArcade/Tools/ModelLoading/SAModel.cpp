@@ -35,7 +35,7 @@ namespace SA
 		}
 	}
 
-	void Model3D::drawInstanced(Shader& shader, uint32_t instanceCount, bool bBindMaterials /*= true*/)
+	void Model3D::drawInstanced(Shader& shader, uint32_t instanceCount, bool bBindMaterials /*= true*/) const
 	{
 		for (uint32_t i = 0; i < meshes.size(); ++i)
 		{
