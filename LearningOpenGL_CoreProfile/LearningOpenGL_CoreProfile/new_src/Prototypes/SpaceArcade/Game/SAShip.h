@@ -59,6 +59,7 @@ namespace SA
 			setNewBrain(new_sp<BrainType>(sp_this()));
 		}
 		void setNewBrain(const sp<ShipAIBrain> newBrain, bool bStartNow = true);
+		const ShipAIBrain* getBrain() const  { return brain.get(); }
 
 		////////////////////////////////////////////////////////
 		//Collision

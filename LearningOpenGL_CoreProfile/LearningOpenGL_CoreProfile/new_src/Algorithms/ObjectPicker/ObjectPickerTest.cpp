@@ -1037,8 +1037,7 @@ namespace
 		using glm::vec3;
 		using glm::mat4;
 
-		int width = 1200;
-		int height = 800;
+		int width = 1500, height = 900;
 
 		GLFWwindow* window = init_window(width, height);
 

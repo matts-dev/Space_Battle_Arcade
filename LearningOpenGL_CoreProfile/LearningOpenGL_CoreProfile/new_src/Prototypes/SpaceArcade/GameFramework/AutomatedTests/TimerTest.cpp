@@ -1,11 +1,11 @@
+#include <cstdint>
+
 #include "TimerTest.h"
 #include "../SAGameBase.h"
 #include "../SATimeManagementSystem.h"
 #include "../SALevel.h"
 #include "../SALog.h"
 #include "../SALevelSystem.h"
-
-
 
 namespace SA
 {
@@ -58,7 +58,6 @@ namespace SA
 	private:
 		TickerTestResults& results;
 	};
-
 
 	////////////////////////////////////////////////////////
 	// tests ticker behavior
@@ -129,6 +128,69 @@ namespace SA
 		sp<ITickable> childAdd;
 		sp<ITickable> childSelfRemove;
 	};
+
+	////////////////////////////////////////////////////////
+	// Test ticker re-addition edge case
+	//		-readding a ticker after it has been removed in the
+	//			same frame can cause issues (it is a bug I found)
+	//			creating a test case to handle it.
+	////////////////////////////////////////////////////////
+	class TickTester_Readdition : public ITickable, public GameEntity
+	{
+		enum class TestState : uint32_t
+		{
+			WAITING,
+			REMOVE_THEN_ADD,
+			CLEANUP
+		};
+
+	public:
+		TickTester_Readdition(bool& bPassingResultLocation) : bPassingResultLocation(bPassingResultLocation) {}
+
+	protected:
+		virtual bool tick(float dt_sec) override
+		{
+			accumulatedTime += dt_sec;
+
+			//state machine
+			if (state == TestState::WAITING)
+			{
+				if (accumulatedTime > waitTime)
+				{
+					state = TestState::REMOVE_THEN_ADD;
+				}
+			}
+			else if (state == TestState::REMOVE_THEN_ADD)
+			{
+				const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+				if (currentLevel)
+				{
+					const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+					worldTimeManager->removeTicker(sp_this());
+					worldTimeManager->registerTicker(sp_this());
+					state = TestState::CLEANUP;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else if (state == TestState::CLEANUP)
+			{
+				bPassingResultLocation = true;
+				return false;
+			}
+
+			return true;
+		}
+
+	private:
+		bool& bPassingResultLocation;
+		const float waitTime = 1.0f;
+		float accumulatedTime = 0.f;
+		TestState state = TestState::WAITING;
+	};
+
 
 
 	////////////////////////////////////////////////////////
@@ -258,7 +320,12 @@ namespace SA
 		delayTimerDelegate->addWeakObj(sp_this(), &TimerTest::handleDelayedTimer);
 		worldTM->createTimer(delayTimerDelegate, basicTestTime - 0.2f, false, 0.5f); //delay half a sec, this should mean it fires after basicTestTime
 
+		//basic ticker tests
 		worldTM->registerTicker(new_sp<TickTester_Main>(tickerResults)); //note: the container of tickers will keep this test object alive
+
+		//ticker edge case test
+		readditionTickerTest = new_sp<TickTester_Readdition>(bReadditionTickerTestPassed);
+		worldTM->registerTicker(readditionTickerTest);
 	}
 
 	void TimerTest::handleBasicTimerTest()
@@ -422,6 +489,10 @@ namespace SA
 		bool bPassedBasicTickerTest = tickerResults.hasPassed();
 		bAllPasing &= bPassedBasicTickerTest;
 			snprintf(msg, msgSize, "\t %s : Basic TICKER Test", bPassedBasicTickerTest ? "PASSED" : "FAILED");
+			log("TimerTest", LogLevel::LOG, msg);
+
+		bAllPasing &= bReadditionTickerTestPassed;
+			snprintf(msg, msgSize, "\t %s : TICKER readdition edge case test", bReadditionTickerTestPassed ? "PASSED" : "FAILED");
 			log("TimerTest", LogLevel::LOG, msg);
 
 

@@ -9,6 +9,8 @@ namespace SA
 		//beware, some lone object may keep the level alive. Relying on ctor/dtor RAII becomes dangerous
 		//I hope to make special pointers that set themselves to null when marked destroy, but until then
 		//be very careful about accessing/destroying resources from gamebase in ctor/dtor
+
+		worldTimeManager = GameBase::get().getTimeSystem().createManager();
 	}
 
 	LevelBase::~LevelBase()
@@ -30,7 +32,6 @@ namespace SA
 	{
 		//base behavior should go here, before the subclass callbacks
 		bLevelStarted = true;
-		worldTimeManager = GameBase::get().getTimeSystem().createManager();
 
 		//start subclass specific behavior after base behavior (ctor/dtor pattern)
 		startLevel_v();

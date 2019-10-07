@@ -62,9 +62,11 @@ namespace SA
 
 	void CameraFPS::onMouseWheelUpdate_v(double xOffset, double yOffset)
 	{
+		float sensitivity = 0.5f;
+
 		float& mutableFOV = adjustFOV();
 		if (mutableFOV >= 1.0f && mutableFOV <= 45.0f)
-			mutableFOV -= static_cast<float>(yOffset);
+			mutableFOV -= sensitivity * static_cast<float>(yOffset);
 		if (mutableFOV <= 1.0f)
 			mutableFOV = 1.0f;
 		if (mutableFOV >= 45.0)

@@ -61,6 +61,10 @@ namespace SA
 		const sp< MultiDelegate<const sp<GameEntity>&> > onDestroyedEvent;
 		bool isPendingDestroy() { return bPendingDestroy; }
 
+		/** WARNING: think twice before using this; if you're given a ref/rawptr then the API may be trying to prevent you from holding a reference
+		 * subclasses can deny this request by overriding the virtual method to return nullptr.*/
+		virtual wp<GameEntity> requestReference() { return sp_this(); }
+
 	protected:
 		/* new_sp will call this function after the object has been created, allowing GameEntities 
 		   to subscribe to delegates immediately after construction*/
@@ -70,7 +74,7 @@ namespace SA
 		void destroy();
 		virtual void onDestroyed();
 
-		/** Not intended to be called directl; please use macro "sp_this" to avoid specifying template types*/
+		/** Not intended to be called directly; please use macro "sp_this()" to avoid specifying template types*/
 		template<typename T>
 		sp<T> sp_this_impl()
 		{

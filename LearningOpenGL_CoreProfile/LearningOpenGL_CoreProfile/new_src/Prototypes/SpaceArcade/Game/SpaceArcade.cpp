@@ -198,8 +198,6 @@ namespace SA
 		{
 			loadedLevel->render(deltaTimeSecs, view, projection);
 		}
-
-		getUISystem()->render();
 	}
 
 	void SpaceArcade::onRegisterCustomSystem()

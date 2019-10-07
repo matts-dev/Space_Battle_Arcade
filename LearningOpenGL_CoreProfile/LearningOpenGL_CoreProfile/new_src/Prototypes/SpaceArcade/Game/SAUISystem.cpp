@@ -27,7 +27,7 @@ namespace SA
 		}
 
 		GameBase& game = GameBase::get();
-		game.PostGameloopTick.addStrongObj(sp_this(), &UISystem::handleGameloopOver); //#future this should be a render command that is sorted after post-processing. 
+		game.onRenderDispatchEnding.addWeakObj(sp_this(), &UISystem::handleRenderDispatchEnding);
 	}
 
 	void UISystem::handleLosingOpenGLContext(const sp<Window>& window)
@@ -90,24 +90,12 @@ namespace SA
 		ImGui_ImplGlfw_ScrollCallback(window, xOffset, yOffset);
 	}
 
-	void UISystem::destroyImGuiContext()
+	void UISystem::handleRenderDispatchEnding(float dt_sec)
 	{
-		//shut down IMGUI
-		ImGui_ImplGlfw_Shutdown();
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui::DestroyContext();
-		imguiBoundWindow = sp<Window>(nullptr);
+		processUIFrame();
 	}
 
-	void UISystem::shutdown()
-	{
-		if (!imguiBoundWindow.expired())
-		{
-			destroyImGuiContext();
-		}
-	}
-
-	void UISystem::handleGameloopOver(float dt_sec)
+	void UISystem::processUIFrame()
 	{
 		if (!imguiBoundWindow.expired() && bUIEnabled)
 		{
@@ -118,13 +106,10 @@ namespace SA
 			onUIFrameStarted.broadcast();
 			//UI elements will draw during first broadcast
 
-			ImGui::EndFrame(); 
+			ImGui::EndFrame();
 			onUIFrameEnded.broadcast();
 		}
-	}
 
-	void UISystem::render()
-	{
 		if (!imguiBoundWindow.expired() && bUIEnabled)
 		{
 			//UI will have set up widgets between frame
@@ -132,5 +117,26 @@ namespace SA
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 	}
+
+	void UISystem::destroyImGuiContext()
+	{
+		//shut down IMGUI
+		ImGui_ImplGlfw_Shutdown();
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui::DestroyContext();
+		imguiBoundWindow = sp<Window>(nullptr);
+	}
+
+
+	void UISystem::shutdown()
+	{
+		if (!imguiBoundWindow.expired())
+		{
+			destroyImGuiContext();
+		}
+	}
+
+
+
 }
 

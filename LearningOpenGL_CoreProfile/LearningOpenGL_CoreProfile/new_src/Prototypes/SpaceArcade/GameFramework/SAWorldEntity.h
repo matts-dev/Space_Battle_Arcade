@@ -30,6 +30,10 @@ namespace SA
 		inline const Transform& getTransform() const noexcept				{ return transform; }
 		inline void				setTransform(const Transform& inTransform)	{ transform = inTransform; }
 
+		//#scenenodes this will need updating to get final parent-child transformed position
+		glm::vec3 getWorldPosition() { return transform.position; } //#scenenodes todo update
+		glm::mat4 getModelMatrix() { return transform.getModelMatrix(); } //#scenenodes todo update
+
 		/* returns reference for speed, to opt out of containing collision data, override hasCollisionData to false and
 		 use the default implementation WorldEntity::getCollisionInfo() to return nullptr;*/
 		virtual const sp<const ModelCollisionInfo>& getCollisionInfo() const = 0;

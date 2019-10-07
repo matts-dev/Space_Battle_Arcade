@@ -238,8 +238,8 @@ namespace SA
 
 	void TimeManager::registerTicker(const sp<ITickable>& tickable)
 	{
-		if (tickables.contains(tickable)) { return; }
-
+		//WARNING: don't check tickables contains the new tickable and early out if it does; if you do removing then adding in same tick frame will break.
+		//^^Since we're dealing with sets, it isn't really necessary to do that check anyways. This has a test case in the unit tests "readdition test".
 		if (bIsTickingTickables)
 		{
 			pendingAddTickables.insert(tickable);

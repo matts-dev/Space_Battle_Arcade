@@ -579,6 +579,10 @@ namespace SA
 			uint32_t getCurrentPriority();
 			Memory& getTreeMemory();
 
+		public: //debug utils
+			void makeTreeDebugTarget() { targetDebugTree = this; }
+			void makeTreeDebugTarget() const { targetDebugTree = const_cast<Tree*>(this); } //this is a debug utility, so I am okay with casting away const.
+
 		private:
 			void possessNodes(const sp<NodeBase>& node, uint32_t& currentPriority);
 			void processAborts(NodeBase*& inOut_CurrentNode, ExecutionState& inOut_currentState);

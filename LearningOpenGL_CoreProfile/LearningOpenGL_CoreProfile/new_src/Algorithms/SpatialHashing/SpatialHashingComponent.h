@@ -222,6 +222,7 @@ namespace SH
 		*/
 		void updateEntry(std::unique_ptr<HashEntry<T>>& entry, const std::array<glm::vec4, 8>& newLocalSpaceOBB);
 
+		/* HashEntry hash functions; usage: provide a entry that will have its location hashed and the out param will be filled with requested information*/
 		inline void lookupNodesInCells(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<SH::GridNode<T>>>& outNodes, bool filterOutSource = true);
 		inline void lookupCellsForEntry(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells);
 

@@ -13,6 +13,7 @@ namespace SA
 	class ProjectileConfig;
 	class CollisionDebugRenderer;
 	class ProjectileTweakerWidget;
+	class HitboxPicker;
 	class ParticleConfig;
 
 	class BasicTestSpaceLevel : public SpaceLevelBase
@@ -78,6 +79,7 @@ namespace SA
 		sp<SpawnConfig> fighterSpawnConfig;
 		sp<CollisionDebugRenderer> collisionDebugRenderer;
 		sp<ProjectileTweakerWidget> projectileWidget;
+		sp<HitboxPicker> hitboxPickerWidget;
 
 		//needs to potentially have O(n) iteration
 		std::set<sp<Ship>> spawnedShips;

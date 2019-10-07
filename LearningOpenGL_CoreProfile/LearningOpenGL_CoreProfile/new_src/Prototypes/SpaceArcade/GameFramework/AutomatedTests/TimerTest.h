@@ -6,6 +6,8 @@
 
 namespace SA
 {
+	class ITickable;
+
 	struct TickerTestResults
 	{
 		const uint32_t STOP_TICKING_AFTER_X_TICKS = 20;
@@ -88,5 +90,7 @@ namespace SA
 		bool bStarted = false;
 
 		TickerTestResults tickerResults;
+		sp<ITickable> readditionTickerTest;
+		bool bReadditionTickerTestPassed = false;
 	};
 }

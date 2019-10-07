@@ -6,25 +6,13 @@
 #include "../Tools/DataStructures/MultiDelegate.h"
 #include "../Tools/DataStructures/IterableHashSet.h"
 #include <unordered_map>
+#include "Interfaces/SATickable.h"
 
 namespace SA
 {
 	//forward declarations
 	template<typename T>
 	class IterableHashSet;
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// interface to register object to be ticked.
-	/////////////////////////////////////////////////////////////////////////////////////
-	class ITickable
-	{
-		friend class TimeManager;
-	protected: 
-		/*  Ticks the current object with the dilated delta time seconds.
-				@note: protected access to allow sub classes to call their super tick.
-				@return return true to continue being ticked, return false to be removed from ticker.*/
-		virtual bool tick(float dt_sec) = 0;
-	};
 
 	//#consider this may be better suited as bit-vector for masking operations (eg SUCCESS = DEFERRED | REMOVED | ADDED) 
 	enum class ETimerOperationResult : char

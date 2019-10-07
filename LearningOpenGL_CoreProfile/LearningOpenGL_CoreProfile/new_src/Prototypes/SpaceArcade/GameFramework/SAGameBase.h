@@ -71,6 +71,7 @@ namespace SA
 		MultiDelegate<float /*deltaSec*/> PreGameloopTick;
 		MultiDelegate<float /*deltaSec*/> PostGameloopTick;
 		MultiDelegate<float /*deltaSec*/> onRenderDispatch;
+		MultiDelegate<float /*deltaSec*/> onRenderDispatchEnding;
 		MultiDelegate<uint64_t /*endingFrameNumber*/> onFrameOver;
 
 		void startShutdown();

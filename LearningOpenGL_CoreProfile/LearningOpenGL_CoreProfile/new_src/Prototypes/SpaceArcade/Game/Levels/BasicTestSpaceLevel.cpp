@@ -2,28 +2,29 @@
 
 #include <random>
 #include <memory>
+#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 
 #include "../SpaceArcade.h"
 #include "../SAProjectileSystem.h"
 #include "../SAModSystem.h"
 #include "../SAUISystem.h"
-#include "../AssetConfigs/SASpawnConfig.h"
 #include "../SAShip.h"
+#include "../AssetConfigs/SASpawnConfig.h"
+#include "../Tools/Debug/SAHitboxPicker.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../GameFramework/RenderModelEntity.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/SAPlayerSystem.h"
-#include "../../Rendering/Camera/SACameraBase.h"
 #include "../../GameFramework/Input/SAInput.h"
 #include "../../GameFramework/SAAssetSystem.h"
 #include "../../GameFramework/SALog.h"
+#include "../../Rendering/Camera/SACameraBase.h"
 
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 #include "../SACollisionDebugRenderer.h"
-#include "../../GameFramework/SAGameEntity.h"
 #include "../UI/SAProjectileTweakerWidget.h"
-#include "../../GameFramework/SAParticleSystem.h"
 #include "../AI/SAShipAIBrain.h"
+#include "../../GameFramework/SAGameEntity.h"
+#include "../../GameFramework/SAParticleSystem.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
 
 namespace SA
@@ -41,6 +42,7 @@ namespace SA
 
 		collisionDebugRenderer = new_sp<CollisionDebugRenderer>();
 		projectileWidget = new_sp<ProjectileTweakerWidget>();
+		hitboxPickerWidget = new_sp<HitboxPicker>();
 
 		testParticleConfig = ParticleFactory::getSimpleExplosionEffect();
 		testParticles.insert({ "simple explosion", testParticleConfig});

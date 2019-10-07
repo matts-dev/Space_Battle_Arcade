@@ -100,7 +100,8 @@ namespace SA
 		glm::mat4 cameraTranslate = glm::translate(glm::mat4(), -1.f * cameraPosition);
 
 		glm::mat4 view = cameraBasisProjection * cameraTranslate;
-		//glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, worldUp);
+
+		//glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + getFront(), getUp());
 
 		return view;
 	}
@@ -121,7 +122,7 @@ namespace SA
 			log("CameraBase", LogLevel::LOG_WARNING, "camera getPerspective() called but no registered window");
 		}
 
-		return glm::perspective(FOV, aspect, nearZ, farZ);
+		return glm::perspective(glm::radians(FOV), aspect, nearZ, farZ);
 	}
 
 	void CameraBase::setCursorMode(bool inCursorMode)

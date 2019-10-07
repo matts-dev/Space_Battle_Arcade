@@ -77,9 +77,13 @@ namespace SA
 	public:
 		BehaviorTreeBrain(const sp<Ship>& controlledShip) : ShipAIBrain(controlledShip) {}
 
-		virtual bool onAwaken() override;
 	public:
+		virtual bool onAwaken() override;
 		virtual void onSleep() override;
+
+		BehaviorTree::Tree& getBehaviorTree() { return *behaviorTree.get(); }
+		const BehaviorTree::Tree& getBehaviorTree() const { return *behaviorTree.get(); }
+
 	protected:
 		virtual void postConstruct() override;
 

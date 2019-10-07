@@ -441,8 +441,10 @@ namespace
 		};
 
 		glm::vec3 modelScale(0.20f);
+
 		//Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan.dae");
 		Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan_FullWeights.dae");
+		//Model_NM_Anim meshModel("Models/simple_man/pre_armor_character_2.79.dae");
 
 		
 		//Model_NM_Anim meshModel("Models/3dBoxMan/3dBoxMan.fbx");
