@@ -227,6 +227,11 @@ namespace SA
 				particleSpawnParams.xform.position = this->getTransform().position;
 				particleSpawnParams.velocity = this->velocity;
 				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+				if (brain)
+				{
+					brain->sleep();
+					brain = nullptr;
+				}
 				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
 			}
 			else

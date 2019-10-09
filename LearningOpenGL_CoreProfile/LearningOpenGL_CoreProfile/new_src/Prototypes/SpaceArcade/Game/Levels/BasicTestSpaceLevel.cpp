@@ -107,7 +107,6 @@ namespace SA
 		int numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		numFighterShipsToSpawn = 250;
-		//numFighterShipsToSpawn = 1;
 #endif//NDEBUG 
 		for (int fighterShip = 0; fighterShip < numFighterShipsToSpawn; ++fighterShip)
 		{ 
