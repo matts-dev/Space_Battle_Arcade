@@ -96,7 +96,7 @@ namespace SA
 
 			for (WorldEntity* entity : potentialCollisions)
 			{
-				if (entity->hasCollisionInfo())
+				if (entity->hasCollisionInfo() && entity != owner)
 				{
 					const sp<const ModelCollisionInfo>& colisionData = entity->getCollisionInfo();
 					const sp<const SAT::Shape>& OBBShape = colisionData->getOBBShape();
@@ -206,13 +206,14 @@ namespace SA
 		spawned->xform.rotQuat = spawnRotation;
 		spawned->xform.position = spawnData.start;
 		spawned->damage = spawnData.damage;
+		spawned->color = spawnData.color;
 		spawned->team = spawnData.team;
+		spawned->owner = spawnData.owner;
 		spawned->direction_n = spawnData.direction_n;
 		spawned->renderXform = glm::scale(glm::mat4(1.f), { 0, 0, 0 });
 
 		spawned->bHit = false;
 		spawned->forceRelease = false;
-
 
 		spawned->distanceStretchScale = 1;
 		spawned->directionQuat = spawnRotation;
@@ -236,11 +237,14 @@ namespace SA
 	{
 		//#optimize potential optimization is to use instanced rendering to reduce draw call number
 		//#TODO perhaps projectile should be made a full class and encapsulate this logic
+		//#TODO refactor so projectile system is self-sufficient and doesn't rely on Game to call "render". 
+		//#TODO refactor so instance rendered, set of uniforms can define instance
 
 		//invariant: shader uniforms pre-configured
 		for (const sp<Projectile>& projectile : activeProjectiles)
 		{
 			projectileShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(projectile->renderXform));
+			projectileShader.setUniform3f("lightColor", projectile->color); //#TODO this uniform name is very specific to emissive shader; either need a callback to configure uniforms unique to projectile or move shader here; NOTE: this perf loss scales linearly, adding this one uniform drops fps by 0.1
 			projectile->model->draw(projectileShader);
 		}
 	}

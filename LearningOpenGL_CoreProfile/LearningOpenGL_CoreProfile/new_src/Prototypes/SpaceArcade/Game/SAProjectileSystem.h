@@ -15,6 +15,7 @@ namespace SA
 	class ProjectileSystem;
 	class ProjectileConfig;
 	class LevelBase;
+	class WorldEntity;
 
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +30,7 @@ namespace SA
 		glm::vec3 direction_n;
 		glm::vec3 hitLocation;
 		glm::vec3 aabbSize;
+		glm::vec3 color;
 		glm::quat directionQuat; //#TODO maybe? duplicate info in xform
 		glm::mat4 collisionXform;
 		glm::mat4 renderXform;
@@ -36,8 +38,9 @@ namespace SA
 		float speed;
 		float lifetimeSec;
 		float timeAlive;
+		WorldEntity* owner;
 		int damage;
-		int team;
+		size_t team;
 		bool forceRelease;
 		bool bHit;
 		sp<const Model3D> model;
@@ -55,6 +58,7 @@ namespace SA
 		glm::vec3 direction;
 		float lifetimeSecs = 3.0f;
 		float speed = 10.0f;
+		WorldEntity* Owner = nullptr;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,8 +83,10 @@ namespace SA
 		{
 			glm::vec3 start;
 			glm::vec3 direction_n;
+			glm::vec3 color = glm::vec3(0.8f, 0.8f, 0.f);
 			int damage = 25;
-			int team = -1;
+			size_t team = 0;
+			WorldEntity* owner = nullptr;
 		};
 		void spawnProjectile(const SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle);
 		void unspawnAllProjectiles();

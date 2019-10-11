@@ -562,12 +562,69 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 	void ModelConfigurerEditor_Level::renderUI_Team()
 	{
+		char strBuffer[256];
+		constexpr size_t strBufferSize = sizeof(strBuffer) / sizeof(strBuffer[0]);
+
 		ImGui::Separator();
 		if (activeConfig)
 		{
-			//#TODO select team index and modify colors based onteam index
-			ImGui::InputFloat3("Shield Color", &activeConfig->shieldColor.r);
-			ImGui::InputFloat3("Shield Offset", &activeConfig->shieldOffset.r);
+			if (activeConfig->teamData.size() == 0)
+			{
+				activeConfig->teamData.push_back({});
+			}
+
+			for (size_t teamIdx = 0; teamIdx < activeConfig->teamData.size(); ++teamIdx)
+			{
+				TeamData& teamData = activeConfig->teamData[teamIdx];
+				snprintf(strBuffer, strBufferSize, "Team %d", teamIdx);
+				if (ImGui::CollapsingHeader(strBuffer))
+				{
+					snprintf(strBuffer, strBufferSize, "Team Tint %d", teamIdx);
+					ImGui::ColorPicker3(strBuffer, &teamData.teamTint.r);
+					ImGui::Dummy(ImVec2(0, 20)); 
+
+					snprintf(strBuffer, strBufferSize, "Shield Color %d", teamIdx);
+					ImGui::ColorPicker3(strBuffer, &teamData.shieldColor.r);
+					ImGui::Dummy(ImVec2(0, 20)); 
+
+					snprintf(strBuffer, strBufferSize, "projectile Color %d", teamIdx);
+					ImGui::ColorPicker3(strBuffer, &teamData.projectileColor.r);
+					ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
+				}
+			}
+			ImGui::Separator();
+			if (ImGui::Button("Add Team"))
+			{
+				activeConfig->teamData.push_back({});
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Remove Last"))
+			{
+				activeConfig->teamData.pop_back();
+			}
+			static int swapIndices[2] = { 0, 0 };
+			ImGui::InputInt2("[0,size-1]", swapIndices);
+			ImGui::SameLine();
+			if (ImGui::Button("Swap"))
+			{
+				int limit = (int)activeConfig->teamData.size(); //realistically there's not chance of overflow; cast is safe
+				if (swapIndices[0] < limit && swapIndices[0] >= 0
+					&& swapIndices[1] < limit && swapIndices[1] >= 0
+					&& swapIndices[0] != swapIndices[1])
+				{
+					TeamData copyFirst = activeConfig->teamData[size_t(swapIndices[0])];
+					activeConfig->teamData[size_t(swapIndices[0])] = activeConfig->teamData[size_t(swapIndices[1])];
+					activeConfig->teamData[size_t(swapIndices[1])] = copyFirst;
+				}
+			}
+			static int viewTeamIdx = 0;
+			ImGui::InputInt("View Team [0,size-1]", &viewTeamIdx);
+			
+			//always set state for real time updates.
+			if (viewTeamIdx < (int)activeConfig->teamData.size() && viewTeamIdx >= 0)
+			{
+				activeTeamData = activeConfig->teamData[viewTeamIdx];
+			}
 		}
 		ImGui::Separator();
 	}
@@ -633,6 +690,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					model3DShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 					model3DShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 					model3DShader->setUniform3f("cameraPosition", camera->getPosition());
+					model3DShader->setUniform3f("tint", activeTeamData.teamTint);
 					model3DShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(rootModelMat));
 					renderModel->draw(*model3DShader);
 				}

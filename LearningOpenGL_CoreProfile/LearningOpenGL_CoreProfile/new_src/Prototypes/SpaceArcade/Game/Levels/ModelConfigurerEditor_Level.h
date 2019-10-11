@@ -1,6 +1,7 @@
 #pragma once
 #include "..\..\GameFramework\SALevel.h"
 #include "SASpaceLevelBase.h"
+#include "..\AssetConfigs\SASpawnConfig.h"
 
 namespace SAT
 {
@@ -50,8 +51,8 @@ namespace SA
 		/** INVARIANT: filepath has been checked to be a valid model file path */
 		void createNewSpawnConfig(const std::string& name, const std::string& fullModelPath);
 
-
 		void onActiveConfigSet(const SpawnConfig& newConfig);
+
 
 	private: 
 		bool bRenderAABB = true;
@@ -60,6 +61,7 @@ namespace SA
 		bool bShowCustomShapes = false;
 		bool bShowSlowShapes = false;
 		int selectedShapeIdx = -1;
+		TeamData activeTeamData;
 
 	private:
 		sp<Model3D> renderModel = nullptr;

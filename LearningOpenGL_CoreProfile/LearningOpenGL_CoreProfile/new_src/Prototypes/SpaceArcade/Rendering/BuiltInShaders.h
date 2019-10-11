@@ -157,13 +157,14 @@ namespace SA
 				};
 				uniform Material material;			
 				uniform vec3 cameraPosition;
+				uniform vec3 tint = vec3(1.0, 1.0, 1.0);
 
 				in vec3 fragNormal;
 				in vec3 fragPosition;
 				in vec2 interpTextCoords;
 
 				void main(){
-					vec3 ambientLight = vec3(texture(material.texture_diffuse0, interpTextCoords));	
+					vec3 ambientLight = tint * vec3(texture(material.texture_diffuse0, interpTextCoords));	
 
 					fragmentColor = vec4(ambientLight, 1.0f);
 				}

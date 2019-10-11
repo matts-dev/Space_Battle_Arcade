@@ -218,7 +218,7 @@ namespace SA
 		friend class ParticleSystem; //#TODO may not should be treated as a struct; will see when system fleshes out
 		
 	public:
-		void ResetTimeAlive() { timeAlive = 0.f; }
+		void resetTimeAlive() { timeAlive = 0.f; }
 
 		////////////////////////////////////////////////////////
 		// data

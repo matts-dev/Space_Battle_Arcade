@@ -101,7 +101,7 @@ namespace SA
 		std::uniform_real_distribution<float> startDist(-200.f, 200.f); //[a, b)
 
 		Ship::SpawnData fighterShipSpawnData;
-		fighterShipSpawnData.team = 1;
+		fighterShipSpawnData.team = 0;
 		fighterShipSpawnData.spawnConfig = fighterSpawnConfig;
 
 		int numFighterShipsToSpawn = 5000;
@@ -117,8 +117,8 @@ namespace SA
 			fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
 
 			sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
-			//fighter->spawnNewBrain<FlyInDirectionBrain>();
-			fighter->spawnNewBrain<WanderBrain>();
+			fighter->spawnNewBrain<FlyInDirectionBrain>();
+			//fighter->spawnNewBrain<WanderBrain>();
 		}
 
 		carrierTransform.position.y += 50;

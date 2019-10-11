@@ -47,12 +47,14 @@ namespace SA
 		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
 		collisionData(spawnData.spawnConfig->toCollisionInfo()), 
 		constViewCollisionData(collisionData),
-		team(spawnData.team)
+		teamIdx(spawnData.team)
 	{
 		overlappingNodes_SH.reserve(10);
 		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
-		shieldColor = spawnData.spawnConfig->getShieldColor();
 		shieldOffset = spawnData.spawnConfig->getShieldOffset();
+		shipData = spawnData.spawnConfig;
+
+		setTeam(spawnData.team);
 	}
 
 	const sp<const ModelCollisionInfo>& Ship::getCollisionInfo() const
@@ -107,6 +109,17 @@ namespace SA
 		primaryProjectile = projectileConfig;
 	}
 
+	void Ship::setTeam(size_t teamIdx)
+	{
+		teamIdx = teamIdx;
+		const std::vector<TeamData>& teams = shipData->getTeams();
+
+		if (teamIdx >= teams.size()) { teamIdx = 0;}
+		
+		assert(teams.size() > 0);
+		cachedTeamData = teams[teamIdx];
+	}
+
 	void Ship::fireProjectile(BrainKey privateKey)
 	{
 		//#optimize: set a default projectile config so this doesn't have to be checked every time a ship fires? reduce branch divergence
@@ -115,11 +128,13 @@ namespace SA
 			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
 
 			ProjectileSystem::SpawnData spawnData;
-			spawnData.direction_n = glm::normalize(velocity);
-			
-			//#TODO below doesn't account for parent transforms
+			//#TODO #scenenodes doesn't account for parent transforms
 			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
-			
+			spawnData.direction_n = glm::normalize(velocity);
+			spawnData.color = cachedTeamData.projectileColor;
+			spawnData.team = teamIdx;
+			spawnData.owner = this;
+
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
 		}
 	}
@@ -217,7 +232,7 @@ namespace SA
 
 	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
-		if (team != hitProjectile.team)
+		if (teamIdx != hitProjectile.team)
 		{
 			hp.current -= hitProjectile.damage;
 			if (hp.current <= 0)
@@ -239,12 +254,18 @@ namespace SA
 				if (!activeShieldEffect.expired())
 				{
 					sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
-					shieldEffect_sp->ResetTimeAlive();
+					shieldEffect_sp->resetTimeAlive();
 				}
 				else
 				{
+					if (!activeShieldEffect.expired())
+					{
+						sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
+						//#TODO kill the shield effect
+					}
+
 					ParticleSystem::SpawnParams particleSpawnParams;
-					particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), shieldColor);
+					particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), cachedTeamData.shieldColor);
 					const Transform& shipXform = this->getTransform(); 
 					particleSpawnParams.xform.position = shipXform.position;
 					particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));

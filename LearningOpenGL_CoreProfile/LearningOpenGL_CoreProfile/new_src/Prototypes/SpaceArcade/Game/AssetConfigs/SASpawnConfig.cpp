@@ -105,15 +105,14 @@ namespace SA
 			{"modelAABB", { {"modelScale", {modelScale.x, modelScale.y, modelScale.z}},
 							{ "modelRotationDegrees", {modelRotationDegrees.x, modelRotationDegrees.y, modelRotationDegrees.z}},
 							{ "modelPosition" , {modelPosition.x, modelPosition.y, modelPosition.z}},
-							{ "shieldColor", {shieldColor.x, shieldColor.y, shieldColor.z}},
 							{ "shieldOffset", {shieldOffset.x, shieldOffset.y, shieldOffset.z} }
 						}
 			},
 			//#suggested perhaps rework this so primareFireProjectile has a setter to update the string name copy... this wouldn't follow the normal pattern of treating the config like a struct from within the editor
 			{"primaryProjectileConfigName", primaryFireProjectile ? primaryFireProjectile->getName() : primaryProjectileConfigName}, 
-			{ "shapes", {} }
+			{ "shapes", {} },
+			{ "teamData", {} }
 		};
-
 
 		for (CollisionShapeConfig& shapeCFG : shapes)
 		{
@@ -126,6 +125,17 @@ namespace SA
 			};
 
 			spawnData["shapes"].push_back(s);
+		}
+
+		for (const TeamData& teamDatum : teamData)
+		{
+			json t = 
+			{
+				{ "shieldColor", {teamDatum.shieldColor.x, teamDatum.shieldColor.y, teamDatum.shieldColor.z}},
+				{ "teamTint", {teamDatum.teamTint.x, teamDatum.teamTint.y, teamDatum.teamTint.z}},
+				{ "projectileColor", {teamDatum.projectileColor.x, teamDatum.projectileColor.y, teamDatum.projectileColor.z} }
+			};
+			spawnData["teamData"].push_back(t);
 		}
 
 		outData.push_back({ "SpawnConfig", spawnData });
@@ -157,17 +167,12 @@ namespace SA
 					const json& pos = modelAABB["modelPosition"];
 					if (!pos.is_null() && pos.is_array()) { modelPosition = { pos[0], pos[1], pos[2] }; }
 
-					if (modelAABB.contains("shieldColor"))
-					{
-						const json& readShieldColor = modelAABB["shieldColor"];
-						if (!readShieldColor.is_null() && readShieldColor.is_array()) { shieldColor = { readShieldColor[0], readShieldColor[1], readShieldColor[2] }; }
-					}
 					if (modelAABB.contains("shieldOffset"))
 					{
 						const json& readShieldOffset = modelAABB["shieldOffset"];
 						if (!readShieldOffset.is_null() && readShieldOffset.is_array()) { shieldOffset = { readShieldOffset[0], readShieldOffset[1], readShieldOffset[2] }; }
 					}
-					
+
 				}
 
 				if (spawnData.contains("primaryProjectileConfigName") && spawnData["primaryProjectileConfigName"].is_string())
@@ -177,6 +182,7 @@ namespace SA
 					primaryProjectileConfigName = spawnData["primaryProjectileConfigName"];
 				}
 
+				//#TODO use lambda to load vec3s
 				json loadedShapes = spawnData["shapes"];
 				if (!loadedShapes.is_null())
 				{
@@ -200,6 +206,42 @@ namespace SA
 							shapes.push_back(shapeConfig);
 						}
 					}
+				}
+
+				auto loadVec3 = [](glm::vec3& out, const json& srcJson, const char* const propertyName)
+				{
+					const json& arrayJson = srcJson[propertyName];
+					if (!arrayJson.is_null() && arrayJson.is_array()) 
+					{ 
+						out.x = arrayJson[0];
+						out.y = arrayJson[1];
+						out.z = arrayJson[2];
+					}
+				};
+
+				if (spawnData.contains("teamData"))
+				{
+					json loadedTeamDataArray = spawnData["teamData"];
+					if (!loadedTeamDataArray.is_null() && loadedTeamDataArray.is_array())
+					{
+						teamData.clear();
+						for (const json& teamJson : loadedTeamDataArray)
+						{
+							if (!teamJson.is_null())
+							{
+								TeamData deserialized;
+								loadVec3(deserialized.shieldColor, teamJson, "shieldColor");
+								loadVec3(deserialized.teamTint, teamJson, "teamTint");
+								loadVec3(deserialized.projectileColor, teamJson, "projectileColor");
+								teamData.push_back(deserialized);
+							}
+						}
+					}
+				}
+				else 
+				{ 
+					log(__FUNCTION__, SA::LogLevel::LOG_WARNING, "load spawn config to find team data"); 
+					teamData.push_back(TeamData{});
 				}
 			}
 			else

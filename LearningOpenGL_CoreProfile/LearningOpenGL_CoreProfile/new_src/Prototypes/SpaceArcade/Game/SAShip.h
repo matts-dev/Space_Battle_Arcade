@@ -5,6 +5,7 @@
 #include "../GameFramework/SACollisionUtils.h"
 #include "SAProjectileSystem.h"
 #include "../Tools/DataStructures/SATransform.h"
+#include "AssetConfigs/SASpawnConfig.h"
 
 
 namespace SA
@@ -29,7 +30,7 @@ namespace SA
 		{
 			sp<SpawnConfig> spawnConfig;
 			Transform spawnTransform;
-			int team = -1;
+			size_t team = 0;
 		};
 
 	public:
@@ -85,6 +86,9 @@ namespace SA
 		////////////////////////////////////////////////////////
 		void setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig);
 
+		void setTeam(size_t teamIdx);
+		size_t getTeam() { return teamIdx; }
+
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
@@ -103,11 +107,12 @@ namespace SA
 		const sp<const ModelCollisionInfo> constViewCollisionData;
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocity;
-		glm::vec3 shieldColor;
 		glm::vec3 shieldOffset = glm::vec3(0.f);
 		float maxSpeed = 10.0f; //#TODO make part of spawn config
 		HitPoints hp = { /*current*/100, /*max*/100 };
-		int team;
+		size_t teamIdx;
+		TeamData cachedTeamData;
+		sp<const SpawnConfig> shipData;
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;
