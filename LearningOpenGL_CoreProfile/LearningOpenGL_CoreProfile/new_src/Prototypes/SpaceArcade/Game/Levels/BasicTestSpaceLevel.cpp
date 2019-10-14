@@ -86,48 +86,65 @@ namespace SA
 			log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "Default Spawn Configs not available.");
 		}
 
-		Transform carrierTransform;
-		carrierTransform.position = { 200,0,0 };
-		carrierTransform.scale = { 5, 5, 5 };
-		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip1 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
-		//cachedSpawnEntities.insert({ carrierShip1.get(), carrierShip1 });
+		glm::vec3 carrierPosition_teamA = { 0,0, 150 };
 
-		particleSpawnOffset = carrierTransform.position;
+		if (const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
+		{
+			const sp<CameraBase>& camera = player->getCamera();
+			camera->setFar(1000.f);
+
+			//camera->setPosition(glm::vec3(-300, 0, 0.f));
+			camera->setPosition(carrierPosition_teamA + glm::vec3(10, 20, 20));
+			camera->lookAt_v(camera->getPosition() + glm::vec3(0,0,-1)); //carriers are currently separated along the z axis; so look down that axis
+		}
+		
+
+		Transform carrierXform_TeamA;
+		carrierXform_TeamA.position = carrierPosition_teamA;
+		carrierXform_TeamA.scale = { 5, 5, 5 };
+		carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
+		sp<Ship> carrierShip_TeamA = spawnEntity<Ship>(carrierModel, carrierXform_TeamA, createUnitCubeCollisionInfo());
+
+		Transform carrierXform_TeamB = carrierXform_TeamA;
+		carrierXform_TeamB.position.z = -carrierXform_TeamB.position.z;
+		carrierXform_TeamB.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
+		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
+
+		particleSpawnOffset = glm::vec3(0,0,0);
 
 		std::random_device rng;
 		std::seed_seq seed{ 28 };
 		std::mt19937 rng_eng = std::mt19937(seed);
-		std::uniform_real_distribution<float> startDist(-200.f, 200.f); //[a, b)
+		std::uniform_real_distribution<float> startDist(-50.f, 50.f); //[a, b)
 
-		Ship::SpawnData fighterShipSpawnData;
-		fighterShipSpawnData.team = 0;
-		fighterShipSpawnData.spawnConfig = fighterSpawnConfig;
-
-		int numFighterShipsToSpawn = 5000;
+		uint32_t numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		numFighterShipsToSpawn = 250;
 #endif//NDEBUG 
-		for (int fighterShip = 0; fighterShip < numFighterShipsToSpawn; ++fighterShip)
-		{ 
-			glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
-			glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
-			startPos += carrierTransform.position;
 
-			fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
+		uint32_t numTeams = 2;
+		uint32_t numFightersPerTeam = numFighterShipsToSpawn / numTeams;
 
-			sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
-			fighter->spawnNewBrain<FlyInDirectionBrain>();
-			//fighter->spawnNewBrain<WanderBrain>();
-		}
+		auto spawnFighters = [&](size_t teamIdx, glm::vec3 teamSpawnOrigin) 
+		{
+			Ship::SpawnData fighterShipSpawnData;
+			fighterShipSpawnData.team = teamIdx;
+			fighterShipSpawnData.spawnConfig = fighterSpawnConfig;
 
-		carrierTransform.position.y += 50;
-		carrierTransform.position.x += 120;
-		carrierTransform.position.z -= 50;
-		carrierTransform.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierTransform, createUnitCubeCollisionInfo());
-		//cachedSpawnEntities.insert({ carrierShip2.get(), carrierShip2 });
+			for (uint32_t fighterShip = 0; fighterShip < numFightersPerTeam; ++fighterShip)
+			{ 
+				glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
+				glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
+				startPos += teamSpawnOrigin;
 
+				fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
+
+				sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
+				fighter->spawnNewBrain<FlyInDirectionBrain>();
+			}
+		};
+		spawnFighters(0, carrierXform_TeamA.position);
+		spawnFighters(1, carrierXform_TeamB.position);
 
 		if(const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{

@@ -99,6 +99,7 @@ namespace SA
 				uniform float lightQuadratic		= 0.032f;
 				uniform vec3 directionalLightDir	= vec3(1, -1, -1);
 				uniform vec3 directionalLightColor	= vec3(1, 1, 1);
+				uniform vec3 objectTint				= vec3(1,1,1);
 
 				in vec3 fragNormal;
 				in vec3 fragPosition;
@@ -106,11 +107,13 @@ namespace SA
 
 				vec3 CalculatePointLighting(vec3 normal, vec3 toView, vec3 fragPosition)
 				{ 
-					vec3 ambientLight = lightAmbientIntensity * vec3(texture(material.texture_diffuse0, interpTextCoords));	
+					vec3 diffuseTexture = objectTint * vec3(texture(material.texture_diffuse0, interpTextCoords));
+
+					vec3 ambientLight = lightAmbientIntensity * diffuseTexture;	
 
 					//POINT LIGHT
 					vec3 toLight = normalize(lightPosition - fragPosition);
-					vec3 diffuseLight = max(dot(toLight, normal), 0) * lightDiffuseIntensity * vec3(texture(material.texture_diffuse0, interpTextCoords));
+					vec3 diffuseLight = max(dot(toLight, normal), 0) * lightDiffuseIntensity * diffuseTexture;
 
 					vec3 toReflection = reflect(-toLight, normal);
 					float specularAmount = pow(max(dot(toView, toReflection), 0), material.shininess);
@@ -122,8 +125,8 @@ namespace SA
 					vec3 lightContribution = (ambientLight + diffuseLight + specularLight) * vec3(attenuation);
 					
 					//DIRECTIONAL LIGHT (probably should cache texture lookup, but this is a debug shader anyways)
-					vec3 dirDiffuse = max(dot(-directionalLightDir, normal),0) * directionalLightColor * vec3(texture(material.texture_specular0, interpTextCoords));
-					//vec3 dirDiffuse = max(dot(-directionalLightDir, normal),0) * directionalLightColor * vec3(texture(material.texture_diffuse0, interpTextCoords));
+					//vec3 dirDiffuse = max(dot(-directionalLightDir, normal),0) * directionalLightColor * vec3(texture(material.texture_specular0, interpTextCoords));
+					vec3 dirDiffuse = max(dot(-directionalLightDir, normal),0) * directionalLightColor * diffuseTexture;
 					vec3 toSunLight = normalize(-directionalLightDir);
 					float dirLightSpecAmount = pow(max(dot(toView, reflect(-toSunLight, normal)), 0), material.shininess);
 					vec3 dirSpecular =  directionalLightColor * dirLightSpecAmount* vec3(texture(material.texture_specular0, interpTextCoords));

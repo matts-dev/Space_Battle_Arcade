@@ -170,7 +170,7 @@ namespace SA
 				//camDir.z = cos(pitch) * sin(yaw)
 				//camDir.z / cos(pitch) = sin(yaw)
 				//asin(camDir.z / cos(pitch)) = yaw
-				float sinval = dir.x / std::cosf(pitch);
+				float sinval = dir.z / std::cosf(pitch);
 
 				//float rounding errors like 1.000000012 are possible
 				sinval = glm::clamp(sinval, -1.f, 1.f); 

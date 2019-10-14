@@ -120,6 +120,12 @@ namespace SA
 		cachedTeamData = teams[teamIdx];
 	}
 
+	void Ship::draw(Shader& shader)
+	{
+		shader.setUniform3f("objectTint", cachedTeamData.teamTint);
+		RenderModelEntity::draw(shader);
+	}
+
 	void Ship::fireProjectile(BrainKey privateKey)
 	{
 		//#optimize: set a default projectile config so this doesn't have to be checked every time a ship fires? reduce branch divergence

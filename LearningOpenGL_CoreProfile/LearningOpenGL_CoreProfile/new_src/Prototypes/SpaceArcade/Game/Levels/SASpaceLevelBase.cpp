@@ -23,6 +23,7 @@ namespace SA
 		{
 			const sp<CameraBase>& camera = zeroPlayer->getCamera();
 
+			//#todo a proper system for renderables should be set up; these uniforms only need to be set up front, not during each draw. It may also be advantageous to avoid virtual calls.
 			forwardShadedModelShader->use();
 			forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 			forwardShadedModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
@@ -35,12 +36,9 @@ namespace SA
 			forwardShadedModelShader->setUniform1i("material.shininess", 32);
 			for (const sp<RenderModelEntity>& entity : renderEntities) 
 			{
-				mat4 model = glm::mat4(1.f);
-				//model = glm::translate(model, vec3(5.f, 0.f, -5.f));
 				forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
-				entity->getModel()->draw(*forwardShadedModelShader);
+				entity->draw(*forwardShadedModelShader);
 			}
-
 		}
 	}
 
@@ -49,7 +47,6 @@ namespace SA
 		LevelBase::startLevel_v();
 
 		forwardShadedModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_SimpleLighting_fragSrc, false);
-
 	}
 
 	void SpaceLevelBase::endLevel_v()

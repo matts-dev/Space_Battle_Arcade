@@ -1,5 +1,6 @@
 #include "RenderModelEntity.h"
 #include "SAWorldEntity.h"
+#include "../Rendering/SAShader.h"
 
 namespace SA
 {
@@ -12,4 +13,10 @@ namespace SA
 	{
 		return false;
 	}
+
+	void RenderModelEntity::draw(Shader& shader)
+	{
+		getModel()->draw(shader);
+	}
+
 }
