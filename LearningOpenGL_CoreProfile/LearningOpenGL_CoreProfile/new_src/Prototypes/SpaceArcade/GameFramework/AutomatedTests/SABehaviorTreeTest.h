@@ -57,6 +57,7 @@ namespace SA
 		sp<BehaviorTree::Tree> treeTest_deferredSequence_sss_n;
 		sp<BehaviorTree::Tree> serviceTest_basicFeatures;
 		sp<BehaviorTree::Tree> serviceTest_immediateExecute;
+		sp<BehaviorTree::Tree> loopTestTree;
 		std::set<sp<BehaviorTree::Tree>> treesToTick;
 
 		//****when accessing us "at" method instead of operator [] to get exceptions when typos are used****
@@ -78,7 +79,8 @@ namespace SA
 			{"decoratorTest_deferred_basicFunctionality", 1},
 			{"memoryOperationsTestTree", 11},
 			{ "abortTest_basicFunctionality", 0 /*uses forbidden set to avoid counting passing*/ },
-			{ "abortTest_externalAbort", 0}
+			{ "abortTest_externalAbort", 0},
+			{ "loopTestTree", 0}
 		};
 
 	};

@@ -66,9 +66,9 @@ namespace SA
 			virtual bool resultReady() const = 0;
 			virtual bool result() const = 0;
 			virtual void evaluate() = 0;
+		protected: //tree state machine methods where subclasses are required to call parent
 			virtual void notifyCurrentChildResult(bool childResult) = 0;
 			virtual NodeBase* getNextChild() { return nullptr; }
-		protected: //tree state machine methods where subclasses are required to call parent
 			virtual void resetNode() { bOnExecutionStack = false; }			
 
 			/* Notifies users that abort happened; cancel any pending timers in your override. */
@@ -115,10 +115,10 @@ namespace SA
 		private:
 			virtual bool resultReady() const override			{ return bChildReturned; };
 			virtual bool result() const							{ return bChildExecutionResult; }
-			virtual NodeBase* getNextChild() override			{ return children.size() > 0 ? children[0].get() : nullptr; }
-			virtual void notifyCurrentChildResult(bool childResult) override;
 
 		protected:
+			virtual void notifyCurrentChildResult(bool childResult) override;
+			virtual NodeBase* getNextChild() override			{ return children.size() > 0 ? children[0].get() : nullptr; }
 			virtual bool hasPendingChildren() const override	{ return !bChildReturned; }
 			virtual void resetNode() override
 			{
@@ -281,6 +281,34 @@ namespace SA
 			virtual NodeBase* getNextChild() override;
 			virtual bool result() const;
 			virtual void handleNodeAborted() override {} // reset node will cover required cleanup
+		};
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Loop Behavior Node
+		/////////////////////////////////////////////////////////////////////////////////////
+		class Loop : public SingleChildNode
+		{
+		public:
+			Loop(const std::string& name, uint32_t inNumLoops, const sp<NodeBase>& child) 
+				: SingleChildNode(name, child),
+				numLoops(inNumLoops),
+				bInifinteLoop(inNumLoops == 0)
+			{
+			}
+			virtual bool resultReady() const override;
+			virtual bool hasPendingChildren() const override { return !resultReady(); }
+
+		protected:
+			virtual void notifyCurrentChildResult(bool childResult) override;
+			virtual void evaluate() override {};
+			virtual bool isProcessing(void) const override;
+			virtual void handleNodeAborted() override {}
+			virtual void resetNode() override;
+		private:
+			const uint32_t numLoops = 1;
+			const bool bInifinteLoop = false;
+			uint32_t currentLoop = 0;
+			mutable uint64_t lastFrameTicked = 0;
 		};
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -552,7 +580,7 @@ namespace SA
 
 		using MemoryInitializer = std::vector<std::pair<std::string, sp<GameEntity>>>;
 		using MakeChildren = std::vector<sp<NodeBase>>;
-		enum class ExecutionState : uint32_t { STARTING, POPPED_CHILD, PUSHED_CHILD, CHILD_EXECUTING };
+		enum class ExecutionState : uint32_t { STARTING, POPPED_CHILD, PUSHED_CHILD, CHILD_EXECUTING, ABORT };
 		struct ResumeStateData
 		{
 			ExecutionState state;

@@ -201,26 +201,14 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////
 	void WanderBrain::postConstruct()
 	{
-		/*
-		service_find_target
-		selector_has_target
-			decorator_hastarget
-			selector_hastarget
-				TaskMoveToTarget
-			decorator_notarget
-			sequence_randomLocation
-				task_findrandomloc
-				task_rotateTowardsLoc
-				task_moveToLoc
-		*/
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("tree-root",
 				new_sp<Selector>("RootSelector", MakeChildren{
 					new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{
 						//new_sp<Task_Ship_SaveShipLocation>("ship_loc", "selfBrain"),
-						new_sp<Task_FindRandomLocationNearby>("target_loc", "ship_loc", 200.0f),
-						new_sp<Task_Ship_MoveToLocation>("selfBrain", "target_loc", 10.0f)
+						new_sp<Task_FindRandomLocationNearby>("target_loc", "ship_loc", 400.0f),
+						new_sp<Task_Ship_MoveToLocation>("selfBrain", "target_loc", 45.0f)
 					})
 				}),
 				MemoryInitializer
@@ -238,7 +226,8 @@ namespace SA
 
 	void FighterBrain::postConstruct()
 	{
-		/*
+		/* old test tree structure
+
 			service_find_target
 			selector_has_target
 				decorator_hastarget
@@ -250,27 +239,47 @@ namespace SA
 					task_rotateTowardsLoc
 					task_moveToLoc
 		*/
+
+		/*
+		notes:
+			-need "opportunistic shots" in that if a non-target but attacker gets in crosshairs, then it will fire
+			-need "friendly friend accidents collection" so if a friendly fire happens it will line trace to avoid that
+
+		tree:
+			service_targetFinder		//tries to find a target by looking around spatial hash (or for friends that have a target for "mob" behavior
+			service_opportunisitic_shots	//shoot at target/attackers if within crosshairs
+				select
+					evade
+						select-random
+							corkscrew-spiral
+							corkscrew-turn
+							turn-back180
+					attack
+						orient_towards(target)		//opportunistic shots service will take care of firing
+					decorator_abort_on_targetFound
+					decorator_abort_on_attackerFound
+					wander
+						-find random location
+							-move to random location
+
+		*/
+
 		using namespace BehaviorTree;
-		//sp<Tree> bt = 
-		//	new_sp<Tree>("tree-root",
-		//		new_sp<Service>("service_find_target", 0.1f, true,
-		//			new_sp<Selector>("selector_hasTarget", std::vector<sp<NodeBase>>{
-		//				new_sp<Decorator>("decorator_hastarget", 
-		//					new_sp<Selector>("selector_hastarget", std::vector<sp<NodeBase>>{
-		//						new_sp<Task>("task_move")
-		//					})
-		//				),
-		//				new_sp<Decorator>("decorator_notarget",
-		//					new_sp<Sequence>("sequence_moveToRandomLoc", std::vector<sp<NodeBase>>{
-		//						new_sp<Task>("task_FindRandomLoc"),
-		//						new_sp<Task>("task_RotateTowardsLoc"),
-		//						new_sp<Task>("task_move")
-		//					})
-		//				)
-		//			})
-		//		)
-		//	);
-		//behaviorTree = bt;
+		behaviorTree =
+			new_sp<Tree>("tree-root",
+				new_sp<Selector>("RootSelector", MakeChildren{
+					new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{
+						new_sp<Task_FindRandomLocationNearby>("target_loc", "ship_loc", 200.0f),
+						new_sp<Task_Ship_MoveToLocation>("selfBrain", "target_loc", 10.0f)
+					})
+				}),
+				MemoryInitializer
+				{
+					{"selfBrain", sp_this() },
+					//{ "ship_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					//{ "target_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) }
+				}
+			);
 	}
 
 

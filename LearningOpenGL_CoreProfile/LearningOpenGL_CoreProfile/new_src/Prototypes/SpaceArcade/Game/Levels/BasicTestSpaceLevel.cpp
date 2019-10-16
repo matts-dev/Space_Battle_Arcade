@@ -120,6 +120,7 @@ namespace SA
 		uint32_t numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		numFighterShipsToSpawn = 250;
+		//numFighterShipsToSpawn = 2;
 #endif//NDEBUG 
 
 		uint32_t numTeams = 2;
@@ -141,6 +142,7 @@ namespace SA
 
 				sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
 				fighter->spawnNewBrain<FlyInDirectionBrain>();
+				//fighter->spawnNewBrain<WanderBrain>();
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);

@@ -209,6 +209,8 @@ namespace SA
 				while (inOut_CurrentNode->getPriority() >= abortPriority.value()
 						&& executionStack.size() > 1)
 				{
+					if constexpr (LOG_TREE_STATE) { treeLog(ExecutionState::ABORT, inOut_CurrentNode, 0); }
+
 					inOut_CurrentNode->handleNodeAborted();
 					inOut_CurrentNode->resetNode();
 					if (executionStack.size() > 1) { executionStack.pop_back(); }
@@ -243,9 +245,13 @@ namespace SA
 				case ExecutionState::PUSHED_CHILD:
 					stateString = "+ PUSHED_CHILD";
 					break;
+				case ExecutionState::ABORT:
+					stateString = "* ABORT";
+					break;
 				default:
 					stateString = "? OTHER";
 			}
+
 			std::string treeInstance = std::to_string((uint64_t)this);
 			std::string numNodesStr = std::to_string(nodesVisited);
 			std::string nodeName = currentNode ? currentNode->nodeName : std::string("null-node");
@@ -563,6 +569,64 @@ namespace SA
 			SingleChildNode::resetNode();
 			conditionalResult.reset();
 			bStartedDecoratorEvaluation = false;
+		}
+
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Loop node
+		/////////////////////////////////////////////////////////////////////////////////////
+		bool Loop::resultReady() const
+		{
+			if (bInifinteLoop)
+			{
+				//use abort decorators to get out of infinte loops
+				return false;
+			}
+			else
+			{
+				return currentLoop >= numLoops;
+			}
+		}
+
+		void Loop::notifyCurrentChildResult(bool childResult)
+		{
+			currentLoop += 1;
+			SingleChildNode::notifyCurrentChildResult(childResult);
+		}
+
+		bool Loop::isProcessing(void) const
+		{
+			/*
+				The loop node itself will only have its "isProcessing" checked once its child returns.
+				Here we limit the loop body to a single frame to avoid running a small loop many times in a single frame.
+				So the execution sequence should go like this:
+					frame:0
+						push loop
+						loop processing is false
+						push loop child
+						pop loop child
+						loop processing is true (this frame already checked)
+					frame:1
+						loop processing is false
+						push loop child
+						...
+			*/
+
+			static GameBase& game = GameBase::get();
+			uint64_t thisFrame = game.getFrameNumber();
+
+			//signal this node is processing if it already looped this frame
+			bool bAlreadyTickedThisFrame = lastFrameTicked == thisFrame;
+
+			lastFrameTicked = thisFrame;
+
+			return bAlreadyTickedThisFrame;
+		}
+
+		void Loop::resetNode()
+		{
+			currentLoop = 0;
+			SingleChildNode::resetNode();
 		}
 
 	}

@@ -204,7 +204,7 @@ namespace SA
 			if constexpr (ENABLE_DEBUG_LINES)
 			{
 				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
-				debug.renderLine(vec4(xform.position, 1), vec4(moveLoc, 1), vec4(1, 0, 0, 1));
+				debug.renderLine(vec4(xform.position, 1), vec4(moveLoc, 1), vec4(0, 0.25f, 0, 1));
 			}
 
 			return !evaluationResult.has_value();

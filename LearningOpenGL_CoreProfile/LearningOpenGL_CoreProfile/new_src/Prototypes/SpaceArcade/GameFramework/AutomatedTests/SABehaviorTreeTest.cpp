@@ -69,6 +69,43 @@ namespace SA
 		TestTreeStructureResults& testLocation;
 	};
 
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Counter task
+	/////////////////////////////////////////////////////////////////////////////////////
+	class task_hit_counter : public BehaviorTree::Task
+	{
+	public:
+		task_hit_counter(uint32_t hitCount, TestTreeStructureResults& testResultLocation)
+			: BehaviorTree::Task("task_hit_counter"),
+			requiredHitCount(hitCount),
+			testLocation(testResultLocation)
+		{
+		}
+		virtual void notifyTreeEstablished() override
+		{
+			/*erase once passing, not all tests make use of this feature*/
+			testLocation.forbiddenTasks.insert(sp_this());
+		}
+		virtual void beginTask() override
+		{
+			hitsSoFar++;
+			evaluationResult = true;
+
+			if (hitsSoFar >= requiredHitCount)
+			{
+				testLocation.requiredCompletedTasks.insert(sp_this());
+				testLocation.forbiddenTasks.erase(sp_this());
+			}
+		}
+		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
+
+		const uint32_t requiredHitCount;
+		uint32_t hitsSoFar = 0;
+		TestTreeStructureResults& testLocation;
+	};
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Task that should never be hit; unit tests should place these in places where tree
 	// structure in combination with task types should never allow this to be executed.
@@ -1113,6 +1150,55 @@ namespace SA
 		bool bHasAborted = false;
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Counter task with memory write
+	/////////////////////////////////////////////////////////////////////////////////////
+	class task_hit_counter_with_memory_write : public BehaviorTree::Task
+	{
+	public:
+		task_hit_counter_with_memory_write(uint32_t hitCount, const std::string& memoryKey, TestTreeStructureResults& testResultLocation)
+			: BehaviorTree::Task("task_hit_counter_with_memory_write"),
+			requiredHitCount(hitCount),
+			varKey(memoryKey),
+			testLocation(testResultLocation)
+		{
+		}
+		virtual void notifyTreeEstablished() override
+		{
+			/*erase once passing, not all tests make use of this feature*/
+			testLocation.forbiddenTasks.insert(sp_this());
+		}
+		virtual void beginTask() override
+		{
+			using namespace BehaviorTree;
+
+			hitsSoFar++;
+			evaluationResult = true;
+
+			if (hitsSoFar >= requiredHitCount)
+			{
+				Memory& mem = getMemory();
+
+				//makes value 1, which a decorator can read and cancel
+				BehaviorTree::ScopedUpdateNotifier<MemoryUpdateTester> writeValue;
+				if (mem.getWriteValueAs<MemoryUpdateTester>(varKey, writeValue))
+				{
+					MemoryUpdateTester& toUpdate = writeValue.get();
+					toUpdate.myValue = 1;
+					testLocation.forbiddenTasks.erase(sp_this());
+					testLocation.requiredCompletedTasks.insert(sp_this());
+				}
+			}
+		}
+		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
+
+		const uint32_t requiredHitCount;
+		uint32_t hitsSoFar = 0;
+		std::string varKey;
+		TestTreeStructureResults& testLocation;
+	};
+
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Behavior Tree Test
@@ -1636,6 +1722,48 @@ namespace SA
 		}
 		abortTest_externalAbort->tick(1.0f);
 		treesToTick.insert(abortTest_externalAbort); //let the ticker finish this tree up
+
+
+		////////////////////////////////////////////////////////
+		// Test looping node
+		// dependencies:
+		//		decorator tests pass
+		//		abort tests pass
+		//	tests
+		//		-counted loop node
+		//		-infinite loop node
+		//		-aborts break infinite loops
+		////////////////////////////////////////////////////////
+		const uint32_t outterLoopNum = 3;
+		loopTestTree =
+			new_sp<Tree>("loop test tree",
+				//gate the entire tree so it will only be run one time; this ensure the loops are incrementing counters and NOT just the tree running multiple times
+				new_sp<Decorator_is_not_one>("run-once-gate", "run-once-key",
+					new_sp<Sequence>("seq_tests", MakeChildren{
+						new_sp<task_make_memory_one>("run-once-key", testResults.at("loopTestTree")),
+						new_sp<Loop>("counted-sequence-loop", outterLoopNum,
+							new_sp<Sequence>("seq_counters", MakeChildren{
+								new_sp<task_hit_counter>(outterLoopNum, testResults.at("loopTestTree")),
+								new_sp<task_hit_counter>(outterLoopNum, testResults.at("loopTestTree")),
+								new_sp<task_hit_counter>(outterLoopNum, testResults.at("loopTestTree"))
+							})
+						),
+						//new_sp<Decorator_is_not_one>("infinite-loop-break", "infLoopKey",
+						new_sp<Decorator_AbortOn>(TestAbortEvent::Modify, "infinite-loop-break", "infLoopKey", Decorator::AbortType::ChildAndLowerPriortyTrees,
+							new_sp<Loop>("infinite-loop", 0,
+								new_sp<task_hit_counter_with_memory_write>(10, "infLoopKey", testResults.at("loopTestTree"))	//makes memory one when it hits value
+							)
+						)
+					})
+				),
+				MemoryInitializer{
+					{ "run-once-key", new_sp<MemoryUpdateTester>(0) },
+					{ "infLoopKey", new_sp<MemoryUpdateTester>(0) }
+				}
+		);
+
+		loopTestTree->start();
+		treesToTick.insert(loopTestTree);
 	}
 
 	void BehaviorTreeTest::tick()

@@ -12,5 +12,5 @@ namespace SA
 	};
 
 	/** #TODO Logging system will probably need more fleshing out*/
-	void log(const char* LogName, LogLevel level, const char* msg);
+	void log(const char* logName, LogLevel level, const char* msg);
 }
