@@ -10,6 +10,11 @@ namespace SA
 	template<typename... Args>
 	class MultiDelegate;
 
+	namespace BehaviorTree
+	{
+		class Tree;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Base ship brain;
 	//		-controls a ship object

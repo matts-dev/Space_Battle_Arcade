@@ -145,6 +145,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SADebugRenderSystem.h" />
@@ -420,6 +421,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />

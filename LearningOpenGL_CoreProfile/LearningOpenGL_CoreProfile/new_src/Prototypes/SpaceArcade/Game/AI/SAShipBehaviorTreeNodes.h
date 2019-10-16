@@ -1,5 +1,5 @@
 #pragma once
-#include "../../GameFramework/SAAIBrainBase.h"
+#include "../../GameFramework/SABehaviorTree.h"
 #include "../../GameFramework/SATimeManagementSystem.h"
 #include "../SAShip.h"
 

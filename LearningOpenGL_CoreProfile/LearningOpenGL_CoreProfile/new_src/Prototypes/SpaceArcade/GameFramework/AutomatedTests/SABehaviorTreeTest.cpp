@@ -1,5 +1,5 @@
 #include "SABehaviorTreeTest.h"
-#include "../SAAIBrainBase.h"
+#include "../SABehaviorTree.h"
 #include <vector>
 #include <iostream>
 #include "../SALog.h"

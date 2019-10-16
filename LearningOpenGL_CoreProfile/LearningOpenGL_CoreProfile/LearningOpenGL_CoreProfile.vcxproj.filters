@@ -642,6 +642,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1665,6 +1668,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,12 +1,12 @@
 #include "SAShipAIBrain.h"
+#include "SAShipBehaviorTreeNodes.h"
+#include "../SAShip.h"
+#include "../SpaceArcade.h"
 #include "../../GameFramework/SALog.h"
 #include "../../GameFramework/SALevel.h"
-#include "../SpaceArcade.h"
 #include "../../GameFramework/SAGameBase.h"
 #include "../../GameFramework/SALevelSystem.h"
-#include "../SAShip.h"
 #include "../../Tools/DataStructures/MultiDelegate.h"
-#include "SAShipBehaviorTreeNodes.h"
 
 namespace SA
 {
