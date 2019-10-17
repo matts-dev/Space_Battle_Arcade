@@ -6,6 +6,8 @@
 #include "SALevelSystem.h"
 #include "SAGameBase.h"
 #include "SALevel.h"
+#include <map>
+#include "SARandomNumberGenerationSystem.h"
 
 
 
@@ -342,14 +344,15 @@ namespace SA
 
 		bool Selector::resultReady() const
 		{
-			if (!hasPendingChildren())
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return !hasPendingChildren();
+			//if (!hasPendingChildren())
+			//{
+			//	return true;
+			//}
+			//else
+			//{
+			//	return false;
+			//}
 		}
 
 		NodeBase* Selector::getNextChild()
@@ -619,6 +622,101 @@ namespace SA
 		{
 			currentLoop = 0;
 			SingleChildNode::resetNode();
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Random Selector Node
+		/////////////////////////////////////////////////////////////////////////////////////
+		Random::Random(
+			const std::string& name,
+			const std::vector<ChildChance> childChances,
+			const std::vector<sp<NodeBase>>& inChildren) 
+			: MultiChildNode(name, inChildren)
+		{
+			rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+
+			std::map<std::string, NodeBase*> nameToNodeMap;
+
+			for (size_t childIdx = 0; childIdx < children.size(); ++childIdx)
+			{
+				const sp<NodeBase>& child = children[childIdx];
+				const std::string& childName = child->getName();
+				auto find = nameToNodeMap.find(childName);
+				if (find == nameToNodeMap.end())
+				{
+					nameToNodeMap[childName] = child.get();
+				}
+				else
+				{
+					log("Random Behavior Node", LogLevel::LOG_ERROR, " !!! Duplicate child node name! Behavior tree must have unique named nodes within a random node !!!");
+				}
+			}
+
+			std::set<std::string> assignedChanceData;
+			for (const ChildChance& chance : childChances)
+			{
+				auto nodeFind = nameToNodeMap.find(chance.childName);
+				if (nodeFind != nameToNodeMap.end())
+				{
+					NodeBase* childRawPtr = nodeFind->second;
+					for (size_t chancePoint = 0; chancePoint < chance.chancePoints; ++chancePoint)
+					{
+						chanceBucket.push_back(childRawPtr);
+					}
+					assignedChanceData.insert(chance.childName);
+				}
+				else
+				{
+					log("Random Behavior Node", LogLevel::LOG_ERROR, "!!! Cannot find child for specified chance !!!");
+				}
+			}
+
+			//make sure all children have assigned chances
+			for (auto childIter : nameToNodeMap)
+			{
+				auto findIfAssignedChance = assignedChanceData.find(childIter.first);
+				if (findIfAssignedChance == assignedChanceData.end())
+				{
+					std::string failedAssignment = std::string("!!! Could not assign node \"") + childIter.first + std::string("\" a chance/probability; did you forget this node? this random node:") + getName();
+					log("Random Behavior Node", LogLevel::LOG_ERROR, failedAssignment.c_str());
+				}
+			}
+
+		}
+
+		bool Random::hasPendingChildren() const
+		{
+			return !randomChoice.has_value();
+		}
+
+		void Random::resetNode()
+		{
+			randomChoice.reset();
+			childResult.reset();
+		}
+
+		SA::BehaviorTree::NodeBase* Random::getNextChild()
+		{
+			//this should only ever be called if there is no current random choice (see hasPendingChildren)
+			randomChoice = rng->getInt<size_t>(0, chanceBucket.size()-1);
+			return chanceBucket[*randomChoice];
+		}
+
+		void Random::notifyCurrentChildResult(bool inChildResult)
+		{
+			childResult = inChildResult;
+		}
+
+		bool Random::resultReady() const
+		{
+			//alternatively the random node could keep choosing until it finds a successful child
+			//but I am leaning towards the simple design. It is basically "choose one child, run that child, return its result"
+			return childResult.has_value();
+		}
+
+		bool Random::result() const
+		{
+			return *childResult;
 		}
 
 	}

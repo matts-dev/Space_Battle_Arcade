@@ -12,6 +12,8 @@
 
 namespace SA
 {
+	class RNG;
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Behavior Trees
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +49,9 @@ namespace SA
 		private:
 			virtual void notifyTreeEstablished() {}; //override for memory value initialization
 
+		public:
+			inline const std::string getName() const { return nodeName; }
+
 		protected: //subclass helpers
 			inline Memory& getMemory() const
 			{
@@ -59,7 +64,7 @@ namespace SA
 				return *owningTree;
 			}
 			inline uint32_t getPriority() const { return priority; }
-			inline bool isOnExecutionStack() { return bOnExecutionStack; }
+			inline bool isOnExecutionStack() const { return bOnExecutionStack; }
 
 		protected:
 			/** The first descendant children of this node */
@@ -281,6 +286,46 @@ namespace SA
 			uint32_t currentLoop = 0;
 			mutable uint64_t lastFrameTicked = 0;
 		};
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Random Selector Node
+		/////////////////////////////////////////////////////////////////////////////////////
+		class Random : public MultiChildNode
+		{
+		public:
+			/** Like a probability, but is more flexible to change. 
+			 *	example: If you have 2 children and you want childA to to have 3/10 chance and childB to have 7/10,
+			 *  then you specify 3 points for A and 7 points for B. If a a new childC is added later, you do not need to
+			 *  bother updating the childA and childB's probabilities to sum to 1. By just assigning 3 points to ChildC, 
+			 *	we now have childA=3/13, childB=7/13, and childC=3/13 */ 
+			struct ChildChance
+			{
+				std::string childName;
+				uint32_t chancePoints;
+			};
+
+		public:
+			Random(const std::string& name, const std::vector<ChildChance> childChances, const std::vector<sp<NodeBase>>& children);
+
+			virtual bool isProcessing() const { return false; }; //children may be processing, but the RandomNode should always be immediately complete
+			virtual void evaluate() { /* Nothing to do here, get next child does random selection*/}
+			virtual bool hasPendingChildren() const;
+			virtual void resetNode() override;
+			virtual NodeBase* getNextChild() override;
+			virtual void notifyCurrentChildResult(bool childResult);
+			virtual bool resultReady() const;
+			virtual bool result() const;
+			virtual void handleNodeAborted() override {} // reset node will cover required cleanup
+		private:
+			/** A bucket of children ptr copies; a simplisitic approach to mapping probability to child
+				example: A(1/6), B(2/6) c(3/6) will look like {A,B,B,C,C,C} */
+			std::vector<NodeBase*> chanceBucket;
+			std::optional<size_t> randomChoice;
+			std::optional<bool> childResult;
+			sp<RNG> rng = nullptr;
+		};
+		using Chances = std::vector<Random::ChildChance>;
+
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Tree Memory Utils

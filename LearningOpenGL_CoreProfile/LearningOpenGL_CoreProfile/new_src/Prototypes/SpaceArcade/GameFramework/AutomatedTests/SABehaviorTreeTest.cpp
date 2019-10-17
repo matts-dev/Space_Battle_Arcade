@@ -1200,6 +1200,32 @@ namespace SA
 	};
 
 
+	class task_named_succeed : public BehaviorTree::Task
+	{
+	public:
+		task_named_succeed(const std::string& name, TestTreeStructureResults& testResultLocation)
+			: BehaviorTree::Task(name),
+			testLocation(testResultLocation)
+		{
+		}
+
+		virtual void notifyTreeEstablished() override
+		{
+			/*erase once passing, not all tests make use of this feature*/
+			testLocation.forbiddenTasks.insert(sp_this());
+		}
+		virtual void beginTask() override
+		{
+			evaluationResult = true;
+			testLocation.requiredCompletedTasks.insert(sp_this());
+			testLocation.forbiddenTasks.erase(sp_this());
+		}
+		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
+
+		TestTreeStructureResults& testLocation;
+	};
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Behavior Tree Test
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -1764,6 +1790,23 @@ namespace SA
 
 		loopTestTree->start();
 		treesToTick.insert(loopTestTree);
+
+		randomNodeTest_hasSmallChanceOfNaturalFailure =
+			new_sp<Tree>("random-node-test",
+				new_sp<Random>("RandomSelector", 
+					Chances{{"A", 1},
+							{"B", 2},
+							{"C", 3}},
+					MakeChildren{
+						new_sp<task_named_succeed>("A", testResults.at("randomNodeTest")),
+						new_sp<task_named_succeed>("B", testResults.at("randomNodeTest")),
+						new_sp<task_named_succeed>("C", testResults.at("randomNodeTest"))
+				}),
+				MemoryInitializer{}
+			);
+		randomNodeTest_hasSmallChanceOfNaturalFailure->start();
+		//BehaviorTree::targetDebugTree = randomNodeTest_hasSmallChanceOfNaturalFailure.get(); std::cout << "TEMP DELETE ME" << std::endl;
+		treesToTick.insert(randomNodeTest_hasSmallChanceOfNaturalFailure);
 	}
 
 	void BehaviorTreeTest::tick()

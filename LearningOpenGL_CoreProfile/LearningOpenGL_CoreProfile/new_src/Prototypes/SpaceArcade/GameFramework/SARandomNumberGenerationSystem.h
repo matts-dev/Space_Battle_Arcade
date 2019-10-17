@@ -64,10 +64,10 @@ namespace SA
 
 	public:
 		template<typename T = int>
-		T getInt(T lowerInclusive = 0, T upperExclusive = std::numeric_limits<T>::max())
+		T getInt(T lowerInclusive = 0, T upperInclusive = std::numeric_limits<T>::max())
 		{
 			static_assert(std::is_integral<T>::value, "must provide integer type");
-			std::uniform_int_distribution<T> distribution(lowerInclusive, upperExclusive);
+			std::uniform_int_distribution<T> distribution(lowerInclusive, upperInclusive);
 			return distribution(rng_eng);
 		}
 
