@@ -2,6 +2,7 @@
 #include "SAGameEntity.h"
 #include "..\Tools\DataStructures\SATransform.h"
 #include "Interfaces\SATickable.h"
+#include "SAComponentEntity.h"
 
 namespace SA
 {
@@ -19,7 +20,7 @@ namespace SA
 			*World entities define their world transform interface
 
 	*/
-	class WorldEntity : public GameEntity, public Tickable
+	class WorldEntity : public GameplayComponentEntity, public Tickable
 	{
 	public:
 		WorldEntity(Transform spawnTransform = Transform{})
