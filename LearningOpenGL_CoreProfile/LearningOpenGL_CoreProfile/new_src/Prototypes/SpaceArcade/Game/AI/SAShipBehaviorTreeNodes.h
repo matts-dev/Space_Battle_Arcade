@@ -6,11 +6,18 @@
 namespace SA
 {
 	class RNG;
+	class ShipAIBrain;
+
+	enum class MentalState_Fighter : uint32_t
+	{
+		EVADE, 
+		FIGHT,
+		WANDER,
+	};
 
 	namespace BehaviorTree
 	{
 		constexpr bool ENABLE_DEBUG_LINES = true;
-
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// task find random location within radius
@@ -105,6 +112,37 @@ namespace SA
 			//thresholds
 			const float atLocThresholdLength2 = 0.1f;
 			float accumulatedTime = 0;
+		};
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Service target finder
+		/////////////////////////////////////////////////////////////////////////////////////
+		class Service_TargetFinder : public Service
+		{
+		public:
+			Service_TargetFinder(const std::string& name, float tickSecs, bool bLoop, 
+				const std::string& brainKey, const std::string& targetKey, const sp<NodeBase>& child)
+				: Service(name, tickSecs, bLoop, child),
+				brainKey(brainKey), targetKey(targetKey)
+			{ }
+
+		protected:
+			virtual void serviceTick() override;
+			virtual void startService() override;
+			virtual void stopService() override;
+			virtual void handleNodeAborted() override {}
+
+			void HandleTargetChanged(const std::string& key, const GameEntity* value);
+			void resetSearchData();
+			void tickFindNewTarget();
+
+		private:
+			std::string brainKey;
+			std::string targetKey;
+			const ShipAIBrain* owningBrain;
+			wp<GameEntity> currentTarget;
+
+		private: //helper data for navigating 3d world to find target over successful ticks
 		};
 
 	}

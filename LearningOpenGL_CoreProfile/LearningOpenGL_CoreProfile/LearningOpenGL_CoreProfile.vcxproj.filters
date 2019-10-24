@@ -645,6 +645,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTreeHelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1671,6 +1677,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTreeHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

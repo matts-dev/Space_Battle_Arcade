@@ -23,7 +23,7 @@ namespace SA
 		int max;
 	};
 
-	class Ship : public RenderModelEntity, public IProjectileHitNotifiable
+ 	class Ship : public RenderModelEntity, public IProjectileHitNotifiable
 	{
 	public:
 		struct SpawnData

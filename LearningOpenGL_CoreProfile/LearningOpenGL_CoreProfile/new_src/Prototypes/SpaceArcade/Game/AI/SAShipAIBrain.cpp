@@ -7,6 +7,8 @@
 #include "../../GameFramework/SAGameBase.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../Tools/DataStructures/MultiDelegate.h"
+#include "../../GameFramework/SABehaviorTreeHelpers.h"
+#include "../../GameFramework/BehaviorTree_ProvidedNodes.h"
 
 namespace SA
 {
@@ -226,20 +228,6 @@ namespace SA
 
 	void FighterBrain::postConstruct()
 	{
-		/* old test tree structure
-
-			service_find_target
-			selector_has_target
-				decorator_hastarget
-				selector_hastarget
-					TaskMoveToTarget
-				decorator_notarget
-				sequence_randomLocation
-					task_findrandomloc
-					task_rotateTowardsLoc
-					task_moveToLoc
-		*/
-
 		/*
 		notes:
 			-need "opportunistic shots" in that if a non-target but attacker gets in crosshairs, then it will fire
@@ -248,36 +236,51 @@ namespace SA
 		tree:
 			service_targetFinder		//tries to find a target by looking around spatial hash (or for friends that have a target for "mob" behavior
 			service_opportunisitic_shots	//shoot at target/attackers if within crosshairs
-				select
-					evade
-						select-random
-							corkscrew-spiral
-							corkscrew-turn
-							turn-back180
-					attack
-						orient_towards(target)		//opportunistic shots service will take care of firing
-					decorator_abort_on_targetFound
-					decorator_abort_on_attackerFound
-					wander
-						-find random location
-							-move to random location
+				loop
+					select
+						evade
+							select-random
+								corkscrew-spiral
+								corkscrew-turn
+								turn-back180
+						attack
+							orient_towards(target)		//opportunistic shots service will take care of firing
+						decorator_abort_on_targetFound
+						decorator_abort_on_attackerFound
+						wander
+							-find random location
+								-move to random location
 
 		*/
 
 		using namespace BehaviorTree;
 		behaviorTree =
-			new_sp<Tree>("tree-root",
-				new_sp<Selector>("RootSelector", MakeChildren{
-					new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{
-						new_sp<Task_FindRandomLocationNearby>("target_loc", "ship_loc", 200.0f),
-						new_sp<Task_Ship_MoveToLocation>("selfBrain", "target_loc", 10.0f)
-					})
-				}),
+			new_sp<Tree>("fighter-tree-root",
+				new_sp<Service_PlaceHolder>("service_targetFinder", 1.0f, true, 
+				new_sp<Service_PlaceHolder>("service_opportunisiticShots", 1.0f, true,
+					new_sp<Loop>("fighter-inf-loop", 0,
+						new_sp<Selector>("state_selector", MakeChildren{
+							new_sp<Decorator_Is<MentalState_Fighter>>("dec_evade_state", "stateKey", OP::EQUAL, MentalState_Fighter::EVADE,
+								new_sp<Task_PlaceHolder>("task_evade", true)
+							),
+							new_sp<Decorator_Is<MentalState_Fighter>>("dec_attack_state", "stateKey", OP::EQUAL, MentalState_Fighter::FIGHT,
+								new_sp<Task_PlaceHolder>("task_orient_to_target", true)
+							),
+							new_sp<Decorator_Is<MentalState_Fighter>>("dec_wander_state", "stateKey", OP::EQUAL, MentalState_Fighter::WANDER,
+								new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{
+									new_sp<Task_FindRandomLocationNearby>("wander_loc", "origin", 400.0f),
+									new_sp<Task_Ship_MoveToLocation>("selfBrain", "wander_loc", 45.0f)
+								})
+							)
+						})
+					)
+				)),
 				MemoryInitializer
 				{
 					{"selfBrain", sp_this() },
-					//{ "ship_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
-					//{ "target_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) }
+					{ "origin", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ "wander_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ "stateKey", new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::WANDER)}
 				}
 			);
 	}

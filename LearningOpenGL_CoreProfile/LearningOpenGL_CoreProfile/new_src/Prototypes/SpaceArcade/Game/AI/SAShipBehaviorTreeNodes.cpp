@@ -227,6 +227,57 @@ namespace SA
 		void Task_Ship_MoveToLocation::handleNodeAborted()
 		{
 		}
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Service target finder
+		/////////////////////////////////////////////////////////////////////////////////////
+
+		void Service_TargetFinder::serviceTick()
+		{
+			//this service should always have a brain available while it is ticking; if it doesn't this is a design error.
+			assert(owningBrain);
+			Memory& memory = getMemory();
+			if (currentTarget.expired())
+			{
+				tickFindNewTarget();
+			}
+		}
+
+		void Service_TargetFinder::startService()
+		{
+			Memory& memory = getMemory();
+			owningBrain = memory.getReadValueAs<ShipAIBrain>(brainKey);
+			memory.getModifiedDelegate(targetKey).addStrongObj(sp_this(), &Service_TargetFinder::HandleTargetChanged);
+		}
+
+		void Service_TargetFinder::stopService()
+		{
+			owningBrain = nullptr;
+			currentTarget.reset();
+			getMemory().getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_TargetFinder::HandleTargetChanged);
+		}
+
+		void Service_TargetFinder::HandleTargetChanged(const std::string& key, const GameEntity* value)
+		{
+			if (value == nullptr)
+			{
+				currentTarget.reset();
+				resetSearchData();
+				tickFindNewTarget();
+			}
+		}
+
+		void Service_TargetFinder::resetSearchData()
+		{
+
+		}
+
+		void Service_TargetFinder::tickFindNewTarget()
+		{
+			//TODO search around current cube for nearby enemies
+			//TODO ray trace out front to see if any enemies are in LOS
+			//TODO draw debug shapes to visualize work this is doing
+		}
 	}
 }
 
