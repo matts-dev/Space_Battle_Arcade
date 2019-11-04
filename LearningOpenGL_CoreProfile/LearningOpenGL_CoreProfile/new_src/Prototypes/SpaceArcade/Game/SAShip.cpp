@@ -10,6 +10,8 @@
 #include "../GameFramework/SAParticleSystem.h"
 #include "../GameFramework/EngineParticles/BuiltInParticles.h"
 #include "AI/SAShipAIBrain.h"
+#include "../GameFramework/Components/GameplayComponents.h"
+#include "../Tools/SAUtilities.h"
 
 namespace
 {
@@ -47,14 +49,20 @@ namespace SA
 		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
 		collisionData(spawnData.spawnConfig->toCollisionInfo()), 
 		constViewCollisionData(collisionData),
-		teamIdx(spawnData.team)
+		cachedTeamIdx(spawnData.team)
 	{
 		overlappingNodes_SH.reserve(10);
 		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
 		shieldOffset = spawnData.spawnConfig->getShieldOffset();
 		shipData = spawnData.spawnConfig;
 
-		setTeam(spawnData.team);
+		createGameComponent<TeamComponent>();
+		if (TeamComponent* teamComp = getGameComponent<TeamComponent>())
+		{
+			//bound to delegate in post construct
+			teamComp->setTeam(spawnData.team);
+			updateTeamDataCache();
+		}
 	}
 
 	const sp<const ModelCollisionInfo>& Ship::getCollisionInfo() const
@@ -64,7 +72,7 @@ namespace SA
 		return constViewCollisionData;
 	}
 
-	glm::vec4 Ship::getForwardDir()
+	glm::vec4 Ship::getForwardDir() const
 	{
 		//#optimize #todo cache per frame/move update; transforming vector (perhaps gameBase can track a framenumber with an inline call)
 		const Transform& transform = getTransform();
@@ -80,7 +88,7 @@ namespace SA
 		return rotDir;
 	}
 
-	glm::vec4 Ship::getUpDir()
+	glm::vec4 Ship::getUpDir() const
 	{
 		//#optimize follow optimizations done in getForwardDir if any are made
 		const Transform& transform = getTransform();
@@ -109,15 +117,24 @@ namespace SA
 		primaryProjectile = projectileConfig;
 	}
 
-	void Ship::setTeam(size_t teamIdx)
-	{
-		teamIdx = teamIdx;
-		const std::vector<TeamData>& teams = shipData->getTeams();
+	void Ship::updateTeamDataCache()
+{
+		if (TeamComponent* teamComp = getGameComponent<TeamComponent>())
+		{
+			cachedTeamIdx = teamComp->getTeam();
+			const std::vector<TeamData>& teams = shipData->getTeams();
 
-		if (teamIdx >= teams.size()) { teamIdx = 0;}
+			if (cachedTeamIdx >= teams.size()) { cachedTeamIdx = 0;}
 		
-		assert(teams.size() > 0);
-		cachedTeamData = teams[teamIdx];
+			assert(teams.size() > 0);
+			cachedTeamData = teams[cachedTeamIdx];
+		}
+
+	}
+
+	void Ship::handleTeamChanged(size_t oldTeamId, size_t newTeamId)
+	{
+		updateTeamDataCache();
 	}
 
 	void Ship::draw(Shader& shader)
@@ -135,13 +152,31 @@ namespace SA
 
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
-			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.direction_n = glm::normalize(velocity);
+			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.color = cachedTeamData.projectileColor;
-			spawnData.team = teamIdx;
+			spawnData.team = cachedTeamIdx;
 			spawnData.owner = this;
 
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
+		}
+	}
+
+	void Ship::fireProjectileInDirection(glm::vec3 dir_n) const
+	{
+		if (primaryProjectile)
+		{
+			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
+
+			ProjectileSystem::SpawnData spawnData;
+			//#TODO #scenenodes doesn't account for parent transforms
+			spawnData.direction_n = glm::normalize(velocity);
+			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
+			spawnData.color = cachedTeamData.projectileColor;
+			spawnData.team = cachedTeamIdx;
+			spawnData.owner = this;
+
+			projectileSys->spawnProjectile(spawnData, *primaryProjectile);
 		}
 	}
 
@@ -160,6 +195,53 @@ namespace SA
 		}
 	}
 
+	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedFactor)
+	{
+		using namespace glm;
+
+		const Transform& xform = getTransform();
+		vec3 targetDir = moveLoc - xform.position;
+
+		vec3 forwardDir_n = glm::normalize(vec3(getForwardDir()));
+		vec3 targetDir_n = glm::normalize(targetDir);
+		bool bPointingTowardsMoveLoc = glm::dot(forwardDir_n, targetDir_n) >= 0.99f;
+
+		if (!bPointingTowardsMoveLoc)
+		{
+			vec3 rotationAxis_n = glm::cross(forwardDir_n, targetDir_n);
+
+			float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
+			float maxTurn_Rad = getMaxTurnAngle_PerSec() * dt_sec;
+			float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
+
+			quat completedRot = Utils::getRotationBetween(forwardDir_n, targetDir_n) * xform.rotQuat;
+			quat newRot = glm::slerp(xform.rotQuat, completedRot, possibleRotThisTick);
+
+			//roll ship -- we want the ship's right (or left) vector to match this rotation axis to simulate it pivoting while turning
+			vec3 rightVec_n = newRot * vec3(1, 0, 0);
+			bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
+
+			vec3 newForwardVec_n = newRot * vec3(localForwardDir_n());
+			if (!bRollMatchesTurnAxis)
+			{
+				float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
+				float rollThisTick = glm::clamp(maxTurn_Rad / rollAngle_rad, 0.f, 1.f);
+				glm::quat roll = glm::angleAxis(rollThisTick, newForwardVec_n);
+				newRot = roll * newRot;
+			}
+
+			Transform newXform = xform;
+			newXform.rotQuat = newRot;
+			setTransform(newXform);
+
+			setVelocity(newForwardVec_n * getMaxSpeed() * speedFactor);
+		}
+		else
+		{
+			setVelocity(forwardDir_n * getMaxSpeed() * speedFactor);
+		}
+	}
+
 	void Ship::postConstruct()
 	{
 		//WARNING: caching world sp will create cyclic reference
@@ -173,6 +255,11 @@ namespace SA
 		else
 		{
 			throw std::logic_error("World entity being created but there is no containing world");
+		}
+
+		if(TeamComponent* team = getGameComponent<TeamComponent>())
+		{
+			team->onTeamChanged.addWeakObj(sp_this(), &Ship::handleTeamChanged);
 		}
 	}
 	
@@ -238,20 +325,25 @@ namespace SA
 
 	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
-		if (teamIdx != hitProjectile.team)
+		if (cachedTeamIdx != hitProjectile.team)
 		{
+			//#BUG something is keeping ships alive after they are destroyed (eg holding on to a shared ptr)
+			//changing references to #releasing_ptr is the best fix, but for now only spawning particle if not destroyed
 			hp.current -= hitProjectile.damage;
 			if (hp.current <= 0)
 			{
-				ParticleSystem::SpawnParams particleSpawnParams;
-				particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
-				particleSpawnParams.xform.position = this->getTransform().position;
-				particleSpawnParams.velocity = this->velocity;
-				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-				if (brain)
+				if(!isPendingDestroy())
 				{
-					brain->sleep();
-					brain = nullptr;
+					ParticleSystem::SpawnParams particleSpawnParams;
+					particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+					particleSpawnParams.xform.position = this->getTransform().position;
+					particleSpawnParams.velocity = this->velocity;
+					GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+					if (brain)
+					{
+						brain->sleep();
+						brain = nullptr;
+					}
 				}
 				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
 			}

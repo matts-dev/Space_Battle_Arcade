@@ -6,6 +6,7 @@
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../Rendering/Camera/SACameraBase.h"
 #include "../SAProjectileSystem.h"
+#include "../Team/Commanders.h"
 
 namespace SA
 {
@@ -42,11 +43,21 @@ namespace SA
 		}
 	}
 
+	TeamCommander* SpaceLevelBase::getTeamCommander(size_t teamIdx)
+	{
+		return teamIdx < commanders.size() ? commanders[teamIdx].get() : nullptr;
+	}
+
 	void SpaceLevelBase::startLevel_v()
 	{
 		LevelBase::startLevel_v();
 
 		forwardShadedModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_SimpleLighting_fragSrc, false);
+
+		for (size_t teamId = 0; teamId < numTeams; ++teamId)
+		{
+			commanders.push_back(new_sp<TeamCommander>(teamId));
+		}
 	}
 
 	void SpaceLevelBase::endLevel_v()

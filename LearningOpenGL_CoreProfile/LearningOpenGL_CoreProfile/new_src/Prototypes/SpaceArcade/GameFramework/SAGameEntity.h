@@ -37,8 +37,8 @@ namespace SA
 
 
 
-/** Automatically provide template type for convenience */
-#define sp_this() sp_this_impl<std::remove_reference<decltype(*this)>::type>()
+/** Automatically provide template type for convenience. Namespaces and class (SA::GameEntity) must be specified for certain templates to compile.*/
+#define sp_this() SA::GameEntity::sp_this_impl<std::remove_reference<decltype(*this)>::type>()
 
 /** Represents a top level object*/
 namespace SA
@@ -59,7 +59,7 @@ namespace SA
 
 	public:
 		const sp< MultiDelegate<const sp<GameEntity>&> > onDestroyedEvent;
-		bool isPendingDestroy() { return bPendingDestroy; }
+		bool isPendingDestroy() const { return bPendingDestroy; }
 
 		/** WARNING: think twice before using this; if you're given a ref/rawptr then the API may be trying to prevent you from holding a reference
 		 * subclasses can deny this request by overriding the virtual method to return nullptr.*/

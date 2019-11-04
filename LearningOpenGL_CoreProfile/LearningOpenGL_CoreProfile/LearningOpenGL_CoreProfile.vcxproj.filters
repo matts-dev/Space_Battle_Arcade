@@ -651,7 +651,13 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAComponentEntity.h">
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\SAComponentEntity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1688,7 +1694,13 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAComponentEntity.cpp">
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\SAComponentEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

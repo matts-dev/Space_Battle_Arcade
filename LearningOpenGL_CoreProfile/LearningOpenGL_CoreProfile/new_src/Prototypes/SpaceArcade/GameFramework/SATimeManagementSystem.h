@@ -59,16 +59,17 @@ namespace SA
 
 	public:
 		inline void setTimeFreeze(bool bInFreezeTime) { bFreezeTime = bInFreezeTime; }
-		inline void setFramesToStep(unsigned int frames) { framesToStep_nextFrame = frames; }
+		inline void setFramesToStep(unsigned int frames) { newFramesToStep = frames; }
 		/*Changing time dilation mid-frame is not supported as it would cause havoc and setting order-depend behavior*/
 		inline void setTimeDilationFactor_OnNextFrame(float inTimeDilationFactor) { DilationFactor_nextFrame = inTimeDilationFactor; }
 
-		inline float getDeltaTimeSecs(){return dt_dilatedSecs; }
-		inline float getUndilatedTimeSecs(){ return dt_undilatedSecs; }
-		inline float getTimeDilationFactor() { return timeDilationFactor; }
-		inline int getRemaningFramesToStep() { return framesToStep; }
+		inline float getDeltaTimeSecs() const {return dt_dilatedSecs; }
+		inline float getUndilatedTimeSecs() const { return dt_undilatedSecs; }
+		inline float getTimeDilationFactor() const { return timeDilationFactor; }
+		inline float getTimestampSecs() const { return timeSinceStartDilatedSecs; }
+		inline int getRemaningFramesToStep() const { return framesToStep; }
 		inline bool isTimeFrozen() const { return bFreezeTime && framesToStep == 0; }
-		inline bool isFrameStepping() { return bFreezeTime && framesToStep > 0; }
+		inline bool isFrameStepping() const { return bFreezeTime && framesToStep > 0; }
 
 	public: //timers
 		/** timer functions returning bool indicate success/failure */
@@ -88,9 +89,10 @@ namespace SA
 		//next frame pattern prevents affects from happening mid-frame
 		float dt_undilatedSecs = 0.f;
 		float dt_dilatedSecs = 0.f;
+		float timeSinceStartDilatedSecs = 0.f;
 
 		int framesToStep = 0;
-		int framesToStep_nextFrame = 0;
+		int newFramesToStep = 0;
 		bool bFreezeTime = false;
 
 		float timeDilationFactor = 1.f;

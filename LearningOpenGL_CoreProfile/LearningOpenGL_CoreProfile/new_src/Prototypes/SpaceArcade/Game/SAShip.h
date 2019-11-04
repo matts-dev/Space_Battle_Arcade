@@ -54,7 +54,8 @@ namespace SA
 		////////////////////////////////////////////////////////
 		// Functions for AI/Player brains
 		////////////////////////////////////////////////////////
-		void fireProjectile(class BrainKey privateKey);
+		void fireProjectile(class BrainKey privateKey); //#todo perhaps remove this in favor of fire in direction; #todo don't delete without cleaning up brain key
+		void fireProjectileInDirection(glm::vec3 dir_n) const; //#todo reconsider limiting this so only brains
 
 		////////////////////////////////////////////////////////
 		//AI
@@ -68,6 +69,9 @@ namespace SA
 		void setNewBrain(const sp<ShipAIBrain> newBrain, bool bStartNow = true);
 		const ShipAIBrain* getBrain() const  { return brain.get(); }
 
+		//control functions
+		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f);
+
 		////////////////////////////////////////////////////////
 		//Collision
 		////////////////////////////////////////////////////////
@@ -78,8 +82,8 @@ namespace SA
 		// Kinematics
 		////////////////////////////////////////////////////////
 		inline glm::vec4 localForwardDir_n() const { return glm::vec4(0, 0, 1, 0); }
-		glm::vec4 getForwardDir();
-		glm::vec4 getUpDir();
+		glm::vec4 getForwardDir() const;
+		glm::vec4 getUpDir() const;
 		glm::vec4 rotateLocalVec(const glm::vec4& localVec);
 		float getMaxTurnAngle_PerSec() const;
 		void setVelocity(glm::vec3 inVelocity) { velocity = inVelocity; }
@@ -92,8 +96,13 @@ namespace SA
 		////////////////////////////////////////////////////////
 		void setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig);
 
-		void setTeam(size_t teamIdx);
-		size_t getTeam() { return teamIdx; }
+
+		////////////////////////////////////////////////////////
+		// teams
+		////////////////////////////////////////////////////////
+		void updateTeamDataCache();
+		size_t getTeam() { return cachedTeamIdx; }
+		void handleTeamChanged(size_t oldTeamId, size_t newTeamId);
 
 	protected:
 		virtual void postConstruct() override;
@@ -116,7 +125,8 @@ namespace SA
 		glm::vec3 shieldOffset = glm::vec3(0.f);
 		float maxSpeed = 10.0f; //#TODO make part of spawn config
 		HitPoints hp = { /*current*/100, /*max*/100 };
-		size_t teamIdx;
+
+		size_t cachedTeamIdx;
 		TeamData cachedTeamData;
 		sp<const SpawnConfig> shipData;
 

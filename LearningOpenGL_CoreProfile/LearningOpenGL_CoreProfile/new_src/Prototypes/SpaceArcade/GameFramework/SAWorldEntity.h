@@ -1,8 +1,8 @@
 #pragma once
 #include "SAGameEntity.h"
-#include "..\Tools\DataStructures\SATransform.h"
-#include "Interfaces\SATickable.h"
-#include "SAComponentEntity.h"
+#include "../Tools/DataStructures/SATransform.h"
+#include "Interfaces/SATickable.h"
+#include "Components/SAComponentEntity.h"
 
 namespace SA
 {
@@ -32,8 +32,8 @@ namespace SA
 		inline void				setTransform(const Transform& inTransform)	{ transform = inTransform; }
 
 		//#scenenodes this will need updating to get final parent-child transformed position
-		glm::vec3 getWorldPosition() { return transform.position; } //#scenenodes todo update
-		glm::mat4 getModelMatrix() { return transform.getModelMatrix(); } //#scenenodes todo update
+		glm::vec3 getWorldPosition() const { return transform.position; } //#scenenodes todo update
+		glm::mat4 getModelMatrix() const { return transform.getModelMatrix(); } //#scenenodes todo update
 
 		/* returns reference for speed, to opt out of containing collision data, override hasCollisionData to false and
 		 use the default implementation WorldEntity::getCollisionInfo() to return nullptr;*/

@@ -45,6 +45,10 @@ namespace SA
 
 	sp<SA::Window> SpaceArcade::startUp()
 	{
+#if		SA_CAPTURE_SPATIAL_HASH_CELLS
+		log("SpaceArcade", LogLevel::LOG_WARNING, "Capturing debug spatial hash information, this has is a perf hit and should be disabled for release");
+#endif
+
 		int width = 1500, height = 900;
 		sp<SA::Window> window = new_sp<SA::Window>(width, height);
 		ec(glViewport(0, 0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?

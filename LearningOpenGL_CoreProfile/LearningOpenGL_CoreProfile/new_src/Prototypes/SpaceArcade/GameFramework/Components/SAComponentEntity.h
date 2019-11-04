@@ -1,19 +1,24 @@
 #pragma once
-#include "SAGameEntity.h"
+#include "../SAGameEntity.h"
 #include <vector>
 #include <map>
 #include <typeindex>
 #include <assert.h>
+#include "../SALog.h"
+#include "../../Tools/RemoveSpecialMemberFunctionUtils.h"
 
 namespace SA
 {
+	class ComponentBase : public GameEntity, public RemoveMoves, public RemoveCopies
+	{};
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// GameComponentBase - the base class for a fast access modular component.
 	//		these components reserve a spot in a GameComponentEntity's array and should
 	//		be used(ie inherited from) only when extremely fast access is needed. Their
 	//		access is based on generating a template method for each subclass
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	class GameComponentBase : public GameEntity
+	class GameComponentBase : public ComponentBase
 	{
 	};
 
@@ -25,7 +30,7 @@ namespace SA
 	//		game components. However, they do not have the high memory costs of gameplay
 	//		components
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	class SystemComponentBase : public GameEntity
+	class SystemComponentBase : public ComponentBase
 	{
 	};
 
@@ -133,6 +138,7 @@ namespace SA
 	class GameplayComponentEntity : public SystemComponentEntity
 	{
 	public:
+		/** note: intentionally doesn't return created component to prevent misuse of API (using create instead of get). Use getGameComponent to get the component created*/
 		template<typename ComponentType>
 		void createGameComponent()
 		{
@@ -148,18 +154,37 @@ namespace SA
 		}
 
 		template<typename ComponentType>
-		bool hasGameComponent() const
+		bool hasGameComponent()
 		{
 			static_assert(std::is_base_of<GameComponentBase, ComponentType>::value);
 			return _componentOperation<ComponentType>(ComponentOp::GET_OP) != nullptr;
 		}
 
 		template<typename ComponentType>
-		ComponentType* getGameComponent() //TODO if used properly set up const and non const versions of this
+		ComponentType* getGameComponent()
 		{
 			static_assert(std::is_base_of<GameComponentBase, ComponentType>::value);
 			return _componentOperation<ComponentType>(ComponentOp::GET_OP);
 		}
+
+		/** All operations are funneled through _componentOperation<> and it is nonconst. Const methods
+			also need to be funneled through this method. Because create/delete operations are inherently non-const,
+			_componentOperation<> must be none const. In order const version of has/getComponent, we use const_cast considering
+			all the above. */
+		template<typename ComponentType>
+		const ComponentType* getGameComponent() const
+		{
+			GameplayComponentEntity* nonConstThis = const_cast<GameplayComponentEntity*>(this);
+			return nonConstThis->getGameComponent<ComponentType>();
+		}
+
+		template<typename ComponentType>
+		bool hasGameComponent() const
+		{
+			GameplayComponentEntity* nonConstThis = const_cast<GameplayComponentEntity*>(this);
+			return nonConstThis->hasGameComponent<ComponentType>();
+		}
+
 
 	private:
 		/** Operations into the single method generated for each component */
@@ -174,14 +199,15 @@ namespace SA
 
 			static_assert(std::is_base_of<GameComponentBase, ComponentType>::value);
 			static size_t this_type_index = nextComponentCreationIndex++; //first time this is called, it gets a new index for fast compile time lookup
-			static int calledOneTimeAtIncrement = []()->int{
-				if (this_type_index == 50)
-				{
-					log("ComponentSystem", LogLevel::LOG_WARNING, "Warning: fast component system is optimized for small number of components; this number is now 50 which means every component entity has 50*sizeof(componentSmartPtr) array. Switching to a map based system may be advised.");
-				}
+			static int calledOneTimeAtIncrement = []()->int
+			{
+				char msg[2048];
+				snprintf(msg, sizeof(msg), "GameComponentSystem : component num:{%d} entry array min bytes: {%d bytes}", nextComponentCreationIndex, sizeof(sp<ComponentType>) * nextComponentCreationIndex);
+				log("Memory", LogLevel::LOG, msg);
+				return 0;
 			}();
 
-			if (componentArray.size() <= this_type_index + 1)
+			if (componentArray.size() < this_type_index + 1)
 			{
 				componentArray.resize(this_type_index + 1, nullptr);
 			}

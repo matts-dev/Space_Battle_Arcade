@@ -12,6 +12,7 @@
 #include "RenderModelEntity.h"
 #include "SAWorldEntity.h"
 #include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "../Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {
@@ -27,6 +28,9 @@ namespace SA
 		virtual ~LevelBase();
 
 	public:
+		MultiDelegate<const sp<WorldEntity>&> onSpawnedEntity;
+		MultiDelegate<const sp<WorldEntity>&> onUnspawningEntity;
+
 		template<typename T>
 		void spawnCompileCheck() { static_assert(std::is_base_of<RenderModelEntity, T>::value, "spawn/unspawn only works with objects that will be rendered."); }
 
@@ -41,6 +45,10 @@ namespace SA
 
 		//#SUGGESTED refactor this to just return reference, a level should always have a valid time manager.
 		inline const sp<TimeManager>& getWorldTimeManager() { return worldTimeManager; }
+
+		/** returns const to prevent modification; use spawn and unspawn entity to add/remove. 
+			#concern this may be an encapsulation issue. Perhaps accessing entities should only be done through the world grid.*/
+		const std::set<sp<WorldEntity>>& getWorldEntities() { return worldEntities; }
 
 	private:
 		void startLevel();
@@ -80,6 +88,7 @@ namespace SA
 			worldEntities.insert(entity);
 			renderEntities.insert(entity);
 			onEntitySpawned_v(entity);
+			onSpawnedEntity.broadcast(entity);
 			return entity;
 		}
 
@@ -87,11 +96,14 @@ namespace SA
 		bool LevelBase::unspawnEntity(const sp<T>& entity)
 		{
 			spawnCompileCheck<T>();
+			sp<T> tempCopy = entity;
+
 			bool foundInAllLocations = renderEntities.find(entity) != renderEntities.end() && worldEntities.find(entity) != worldEntities.end();
 			worldEntities.erase(entity);
 			renderEntities.erase(entity);
 
 			onEntityUnspawned_v(entity);
+			onUnspawningEntity.broadcast(entity);
 			return foundInAllLocations;
 		}
 }

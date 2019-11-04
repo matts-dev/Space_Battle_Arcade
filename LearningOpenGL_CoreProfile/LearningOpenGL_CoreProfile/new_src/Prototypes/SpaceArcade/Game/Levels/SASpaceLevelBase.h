@@ -5,6 +5,7 @@
 namespace SA
 {
 	class ProjectileSystem;
+	class TeamCommander;
 
 	class SpaceLevelBase : public LevelBase
 	{
@@ -13,6 +14,8 @@ namespace SA
 		SpaceLevelBase();
 
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
+		
+		TeamCommander* getTeamCommander(size_t teamIdx);
 
 	protected:
 		virtual void startLevel_v() override;
@@ -20,5 +23,9 @@ namespace SA
 
 	protected:
 		sp<SA::Shader> forwardShadedModelShader;
+		size_t numTeams = 2;
+
+	private:
+		std::vector<sp<TeamCommander>> commanders;
 	};
 }

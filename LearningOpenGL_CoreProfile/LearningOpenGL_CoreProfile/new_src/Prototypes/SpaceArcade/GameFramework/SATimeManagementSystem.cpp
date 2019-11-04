@@ -66,10 +66,10 @@ namespace SA
 		// updating state
 		////////////////////////////////////////////////////////
 		framesToStep = framesToStep > 0 ? framesToStep - 1 : framesToStep;
-		if (framesToStep_nextFrame > 0)
+		if (newFramesToStep > 0)
 		{
-			framesToStep = framesToStep_nextFrame;
-			framesToStep_nextFrame = 0;
+			framesToStep = newFramesToStep; 
+			newFramesToStep = 0;
 		}
 
 		//prevents time dilation from happening mid frame
@@ -77,6 +77,7 @@ namespace SA
 
 		dt_undilatedSecs = timeSystem.getDeltaTimeSecs();
 		dt_dilatedSecs = dt_undilatedSecs * timeDilationFactor;
+		timeSinceStartDilatedSecs += dt_dilatedSecs;
 
 		////////////////////////////////////////////////////////
 		//tick timers

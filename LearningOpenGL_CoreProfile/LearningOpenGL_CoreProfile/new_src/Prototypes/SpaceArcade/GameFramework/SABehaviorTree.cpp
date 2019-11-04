@@ -276,6 +276,10 @@ namespace SA
 				//efficient tree structures meaning not bounds checking child index
 				throw std::runtime_error("invalid multichild node; no children passed. This will corrupt efficient tree structures and cannot be permitted.");
 			}
+
+			childResults = std::vector<bool>(children.size(), false);
+			childHasReturned = std::vector<bool>(children.size(), false);
+
 			resetMultiNode();
 		}
 
@@ -306,8 +310,13 @@ namespace SA
 			/* non virtual; intended to be safe to call within constructor; be careful adding virtual calls here*/
 			NodeBase::resetNode();
 			childIdx = 0;
-			childResults = std::vector<bool>(children.size(), false);
-			childHasReturned = std::vector<bool>(children.size(), false);
+
+			assert(childResults.size() == childHasReturned.size());
+			for (size_t childIdx = 0; childIdx < childResults.size(); ++childIdx)
+			{
+				childResults[childIdx] = false;
+				childHasReturned[childIdx] = false;
+			}
 		}
 
 		NodeBase* MultiChildNode::getNextChild()

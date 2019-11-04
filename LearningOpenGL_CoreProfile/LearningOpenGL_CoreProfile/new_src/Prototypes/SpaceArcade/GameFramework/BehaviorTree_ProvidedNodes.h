@@ -17,6 +17,13 @@ namespace SA
 			GREATER_THAN_EQUAL,
 		};
 
+		enum class AbortPreference
+		{
+			NO_ABORT,
+			ABORT_ON_MODIFY,
+			ABORT_ON_REPLACE,
+		};
+
 		template<typename T>
 		class Decorator_Is : public BehaviorTree::Decorator
 		{
@@ -47,22 +54,118 @@ namespace SA
 						break;
 				}
 			}
-
+		protected:
 			virtual void startBranchConditionCheck()
 			{
 				Memory& memory = getMemory();
 				const T* memoryValue = memory.getReadValueAs<T>(memoryKey);
 
 				//short circuit evaluate
-				conditionalResult = (memoryValue != nullptr) && opFunc(*memoryValue, value);
+				conditionalResult = doConditionCheck(memoryValue, &value);
 			}
+
+			/** Separated this from startBranchConditionCheck so subclasses can use it. */
+			inline bool doConditionCheck(const T* runtimeValue, const T* nodePropertyValue) const
+			{
+				return (runtimeValue != nullptr) && opFunc(*runtimeValue, *nodePropertyValue);
+			}
+
 		private:
 			virtual void handleNodeAborted() override {}
 
-		private:
+		protected: //node properties
 			const std::string memoryKey;
-			T value;
+			const T value;
+		private: //node properties
 			std::function<bool(T, T)> opFunc;
+			
 		};
+
+		/** Separate from Decorator_Is because caches start value. Which is not great for memory values that
+			are not POD*/
+		template<typename T>
+		class Decorator_Aborting_Is : public Decorator_Is<T>
+		{
+		public:
+			Decorator_Aborting_Is(const std::string& name, const std::string& memoryKey, OP cmp, const T& value, AbortPreference abortPref, const sp<NodeBase>& child)
+				: Decorator_Is<T>(name, memoryKey, cmp, value, child), abortPref(abortPref)
+			{
+			}
+		protected:
+
+			virtual void startBranchConditionCheck() override
+			{
+				Decorator_Is<T>::startBranchConditionCheck();
+				if (*Decorator::conditionalResult)
+				{
+					Memory& memory = NodeBase::getMemory();
+					bSubscribedDelegates = true;
+					if (abortPref == AbortPreference::ABORT_ON_MODIFY)
+					{
+						memory.getModifiedDelegate(this->memoryKey).addStrongObj<Decorator_Aborting_Is<T>>(sp_this(), &Decorator_Aborting_Is<T>::handleValueModified);
+					}
+					else if (abortPref == AbortPreference::ABORT_ON_REPLACE)
+					{
+						memory.getReplacedDelegate(this->memoryKey).addStrongObj<Decorator_Aborting_Is<T>>(sp_this(), &Decorator_Aborting_Is<T>::handleValueReplaced);
+					}
+					else if (abortPref == AbortPreference::NO_ABORT)
+					{
+						//do nothing
+					}
+				}
+			}
+
+			virtual void resetNode() override
+			{
+				if (bSubscribedDelegates)
+				{
+					Memory& memory = NodeBase::getMemory();
+					if (abortPref == AbortPreference::ABORT_ON_MODIFY)
+					{
+						//memory.getModifiedDelegate(this->memoryKey).removeStrong(sp_this(), &Decorator_Aborting_Is<T>::handleValueModified);
+					}
+					else if (abortPref == AbortPreference::ABORT_ON_REPLACE)
+					{
+						//memory.getReplacedDelegate(this->memoryKey).removeStrong(sp_this(), &Decorator_Aborting_Is<T>::handleValueReplaced);
+					}
+					else if (abortPref == AbortPreference::NO_ABORT)
+					{
+						//do nothing
+					}
+				}
+				bSubscribedDelegates = false;
+				Decorator_Is<T>::resetNode();
+			}
+		private:
+			void abortIfValueChanged()
+			{
+				Memory& memory = NodeBase::getMemory();
+				const T* newValue = memory.getReadValueAs<T>(this->memoryKey);
+
+				if (!this->doConditionCheck(newValue, &this->value))
+				{
+					this->abortTree(Decorator::AbortType::ChildTree);
+				}
+			}
+
+			void handleValueReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+			{
+				//it is not safe to cast GameEntity to PrimitiveWrapper<T> because it may have been replaced with a different type
+				abortIfValueChanged();
+			}
+
+			void handleValueModified(const std::string& key, const GameEntity* oldValue)
+			{
+				//it is not safe to cast GameEntity to PrimitiveWrapper<T> because it may have been replaced with a different type (this gets called if replace is called)
+				abortIfValueChanged();
+			}
+
+		private:
+			bool bSubscribedDelegates;
+		private: //node properties
+			const AbortPreference abortPref;
+		};
+
+
 	}
 }

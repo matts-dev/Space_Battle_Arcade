@@ -9,6 +9,7 @@
 #include "../../Tools/DataStructures/MultiDelegate.h"
 #include "../../GameFramework/SABehaviorTreeHelpers.h"
 #include "../../GameFramework/BehaviorTree_ProvidedNodes.h"
+#include "../../GameFramework/SAWorldEntity.h"
 
 namespace SA
 {
@@ -253,34 +254,51 @@ namespace SA
 
 		*/
 
+		const char* const brainKey = "selfBrain";
+		const char* const stateKey = "stateKey";
+		const char* const originKey = "origin";
+		const char* const wanderLocKey = "wander_loc";
+		const char* const targetKey = "target";
+		const char* const targetLocKey = "target_loc";
+		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
+
+
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Service_PlaceHolder>("service_targetFinder", 1.0f, true, 
-				new_sp<Service_PlaceHolder>("service_opportunisiticShots", 1.0f, true,
+				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+				new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
-							new_sp<Decorator_Is<MentalState_Fighter>>("dec_evade_state", "stateKey", OP::EQUAL, MentalState_Fighter::EVADE,
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_evade_state", stateKey, OP::EQUAL, MentalState_Fighter::EVADE, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Task_PlaceHolder>("task_evade", true)
 							),
-							new_sp<Decorator_Is<MentalState_Fighter>>("dec_attack_state", "stateKey", OP::EQUAL, MentalState_Fighter::FIGHT,
-								new_sp<Task_PlaceHolder>("task_orient_to_target", true)
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::FIGHT, AbortPreference::ABORT_ON_MODIFY,
+								new_sp<Task_Ship_FollowTarget_Indefinitely>("task_followTarget", brainKey, targetKey)
+								//new_sp<Sequence>("seq_move_to_target", MakeChildren{
+								//	new_sp<Task_Ship_GetEntityLocation>("get_target_loc", targetKey, targetLocKey),
+								//	new_sp<Task_Ship_MoveToLocation>(brainKey, targetLocKey, 0.1f)
+								//})
 							),
-							new_sp<Decorator_Is<MentalState_Fighter>>("dec_wander_state", "stateKey", OP::EQUAL, MentalState_Fighter::WANDER,
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_wander_state", stateKey, OP::EQUAL, MentalState_Fighter::WANDER, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{
-									new_sp<Task_FindRandomLocationNearby>("wander_loc", "origin", 400.0f),
-									new_sp<Task_Ship_MoveToLocation>("selfBrain", "wander_loc", 45.0f)
+									new_sp<Task_FindRandomLocationNearby>(wanderLocKey, originKey, 400.0f),
+									new_sp<Task_Ship_MoveToLocation>(brainKey, wanderLocKey, 45.0f)
 								})
 							)
 						})
 					)
-				)),
+				))),
 				MemoryInitializer
 				{
-					{"selfBrain", sp_this() },
-					{ "origin", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
-					{ "wander_loc", new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
-					{ "stateKey", new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::WANDER)}
+					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::WANDER)},
+					{ brainKey, sp_this() },
+					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetKey, sp<WorldEntity>(nullptr) },
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) } //#TODO perhaps should be releasing pointers instead of shared ptr when those are a thing
 				}
 			);
 	}

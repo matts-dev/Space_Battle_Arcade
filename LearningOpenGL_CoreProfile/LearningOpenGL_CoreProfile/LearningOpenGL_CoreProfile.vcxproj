@@ -142,13 +142,14 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\TimerTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTreeHelpers.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAComponentEntity.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\SAComponentEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SADebugRenderSystem.h" />
@@ -181,6 +182,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACollisionUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASpawnConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAProjectileTweakerWidget.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUISystem.h" />
@@ -422,12 +424,13 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\TimerTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTreeHelpers.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAComponentEntity.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\SAComponentEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SACrossPlatformUtils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.cpp" />
@@ -458,6 +461,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAProjectileConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASpawnConfig.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAProjectileTweakerWidget.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAUIRootWindow.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAUISystem.cpp" />

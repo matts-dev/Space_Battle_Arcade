@@ -225,6 +225,7 @@ namespace SH
 		/* HashEntry hash functions; usage: provide a entry that will have its location hashed and the out param will be filled with requested information*/
 		inline void lookupNodesInCells(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<SH::GridNode<T>>>& outNodes, bool filterOutSource = true);
 		inline void lookupCellsForEntry(const SH::HashEntry<T>& cellSource, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells);
+		inline void lookupCellsForOOB(const std::array<glm::vec4, 8>& OBB_hashLocalSpace, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells);
 
 		inline void findCellLocationsForLine(const glm::vec3& start_hashLocalSpace, const glm::vec3& end_hashLocalSpace, std::vector<glm::ivec3>& outCells, float nudgeIntersectionBias = 0.01f);
 		inline void lookupCellsForLine(const glm::vec3& start_hashLocalSpace, const glm::vec3& end_hashLocalSpace, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells);
@@ -820,6 +821,24 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+	template<typename T>
+	inline void SpatialHashGrid<T>::lookupCellsForOOB(const std::array<glm::vec4, 8>& localSpaceOBB, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells)
+	{
+		Range<int> xCellIndices, yCellIndices, zCellIndices;
+		projectOBBToCells(xCellIndices, yCellIndices, zCellIndices, localSpaceOBB);
+
+		BEGIN_FOR_EVERY_CELL(xCellIndices, yCellIndices, zCellIndices)
+			glm::ivec3 hashLocation(cellX, cellY, cellZ);
+			uint64_t hashVal = hash(hashLocation);
+
+			std::shared_ptr<HashCell<T>> cell = findCellForHash(hashVal, hashLocation);
+			if (cell) { outCells.push_back(cell); }
+		END_FOR_EVERY_CELL
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
 	template<typename T>

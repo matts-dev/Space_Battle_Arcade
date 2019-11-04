@@ -176,9 +176,9 @@ namespace SA
 			virtual bool result() const override;
 			virtual void evaluate() override;
 
+		protected:
 			/* Requires user fill out evaluationResult when task is complete. Otherwise tree will not proceed because task will appear to be incomplete.*/
 			virtual void beginTask() = 0; //override this to start deferred tasks that will update the evaluationResult
-		protected:
 			virtual void taskCleanup() = 0; //override and clean up; be sure to call super if subclassing another task
 
 		private: //required node methods
