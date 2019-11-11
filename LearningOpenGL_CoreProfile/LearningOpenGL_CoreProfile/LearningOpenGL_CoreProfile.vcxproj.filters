@@ -660,6 +660,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1701,6 +1704,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\FastWeakPtr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

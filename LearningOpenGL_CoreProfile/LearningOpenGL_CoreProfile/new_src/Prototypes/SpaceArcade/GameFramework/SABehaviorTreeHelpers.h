@@ -12,7 +12,7 @@ namespace SA
 		{
 		public:
 			Task_PlaceHolder(const std::string& name, bool bEvaluatesToThisValue)
-				: Task("task_random_location_nearby"), bEvaluateValue(bEvaluatesToThisValue)
+				: Task(name), bEvaluateValue(bEvaluatesToThisValue)
 			{
 			}
 		public:
@@ -23,6 +23,7 @@ namespace SA
 		private:
 			bool bEvaluateValue = true;
 		};
+
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Place Holder service
@@ -61,5 +62,23 @@ namespace SA
 			bool bSimulateDecorateSuccess = true;
 		};
 
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// empty task for null trees
+		/////////////////////////////////////////////////////////////////////////////////////
+		class Task_Empty : public Task
+		{
+		public:
+			Task_Empty(const std::string& name)
+				: Task(name)
+			{
+			}
+		public:
+			virtual void beginTask() override { evaluationResult = true; }
+		protected:
+			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
+		private:
+		};
 	}
 }

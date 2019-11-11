@@ -12,6 +12,7 @@
 #include "AI/SAShipAIBrain.h"
 #include "../GameFramework/Components/GameplayComponents.h"
 #include "../Tools/SAUtilities.h"
+#include "../GameFramework/SABehaviorTree.h"
 
 namespace
 {
@@ -56,6 +57,7 @@ namespace SA
 		shieldOffset = spawnData.spawnConfig->getShieldOffset();
 		shipData = spawnData.spawnConfig;
 
+		createGameComponent<BrainComponent>();
 		createGameComponent<TeamComponent>();
 		if (TeamComponent* teamComp = getGameComponent<TeamComponent>())
 		{
@@ -177,21 +179,6 @@ namespace SA
 			spawnData.owner = this;
 
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile);
-		}
-	}
-
-	void Ship::setNewBrain(const sp<ShipAIBrain> newBrain, bool bStartNow /*= true*/)
-	{
-		if (brain)
-		{
-			brain->sleep();
-		}
-
-		//update brain to new brain after stopping previous; should not allow two brains to operate on a single ship 
-		brain = newBrain;
-		if (newBrain && bStartNow)
-		{
-			newBrain->awaken();
 		}
 	}
 
@@ -339,10 +326,10 @@ namespace SA
 					particleSpawnParams.xform.position = this->getTransform().position;
 					particleSpawnParams.velocity = this->velocity;
 					GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-					if (brain)
+
+					if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
 					{
-						brain->sleep();
-						brain = nullptr;
+						brainComp->setNewBrain(sp<AIBrain>(nullptr));
 					}
 				}
 				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning

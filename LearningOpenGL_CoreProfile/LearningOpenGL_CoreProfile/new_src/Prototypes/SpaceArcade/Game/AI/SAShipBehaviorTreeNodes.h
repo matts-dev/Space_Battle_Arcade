@@ -3,6 +3,7 @@
 #include "../../GameFramework/SATimeManagementSystem.h"
 #include "../SAShip.h"
 #include "../../Tools/DataStructures/SATransform.h"
+#include "../../Tools/DataStructures/AdvancedPtrs.h"
 
 
 
@@ -146,10 +147,12 @@ namespace SA
 			Task_Ship_FollowTarget_Indefinitely(
 				const std::string& nodeName,
 				const std::string& shipBrain_MemoryKey,
-				const std::string& target_MemoryKey
+				const std::string& target_MemoryKey,
+				const std::string& activeAttackers_MemoryKey
 			) : Task_TickingTaskBase(nodeName),
 				shipBrain_MemoryKey(shipBrain_MemoryKey),
-				target_MemoryKey(target_MemoryKey)
+				target_MemoryKey(target_MemoryKey),
+				activeAttackers_MemoryKey(activeAttackers_MemoryKey)
 			{}
 		protected:
 			virtual void beginTask() override;
@@ -167,6 +170,7 @@ namespace SA
 		private: //node properties
 			const std::string shipBrain_MemoryKey;
 			const std::string target_MemoryKey;
+			const std::string activeAttackers_MemoryKey;
 			float preferredDistanceToTarget = 30.0f;
 		};
 
@@ -219,6 +223,16 @@ namespace SA
 		private: //helper data for navigating 3d world to find target over successful ticks
 		};
 
+		////////////////////////////////////////////////////////
+		// Data types for tracking current attackers.
+		////////////////////////////////////////////////////////
+		struct CurrentAttackerDatum
+		{
+			CurrentAttackerDatum(const sp<TargetType>& inAttacker) : attacker(inAttacker) {}
+			fwp<TargetType> attacker;
+		};
+		using CurrentAttackers = std::map<WorldEntity*, CurrentAttackerDatum>;
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Service that fires projectiles when targets align with crosshairs
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -243,6 +257,7 @@ namespace SA
 
 		private:
 			void handleTargetModified(const std::string& key, const GameEntity* value);
+			void handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue);
 
 			bool canShoot() const;
 			bool tryShootAtTarget(const TargetType& target, const Ship* myShip, const glm::vec3& myPos, const glm::vec3& myForward_n);
@@ -257,13 +272,12 @@ namespace SA
 			std::string secondaryTargetsKey;
 			float fireRadius_cosTheta = glm::cos(10 * glm::pi<float>()/180);
 			float shootRandomOffsetStrength = 1.0f;
-			float shootCooldown = 0.1f;
+			float shootCooldown = 1.1f;
 
 		private: //node cached values
 			const ShipAIBrain* owningBrain;
-			const std::vector<sp<TargetType>>* secondaryTargets;
-			const sp<TargetType>* primaryTarget = nullptr;
-
+			sp<const PrimitiveWrapper<std::vector<sp<TargetType>>>> secondaryTargets;
+			sp<const TargetType> primaryTarget = nullptr; //#todo #releasing_ptr
 		};
 
 		/////////////////////////////////////////////////////////////////////////////////////

@@ -854,6 +854,51 @@ namespace SA
 			bool bHadMemoryAtleastOnce = false;
 		};
 
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Tests the api for holding constant references to memory
+		/////////////////////////////////////////////////////////////////////////////////////
+		class task_memory_reference_tester : public BehaviorTree::Task
+		{
+		public:
+			task_memory_reference_tester(const std::string& gameEntityKey, const std::string& primitiveKey, TestTreeStructureResults& testResultLocation)
+				: BehaviorTree::Task("task_remove_memory "),
+				testLocation(testResultLocation), gameEntityKey(gameEntityKey), primitiveKey(primitiveKey)
+			{
+			}
+
+			virtual void notifyTreeEstablished() override
+			{
+				testLocation.forbiddenTasks.insert(sp_this());
+			}
+
+			virtual void beginTask() override
+			{
+				using BehaviorTree::PrimitiveWrapper;
+				BehaviorTree::Memory& memory = getMemory();
+
+				//TODO these should be #releasing_ptr when that is a thing.
+				sp<const GameEntity> gameEntityObjRef = memory.getMemoryReference<GameEntity>(gameEntityKey);
+				sp<const PrimitiveWrapper<int>> primitiveObjRef = memory.getMemoryReference<PrimitiveWrapper<int>>(primitiveKey);
+
+				if (gameEntityObjRef && primitiveObjRef)
+				{
+					testLocation.requiredCompletedTasks.insert(sp_this());
+					testLocation.forbiddenTasks.erase(sp_this());
+				}
+
+				evaluationResult = true;
+			}
+		private:
+			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
+
+
+		private:
+			TestTreeStructureResults& testLocation;
+			const std::string gameEntityKey;
+			const std::string primitiveKey;
+		};
+
 		class task_verify_removed : public BehaviorTree::Task
 		{
 		public:
@@ -1561,19 +1606,22 @@ namespace SA
 					new_sp<task_verify_removed>("Remove_1", testResults.at("memoryOperationsTestTree")),
 					new_sp<task_remove_memory>("Remove_2", false, testResults.at("memoryOperationsTestTree")),
 					new_sp<task_verify_removed>("Remove_2", testResults.at("memoryOperationsTestTree")),
+					new_sp<task_memory_reference_tester>("object_value", "int_value", testResults.at("memoryOperationsTestTree"))
 				}),
 				MemoryInitializer{
 					{"modifyValueKey", new_sp<MemoryUpdateTester>(0)},
 					{"replaceValueKey", new_sp<MemoryUpdateTester>(0)},
 					{ "Remove_1", new_sp<PrimitiveWrapper<int>>(0) },
-					{ "Remove_2", new_sp<MemoryUpdateTester>(0) }
+					{ "Remove_2", new_sp<MemoryUpdateTester>(0) },
+					{"object_value", new_sp<MemoryUpdateTester>(0)},	//TEST MEMORY REFERENCE
+					{ "int_value", new_sp<PrimitiveWrapper<int>>(0) }		//TEST MEMORY REFERENCE
 					//note: future add will be added at runtime by a task, its decorators should respond to its add.
 				}
 			);
 		memoryOperationsTestTree->start();
 		memoryOperationsTestTree->tick(0.1f);
 		memoryOperationsTestTree->stop();
-		testResults.at("memoryOperationsTestTree").bComplete = true;
+		testResults.at("memoryOperationsTestTree").bComplete = true;	//don't forget to update the number of required tests this test uses.
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Aborting deferred behavior test; basic funcitonality. Aborts are not quite the same
@@ -1738,7 +1786,7 @@ namespace SA
 			);
 		abortTest_externalAbort->start();
 		abortTest_externalAbort->tick(1.0f);
-		Memory& abortTreeMemory = abortTest_externalAbort->getTreeMemory();
+		Memory& abortTreeMemory = abortTest_externalAbort->getMemory();
 		{
 			ScopedUpdateNotifier<MemoryUpdateTester> externalAbortTest_ObjWriteAccess;
 			if (abortTreeMemory.getWriteValueAs("external_abort", externalAbortTest_ObjWriteAccess))

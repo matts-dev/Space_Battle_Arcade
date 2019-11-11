@@ -53,11 +53,13 @@ namespace SA
 			inline const std::string getName() const { return nodeName; }
 
 		protected: //subclass helpers
+			/* Gives child nodes access to memory, if accessing a behavior  */
 			inline Memory& getMemory() const
 			{
 				assert(assignedMemory);
 				return *assignedMemory;
 			}
+
 			inline Tree& getTree() const
 			{
 				assert(owningTree);
@@ -464,6 +466,24 @@ namespace SA
 				return false;
 			}
 
+			/* Returns a copy of pointer to the memory value for caching purposes. 
+				NOTES:
+					-Must return const pointer so that user cannot modify it without OnModified/OnReplaced delegates firing
+					-must provide PrimitiveWrapper<T> as argument for non gameentity values
+					-do not const-cast the result; doing so will bypass the modified/replaced delegates; instead get writeable reference if you need to call non-const functions
+			*/
+			template<typename T>
+			sp<const T> getMemoryReference(const std::string& key)
+			{
+				if (MemoryEntry* memEntry = _getMemoryEntry(key))
+				{
+					//profiling suggests just using dynamic cast is faster than caching rtti info in hash_set<std::type_index> and bypassing with static casts. 
+					return std::dynamic_pointer_cast<T>(memEntry->value);
+				}
+
+				return sp<const T>(nullptr);
+			}
+
 			/** Warning: modifying values in response to this delegate will lead to infinite recursion; if required use next tick */
 			Modified_MemoryDelegate& getModifiedDelegate(const std::string& key)
 			{
@@ -620,7 +640,7 @@ namespace SA
 			/* Aborts all nodes with this priority or larger magnitude values; note lower numbers mean higher priority in behavior trees */
 			void abort(uint32_t priority);
 			uint32_t getCurrentPriority();
-			Memory& getTreeMemory();
+			Memory& getMemory() const;
 
 		public: //debug utils
 			void makeTreeDebugTarget() { targetDebugTree = this; }

@@ -6,6 +6,7 @@
 #include "SAProjectileSystem.h"
 #include "../Tools/DataStructures/SATransform.h"
 #include "AssetConfigs/SASpawnConfig.h"
+#include "../GameFramework/Components/GameplayComponents.h"
 
 
 namespace SA
@@ -60,14 +61,19 @@ namespace SA
 		////////////////////////////////////////////////////////
 		//AI
 		////////////////////////////////////////////////////////
+	public:
 		template <typename BrainType>
 		void spawnNewBrain()
 		{
+			//automatically give the brain the current shp
 			static_assert(std::is_base_of<ShipAIBrain, BrainType>::value, "BrainType must be derived from ShipAIBrain");
-			setNewBrain(new_sp<BrainType>(sp_this()));
+			if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
+			{
+				brainComp->spawnNewBrain<BrainType>(sp_this());
+			}
 		}
-		void setNewBrain(const sp<ShipAIBrain> newBrain, bool bStartNow = true);
-		const ShipAIBrain* getBrain() const  { return brain.get(); }
+
+	public:
 
 		//control functions
 		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f);

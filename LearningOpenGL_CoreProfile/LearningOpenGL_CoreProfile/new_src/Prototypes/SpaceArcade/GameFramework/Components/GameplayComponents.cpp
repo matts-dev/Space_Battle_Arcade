@@ -2,6 +2,10 @@
 
 namespace SA
 {
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// team component
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void TeamComponent::setTeam(size_t inTeamIdx)
 	{
 		// anyone can change the team; this may be a problem later.
@@ -11,6 +15,31 @@ namespace SA
 		size_t oldTeamIdx = teamIdx;
 		teamIdx = inTeamIdx;
 		onTeamChanged.broadcast(oldTeamIdx, teamIdx);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// brain component
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	void BrainComponent::setNewBrain(const sp<AIBrain>& newBrain, bool bStartNow /*= true*/)
+	{
+		if (brain)
+		{
+			brain->sleep();
+		}
+
+		//update brain to new brain after stopping previous; should not allow two brains to operate on a single ship 
+		brain = newBrain;
+		if (newBrain && bStartNow)
+		{
+			newBrain->awaken();
+		}
+
+		cachedBehaviorTree = nullptr;
+		if(BehaviorTreeBrain* btBrain = dynamic_cast<BehaviorTreeBrain*>(newBrain.get()))
+		{
+			cachedBehaviorTree = &btBrain->getBehaviorTree();
+		}
 	}
 
 }

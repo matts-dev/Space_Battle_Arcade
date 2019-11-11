@@ -78,7 +78,7 @@ namespace SA
 			{"serviceTest_immediateExecute", 1},
 			{"decoratorTest_basicFunctionality", 1 },
 			{"decoratorTest_deferred_basicFunctionality", 1},
-			{"memoryOperationsTestTree", 11},
+			{"memoryOperationsTestTree", 12},
 			{ "abortTest_basicFunctionality", 0 /*uses forbidden set to avoid counting passing*/ },
 			{ "abortTest_externalAbort", 0},
 			{ "loopTestTree", 0},

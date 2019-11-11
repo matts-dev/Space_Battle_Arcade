@@ -25,6 +25,7 @@ namespace SA
 			: NodeBase(name), root(root)
 		{
 			memory = new_sp<Memory>();
+			this->assignedMemory = this->memory.get(); //make sure that if this is accessed as a node, it returns correct memory.
 			for (const auto& kv_pair : initializedMemory)
 			{
 				memory->replaceValue(kv_pair.first, kv_pair.second);
@@ -85,8 +86,11 @@ namespace SA
 			return executionStack.back()->getPriority();
 		}
 
-		SA::BehaviorTree::Memory& Tree::getTreeMemory()
+		SA::BehaviorTree::Memory& Tree::getMemory() const
 		{
+			// This overloads the node version of the method to make it public. 
+			// even if node version is made public, This being on the tree makes the API more clear as someone only looking 
+			// through the behavior tree class for the first time, they don't need to know Nodes have a function to get memory.
 			assert(memory.get() != nullptr);
 			return *memory;
 		}

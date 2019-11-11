@@ -457,12 +457,29 @@ namespace SA
 		{
 			Memory& memory = getMemory();
 			owningBrain = memory.getReadValueAs<ShipAIBrain>(brainKey);
-			secondaryTargets = memory.getReadValueAs<std::vector<sp<WorldEntity>>>(secondaryTargetsKey);
-			//primaryTarget = memory.getReadValueAs<WorldEntity>(targetKey);
+
+			primaryTarget = memory.getMemoryReference<TargetType>(targetKey);
+			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<std::vector<sp<TargetType>>>>(secondaryTargetsKey);
+			
 			memory.getModifiedDelegate(targetKey).addStrongObj(sp_this(), &Service_OpportunisiticShots::handleTargetModified);
+
+			//don't listen to modified, just replaced. We only care when the underlying datastructure may have been swapped out.
+			memory.getReplacedDelegate(secondaryTargetsKey).addStrongObj(sp_this(), &Service_OpportunisiticShots::handleSecondaryTargetsReplaced);
 
 			if (!owningBrain) { log("Service_OpportunisiticShots", LogLevel::LOG_ERROR, "No owning brain"); exit(-1); }
 			if (!secondaryTargets) { log("Service_OpportunisiticShots", LogLevel::LOG_ERROR, "No secondary target array"); exit(-1);}
+		}
+
+		void Service_OpportunisiticShots::handleTargetModified(const std::string& key, const GameEntity* value)
+		{
+			Memory& memory = getMemory();
+			primaryTarget = memory.getMemoryReference<TargetType>(targetKey);
+		}
+
+		void Service_OpportunisiticShots::handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+		{
+			Memory& memory = getMemory();
+			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<std::vector<sp<TargetType>>>>(secondaryTargetsKey);
 		}
 
 		void Service_OpportunisiticShots::stopService()
@@ -473,6 +490,7 @@ namespace SA
 
 			Memory& memory = getMemory();
 			memory.getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_OpportunisiticShots::handleTargetModified);
+			memory.getReplacedDelegate(secondaryTargetsKey).removeStrong(sp_this(), &Service_OpportunisiticShots::handleSecondaryTargetsReplaced);
 		}
 
 		void Service_OpportunisiticShots::serviceTick()
@@ -486,23 +504,21 @@ namespace SA
 					vec3 myPos = myShip->getWorldPosition();
 					vec4 myForward = myShip->getForwardDir();
 
-					if (primaryTarget && *primaryTarget)
+					if (primaryTarget )
 					{
-						TargetType& target = **primaryTarget;
-
-						bool firedAtTarget = tryShootAtTarget(target, myShip, myPos, myForward);
+						bool firedAtTarget = tryShootAtTarget(*primaryTarget, myShip, myPos, myForward);
 					}
 
 					//note: secondary targets can be updated between ticks, so do not cache anything within it. It should always be non-null though.
-					assert(secondaryTargets);
-					if (secondaryTargets)
-					{
-						//note: be careful not to modify this array indirectly while looping over it; modifications should be on same thread so that isn't a concern.
-						for (const sp<TargetType>& otherTarget : *secondaryTargets)
-						{
+					//assert(secondaryTargets);
+					//if (secondaryTargets)
+					//{
+					//	//note: be careful not to modify this array indirectly while looping over it; modifications should be on same thread so that isn't a concern.
+					//	for (const sp<TargetType>& otherTarget : *secondaryTargets)
+					//	{
 
-						}
-					}
+					//	}
+					//}
 				}
 			}
 		}
@@ -513,19 +529,10 @@ namespace SA
 			rng = game.getRNGSystem().getTimeInfluencedRNG();
 		}
 
-		void Service_OpportunisiticShots::handleTargetModified(const std::string& key, const GameEntity* value)
-		{
-			Memory& memory = getMemory();
-			//primaryTarget = memory.getReadValueAs<TargetType>(targetKey);
-			//#TODO cache primary target, 
-			//#TODO perhaps create system where you can easily get a reference to a memory value without having to walk through write values
-		}
-
 		bool Service_OpportunisiticShots::canShoot() const
 		{
-			//#TODO release_ptr keep a pointer to the current level that auto-releases, instead of locking a weakpointer every tick.
 			static LevelSystem& levelSys = GameBase::get().getLevelSystem();
-			if (const sp<LevelBase>& currentLevel = levelSys.getCurrentLevel())
+			if (const sp<LevelBase>& currentLevel = levelSys.getCurrentLevel()) //#TODO #optimize cache level and listen for updates #auto_delegate_listening_handles?
 			{
 				return currentLevel->getWorldTimeManager()->getTimestampSecs() - lastShotTimestamp > shootCooldown;
 			}
@@ -587,7 +594,8 @@ namespace SA
 
 		void Decorator_FighterStateSetter::reevaluateState()
 		{
-			//becareful not to call this method when state memory changes, that could result in infinite recursion
+			//WARNING:
+			//Becareful not to call this method when MentalState_Fighter memory changes, that could result in infinite recursion as this also updates that field
 
 			Memory& memory = getMemory();
 
@@ -722,14 +730,52 @@ namespace SA
 				}
 			}
 			myTarget->onDestroyedEvent->addWeakObj(sp_this(), &Task_Ship_FollowTarget_Indefinitely::handleTargetDestroyed);
+
+			//lock on to target (this signals to target to potential evade; unrealistic but makes AI simplier)
+			if (BrainComponent* brainComp = myTarget->getGameComponent<BrainComponent>())
+			{
+				assert(static_cast<bool>(myShip));
+				if (const BehaviorTree::Tree* targetTree = brainComp->getTree())
+				{
+					Memory& targetMemory = targetTree->getMemory();
+					{
+						ScopedUpdateNotifier<CurrentAttackers> outWriteValue;
+						if (targetMemory.getWriteValueAs<CurrentAttackers>(activeAttackers_MemoryKey, outWriteValue))
+						{
+							outWriteValue.get().insert({ myShip.get(), CurrentAttackerDatum{ myShip } });
+						}
+					}
+				}
+			}
 		}
 
 		void Task_Ship_FollowTarget_Indefinitely::taskCleanup()
 		{
 			Task_TickingTaskBase::taskCleanup();
 
+			if (myTarget != nullptr)
+			{
+				if (BrainComponent* brainComp = myTarget->getGameComponent<BrainComponent>())
+				{
+					assert(static_cast<bool>(myShip));
+					if (const BehaviorTree::Tree* targetTree = brainComp->getTree())
+					{
+						Memory& targetMemory = targetTree->getMemory();
+						{
+							ScopedUpdateNotifier<CurrentAttackers> outWriteValue;
+							if (targetMemory.getWriteValueAs<CurrentAttackers>(activeAttackers_MemoryKey, outWriteValue))
+							{
+								outWriteValue.get().erase(myShip.get());
+							}
+						}
+					}
+				}
+
+				//clean up target
+				handleTargetDestroyed(myTarget);
+			}
+
 			myShip = nullptr;
-			myTarget = nullptr;
 		}
 
 		bool Task_Ship_FollowTarget_Indefinitely::tick(float dt_sec)
@@ -746,7 +792,8 @@ namespace SA
 				//if target is really close, do not try to adjust
 				if (distToTarget2 > 1.0f)
 				{
-					float slowdownCloseFactor = glm::clamp(distToTarget2 / prefDistTarget2, 0.25f, 1.f);
+					//float slowdownCloseFactor = glm::clamp(distToTarget2 / prefDistTarget2, 0.25f, 1.f);  //#TODO renable this after evade is implemented
+					float slowdownCloseFactor = 1.f;
 
 					myShip->moveTowardsPoint(targetPos, dt_sec, slowdownCloseFactor);
 				}
@@ -772,5 +819,8 @@ namespace SA
 		}
 
 	}
+
+
+
 }
 

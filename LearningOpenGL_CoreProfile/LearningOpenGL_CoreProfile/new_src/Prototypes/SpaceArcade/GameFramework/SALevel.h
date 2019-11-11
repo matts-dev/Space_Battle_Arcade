@@ -20,7 +20,7 @@ namespace SA
 	class TimeManager;
 
 	/** Base class for a level object */
-	class LevelBase : public GameEntity, public Tickable
+	class LevelBase : public GameEntity, public Tickable, public RemoveCopies, public RemoveMoves
 	{
 		friend LevelSystem;
 	public:

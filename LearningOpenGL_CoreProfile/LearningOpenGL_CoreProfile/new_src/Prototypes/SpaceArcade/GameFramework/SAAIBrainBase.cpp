@@ -5,6 +5,8 @@
 #include "SALevelSystem.h"
 #include "SAGameBase.h"
 #include "SALevel.h"
+#include "SABehaviorTree.h"
+#include "SATimeManagementSystem.h"
 
 namespace SA
 {
@@ -19,5 +21,32 @@ namespace SA
 		onSleep();
 		bActive = false;
 	}
+
+	bool BehaviorTreeBrain::onAwaken()
+	{
+		behaviorTree->start();
+
+		const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+		currentLevel->getWorldTimeManager()->registerTicker(sp_this());
+		tickingOnLevel = currentLevel;
+		return true;
+	}
+
+	void BehaviorTreeBrain::onSleep()
+	{
+		behaviorTree->stop();
+
+		if (!tickingOnLevel.expired())
+		{
+			tickingOnLevel.lock()->getWorldTimeManager()->removeTicker(sp_this());
+		}
+	}
+
+	bool BehaviorTreeBrain::tick(float dt_sec)
+	{
+		behaviorTree->tick(dt_sec);
+		return true;
+	}
+
 }
 

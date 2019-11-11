@@ -26,6 +26,7 @@
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../GameFramework/SAParticleSystem.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
+#include "../../GameFramework/Components/GameplayComponents.h"
 
 namespace SA
 {
@@ -141,9 +142,16 @@ namespace SA
 				fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
 
 				sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
-				//fighter->spawnNewBrain<FlyInDirectionBrain>();
-				//fighter->spawnNewBrain<WanderBrain>();
-				fighter->spawnNewBrain<FighterBrain>();
+				if (BrainComponent* brainComp = fighter->getGameComponent<BrainComponent>())
+				{
+					//brainComp->spawnNewBrain<FlyInDirectionBrain>();
+					//brainComp->spawnNewBrain<WanderBrain>();
+					//brainComp->spawnNewBrain<FighterBrain>();
+
+					//fighter->spawnNewBrain<FlyInDirectionBrain>();
+					//fighter->spawnNewBrain<WanderBrain>();
+					fighter->spawnNewBrain<FighterBrain>(); 
+				}
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);
@@ -439,17 +447,21 @@ namespace SA
 
 		for (const sp<Ship>& ship : spawnedShips)
 		{
-			if (bForceShipsToFire_ui)
+			if (BrainComponent* brainComp = ship->getGameComponent<BrainComponent>())
 			{
-				sp<ContinuousFireBrain> cfBrain = new_sp<ContinuousFireBrain>(ship);
-				cfBrain->setDelayStartFire(fireDelayDistribution(rng_eng));
-				cfBrain->setFireRateSecs(forceFireRateSecs_ui);
-				ship->setNewBrain(cfBrain);
-			}
-			else
-			{
-				sp<FlyInDirectionBrain> singleDirectionBrain = new_sp<FlyInDirectionBrain>(ship);
-				ship->setNewBrain(singleDirectionBrain);
+				if (bForceShipsToFire_ui)
+				{
+					sp<ContinuousFireBrain> cfBrain = new_sp<ContinuousFireBrain>(ship);
+					cfBrain->setDelayStartFire(fireDelayDistribution(rng_eng));
+					cfBrain->setFireRateSecs(forceFireRateSecs_ui);
+					brainComp->setNewBrain(cfBrain);
+				}
+				else
+				{
+					sp<FlyInDirectionBrain> singleDirectionBrain = new_sp<FlyInDirectionBrain>(ship);
+					brainComp->setNewBrain(singleDirectionBrain);
+				}
+
 			}
 		}
 	}

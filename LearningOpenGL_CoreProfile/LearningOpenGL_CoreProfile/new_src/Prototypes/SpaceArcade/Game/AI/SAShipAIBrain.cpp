@@ -21,20 +21,25 @@ namespace SA
 
 	bool ShipAIBrain::onAwaken()
 	{
-		if (const sp<LevelBase>& level = SpaceArcade::get().getLevelSystem().getCurrentLevel())
+		if (BehaviorTreeBrain::onAwaken())
 		{
-			this->wpLevel = level;
-			return true;
+			if (const sp<LevelBase>& level = SpaceArcade::get().getLevelSystem().getCurrentLevel())
+			{
+				this->wpLevel = level;
+				return true;
+			}
+			else
+			{
+				log("ShipAIBrain", LogLevel::LOG_ERROR, "failed to start; no level." __FUNCTION__);
+				return false;
+			}
 		}
-		else
-		{
-			log("ShipAIBrain", LogLevel::LOG_ERROR, "failed to start; no level." __FUNCTION__);
-			return false;
-		}
+		return false;
 	}
 
 	void ShipAIBrain::onSleep()
 	{
+		BehaviorTreeBrain::onSleep();
 	}
 
 	SA::Ship* ShipAIBrain::getControlledTarget()
@@ -54,6 +59,10 @@ namespace SA
 		}
 		return nullptr;
 	}
+
+	////////////////////////////////////////////////////////
+	// ContinuousFireBrain
+	////////////////////////////////////////////////////////
 
 	bool ContinuousFireBrain::onAwaken()
 	{
@@ -124,6 +133,18 @@ namespace SA
 		}
 	}
 
+	void ContinuousFireBrain::postConstruct()
+	{
+		ShipAIBrain::postConstruct();
+
+		//dummy brain
+		using namespace BehaviorTree;
+		behaviorTree = new_sp<Tree>("dummy-tree",
+			new_sp<Task_Empty>("empty_task"),
+			MemoryInitializer{}
+		);
+	}
+
 	void ContinuousFireBrain::setFireRateSecs(float InFireRateSecs)
 	{
 		fireRateSec = InFireRateSecs;
@@ -157,47 +178,21 @@ namespace SA
 		return false;
 	}
 
+	void FlyInDirectionBrain::postConstruct()
+	{
+		ShipAIBrain::postConstruct();
+		//dummy brain
+		using namespace BehaviorTree;
+		behaviorTree = new_sp<Tree>("dummy-tree",
+			new_sp<Task_Empty>("empty_task"),
+			MemoryInitializer{}
+		);
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// behavior tree brain
 	/////////////////////////////////////////////////////////////////////////////////////
-	bool BehaviorTreeBrain::onAwaken()
-	{
-		if (ShipAIBrain::onAwaken())
-		{
-			behaviorTree->start();
 
-			const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
-			currentLevel->getWorldTimeManager()->registerTicker(sp_this());
-			tickingOnLevel = currentLevel;
-
-			return true;
-		}
-		return false;
-	}
-
-	void BehaviorTreeBrain::postConstruct()
-	{
-		// subclasses should set behavior tree in an override of this function
-		ShipAIBrain::postConstruct();
-	}
-
-	bool BehaviorTreeBrain::tick(float dt_sec)
-	{
-		behaviorTree->tick(dt_sec);
-		return true;
-	}
-
-	void BehaviorTreeBrain::onSleep()
-	{
-		ShipAIBrain::onSleep();
-		behaviorTree->stop();
-
-		if (!tickingOnLevel.expired())
-		{
-			tickingOnLevel.lock()->getWorldTimeManager()->removeTicker(sp_this());
-		}
-
-	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// wander brain
@@ -261,6 +256,7 @@ namespace SA
 		const char* const targetKey = "target";
 		const char* const targetLocKey = "target_loc";
 		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
+		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
 
 
 		using namespace BehaviorTree;
@@ -275,11 +271,7 @@ namespace SA
 								new_sp<Task_PlaceHolder>("task_evade", true)
 							),
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::FIGHT, AbortPreference::ABORT_ON_MODIFY,
-								new_sp<Task_Ship_FollowTarget_Indefinitely>("task_followTarget", brainKey, targetKey)
-								//new_sp<Sequence>("seq_move_to_target", MakeChildren{
-								//	new_sp<Task_Ship_GetEntityLocation>("get_target_loc", targetKey, targetLocKey),
-								//	new_sp<Task_Ship_MoveToLocation>(brainKey, targetLocKey, 0.1f)
-								//})
+								new_sp<Task_Ship_FollowTarget_Indefinitely>("task_followTarget", brainKey, targetKey, activeAttackers_MemoryKey)
 							),
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_wander_state", stateKey, OP::EQUAL, MentalState_Fighter::WANDER, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{
@@ -298,6 +290,7 @@ namespace SA
 					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
+					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<CurrentAttackers>>(CurrentAttackers{})},
 					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) } //#TODO perhaps should be releasing pointers instead of shared ptr when those are a thing
 				}
 			);
