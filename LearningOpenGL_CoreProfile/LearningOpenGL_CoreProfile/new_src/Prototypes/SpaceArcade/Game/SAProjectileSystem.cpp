@@ -62,6 +62,10 @@ namespace SA
 
 		// models parallel to z
 		xform.position = end;
+#if _WIN32 && _DEBUG
+		if (Utils::anyValueNAN(start)){__debugbreak();}
+		if (Utils::anyValueNAN(end)) {__debugbreak();}
+#endif //_WIN32
 
 		//collision check
 		if (bDoCollisionTest && !bHit)
@@ -224,6 +228,10 @@ namespace SA
 		spawned->aabbSize = projectileTypeHandle.getAABBsize();
 
 		spawned->timeAlive = 0.f;
+#if _WIN32 && _DEBUG
+		if (Utils::anyValueNAN(spawnRotation)) { __debugbreak(); }
+		if (Utils::anyValueNAN(spawnData.start)) { __debugbreak(); }
+#endif
 
 		activeProjectiles.insert( spawned );
 	}

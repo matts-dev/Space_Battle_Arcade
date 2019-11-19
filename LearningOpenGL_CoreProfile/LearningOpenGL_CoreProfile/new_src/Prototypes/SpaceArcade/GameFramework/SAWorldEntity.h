@@ -29,7 +29,7 @@ namespace SA
 		virtual void tick(float deltaTimeSecs) {};
 
 		inline const Transform& getTransform() const noexcept				{ return transform; }
-		inline void				setTransform(const Transform& inTransform)	{ transform = inTransform; }
+		void					setTransform(const Transform& inTransform);
 
 		//#scenenodes this will need updating to get final parent-child transformed position
 		glm::vec3 getWorldPosition() const { return transform.position; } //#scenenodes todo update

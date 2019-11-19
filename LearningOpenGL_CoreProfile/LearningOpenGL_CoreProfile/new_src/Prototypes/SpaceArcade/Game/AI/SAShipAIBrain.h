@@ -91,6 +91,18 @@ namespace SA
 	////////////////////////////////////////////////////////
 	// The primary behavior tree for a fighter ship.
 	////////////////////////////////////////////////////////
+	class EvadeTestBrain : public ShipAIBrain
+	{
+	public:
+		EvadeTestBrain(const sp<Ship>& controlledShip) : ShipAIBrain(controlledShip) {}
+
+	protected:
+		virtual void postConstruct() override;
+	};
+
+	////////////////////////////////////////////////////////
+	// The primary behavior tree for a fighter ship.
+	////////////////////////////////////////////////////////
 	class FighterBrain : public ShipAIBrain
 	{
 	public:

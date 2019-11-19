@@ -2,6 +2,7 @@
 #include "SAGameBase.h"
 #include "SALevel.h"
 #include "SALevelSystem.h"
+#include "../Tools/SAUtilities.h"
 
 namespace SA
 {
@@ -9,6 +10,13 @@ namespace SA
 	{
 		GameBase& game = GameBase::get();
 		return game.getLevelSystem().getCurrentLevel().get();
+	}
+
+	void WorldEntity::setTransform(const Transform& inTransform)
+	{
+		NAN_BREAK(inTransform.position);
+		NAN_BREAK(inTransform.rotQuat);
+		transform = inTransform;
 	}
 
 	const sp<const ModelCollisionInfo>& WorldEntity::getCollisionInfo() const

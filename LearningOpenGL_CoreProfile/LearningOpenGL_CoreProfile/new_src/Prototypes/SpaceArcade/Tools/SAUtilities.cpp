@@ -219,7 +219,8 @@ namespace SA
 
 		float getRadianAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n)
 		{
-			float cosTheta = glm::dot(from_n, to_n);
+			//clamp required because dot can produce values outside range of [-1,1] whih will cause acos to return nan.
+			float cosTheta = glm::clamp(glm::dot(from_n, to_n), -1.f, 1.f);
 			float rotDegreesRadians = glm::acos(cosTheta);
 
 			return rotDegreesRadians;
@@ -234,7 +235,7 @@ namespace SA
 		{
 			glm::quat rot; //unit quaternion;
 
-			float cosTheta = glm::dot(from_n, to_n);
+			float cosTheta = glm::clamp(glm::dot(from_n, to_n), -1.f, 1.f);
 
 			bool bVectorsAre180 = Utils::float_equals(cosTheta, -1.0f);
 			bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f) && !bVectorsAre180; //#TODO, don't want to change this mid-refactor; but second check seems unecessary and impossible

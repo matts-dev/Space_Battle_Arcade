@@ -72,5 +72,24 @@ namespace SA
 		float getRadianAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		glm::quat getRotationBetween(const glm::vec3& a_n, const glm::vec3& b_n);
 		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees);
+
+		inline bool anyValueNAN(glm::vec3 vec) {return glm::isnan(vec.x) || glm::isnan(vec.y) || glm::isnan(vec.z);}
+		inline bool anyValueNAN(glm::vec4 vec) { return glm::isnan(vec.x) || glm::isnan(vec.y) || glm::isnan(vec.z) || glm::isnan(vec.w); };
+		inline bool anyValueNAN(glm::quat quat) 
+		{ 
+			glm::bvec4 vec = glm::isnan(quat);
+			return vec.x || vec.y || vec.z || vec.w;
+		};
+
+#if _DEBUG | ERROR_CHECK_GL_RELEASE 
+#define NAN_BREAK(value)\
+if(SA::Utils::anyValueNAN(value))\
+{\
+	__debugbreak();\
+}
+#else
+#define NAN_BREAK(value) 
+#endif //_DEBUG
+
 	}
 }

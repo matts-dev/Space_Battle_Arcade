@@ -51,6 +51,10 @@ namespace SA
 
 	void BasicTestSpaceLevel::startLevel_v()
 	{
+#if ERROR_CHECK_GL_RELEASE 
+	log("BasicTestSpaceLevel", LogLevel::LOG_WARNING, "ERROR_CHECK_GL_RELEASE enabled. For performance this should be disabled for final release builds.");
+#endif
+
 		SpaceLevelBase::startLevel_v();
 
 		SpaceArcade& game = SpaceArcade::get();
@@ -104,12 +108,12 @@ namespace SA
 		carrierXform_TeamA.position = carrierPosition_teamA;
 		carrierXform_TeamA.scale = { 5, 5, 5 };
 		carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip_TeamA = spawnEntity<Ship>(carrierModel, carrierXform_TeamA, createUnitCubeCollisionInfo());
+		//sp<Ship> carrierShip_TeamA = spawnEntity<Ship>(carrierModel, carrierXform_TeamA, createUnitCubeCollisionInfo());
 
 		Transform carrierXform_TeamB = carrierXform_TeamA;
 		carrierXform_TeamB.position.z = -carrierXform_TeamB.position.z;
 		carrierXform_TeamB.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
-		sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
+		//sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
 
 		particleSpawnOffset = glm::vec3(0,0,0);
 
@@ -120,8 +124,11 @@ namespace SA
 
 		uint32_t numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
-		numFighterShipsToSpawn = 250;
-		//numFighterShipsToSpawn = 20;
+		//numFighterShipsToSpawn = 250;
+		numFighterShipsToSpawn = 20;
+		//numFighterShipsToSpawn = 10;
+		//numFighterShipsToSpawn = 4;
+
 #endif//NDEBUG 
 
 		uint32_t numTeams = 2;
@@ -142,16 +149,10 @@ namespace SA
 				fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
 
 				sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
-				if (BrainComponent* brainComp = fighter->getGameComponent<BrainComponent>())
-				{
-					//brainComp->spawnNewBrain<FlyInDirectionBrain>();
-					//brainComp->spawnNewBrain<WanderBrain>();
-					//brainComp->spawnNewBrain<FighterBrain>();
-
-					//fighter->spawnNewBrain<FlyInDirectionBrain>();
-					//fighter->spawnNewBrain<WanderBrain>();
-					fighter->spawnNewBrain<FighterBrain>(); 
-				}
+				//fighter->spawnNewBrain<FlyInDirectionBrain>();
+				//fighter->spawnNewBrain<WanderBrain>();
+				fighter->spawnNewBrain<FighterBrain>(); 
+				//fighter->spawnNewBrain<EvadeTestBrain>();
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);
@@ -176,6 +177,19 @@ namespace SA
 				}
 				idx++;
 			}
+		}
+
+		//follow a target from the start
+		const size_t targetIdx = 15;
+		size_t pickIdx = 0;
+		for (sp<WorldEntity> entity : worldEntities)
+		{
+			if (pickIdx == targetIdx)
+			{
+				hitboxPickerWidget->setPickTarget(entity);
+				break;
+			}
+			pickIdx++;
 		}
 	}
 

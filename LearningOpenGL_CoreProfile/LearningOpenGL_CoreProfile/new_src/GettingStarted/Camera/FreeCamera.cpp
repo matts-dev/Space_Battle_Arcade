@@ -228,7 +228,7 @@ void FreeCamera::lookAt(glm::vec3 position)
 
 	//3. calculate the angle between the two vectors
 	float cos_theta = dot(newLookAt, currentLooking);
-	float theta_radians = acos(cos_theta); //imprecision can make values great than one for cos_theta; which acos(x>1) == nan
+	float theta_radians = glm::clamp(acos(cos_theta), -1.f, 1.f); //imprecision can make values great than one for cos_theta; which acos(x>1) == nan
 	if (isnan(theta_radians))
 		return;
 

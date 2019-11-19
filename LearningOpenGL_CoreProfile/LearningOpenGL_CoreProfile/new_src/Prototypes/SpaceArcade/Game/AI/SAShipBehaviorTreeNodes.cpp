@@ -22,6 +22,14 @@ namespace SA
 {
 	namespace BehaviorTree
 	{
+		void LogShipNodeDebugMessage(const Tree& tree, const NodeBase& node, const std::string& msg)
+		{
+			std::string treeInstance = std::to_string((uint64_t)&tree);
+			std::string newMessage = treeInstance + " : " + node.getName() + "\t - " + msg;
+			log("ShipNodeDebugMessage", LogLevel::LOG, newMessage.c_str());
+		}
+
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Task find random location within radius of location
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -151,66 +159,31 @@ namespace SA
 		{
 			using namespace glm;
 
-			const Transform& xform = myShip->getTransform();
-			accumulatedTime += dt_sec;
+			if (myShip)
+			{
+				const Transform& xform = myShip->getTransform();
+				accumulatedTime += dt_sec;
 
-			vec3 targetDir = moveLoc - xform.position;
+				vec3 targetDir = moveLoc - xform.position;
 			
-			if (glm::length2(targetDir) < atLocThresholdLength2)
-			{
-				evaluationResult = true;
-			}
-			else if (accumulatedTime >= timeoutSecs)
-			{
-				evaluationResult = false;
-			}
-			else
-			{
-				myShip->moveTowardsPoint(moveLoc, dt_sec);
-				//vec3 forwardDir_n = glm::normalize(vec3(myShip->getForwardDir()));
-				//vec3 targetDir_n = glm::normalize(targetDir);
-				//bool bPointingTowardsMoveLoc = glm::dot(forwardDir_n, targetDir_n) >= 0.99f;
+				if (glm::length2(targetDir) < atLocThresholdLength2)
+				{
+					evaluationResult = true;
+				}
+				else if (accumulatedTime >= timeoutSecs)
+				{
+					evaluationResult = false;
+				}
+				else
+				{
+					myShip->moveTowardsPoint(moveLoc, dt_sec);
+				}
 
-				//if (!bPointingTowardsMoveLoc)
-				//{
-				//	vec3 rotationAxis_n = glm::cross(forwardDir_n, targetDir_n);
-
-				//	float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
-				//	float maxTurn_Rad = myShip->getMaxTurnAngle_PerSec() * dt_sec;
-				//	float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
-
-				//	quat completedRot = Utils::getRotationBetween(forwardDir_n, targetDir_n) * xform.rotQuat;
-				//	quat newRot = glm::slerp(xform.rotQuat, completedRot, possibleRotThisTick); 
-
-				//	//roll ship -- we want the ship's right (or left) vector to match this rotation axis to simulate it pivoting while turning
-				//	vec3 rightVec_n = newRot * vec3(1, 0, 0);
-				//	bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
-
-				//	vec3 newForwardVec_n = newRot * vec3(myShip->localForwardDir_n());
-				//	if (!bRollMatchesTurnAxis)
-				//	{
-				//		float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
-				//		float rollThisTick = glm::clamp(maxTurn_Rad / rollAngle_rad, 0.f, 1.f);
-				//		glm::quat roll = glm::angleAxis(rollThisTick, newForwardVec_n);
-				//		newRot = roll * newRot;
-				//	}
-
-				//	Transform newXform = xform;
-				//	newXform.rotQuat = newRot;
-				//	myShip->setTransform(newXform);
-
-				//	myShip->setVelocity(newForwardVec_n * myShip->getMaxSpeed());
-				//}
-				//else
-				//{
-				//	myShip->setVelocity(forwardDir_n * myShip->getMaxSpeed());
-				//}
-			}
-
-			if constexpr (ENABLE_DEBUG_LINES)
-			{
-				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
-				debug.renderLine(vec4(xform.position, 1), vec4(moveLoc, 1), vec4(0, 0.25f, 0, 1));
+				if constexpr (ENABLE_DEBUG_LINES)
+				{
+					static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+					debug.renderLine(vec4(xform.position, 1), vec4(moveLoc, 1), vec4(0, 0.25f, 0, 1));
+				}
 			}
 
 			return !evaluationResult.has_value();
@@ -582,47 +555,125 @@ namespace SA
 
 		void Decorator_FighterStateSetter::notifyTreeEstablished()
 		{
+			//Decorator::notifyTreeEstablished();
+
+			deferredStateChangeTimer = new_sp<MultiDelegate<>>();
+			deferredStateChangeTimer->addWeakObj(sp_this(), &Decorator_FighterStateSetter::handleDeferredStateUpdate);
+
+			rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+
 			Memory& memory = getMemory();
 			memory.getModifiedDelegate(targetKey).addWeakObj(sp_this(), &Decorator_FighterStateSetter::handleTargetModified);
+			memory.getModifiedDelegate(activeAttackersKey).addWeakObj(sp_this(), &Decorator_FighterStateSetter::handleActiveAttackersModified);
 
 		}
 
-		void Decorator_FighterStateSetter::handleTargetModified(const std::string& key, const GameEntity* value)
+		void Decorator_FighterStateSetter::handleDeferredStateUpdate()
 		{
 			reevaluateState();
 		}
 
+		void Decorator_FighterStateSetter::startStateUpdateTimer()
+		{
+			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+			if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
+			{
+				if (const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager())
+				{
+					if (!worldTimeManager->hasTimerForDelegate(deferredStateChangeTimer))
+					{
+						worldTimeManager->createTimer(deferredStateChangeTimer, deferrStateTime + rng->getFloat(0.f, 0.1f));
+					}
+				}
+			}
+		}
+
+		void Decorator_FighterStateSetter::stopStateUpdateTimer()
+		{
+			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+			if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
+			{
+				if (const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager())
+				{
+					if (worldTimeManager->hasTimerForDelegate(deferredStateChangeTimer))
+					{
+						worldTimeManager->removeTimer(deferredStateChangeTimer);
+					}
+				}
+			}
+		}
+
+		void Decorator_FighterStateSetter::handleTargetModified(const std::string& key, const GameEntity* value)
+		{
+			DEBUG_SHIP_MSG(__FUNCTION__);
+			reevaluateState();
+		}
+
+		void Decorator_FighterStateSetter::handleActiveAttackersModified(const std::string& key, const GameEntity* value)
+		{
+			DEBUG_SHIP_MSG(__FUNCTION__);
+			//reevaluateState();
+			startStateUpdateTimer();
+		}
+
 		void Decorator_FighterStateSetter::reevaluateState()
 		{
-			//WARNING:
-			//Becareful not to call this method when MentalState_Fighter memory changes, that could result in infinite recursion as this also updates that field
+			//WARNING: Becareful not to call this method when MentalState_Fighter memory changes, that could result in infinite recursion as this also updates that field
 
 			Memory& memory = getMemory();
+			const MentalState_Fighter* state = memory.getReadValueAs<MentalState_Fighter>(stateKey);
+			const ActiveAttackers* activeAttackers = memory.getReadValueAs<ActiveAttackers>(activeAttackersKey);
+			const TargetType* target = memory.getReadValueAs<TargetType>(targetKey);
 
-			if (const MentalState_Fighter* state = memory.getReadValueAs<MentalState_Fighter>(stateKey))
+			bool bRequiredDecisionDataAvailable = state && activeAttackers;
+			if (bRequiredDecisionDataAvailable)
 			{
-				if (const WorldEntity* target = memory.getReadValueAs<WorldEntity>(targetKey))
+				/////////////////////////////////////////////////////////////////////////////////////
+				// make state setting decisions, pointers should be safe
+				/////////////////////////////////////////////////////////////////////////////////////
+				if (target)
 				{
-					//for now simply switch to fighting state; later this will probably need to do some logic to figure out if it needs to evade.
-					if (*state != MentalState_Fighter::FIGHT){ writeState(MentalState_Fighter::FIGHT, memory);}
+					if (activeAttackers->size() > 0)
+					{
+						if (activeAttackers->find(target) != activeAttackers->end())
+						{
+							writeState(*state, MentalState_Fighter::ATTACK, memory);
+						}
+						else
+						{
+							writeState(*state, MentalState_Fighter::EVADE, memory);
+						}
+					}
+					else
+					{
+						writeState(*state, MentalState_Fighter::ATTACK, memory);
+					}
 				}
-				else
+				else //no target
 				{
-					if (*state != MentalState_Fighter::WANDER) { writeState(MentalState_Fighter::WANDER, memory);}
+					if (activeAttackers->size() > 0)
+					{
+						writeState(*state, MentalState_Fighter::EVADE, memory);
+					}
+					else
+					{
+						writeState(*state, MentalState_Fighter::WANDER, memory);
+					}
 				}
 			}
 			else
 			{
-				log("Decorator_FighterStateSetter", LogLevel::LOG_ERROR, "No mental state in tree; there should always be a valid state.");
+				log(__FUNCTION__, LogLevel::LOG_ERROR, "Required data for state setting is not available");
 			}
 		}
 
-		void Decorator_FighterStateSetter::writeState(MentalState_Fighter newState, Memory& memory)
+		void Decorator_FighterStateSetter::writeState(MentalState_Fighter currentState, MentalState_Fighter newState, Memory& memory)
 		{
 			ScopedUpdateNotifier<MentalState_Fighter> write_state;
-			if (memory.getWriteValueAs<MentalState_Fighter>(stateKey, write_state))
+			if (currentState != newState && memory.getWriteValueAs<MentalState_Fighter>(stateKey, write_state))
 			{
 				write_state.get() = newState;
+				DEBUG_SHIP_MSG("writing state");
 			}
 		}
 
@@ -739,9 +790,10 @@ namespace SA
 				{
 					Memory& targetMemory = targetTree->getMemory();
 					{
-						ScopedUpdateNotifier<CurrentAttackers> outWriteValue;
-						if (targetMemory.getWriteValueAs<CurrentAttackers>(activeAttackers_MemoryKey, outWriteValue))
+						ScopedUpdateNotifier<ActiveAttackers> outWriteValue;
+						if (targetMemory.getWriteValueAs<ActiveAttackers>(activeAttackers_MemoryKey, outWriteValue))
 						{
+							DEBUG_SHIP_MSG("locking on to target");
 							outWriteValue.get().insert({ myShip.get(), CurrentAttackerDatum{ myShip } });
 						}
 					}
@@ -762,9 +814,10 @@ namespace SA
 					{
 						Memory& targetMemory = targetTree->getMemory();
 						{
-							ScopedUpdateNotifier<CurrentAttackers> outWriteValue;
-							if (targetMemory.getWriteValueAs<CurrentAttackers>(activeAttackers_MemoryKey, outWriteValue))
+							ScopedUpdateNotifier<ActiveAttackers> outWriteValue;
+							if (targetMemory.getWriteValueAs<ActiveAttackers>(activeAttackers_MemoryKey, outWriteValue))
 							{
+								DEBUG_SHIP_MSG("un-locking on to target");
 								outWriteValue.get().erase(myShip.get());
 							}
 						}
@@ -801,7 +854,8 @@ namespace SA
 				if constexpr (ENABLE_DEBUG_LINES)
 				{
 					static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
-					debug.renderLine(vec4(myPos, 1), vec4(targetPos, 1), vec4(0.25f, 0, 0, 1));
+					vec4 visibleNudge(0, 0.1f, 0, 0);
+					debug.renderLine(vec4(myPos, 1) + visibleNudge, vec4(targetPos, 1), vec4(0.25f, 0, 0, 1));
 				}
 			}
 			return true;
@@ -816,6 +870,300 @@ namespace SA
 				myTarget = nullptr;
 				evaluationResult = false; //#todo, perhaps need to return false or listen for new target -- not sure on best design yet. Not return requires nullchecking target
 			}
+		}
+
+		////////////////////////////////////////////////////////
+		// Task_FindDogfightLocation
+		////////////////////////////////////////////////////////
+		void Task_FindDogfightLocation::beginTask()
+		{
+			using namespace BehaviorTree;
+			Memory& memory = getMemory();
+			{
+				const ShipAIBrain* myBrain = memory.getReadValueAs<ShipAIBrain>(brainKey);
+				ScopedUpdateNotifier<PrimitiveWrapper<glm::vec3>> location_writable;
+				if (
+					myBrain &&
+					memory.getWriteValueAs(writeLocationKey, location_writable)
+					)
+				{
+					glm::vec3& dogFightLoc = location_writable.get().value;
+
+					static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+					SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(levelSystem.getCurrentLevel().get());
+
+					const Ship* myShip = myBrain->getControlledTarget();
+					if (myShip && spaceLevel)
+					{
+						if (const TeamComponent* teamComp = myShip->getGameComponent<TeamComponent>())
+						{
+							if (TeamCommander* teamCommander = spaceLevel->getTeamCommander(teamComp->getTeam()))
+							{
+								glm::vec3 dogfightLocation = getRandomPointNear(teamCommander->getCommanderPosition());
+								glm::vec3 myShipLoc = myShip->getWorldPosition();
+								glm::vec3 toPoint = dogfightLocation - myShipLoc;
+								if (glm::length2(toPoint) > cacheMaxTravelDistance2)
+								{
+									toPoint = glm::normalize(toPoint) * maxTravelDistance;
+								}
+								dogFightLoc = myShipLoc + toPoint;
+								evaluationResult = true;
+								return;
+							}
+							else
+							{
+								log(__FUNCTION__, LogLevel::LOG_ERROR, "no commander.");
+							}
+						}
+						else
+						{
+							log(__FUNCTION__, LogLevel::LOG_ERROR, "no team component.");
+						}
+					}
+					else
+					{
+						log(__FUNCTION__, LogLevel::LOG_ERROR, "no control target or level.");
+					}
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get required memory keys.");
+				}
+			}
+			evaluationResult = false;
+		}
+
+		void Task_FindDogfightLocation::postConstruct()
+		{
+			Task::postConstruct();
+			rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+			cacheMaxTravelDistance2 = maxTravelDistance * maxTravelDistance;
+		}
+
+		glm::vec3 Task_FindDogfightLocation::getRandomPointNear(glm::vec3 point)
+		{
+			glm::vec3 randomDir;
+			randomDir.x = rng->getFloat(-1.f, 1.f);
+			randomDir.y = rng->getFloat(-1.f, 1.f);
+			randomDir.z = rng->getFloat(-1.f, 1.f);
+
+			glm::vec3 offsetVec = glm::normalize(randomDir) * rng->getFloat(minRandomPointRadius, maxRandomPointRadius);
+			return point + offsetVec;
+		}
+
+		////////////////////////////////////////////////////////
+		// Task_EvadePattern1
+		////////////////////////////////////////////////////////
+		void Task_EvadePatternBase::beginTask()
+		{
+			Task_TickingTaskBase::beginTask();
+			accumulatedTime = 0.f;
+
+			using namespace BehaviorTree;
+			Memory& memory = getMemory();
+			{
+				const glm::vec3* targetLoc = memory.getReadValueAs<glm::vec3>(targetLocKey);
+				ScopedUpdateNotifier<ShipAIBrain> brain_writable;
+				if (	
+					memory.getWriteValueAs(brainKey, brain_writable) &&
+					targetLoc 
+				)
+				{
+					ShipAIBrain& brain = brain_writable.get();
+					myShip = brain.getWeakControlledTarget();
+					base.myTargetLoc = *targetLoc;
+					if (myShip)
+					{
+						base.myShipStartLoc = myShip->getWorldPosition();
+						base.startToTarget_n = base.myTargetLoc - base.myShipStartLoc;
+						base.totalTravelDistance = glm::length(base.startToTarget_n);
+						base.startToTarget_n /= base.totalTravelDistance; //normalize
+
+						childSetup();
+					}
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get required memory from keys.");
+					evaluationResult = false; //end this task asap
+				}
+			}
+
+		}
+
+		void Task_EvadePatternBase::taskCleanup()
+		{
+			myShip = nullptr;
+			base = MyPOD{};
+
+			Task_TickingTaskBase::taskCleanup();
+		}
+
+		bool Task_EvadePatternBase::tick(float dt_sec)
+		{
+			accumulatedTime += dt_sec;
+			if (accumulatedTime > timeoutSecs)
+			{
+				evaluationResult = false;
+			}
+			else //not timed out
+			{
+				tickPattern(dt_sec);
+			}
+			return true;
+		}
+
+		void Task_EvadePatternBase::postConstruct()
+		{
+			rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Evade pattern spiral
+		/////////////////////////////////////////////////////////////////////////////////////
+
+		void Task_EvadePatternSpiral::childSetup()
+		{
+			using namespace glm;
+			vec3 tempUp = Utils::getDifferentVector(base.startToTarget_n);
+			spiral.right_n = glm::normalize(cross(base.startToTarget_n, tempUp));
+			cylinderRotDirection = (rng->getFloat(-1.f, 1.f) > 0) ? 1.0f : -1.0f; //use sign as binary choice between -1.f and 1.f, don't allow non-1 values
+		}
+
+		void Task_EvadePatternSpiral::tickPattern(float dt_sec)
+		{
+			using namespace glm;
+
+			if (myShip)
+			{
+				vec3 worldPosition = myShip->getWorldPosition();
+				vec3 forwardDir = vec3(myShip->getForwardDir());
+
+				float directionProjection = glm::dot(worldPosition - base.myShipStartLoc, base.startToTarget_n);
+
+				if (directionProjection >= base.totalTravelDistance)
+				{
+					evaluationResult = true;
+					return;
+				}
+
+				if (directionProjection >= spiral.nextPointCalculationDistance || spiral.bFirstTick)
+				{
+					spiral.bFirstTick = false;
+
+					spiral.nextPointCalculationDistance += pointDistanceIncrement;
+					spiral.cylinderRotation_rad += cylinderRotationIncrement_rad * cylinderRotDirection;
+
+					quat rotate_q = glm::angleAxis(spiral.cylinderRotation_rad, base.startToTarget_n);
+					vec3 rotatedOffset = rotate_q * spiral.right_n;
+
+					spiral.nextPnt = base.startToTarget_n * spiral.nextPointCalculationDistance + base.myShipStartLoc;
+					spiral.nextPnt += rotatedOffset * cylinderRadius;
+					NAN_BREAK(spiral.nextPnt);
+
+					//gamification - make spirals just as fast as flying in straight line. 
+					//project spiral dir onto main_dir to find out fraction moved in main_dir, bump speed to make this 1.0f
+					vec3 pntOnDirLine = base.startToTarget_n * directionProjection;
+					vec3 toNextPnt_n = glm::normalize(spiral.nextPnt - pntOnDirLine);
+					float speedScaleDownFactor = glm::dot(base.startToTarget_n, toNextPnt_n);
+					spiral.speedBoost = glm::clamp( 1/speedScaleDownFactor, 1.f, 2.f);
+				}
+
+				myShip->moveTowardsPoint(spiral.nextPnt, dt_sec, spiral.speedBoost, true);
+
+				if constexpr (ENABLE_DEBUG_LINES)
+				{
+					static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+					debug.renderLine(
+						vec4(base.myShipStartLoc + base.startToTarget_n * directionProjection, 1),
+						vec4(base.myTargetLoc, 1),
+						vec4(0.76f, 0.76f, 0.14f, 1));
+
+					debug.renderLine(
+						vec4(worldPosition, 1),
+						vec4(spiral.nextPnt, 1),
+						vec4(0.f, 0.4f, 0.f, 1));
+				}
+
+			}
+		}
+
+		void Task_EvadePatternSpiral::taskCleanup()
+		{
+			Task_EvadePatternBase::taskCleanup();
+			spiral = SpiralData{};
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Evade pattern spin
+		/////////////////////////////////////////////////////////////////////////////////////
+		void Task_EvadePatternSpin::childSetup()
+		{
+			using namespace glm;
+
+			cylinderDir = (rng->getFloat(-1.f, 1.f) > 0) ? 1.0f : -1.0f; //use sign as binary choice between -1.f and 1.f, don't allow non-1 values
+			spinDir = (rng->getFloat(-1.f, 1.f) > 0) ? 1.0f : -1.0f;
+
+			vec3 tempUp = Utils::getDifferentVector(base.startToTarget_n);
+			spin.right_n = glm::normalize(cross(base.startToTarget_n, tempUp));
+		}
+
+		void Task_EvadePatternSpin::tickPattern(float dt_sec)
+		{
+			using namespace glm;
+
+			if (myShip)
+			{
+				vec3 worldPosition = myShip->getWorldPosition();
+				vec3 forwardDir = vec3(myShip->getForwardDir());
+
+				float directionProjection = glm::dot(worldPosition - base.myShipStartLoc, base.startToTarget_n);
+
+				if (directionProjection >= base.totalTravelDistance)
+				{
+					evaluationResult = true;
+					return;
+				}
+
+				if (directionProjection >= spin.nextPointCalculationDistance || spin.bFirstTick)
+				{
+					spin.bFirstTick = false;
+
+					spin.nextPointCalculationDistance += pointDistanceIncrement;
+					spin.cylinderRotation_rad += cylinderRotationIncrement_rad * cylinderDir;
+
+					quat rotate_q = glm::angleAxis(spin.cylinderRotation_rad, base.startToTarget_n);
+					vec3 rotatedOffset = rotate_q * spin.right_n;
+
+					spin.nextPnt = base.startToTarget_n * spin.nextPointCalculationDistance + base.myShipStartLoc;
+					spin.nextPnt += rotatedOffset * cylinderRadius;
+					NAN_BREAK(spin.nextPnt);
+				}
+
+				myShip->moveTowardsPoint(spin.nextPnt, dt_sec, 1.f, true);
+				myShip->roll(spin.rollspinIncrement_rad * spinDir, dt_sec);
+
+				if constexpr (ENABLE_DEBUG_LINES)
+				{
+					static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+					debug.renderLine(
+						vec4(base.myShipStartLoc + base.startToTarget_n * directionProjection, 1),
+						vec4(base.myTargetLoc, 1),
+						vec4(0.76f, 0.76f, 0.14f, 1));
+
+					debug.renderLine(
+						vec4(worldPosition, 1),
+						vec4(spin.nextPnt, 1),
+						vec4(0.f, 0.4f, 0.f, 1));
+				}
+
+			}
+		}
+
+		void Task_EvadePatternSpin::taskCleanup()
+		{
+			Task_EvadePatternBase::taskCleanup();
+			spin = SpinData{};
 		}
 
 	}

@@ -5,37 +5,49 @@
 namespace SA
 {
 
-	struct TestEntity_fwp : public GameEntity
+	struct TestEntityBase_fwp : public GameEntity
 	{
-		TestEntity_fwp(const std::string& name) : name(name) {}
+		TestEntityBase_fwp(const std::string& name) : name(name) {}
 		std::string name;
 		void printName() { std::cout << name << std::endl; }
 	};
 
+	struct TestFWPChild : public TestEntityBase_fwp
+	{
+		TestFWPChild() : TestEntityBase_fwp("child test") {}
+	};
+
 	void FastWeakPointerCompileTest()
 	{
-		sp<TestEntity_fwp> objA = new_sp<TestEntity_fwp>("A");
-		sp<TestEntity_fwp> objB = new_sp<TestEntity_fwp>("B");
-		wp<TestEntity_fwp> weakA = objA;
-		wp<TestEntity_fwp> weakB = objB;
+		sp<TestEntityBase_fwp> objA = new_sp<TestEntityBase_fwp>("A");
+		sp<TestEntityBase_fwp> objB = new_sp<TestEntityBase_fwp>("B");
+		wp<TestEntityBase_fwp> weakA = objA;
+		wp<TestEntityBase_fwp> weakB = objB;
 
 		
-		fwp<TestEntity_fwp> fwp1 = objA;		//test construction from shared ptr
+		fwp<TestEntityBase_fwp> fwp1 = objA;		//test construction from shared ptr
 		fwp1 = objB;							//test assignment to shared ptr
 
-		fwp<TestEntity_fwp> fwp2 = weakB;		//test construction from weak pointer
+		fwp<TestEntityBase_fwp> fwp2 = weakB;		//test construction from weak pointer
 		fwp2 = weakA;							//test assignment to weak pointer
 
-		fwp<TestEntity_fwp> fwp3 = nullptr;		//test construction to nullptr
+		fwp<TestEntityBase_fwp> fwp3 = nullptr;		//test construction to nullptr
 		fwp3 = nullptr;							//test assignment to nullptr
 
-		fwp<TestEntity_fwp> noArgCtor;			//test no arg ctor
+		fwp<TestEntityBase_fwp> noArgCtor;			//test no arg ctor
 
 		//test access functions
 		fwp1->printName();
 		fwp2->printName();
 		if (fwp1) { fwp1->printName(); }
 		if (fwp2) { fwp2->printName(); }
+
+		//test implicit conversions
+		sp<TestFWPChild> childA = new_sp<TestFWPChild>();
+		wp<TestFWPChild> weakChild = childA;
+		wp<TestEntityBase_fwp> weakBase1 = childA;
+		wp<TestEntityBase_fwp> weakBase2 = weakChild;
+
 	}
 
 }

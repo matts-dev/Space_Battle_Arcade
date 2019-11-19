@@ -219,36 +219,10 @@ namespace SA
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Fighter Brain
+	// Evade test brain
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	void FighterBrain::postConstruct()
+	void EvadeTestBrain::postConstruct()
 	{
-		/*
-		notes:
-			-need "opportunistic shots" in that if a non-target but attacker gets in crosshairs, then it will fire
-			-need "friendly friend accidents collection" so if a friendly fire happens it will line trace to avoid that
-
-		tree:
-			service_targetFinder		//tries to find a target by looking around spatial hash (or for friends that have a target for "mob" behavior
-			service_opportunisitic_shots	//shoot at target/attackers if within crosshairs
-				loop
-					select
-						evade
-							select-random
-								corkscrew-spiral
-								corkscrew-turn
-								turn-back180
-						attack
-							orient_towards(target)		//opportunistic shots service will take care of firing
-						decorator_abort_on_targetFound
-						decorator_abort_on_attackerFound
-						wander
-							-find random location
-								-move to random location
-
-		*/
-
 		const char* const brainKey = "selfBrain";
 		const char* const stateKey = "stateKey";
 		const char* const originKey = "origin";
@@ -257,20 +231,91 @@ namespace SA
 		const char* const targetLocKey = "target_loc";
 		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
 		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const dogFightLoc_Key = "dogFightLocKey";
 
 
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey,
 				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
-				new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_evade_state", stateKey, OP::EQUAL, MentalState_Fighter::EVADE, AbortPreference::ABORT_ON_MODIFY,
-								new_sp<Task_PlaceHolder>("task_evade", true)
+								new_sp<Sequence>("EvadeToDogfight", MakeChildren{
+									new_sp<Task_FindDogfightLocation>("task_findDFLoc", dogFightLoc_Key, brainKey),
+									new_sp<Random>("RandomSelector",
+										Chances{
+											{"spiral_evade", 1},
+											{"spiral_spin", 1}
+										},
+										MakeChildren{
+											new_sp<Task_EvadePatternSpiral>("spiral_evade", dogFightLoc_Key, brainKey, 15.0f),
+											new_sp<Task_EvadePatternSpin>("spiral_spin", dogFightLoc_Key, brainKey, 15.0f)
+										}
+									)
+								})
 							),
-							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::FIGHT, AbortPreference::ABORT_ON_MODIFY,
+						})
+					)
+				),
+				MemoryInitializer
+				{
+					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::EVADE)},
+					{ brainKey, sp_this() },
+					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetKey, sp<WorldEntity>(nullptr) },
+					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) } //#TODO perhaps should be releasing pointers instead of shared ptr when those are a thing
+				}
+			);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Fighter Brain
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	void FighterBrain::postConstruct()
+	{
+		const char* const brainKey = "selfBrain";
+		const char* const stateKey = "stateKey";
+		const char* const originKey = "origin";
+		const char* const wanderLocKey = "wander_loc";
+		const char* const targetKey = "target";
+		const char* const targetLocKey = "target_loc";
+		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
+		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const dogFightLoc_Key = "dogFightLocKey";
+
+
+		using namespace BehaviorTree;
+		behaviorTree =
+			new_sp<Tree>("fighter-tree-root",
+				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey, activeAttackers_MemoryKey,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+					new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey,
+					new_sp<Loop>("fighter-inf-loop", 0,
+						new_sp<Selector>("state_selector", MakeChildren{
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_evade_state", stateKey, OP::EQUAL, MentalState_Fighter::EVADE, AbortPreference::ABORT_ON_MODIFY,
+								new_sp<Sequence>("EvadeToDogfight", MakeChildren{
+									new_sp<Task_FindDogfightLocation>("task_findDFLoc", dogFightLoc_Key, brainKey),
+									new_sp<Loop>("evade-loop", 0,
+										new_sp<Random>("RandomSelector",
+											Chances{
+												{"spiral_evade", 1},
+												{"spiral_spin", 1}
+											},
+											MakeChildren{
+												new_sp<Task_EvadePatternSpiral>("spiral_evade", dogFightLoc_Key, brainKey, 15.0f),
+												new_sp<Task_EvadePatternSpin>("spiral_spin", dogFightLoc_Key, brainKey, 15.0f)
+											}
+										)
+									)
+								})
+							),
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Task_Ship_FollowTarget_Indefinitely>("task_followTarget", brainKey, targetKey, activeAttackers_MemoryKey)
 							),
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_wander_state", stateKey, OP::EQUAL, MentalState_Fighter::WANDER, AbortPreference::ABORT_ON_MODIFY,
@@ -288,14 +333,14 @@ namespace SA
 					{ brainKey, sp_this() },
 					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
-					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<CurrentAttackers>>(CurrentAttackers{})},
+					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
 					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) } //#TODO perhaps should be releasing pointers instead of shared ptr when those are a thing
 				}
 			);
 	}
-
 
 }
 

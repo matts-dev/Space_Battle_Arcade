@@ -24,22 +24,20 @@ namespace SA
 	{
 	public:
 		FastWeakPointer() : weakptr(), rawPtr(nullptr) {}
-		FastWeakPointer(const sp<T>& copySP)
+
+		template<typename Y>
+		FastWeakPointer(const sp<Y>& copySP)
 		{
 			weakptr = copySP;
+			rawPtr = copySP ? copySP.get() : nullptr;
 		}
-		FastWeakPointer(const wp<T>& copyWP)
+		template<typename Y>
+		FastWeakPointer(const wp<Y>& copyWP)
 		{
 			weakptr = copyWP;
-			if (!weakptr.expired())
-			{
-				rawPtr = weakptr.lock().get();
-			}
-			else
-			{
-				rawPtr = nullptr;
-			}
+			rawPtr = !weakptr.expired() ? weakptr.lock().get() : nullptr;
 		}
+
 		FastWeakPointer(std::nullptr_t nullptrvalue) 
 		{
 			weakptr = sp<T>(nullptr);

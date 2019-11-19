@@ -76,7 +76,8 @@ namespace SA
 	public:
 
 		//control functions
-		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f);
+		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true);
+		void roll(float roll_rad, float dt_sec);
 
 		////////////////////////////////////////////////////////
 		//Collision
@@ -92,7 +93,7 @@ namespace SA
 		glm::vec4 getUpDir() const;
 		glm::vec4 rotateLocalVec(const glm::vec4& localVec);
 		float getMaxTurnAngle_PerSec() const;
-		void setVelocity(glm::vec3 inVelocity) { velocity = inVelocity; }
+		void setVelocity(glm::vec3 inVelocity);
 		glm::vec3 getVelocity() { return velocity; }
 		float getMaxSpeed() const { return maxSpeed; }
 

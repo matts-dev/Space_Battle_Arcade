@@ -4,6 +4,7 @@
 #include "../../GameFramework/Components/GameplayComponents.h"
 #include <vector>
 #include <stack>
+#include "../../Tools/DataStructures/SATransform.h"
 
 namespace SA
 {
@@ -16,6 +17,7 @@ namespace SA
 
 		sp<WorldEntity> getTarget();
 		sp<WorldEntity> getTargetOnTeam(size_t team);
+		glm::vec3 getCommanderPosition() { return glm::vec3(0, 0, 0); } //#TODO hook up commander positions tied to leader ship
 
 	protected:
 

@@ -64,12 +64,13 @@ namespace SA
 			}
 		}
 
-		void Tree::abort(uint32_t priority)
+		void Tree::abort(uint32_t priority, NodeBase* inAbortInstigator /*= nullptr*/)
 		{
 			//aborting is done in state machine tick. That will clear the optional.
 			// design considerations
 			//		-the outside world probably shouldn't be able to query current abort priority; that will allow some needlessly complex logic like "stop aborting if someone else decided to abort"; those kinds of things should be addressed with the tree structure.
 			//		-do not stomp previous aborts that have a higher priority (lower number is higher in priority)
+			//		-abort instigator provided for debugging, only updates if priority is greater
 
 			if (abortPriority.has_value()
 				&& abortPriority.value() <= priority)	//short-circuit evaluation
@@ -78,6 +79,7 @@ namespace SA
 			}
 
 			abortPriority = priority;
+			abortInstigator = inAbortInstigator;
 		}
 
 		uint32_t Tree::getCurrentPriority()
@@ -204,6 +206,8 @@ namespace SA
 
 			if (abortPriority.has_value())
 			{
+				if constexpr (LOG_TREE_STATE) { treeLogAbortInstigator(); }
+
 				while (inOut_CurrentNode->getPriority() >= abortPriority.value()
 					&& executionStack.size() > 1)
 				{
@@ -215,6 +219,7 @@ namespace SA
 					inOut_CurrentNode = executionStack.back();
 				}
 				abortPriority.reset();
+				abortInstigator = nullptr;
 
 				inOut_CurrentNode->resetNode();
 				inOut_currentState = ExecutionState::PUSHED_CHILD;
@@ -258,6 +263,22 @@ namespace SA
 
 			log("BehaviorTreeLog", LogLevel::LOG, logStr.c_str());
 
+		}
+
+		void Tree::treeLogAbortInstigator()
+		{
+			if (targetDebugTree && this != targetDebugTree)
+			{
+				return; //filter is present and this is the wrong instance; abort.
+			}
+
+			std::string treeInstance = std::to_string((uint64_t)this);
+
+			std::string logStr = treeInstance + "\t state: * ABORTING - ";
+			std::string instigatorName = (abortInstigator != nullptr) ? abortInstigator->getName() : std::string("abort instigator unspecified");
+			logStr = logStr + "INSTIGATOR: " + instigatorName;
+
+			log("BehaviorTreeLog", LogLevel::LOG, logStr.c_str());
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -555,7 +576,7 @@ namespace SA
 			{
 				if (isOnExecutionStack())
 				{
-					tree.abort(getPriority());
+					tree.abort(getPriority(), this);
 					return; //don't need to execute code to abort lower priorities because we're already aborting them
 				}
 			}
@@ -567,7 +588,7 @@ namespace SA
 				{
 					//checking if this node is on the execution path will prevent
 					//it from aborting its children, technically priority + 1 is its first child
-					tree.abort(getPriority() + 1);
+					tree.abort(getPriority() + 1, this);
 				}
 			}
 		}

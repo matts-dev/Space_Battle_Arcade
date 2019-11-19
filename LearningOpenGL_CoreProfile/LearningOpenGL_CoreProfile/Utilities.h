@@ -57,4 +57,5 @@ namespace Utils {
 
 	extern const float cubeVertices[36*5];
 	extern const float cubeVerticesWithNormals[36*6];
+
 }

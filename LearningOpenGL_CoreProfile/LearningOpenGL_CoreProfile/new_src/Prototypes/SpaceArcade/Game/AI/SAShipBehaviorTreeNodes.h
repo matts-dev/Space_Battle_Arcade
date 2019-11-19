@@ -15,14 +15,26 @@ namespace SA
 	enum class MentalState_Fighter : uint32_t
 	{
 		EVADE, 
-		FIGHT,
+		ATTACK,
 		WANDER,
 	};
 
 	namespace BehaviorTree
 	{
 		constexpr bool ENABLE_DEBUG_LINES = true;
+
 		using TargetType = WorldEntity;
+
+		//constexpr bool SHIP_TREE_DEBUG_LOG = true;
+		void LogShipNodeDebugMessage(const Tree& tree, const NodeBase& node, const std::string& msg);
+/** These messages get compiled out and cause no performance lose when not enabled.*/
+#define SHIP_TREE_DEBUG_LOG 0
+#if SHIP_TREE_DEBUG_LOG
+#define DEBUG_SHIP_MSG(message)\
+LogShipNodeDebugMessage(this->getTree(), *this, message);
+#else
+#define DEBUG_SHIP_MSG(message)
+#endif
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// task find random location within radius
@@ -132,8 +144,13 @@ namespace SA
 
 		protected:
 			virtual void handleNodeAborted() override {}
+
+			//Call super on the following overrides if overridden
 			virtual void beginTask() override;
 			virtual void taskCleanup() override;
+
+			//override this to tick 
+			//virtual bool tick(float dt_sec) override;
 		};
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +248,7 @@ namespace SA
 			CurrentAttackerDatum(const sp<TargetType>& inAttacker) : attacker(inAttacker) {}
 			fwp<TargetType> attacker;
 		};
-		using CurrentAttackers = std::map<WorldEntity*, CurrentAttackerDatum>;
+		using ActiveAttackers = std::map<const TargetType*, CurrentAttackerDatum>;
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Service that fires projectiles when targets align with crosshairs
@@ -292,9 +309,10 @@ namespace SA
 					const std::string& name, 
 					const std::string& stateKey, 
 					const std::string& targetKey,
+					const std::string& activeAttackersKey,
 					const sp<NodeBase>& child) 
 				: BehaviorTree::Decorator(name, child),
-				stateKey(stateKey), targetKey(targetKey)
+				stateKey(stateKey), targetKey(targetKey), activeAttackersKey(activeAttackersKey)
 			{
 			}
 
@@ -305,16 +323,25 @@ namespace SA
 				conditionalResult = true;
 			}
 			virtual void notifyTreeEstablished() override;
-
 			virtual void handleNodeAborted() override {}
 
-			void handleTargetModified(const std::string& key, const GameEntity* value);
-			void reevaluateState();
-			void writeState(MentalState_Fighter newState, Memory& memory);
+			void handleDeferredStateUpdate();
+			void startStateUpdateTimer();
+			void stopStateUpdateTimer();
 
+			void handleTargetModified(const std::string& key, const GameEntity* value);
+			void handleActiveAttackersModified(const std::string& key, const GameEntity* value);
+
+			void reevaluateState();
+			void writeState(MentalState_Fighter currentState, MentalState_Fighter newState, Memory& memory);
+		private:
+			const float deferrStateTime = 0.25f;
+			sp<MultiDelegate<>> deferredStateChangeTimer;
+			sp<RNG> rng;
 		private:
 			const std::string stateKey;
 			const std::string targetKey;
+			const std::string activeAttackersKey;
 		};
 
 
@@ -344,5 +371,155 @@ namespace SA
 			const std::string entityKey;
 			const std::string writeLocKey;
 		};
+
+
+		////////////////////////////////////////////////////////
+		// Task_FindDogfightLocation
+		////////////////////////////////////////////////////////
+		class Task_FindDogfightLocation : public Task
+		{
+		public:
+			Task_FindDogfightLocation(const std::string& name,
+				const std::string& writeLocationKey,
+				const std::string& brainKey
+			) : Task(name),
+				writeLocationKey(writeLocationKey),
+				brainKey(brainKey)
+			{
+			}
+		public:
+			virtual void beginTask() override;
+			
+		protected:
+			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
+			virtual void postConstruct() override;
+		private:
+			glm::vec3 getRandomPointNear(glm::vec3 point);
+		private:
+			sp<RNG> rng;
+			float cacheMaxTravelDistance2 = maxTravelDistance * maxTravelDistance;
+		private:
+			const std::string writeLocationKey;
+			const std::string brainKey;
+			float maxRandomPointRadius = 300.f;
+			float minRandomPointRadius = 10.f;
+			float maxTravelDistance = 200.f;
+		};
+
+		////////////////////////////////////////////////////////
+		// Task_EvadePatternBase
+		////////////////////////////////////////////////////////
+		class Task_EvadePatternBase : public Task_TickingTaskBase
+		{
+		public:
+			Task_EvadePatternBase(const std::string& name,
+				const std::string& targetLocKey,
+				const std::string& brainKey,
+				const float timeoutSecs
+			): Task_TickingTaskBase(name),
+				targetLocKey(targetLocKey),
+				brainKey(brainKey),
+				timeoutSecs(timeoutSecs)
+			{	}
+		protected:
+			virtual void handleNodeAborted() override {}
+
+			virtual void childSetup() = 0;
+			virtual void beginTask() override;
+			virtual void taskCleanup() override;
+			virtual bool tick(float dt_sec) override;
+			virtual void tickPattern(float dt_sec) = 0;
+
+			virtual void postConstruct() override;
+
+		private: //node state
+			float accumulatedTime = 0.f;
+		protected: //node state
+			fwp<Ship> myShip;
+			sp<RNG> rng;
+			struct MyPOD
+			{
+				glm::vec3 myShipStartLoc = glm::vec3(0.f);
+				glm::vec3 myTargetLoc = glm::vec3(0.f);
+				glm::vec3 startToTarget_n = glm::vec3(0.f);
+				float totalTravelDistance = 0.f;
+			} base; //data
+		private: //node properties
+			const std::string targetLocKey;
+			const std::string brainKey;
+			float timeoutSecs;
+		};
+		
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Evade pattern spiral
+		/////////////////////////////////////////////////////////////////////////////////////
+		class Task_EvadePatternSpiral : public Task_EvadePatternBase
+		{
+		public:
+			Task_EvadePatternSpiral(const std::string& name,
+				const std::string& targetLocKey,
+				const std::string& brainKey,
+				const float timeoutSecs
+			) : Task_EvadePatternBase(name,targetLocKey,brainKey,timeoutSecs)
+			{
+			}
+		protected:
+			virtual void childSetup() override;
+			virtual void tickPattern(float dt_sec);
+			virtual void taskCleanup() override;
+		private:
+			// distIncrement, rotationDegrees, and cylinderRadius have relationship that if one is a small value, all should be small value.
+			const float pointDistanceIncrement = 0.99f;
+			const float cylinderRotationIncrement_rad = 35.0f * (3.1415f/180);
+			const float cylinderRadius = 0.99f;
+			float cylinderRotDirection = 1.0f;
+			struct SpiralData
+			{
+				glm::vec3 nextPnt = glm::vec3(0.f);
+				glm::vec3 right_n = glm::vec3(0.f);
+				float cylinderRotation_rad = 0.f;
+				float nextPointCalculationDistance = 0.f;
+				float speedBoost = 1.f;
+				bool bFirstTick = true;
+			}spiral;
+
+		};
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Evade pattern spin
+		/////////////////////////////////////////////////////////////////////////////////////
+		class Task_EvadePatternSpin : public Task_EvadePatternBase
+		{
+		public:
+			Task_EvadePatternSpin(const std::string& name,
+				const std::string& targetLocKey,
+				const std::string& brainKey,
+				const float timeoutSecs
+			) : Task_EvadePatternBase(name, targetLocKey, brainKey, timeoutSecs)
+			{
+			}
+		protected:
+			virtual void childSetup() override;
+			virtual void tickPattern(float dt_sec);
+			virtual void taskCleanup() override;
+		private:
+			const float pointDistanceIncrement = 20;
+			float spinDir = 1.0f;
+			float cylinderDir = 1.0f;
+			const float cylinderRotationIncrement_rad = 105.0f * (3.1415f / 180);
+			const float cylinderRadius = 0.49f;
+			struct SpinData
+			{
+				glm::vec3 nextPnt = glm::vec3(0.f);
+				glm::vec3 right_n = glm::vec3(0.f);
+				float cylinderRotation_rad = 0.f;
+				float rollspinIncrement_rad = 200.0f * (3.1415f / 180);
+				float nextPointCalculationDistance = 0.f;
+				bool bFirstTick = true;
+			}spin;
+
+		};
+
 	}
 }

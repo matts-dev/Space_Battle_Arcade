@@ -114,6 +114,12 @@ namespace SA
 		return glm::pi<float>();
 	}
 
+	void Ship::setVelocity(glm::vec3 inVelocity)
+	{
+		NAN_BREAK(velocity);
+		velocity = inVelocity;
+	}
+
 	void Ship::setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig)
 	{
 		primaryProjectile = projectileConfig;
@@ -166,13 +172,13 @@ namespace SA
 
 	void Ship::fireProjectileInDirection(glm::vec3 dir_n) const
 	{
-		if (primaryProjectile)
+		if (primaryProjectile && length2(dir_n) > 0.001)
 		{
 			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
 
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
-			spawnData.direction_n = glm::normalize(velocity);
+			spawnData.direction_n = glm::normalize(dir_n);
 			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
@@ -182,7 +188,7 @@ namespace SA
 		}
 	}
 
-	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedFactor)
+	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedFactor, bool bRoll)
 	{
 		using namespace glm;
 
@@ -209,7 +215,7 @@ namespace SA
 			bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
 
 			vec3 newForwardVec_n = newRot * vec3(localForwardDir_n());
-			if (!bRollMatchesTurnAxis)
+			if (!bRollMatchesTurnAxis && bRoll)
 			{
 				float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
 				float rollThisTick = glm::clamp(maxTurn_Rad / rollAngle_rad, 0.f, 1.f);
@@ -220,13 +226,24 @@ namespace SA
 			Transform newXform = xform;
 			newXform.rotQuat = newRot;
 			setTransform(newXform);
-
 			setVelocity(newForwardVec_n * getMaxSpeed() * speedFactor);
 		}
 		else
 		{
 			setVelocity(forwardDir_n * getMaxSpeed() * speedFactor);
 		}
+	}
+
+	void Ship::roll(float rollspeed_rad, float dt_sec)
+	{
+		using namespace glm;
+		Transform newXform = getTransform();
+		vec3 forwardDir_n = glm::normalize(vec3(getForwardDir()));
+
+		float rollThisTick = glm::clamp(rollspeed_rad * dt_sec, -1.f, 1.f);
+		glm::quat roll = glm::angleAxis(rollThisTick, forwardDir_n);
+		newXform.rotQuat = roll * newXform.rotQuat;
+		setTransform(newXform);
 	}
 
 	void Ship::postConstruct()

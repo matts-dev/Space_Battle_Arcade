@@ -625,8 +625,8 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		// The behavior tree composed of nodes.
 		/////////////////////////////////////////////////////////////////////////////////////
-		static constexpr bool LOG_TREE_STATE = false;	//if true, this will hit performance hard, but gives a stream of state changes.
-		extern Tree* volatile targetDebugTree;			//use a debugger to set this tree and logging will only print for this instance. hint: set by name "SA::BehaviorTree::targetDebugTree ptr_address_value"
+		static constexpr bool LOG_TREE_STATE = true;	//if true, this will hit performance hard, but gives a stream of state changes.
+		extern Tree* volatile targetDebugTree;			//use a debugger to set this tree and logging will only print for this instance. hint1: set by name "SA::BehaviorTree::targetDebugTree ptr_address_value". hint2 set conditional breakpoints in nodes using "owningTree == SA::BehaviorTree::targetDebugTree"
 		/////////////////////////////////////////////////////////////////////////////////////
 		class Tree : public NodeBase
 		{
@@ -638,7 +638,7 @@ namespace SA
 
 		public: //node utils
 			/* Aborts all nodes with this priority or larger magnitude values; note lower numbers mean higher priority in behavior trees */
-			void abort(uint32_t priority);
+			void abort(uint32_t priority, NodeBase* abortInstigator = nullptr);
 			uint32_t getCurrentPriority();
 			Memory& getMemory() const;
 
@@ -650,6 +650,7 @@ namespace SA
 			void possessNodes(const sp<NodeBase>& node, uint32_t& currentPriority);
 			void processAborts(NodeBase*& inOut_CurrentNode, ExecutionState& inOut_currentState);
 			void treeLog(ExecutionState state, NodeBase* currentNode, uint32_t nodesVisited);
+			void treeLogAbortInstigator();
 
 		private: //node interface
 			virtual bool hasPendingChildren() const override { return true; }
@@ -667,6 +668,9 @@ namespace SA
 			/** Represents the path of current nodes being executed. Life time of nodes is controlled by the root node */
 			std::vector<NodeBase*> executionStack;
 			sp<Memory> memory = nullptr;
+
+			/* Raw pointer is safe since tree owns lifetime of nodes */
+			NodeBase* abortInstigator = nullptr;
 			std::optional<uint32_t> abortPriority;
 
 			bool bExecutingTree = false;
