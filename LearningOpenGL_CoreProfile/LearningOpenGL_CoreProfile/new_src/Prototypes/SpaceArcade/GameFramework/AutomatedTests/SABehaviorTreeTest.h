@@ -49,6 +49,7 @@ namespace SA
 		sp<BehaviorTree::Tree> memoryTaskTest;
 		sp<BehaviorTree::Tree> decoratorTest_basicFunctionality;
 		sp<BehaviorTree::Tree> decoratorTest_deferred_basicFunctionality;
+		sp<BehaviorTree::Tree> decoratorTest_EdgeCase1;
 		sp<BehaviorTree::Tree> memoryOperationsTestTree;
 		sp<BehaviorTree::Tree> abortTest_basicFunctionality;
 		sp<BehaviorTree::Tree> abortTest_externalAbort;
@@ -78,6 +79,7 @@ namespace SA
 			{"serviceTest_immediateExecute", 1},
 			{"decoratorTest_basicFunctionality", 1 },
 			{"decoratorTest_deferred_basicFunctionality", 1},
+			{"decoratorTest_EdgeCase1", 0},
 			{"memoryOperationsTestTree", 12},
 			{ "abortTest_basicFunctionality", 0 /*uses forbidden set to avoid counting passing*/ },
 			{ "abortTest_externalAbort", 0},

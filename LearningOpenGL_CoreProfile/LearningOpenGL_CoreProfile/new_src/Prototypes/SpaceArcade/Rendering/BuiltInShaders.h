@@ -144,6 +144,11 @@ namespace SA
 
 					lightContribution += CalculatePointLighting(normal, toView, fragPosition);
 
+					//debug ambient
+					vec3 diffuseTexture = objectTint * vec3(texture(material.texture_diffuse0, interpTextCoords));
+					vec3 ambientLight = vec3(0.05f) * diffuseTexture;	
+					lightContribution += ambientLight;
+
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}
 			)";

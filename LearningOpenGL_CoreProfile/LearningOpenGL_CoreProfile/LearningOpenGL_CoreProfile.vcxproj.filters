@@ -663,6 +663,18 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Components\ShipEnergyComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ChoiceChoosingHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1709,7 +1721,19 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\FastWeakPtr.cpp">
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Components\ShipEnergyComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\FastWeakPtrSyntaxTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\LifetimePointerSyntaxTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

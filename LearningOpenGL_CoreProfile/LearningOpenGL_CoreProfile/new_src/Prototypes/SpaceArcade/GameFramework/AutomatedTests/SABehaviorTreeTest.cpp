@@ -288,6 +288,81 @@ namespace SA
 	};
 
 	////////////////////////////////////////////////////////
+	// Bool Flipper
+	////////////////////////////////////////////////////////
+	class task_bool_flipper : public BehaviorTree::Task
+	{
+	public:
+		task_bool_flipper(const std::string& boolMemKey, TestTreeStructureResults& testResultLocation)
+			: BehaviorTree::Task("task_bool_flipper "),
+			boolMemKey(boolMemKey),
+			testLocation(testResultLocation)
+		{
+		}
+
+		virtual void notifyTreeEstablished() override
+		{
+			/*erase once passing, not all tests make use of this feature*/
+			testLocation.forbiddenTasks.insert(sp_this());
+		}
+		virtual void beginTask() override
+		{
+			using namespace BehaviorTree;
+			Memory& memory = getMemory();
+			{
+				ScopedUpdateNotifier<PrimitiveWrapper<bool>> bool_writable;
+				if (memory.getWriteValueAs(boolMemKey, bool_writable))
+				{
+					bool& theBool = bool_writable.get().value;
+					theBool = !theBool;
+					evaluationResult = true;
+					testLocation.requiredCompletedTasks.insert(sp_this());
+					testLocation.forbiddenTasks.erase(sp_this());
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get required memory from keys.");
+				}
+			}
+		}
+		virtual void handleNodeAborted() override {}
+		virtual void taskCleanup() override {};
+
+		const std::string boolMemKey;
+		TestTreeStructureResults& testLocation;
+	};
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Decorator_BoolCheck
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	class Decorator_BoolCheck : public BehaviorTree::Decorator
+	{
+	public:
+		Decorator_BoolCheck(const std::string& nodeName,
+			const std::string& memoryKey,
+			const bool& referenceValue,
+			const sp<NodeBase>& child) :
+			BehaviorTree::Decorator(nodeName, child), 
+			memoryKey(memoryKey),
+			referenceValue(referenceValue)
+		{
+			assert(this->referenceValue == referenceValue);
+		}
+	protected:
+		virtual void startBranchConditionCheck()
+		{
+			BehaviorTree::Memory& memory = getMemory();
+			const bool* memoryValue = memory.getReadValueAs<bool>(memoryKey);
+			conditionalResult = memoryValue && *memoryValue == referenceValue;
+		}
+	private:
+		virtual void handleNodeAborted() override {}
+	private: //node properties
+		const std::string memoryKey;
+		const bool referenceValue;
+	};
+
+
+	////////////////////////////////////////////////////////
 	// small struct that has an int within it to update.
 	////////////////////////////////////////////////////////
 	struct MemoryUpdateTester : public GameEntity
@@ -1575,6 +1650,33 @@ namespace SA
 		);
 		decoratorTest_deferred_basicFunctionality->start();
 		treesToTick.insert(decoratorTest_deferred_basicFunctionality);
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Test decorator edge case where child returned true first time but incorrectly
+		// reports true second time when decorator fails
+		/////////////////////////////////////////////////////////////////////////////////////
+		decoratorTest_EdgeCase1 =
+			new_sp<Tree>("root-decorator-edgecase1",
+				new_sp<Selector>("selector", std::vector<sp<NodeBase>>{
+					new_sp<Decorator_BoolCheck>("true bool decorator", "boolFlipper", true,
+						new_sp<task_bool_flipper>("boolFlipper",testResults.at("decoratorTest_EdgeCase1"))
+					),
+					new_sp<Decorator_BoolCheck>("false bool decorator", "boolFlipper", false,
+						new_sp<task_bool_flipper>("boolFlipper",testResults.at("decoratorTest_EdgeCase1"))
+					),
+					new_sp<task_never_execute>(testResults.at("decoratorTest_EdgeCase1"))
+				}),
+				BehaviorTree::MemoryInitializer{
+					{ "boolFlipper", new_sp<BehaviorTree::PrimitiveWrapper<bool>>(true)}
+				}
+		);
+		decoratorTest_EdgeCase1->start();
+		decoratorTest_EdgeCase1->tick(0.1f);
+		decoratorTest_EdgeCase1->tick(0.1f);
+		decoratorTest_EdgeCase1->tick(0.1f);
+		decoratorTest_EdgeCase1->stop();
+		testResults.at("decoratorTest_EdgeCase1").bComplete = true;
+
 
 		////////////////////////////////////////////////////////
 		// Memory operations test

@@ -15,6 +15,8 @@
 #include "../Levels/SASpaceLevelBase.h"
 #include "../Team/Commanders.h"
 #include <assert.h>
+#include "../../Tools/DataStructures/ChoiceChoosingHelper.h"
+#include "../../Tools/color_utils.h"
 //#include "../../GameFramework/SAGameBase.h"
 //#include "../../GameFramework/SALevelSystem.h"
 
@@ -230,6 +232,18 @@ namespace SA
 
 			resetSearchData();
 
+			{ScopedUpdateNotifier<TargetType> target_writable;
+				if (memory.getWriteValueAs(targetKey, target_writable))
+				{
+					TargetType& target = target_writable.get();
+					wp<TargetType> weakTarget = target.requestTypedReference_Nonsafe<TargetType>();
+					if (!weakTarget.expired())
+					{
+						setTarget(weakTarget.lock());
+					}
+				}
+			}
+
 			cachedPrefDist2 = preferredTargetMaxDistance * preferredTargetMaxDistance;
 			if (owningBrain)
 			{
@@ -411,7 +425,7 @@ namespace SA
 			if (currentTarget)
 			{
 				//#TODO make this a releasing pointer when that gets implemented
-				currentTarget->onDestroyedEvent->removeStrong(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
+				currentTarget->onDestroyedEvent->removeWeak(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
 			}
 	
 			currentTarget = target;
@@ -419,7 +433,7 @@ namespace SA
 			//make sure write to memory happens AFTER updating current target. This is to prevent the handler for target modified from updating current target twice.
 			getMemory().replaceValue(targetKey, currentTarget);
 
-			target->onDestroyedEvent->addStrongObj(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
+			target->onDestroyedEvent->addWeakObj(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -433,26 +447,17 @@ namespace SA
 
 			primaryTarget = memory.getMemoryReference<TargetType>(targetKey);
 			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<std::vector<sp<TargetType>>>>(secondaryTargetsKey);
+			handleStateModified("directly calling handler to init state", nullptr);
 			
 			memory.getModifiedDelegate(targetKey).addStrongObj(sp_this(), &Service_OpportunisiticShots::handleTargetModified);
+			memory.getModifiedDelegate(stateKey).addStrongObj(sp_this(), &Service_OpportunisiticShots::handleStateModified);
 
 			//don't listen to modified, just replaced. We only care when the underlying datastructure may have been swapped out.
 			memory.getReplacedDelegate(secondaryTargetsKey).addStrongObj(sp_this(), &Service_OpportunisiticShots::handleSecondaryTargetsReplaced);
 
+			if (!stateRef) { log("Service_OpportunisiticShots", LogLevel::LOG_ERROR, "no mental state acquired brain"); exit(-1); }
 			if (!owningBrain) { log("Service_OpportunisiticShots", LogLevel::LOG_ERROR, "No owning brain"); exit(-1); }
 			if (!secondaryTargets) { log("Service_OpportunisiticShots", LogLevel::LOG_ERROR, "No secondary target array"); exit(-1);}
-		}
-
-		void Service_OpportunisiticShots::handleTargetModified(const std::string& key, const GameEntity* value)
-		{
-			Memory& memory = getMemory();
-			primaryTarget = memory.getMemoryReference<TargetType>(targetKey);
-		}
-
-		void Service_OpportunisiticShots::handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
-		{
-			Memory& memory = getMemory();
-			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<std::vector<sp<TargetType>>>>(secondaryTargetsKey);
 		}
 
 		void Service_OpportunisiticShots::stopService()
@@ -463,8 +468,28 @@ namespace SA
 
 			Memory& memory = getMemory();
 			memory.getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_OpportunisiticShots::handleTargetModified);
+			memory.getModifiedDelegate(stateKey).removeStrong(sp_this(), &Service_OpportunisiticShots::handleStateModified);
 			memory.getReplacedDelegate(secondaryTargetsKey).removeStrong(sp_this(), &Service_OpportunisiticShots::handleSecondaryTargetsReplaced);
 		}
+
+		void Service_OpportunisiticShots::handleTargetModified(const std::string& key, const GameEntity* value)
+		{
+			Memory& memory = getMemory();
+			primaryTarget = memory.getMemoryReference<TargetType>(targetKey);
+		}
+
+		void Service_OpportunisiticShots::handleStateModified(const std::string& key, const GameEntity* value)
+		{
+			Memory& memory = getMemory();
+			stateRef = memory.getMemoryReference<PrimitiveWrapper<MentalState_Fighter>>(targetKey);
+		}
+
+		void Service_OpportunisiticShots::handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+		{
+			Memory& memory = getMemory();
+			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<std::vector<sp<TargetType>>>>(secondaryTargetsKey);
+		}
+
 
 		void Service_OpportunisiticShots::serviceTick()
 		{
@@ -505,9 +530,16 @@ namespace SA
 		bool Service_OpportunisiticShots::canShoot() const
 		{
 			static LevelSystem& levelSys = GameBase::get().getLevelSystem();
+
+			assert(stateRef);
+			if (stateRef->value == MentalState_Fighter::ATTACK)
+			{
+				return false;
+			}
+
 			if (const sp<LevelBase>& currentLevel = levelSys.getCurrentLevel()) //#TODO #optimize cache level and listen for updates #auto_delegate_listening_handles?
 			{
-				return currentLevel->getWorldTimeManager()->getTimestampSecs() - lastShotTimestamp > shootCooldown;
+				return (currentLevel->getWorldTimeManager()->getTimestampSecs() - lastShotTimestamp) > shootCooldown;
 			}
 
 			return false;
@@ -517,29 +549,32 @@ namespace SA
 		{
 			using namespace glm;
 
-			vec3 targetPos = target.getWorldPosition();
-			vec3 toTarget_n = glm::normalize(targetPos - myPos);
+			//vec3 targetPos = target.getWorldPosition();
+			//vec3 toTarget_n = glm::normalize(targetPos - myPos);
 
-			float toTarget_cosTheta = glm::dot(toTarget_n, myForward_n);
-			if (toTarget_cosTheta >= fireRadius_cosTheta)
+			//float toTarget_cosTheta = glm::dot(toTarget_n, myForward_n);
+			//if (toTarget_cosTheta >= fireRadius_cosTheta)
+			//{
+			//	//correct for velocity
+			//	//#TODO, perhaps get a kinematic component or something to get an idea of the velocity
+			//	vec3 correctTargetPos = targetPos;
+			//	vec3 toFirePos_un = correctTargetPos - myPos;
+
+			//	//construct basis around target direction
+			//	vec3 fireRight_n = glm::normalize(glm::cross(toFirePos_un, vec3(myShip->getUpDir())));
+			//	vec3 fireUp_n = glm::normalize(glm::cross(fireRight_n, toFirePos_un));
+
+			//	//add some randomness to fire direction, more random of easier AI; randomness also helps correct for twitch movements done by target
+			//	//we could apply this directly the fire direction we pass to ship, but this has a more intuitive meaning and will probably perform better for getting actual hits
+			//	correctTargetPos += fireRight_n * rng->getFloat<float>(-1.f, 1.f) * shootRandomOffsetStrength;
+			//	correctTargetPos += fireUp_n * rng->getFloat<float>(-1.f, 1.f) * shootRandomOffsetStrength;
+
+			//	//fire in direction
+			//	vec3 toFirePos_n = glm::normalize(correctTargetPos - myPos);
+			//	myShip->fireProjectileInDirection(toFirePos_n);
+
+			if (myShip->fireProjectileAtShip(target, fireRadius_cosTheta, shootRandomOffsetStrength))
 			{
-				//correct for velocity
-				//#TODO, perhaps get a kinematic component or something to get an idea of the velocity
-				vec3 correctTargetPos = targetPos;
-				vec3 toFirePos_un = correctTargetPos - myPos;
-
-				//construct basis around target direction
-				vec3 fireRight_n = glm::normalize(glm::cross(toFirePos_un, vec3(myShip->getUpDir())));
-				vec3 fireUp_n = glm::normalize(glm::cross(fireRight_n, toFirePos_un));
-
-				//add some randomness to fire direction, more random of easier AI; randomness also helps correct for twitch movements done by target
-				//we could apply this directly the fire direction we pass to ship, but this has a more intuitive meaning and will probably perform better for getting actual hits
-				correctTargetPos += fireRight_n * rng->getFloat<float>(-1.f, 1.f) * shootRandomOffsetStrength;
-				correctTargetPos += fireUp_n * rng->getFloat<float>(-1.f, 1.f) * shootRandomOffsetStrength;
-
-				//fire in direction
-				vec3 toFirePos_n = glm::normalize(correctTargetPos - myPos);
-				myShip->fireProjectileInDirection(toFirePos_n);
 
 				static LevelSystem& levelSys = GameBase::get().getLevelSystem();
 				if (const sp<LevelBase>& currentLevel = levelSys.getCurrentLevel())
@@ -1164,6 +1199,508 @@ namespace SA
 		{
 			Task_EvadePatternBase::taskCleanup();
 			spin = SpinData{};
+		}
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// DogfightNode and helpers
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		void ComboStepBase::updateTimeAlive(float dt_sec, TargetDirection arrangement)
+		{
+			basePOD.totalActiveTime += dt_sec;
+			if (isInArrangement(arrangement))
+			{
+				basePOD.timeInWrongPhase = 0.f;
+			}
+			else
+			{
+				basePOD.timeInWrongPhase += dt_sec;
+			}
+		}
+
+		bool ComboStepBase::isInArrangement(TargetDirection arrangement) const
+		{
+			return data.arrangements_bitvector & uint8_t(arrangement);
+		}
+
+		void ComboStepBase::setComboData(const ComboStepData& inComboData)
+		{
+			basePOD = BasePOD{};
+			data = inComboData;
+		}
+
+		bool ComboStepBase::inGracePeriod() const
+		{
+			bool bTimedOut = (inPhaseTimeout.has_value() && inPhaseTimeout.value() < basePOD.totalActiveTime);
+
+			return (basePOD.timeInWrongPhase < wrongPhaseTimeout)
+					&& !basePOD.bForceStepEnd
+					&& !bTimedOut;
+		}
+
+		void SharpTurnStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		{
+			using namespace glm;
+			vec3 targetPos = myTarget.getWorldPosition();
+			vec3 myPos = myShip.getWorldPosition();
+
+			myShip.adjustSpeedFraction(dt_sec, 0.5f);
+			myShip.moveTowardsPoint(targetPos, dt_sec);
+
+			if constexpr (ENABLE_DEBUG_LINES)
+			{
+				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+				debug.renderLine(vec4(myPos + vec3(0, 0.25f,0), 1),vec4(targetPos, 1), vec3(0.6, 0.7, 0.3));
+			}
+		}
+
+		void SlowWhenFacingStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		{
+			using namespace glm;
+			vec3 debugColor = vec3(0.81f, 0.92f, 0.81f);
+
+			vec3 targetPos = myTarget.getWorldPosition();
+			vec3 myPos = myShip.getWorldPosition();
+
+			if (arrangement == TargetDirection::FACING)
+			{
+				vec3 toTarget = targetPos - myPos;
+				float lengthToTarget2 = glm::length2(toTarget);
+
+				vec3 targetPoint;
+
+				if (lengthToTarget2 > slowdownDist2)
+				{
+					targetPoint = targetPos;
+					myShip.adjustSpeedFraction(dt_sec, 1.0f);
+					myShip.moveTowardsPoint(targetPoint, dt_sec);
+				}
+				else
+				{
+					targetPoint = targetPos + (vec3(myShip.getRightDir()) * 5.0f);
+
+					//don't roll to stablize the right vector
+					myShip.moveTowardsPoint(targetPoint, dt_sec, 1.0f, false);
+					myShip.adjustSpeedFraction(dt_sec, 0.5f);
+
+					if constexpr (ENABLE_DEBUG_LINES) { debugColor *= 0.5f; }
+				}
+
+				if constexpr (ENABLE_DEBUG_LINES)
+				{
+					static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+					debug.renderLine(vec4(myPos + vec3(0.f,0.25f, 0.f), 1), glm::vec4(targetPos, 1), debugColor);
+				}
+			}
+		}
+
+		void FollowAndAttackStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		{
+
+		}
+
+
+		////////////////////////////////////////////////////////
+		// Faceoff collision avoidance
+		////////////////////////////////////////////////////////
+		void FaceoffCollisionAvoidanceStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		{
+			using namespace glm;
+			wrongPhaseTimeout = data.optionalFloats.a;
+
+			vec3 myPos = myShip.getWorldPosition();
+			vec3 targetPos = myTarget.getWorldPosition();
+			float dist2 = glm::length2(targetPos - myPos);
+
+			vec3 debugColor(0.5f, 0.f, 0.9f);
+
+			if (arrangement == TargetDirection::FACING)
+			{
+				if (dist2 > startAvoidDist2)
+				{
+					myShip.moveTowardsPoint(targetPos, dt_sec);
+				}
+				else 
+				{
+					//don't roll so right direction stays relatively stable
+					targetPos += normalize(vec3(myShip.getRightDir())) * 1.f;
+					myShip.moveTowardsPoint(targetPos, dt_sec, 1.f, false); 
+					debugColor *= 0.75f;
+				}
+			}
+			else /* out of arrangment*/
+			{
+				float turnLimit = (basePOD.timeInWrongPhase + 0.001f) / wrongPhaseTimeout;
+
+				//do not let full turn happen, otherwise combo step will reengage when again facing
+				const float maximumTurnFactor = 0.25f;
+				turnLimit *= maximumTurnFactor; 
+
+				myShip.moveTowardsPoint(targetPos, dt_sec, 1.f, true, turnLimit);
+
+				debugColor *= 0.25f;
+			}
+
+			if constexpr (ENABLE_DEBUG_LINES)
+			{
+				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+				debug.renderLine(glm::vec4(myPos, 1), glm::vec4(targetPos, 1), debugColor);
+			}
+		}
+
+		////////////////////////////////////////////////////////
+		// Faceoff boost after avoidance
+		////////////////////////////////////////////////////////
+
+		void BoostAwayStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		{
+			using namespace glm;
+			static vec3 debugColor = color::brightGreen();
+
+			inPhaseTimeout = data.optionalFloats.a;
+
+			myShip.setNextFrameBoost(4.0f);
+
+			if constexpr (ENABLE_DEBUG_LINES)
+			{
+				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+
+				vec3 myPos = myShip.getWorldPosition();
+				vec3 myForward = vec3(myShip.getForwardDir());
+				debug.renderLine(vec4(myPos, 1), myPos + myForward*5.f, debugColor);
+			}
+		}
+
+
+		////////////////////////////////////////////////////////
+		// combo processor
+		////////////////////////////////////////////////////////
+		size_t DogFightComboProccessor::currentGeneratedStepIdx = 0;
+
+		void DogFightComboProccessor::resetComboList()
+		{
+			activeStepIdx = 0;
+			activeSteps.clear();
+			stepData.clear();
+		}
+
+		void DogFightComboProccessor::advanceToState(size_t idx)
+		{
+			assert(idx < stepData.size() && idx < activeSteps.size());
+			activeStepIdx = idx;
+			activeSteps[idx]->setComboData(stepData[idx]);
+
+			//if we have another step, set its data too as it needs it for the transition
+			size_t nextIdx = idx + 1;
+			if (nextIdx < activeSteps.size())
+			{
+				assert(nextIdx < stepData.size()); //if nextIdx < activeSteps.size() is true -- then this should be true too. 
+				assert(activeSteps[nextIdx] != activeSteps[idx]); //did you add the same step in a row? we can't separate their passed data if so.
+				activeSteps[nextIdx]->setComboData(stepData[nextIdx]);
+
+			}
+		}
+
+		void DogFightComboProccessor::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		{
+			ComboStepBase* currentStep = activeStepIdx < activeSteps.size() ? activeSteps[activeStepIdx] : nullptr;
+			ComboStepBase* nextStep = activeStepIdx + 1 < activeSteps.size() ? activeSteps[activeStepIdx+1] : nullptr;
+			if (currentStep)
+			{
+				currentStep->updateTimeAlive(dt_sec, arrangement);
+				if (nextStep && nextStep->isInArrangement(arrangement) && !currentStep->inGracePeriod())
+				{
+					advanceToState(activeStepIdx + 1);
+					nextStep->tickStep(dt_sec, arrangement, myTarget, myShip);
+				}
+				else if (currentStep->inGracePeriod())
+				{
+					currentStep->tickStep(dt_sec, arrangement, myTarget, myShip);
+				}
+				else //all steps are done
+				{
+					resetComboList();
+				}
+			}
+		}
+
+		DogFightComboProccessor::DogFightComboProccessor()
+		{
+			activeSteps.reserve(10);
+			stepData.reserve(10);
+		}
+
+		////////////////////////////////////////////////////////
+		// dog fight node
+		////////////////////////////////////////////////////////
+		void Task_DogfightNode::notifyTreeEstablished()
+		{
+			rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+
+			Memory& memory = getMemory();
+			memory.getReplacedDelegate(target_key).addWeakObj(sp_this(), &Task_DogfightNode::handleTargetReplaced);
+		}
+
+		void Task_DogfightNode::beginTask()
+		{
+			Task_TickingTaskBase::beginTask();
+
+			cur_TimeStamp = 0.f;
+			fireData = FireData();
+
+			using namespace BehaviorTree;
+			Memory& memory = getMemory();
+			{
+				ScopedUpdateNotifier<ShipAIBrain> brain_writable;
+				ScopedUpdateNotifier<TargetType> target_writable;
+				if (
+					memory.getWriteValueAs(brain_key, brain_writable) &&
+					memory.getWriteValueAs(target_key, target_writable)
+					)
+				{
+					ShipAIBrain& brain = brain_writable.get();
+					TargetType& targetBase = target_writable.get();
+
+					wp<GameEntity> weakTarget = targetBase.requestReference();
+					if (!weakTarget.expired())
+					{
+						myTarget_Cache = std::dynamic_pointer_cast<Ship>(weakTarget.lock());
+						assert(myTarget_Cache);
+					}
+
+					if (Ship* myShipRaw = brain.getControlledTarget())
+					{
+						myShip_Cache = myShipRaw->requestTypedReference_Nonsafe<Ship>();
+						assert(myShip_Cache);
+					}
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get required memory from keys.");
+				}
+			}
+		}
+
+		bool Task_DogfightNode::tick(float dt_sec)
+		{
+			cur_TimeStamp += dt_sec;
+
+			if (myTarget_Cache && myShip_Cache)
+			{
+				// note checking FWP may not be valid after operations are performed. EG if you destroy the target inbetween usage, the target may a dangling pointer.
+				// This shouldn't happen since AI is all within the same thread and nothing done within this function should cause the ship to be destroyed. 
+				// but if this node is modified to include firing, then target should be re-checked for validity after the shot sicne the shot may destroy the target.
+				Ship& myTarget = *myTarget_Cache;
+				Ship& myShip = *myShip_Cache;
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// Handle movement
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				const TargetDirection arrangment = calculateShipArangement(myTarget, myShip);
+				//if (arrangment == TargetDirection::BEHIND) //#TODO perhaps just remove this as the facing combo with default behavior is sufficient to get reasonable AI dogfighting
+				//{
+				//	if (!comboProcessor.hasActiveCombo())
+				//	{
+				//		generateDefensiveCombo();
+				//	}
+				//}
+				//else 
+				if (arrangment == TargetDirection::FACING)
+				{
+					if (!comboProcessor.hasActiveCombo())
+					{
+						generateFacingCombo();
+					}
+				}
+				//else if (arrangment == TargetArrangement::OPPOSING)
+				//{}
+				//else if (arrangment == TargetArrangement::INFRONT)
+				//{}
+
+				if (comboProcessor.hasActiveCombo())
+				{
+					comboProcessor.tickStep(dt_sec, arrangment, myTarget, myShip);
+				}
+				else
+				{
+					defaultBehavior(dt_sec, myTarget, myShip);
+				}
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// Handle firing projectiles
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				static const uint8_t fireArrangement = (uint8_t(TargetDirection::FACING) | uint8_t(TargetDirection::INFRONT));
+				if (uint8_t(arrangment) & fireArrangement)
+				{
+					float fireCooldown = fireData.state == FireState::BURST ? fireData.MIN_TIME_BETWEEN_BURST_SHOTS() : fireData.MIN_TIME_BETWEEN_NORMAL_SHOTS();
+					bool bCooldownUp = cur_TimeStamp - fireData.lastFire_TimeStamp > fireCooldown;
+					if (bCooldownUp)
+					{
+						myShip.fireProjectileAtShip(myTarget);
+						fireData.lastFire_TimeStamp = cur_TimeStamp;
+						fireData.currentShotInBurst += fireData.state == FireState::BURST ? 1 : 0;
+					}
+				}
+
+				//post firing state update - update regardless if firing so se can switch between burst/normal fire states
+				if (fireData.state == FireState::BURST)
+				{
+					if (fireData.currentShotInBurst >= fireData.burstShotsNum)
+					{
+						fireData.currentShotInBurst = 0;
+						fireData.lastBurst_TimeStamp = cur_TimeStamp;
+						fireData.state = FireState::NORMAL;
+						fireData.randomizeControllingParameters(*rng);
+					}
+				}
+				else //normal fire state
+				{
+					if (cur_TimeStamp - fireData.lastBurst_TimeStamp > fireData.burstTimeoutDuration)
+					{
+						fireData.state = FireState::BURST;
+					}
+				}
+			}
+			return true;
+		}
+
+		void Task_DogfightNode::handleTargetReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+		{
+			updateTargetPointer();
+		}
+
+		void Task_DogfightNode::updateTargetPointer()
+		{
+			using namespace BehaviorTree;
+			Memory& memory = getMemory();
+			{
+				ScopedUpdateNotifier<TargetType> target_writable;
+				if (memory.getWriteValueAs(target_key, target_writable))
+				{
+					TargetType& targetRef = target_writable.get();
+
+					//this is kinda slow, but we need it as a ship to get the forward directions. Probably should refactor the
+					//methods that get forward vectors to be part of a gameplay component so it can by quickly reached.
+					myTarget_Cache = std::dynamic_pointer_cast<Ship>(targetRef.requestReference().lock());
+				}
+				else
+				{
+					myTarget_Cache = nullptr;
+				}
+			}
+		}
+
+		void Task_DogfightNode::generateDefensiveCombo()
+		{
+			static class PerfChoiceChooserHelper chooser;
+			static size_t choice_SharpSix = chooser.add(1);
+
+			comboProcessor.resetComboList();
+
+			size_t randomChoice = chooser.getChoice(*rng);
+			if (chooser.inRange(randomChoice, choice_SharpSix))
+			{
+				comboProcessor.addStep<SharpTurnStep>({ uint8_t(TargetDirection::BEHIND) });
+				comboProcessor.addStep<SlowWhenFacingStep>({ uint8_t(TargetDirection::FACING) });
+				comboProcessor.addStep<SharpTurnStep>({ uint8_t(TargetDirection::OPPOSING) });
+			}
+		}
+
+		void Task_DogfightNode::generateFacingCombo()
+		{
+			using namespace glm;
+
+			static class PerfChoiceChooserHelper chooser;
+			static size_t choice_FaceoffDefaultRange = chooser.add(1);
+			static size_t choice_boostSeparate = chooser.add(1);
+
+			comboProcessor.resetComboList();
+
+			size_t randomChoice = chooser.getChoice(*rng);
+			if (chooser.inRange(randomChoice, choice_FaceoffDefaultRange))
+			{
+				comboProcessor.addStep<FaceoffCollisionAvoidanceStep>({ uint8_t(TargetDirection::FACING), vec4{0,0,0, 1.0f} }); //1.5 timeout has smooth turn, but it restores facing direction preventing combo from ending
+			}
+			else if (chooser.inRange(randomChoice, choice_boostSeparate))
+			{
+				comboProcessor.addStep<FaceoffCollisionAvoidanceStep>({ uint8_t(TargetDirection::FACING), vec4{0,0,0, 0.1f} });
+				comboProcessor.addStep<BoostAwayStep>({ uint8_t(TargetDirection::OPPOSING), vec4{0,0,0, 2.f} });
+			}
+			else
+			{
+				assert(false); //didn't make a choice, what went wrong?
+			}
+		}
+
+		void Task_DogfightNode::defaultBehavior(float dt_sec, Ship& myTarget, Ship& myShip)
+		{
+			using namespace glm;
+			vec3 myPos = myShip.getWorldPosition();
+			vec3 targetPos = myTarget.getWorldPosition();
+
+			//slow down when close to enemy to simulate aiming -- main reason is that it helps keep distance between fighters
+			const float slowdownDistFar2 = 10 * 10;
+			float speedFactor = glm::length2(targetPos - myPos) / slowdownDistFar2;
+			speedFactor = glm::clamp<float>(speedFactor, 0.25f, 1.f);
+
+			myShip.setNextFrameBoost(speedFactor); //allow gradual slow down
+			myShip.moveTowardsPoint(targetPos, dt_sec);
+
+			if constexpr (ENABLE_DEBUG_LINES)
+			{
+				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+				debug.renderLine(vec4(myPos, 1), vec4(targetPos, 1), vec4(0.25f, 0.25f, 0.25f, 1));
+			}
+		}
+
+		TargetDirection Task_DogfightNode::calculateShipArangement(Ship& myTarget, Ship& myShip)
+		{
+			using namespace glm;
+
+			TargetDirection arrangment = TargetDirection::FAILURE;
+			vec3 tForward_n = vec3(myTarget.getForwardDir());
+			vec3 mForward_n = vec3(myShip.getForwardDir());
+			vec3 tarPos = myTarget.getWorldPosition();
+			vec3 myPos = myShip.getWorldPosition();
+
+			//no need to normalize as we only care about sign of dot products
+			vec3 toMe = myPos - tarPos;
+			vec3 toTarget = -(toMe);
+
+			bool imBehindTarget = glm::dot(toMe, tForward_n) < 0.f;
+			bool targetBehindMe = glm::dot(toTarget, mForward_n) < 0.f;
+
+			if (imBehindTarget)
+			{
+				if (targetBehindMe) //  <t ------- m>
+				{
+					arrangment = TargetDirection::OPPOSING;
+				}
+				else				// <t ------- <m
+				{
+					arrangment = TargetDirection::INFRONT;
+				}
+			}
+			else //target is facing me
+			{
+				if (targetBehindMe) // t> ------ m>
+				{
+					arrangment = TargetDirection::BEHIND;
+				}
+				else				// t> ------- <m
+				{
+					arrangment = TargetDirection::FACING;
+				}
+			}
+			return arrangment;
+		}
+
+		void Task_DogfightNode::FireData::randomizeControllingParameters(RNG& rng)
+		{
+			burstShotsNum = rng.getInt<uint16_t>(MIN_BURST_SHOT_RANDOMIZATION(), MAX_BURST_SHOT_RANDOMIZATION());
+			burstTimeoutDuration = rng.getFloat<float>(MIN_BURST_TIMEOUT_RANDOMIZATION(), MAX_BURST_TIMEOUT_RANDOMIZATION());
 		}
 
 	}

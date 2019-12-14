@@ -27,6 +27,9 @@
 #include "../../GameFramework/SAParticleSystem.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
 #include "../../GameFramework/Components/GameplayComponents.h"
+#include "../../GameFramework/SAAIBrainBase.h"
+#include "../../GameFramework/SABehaviorTree.h"
+#include "../AI/SADogfightNodes_LargeTree.h"
 
 namespace SA
 {
@@ -91,7 +94,8 @@ namespace SA
 			log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "Default Spawn Configs not available.");
 		}
 
-		glm::vec3 carrierPosition_teamA = { 0,0, 150 };
+		//glm::vec3 carrierPosition_teamA = { 0,0, 150 };
+		glm::vec3 carrierPosition_teamA = { 0,0, 30 }; //testing dogfight
 
 		if (const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{
@@ -125,14 +129,19 @@ namespace SA
 		uint32_t numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		//numFighterShipsToSpawn = 250;
-		numFighterShipsToSpawn = 20;
+		//numFighterShipsToSpawn = 20;
 		//numFighterShipsToSpawn = 10;
 		//numFighterShipsToSpawn = 4;
-
+		numFighterShipsToSpawn = 2;
 #endif//NDEBUG 
 
 		uint32_t numTeams = 2;
 		uint32_t numFightersPerTeam = numFighterShipsToSpawn / numTeams;
+
+		std::vector< std::vector<sp<Ship>> > teamTargets = {
+			std::vector<sp<Ship>>{},
+			std::vector<sp<Ship>>{}
+		};
 
 		auto spawnFighters = [&](size_t teamIdx, glm::vec3 teamSpawnOrigin) 
 		{
@@ -149,10 +158,14 @@ namespace SA
 				fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
 
 				sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
+				teamTargets[teamIdx].push_back(fighter);
+
 				//fighter->spawnNewBrain<FlyInDirectionBrain>();
 				//fighter->spawnNewBrain<WanderBrain>();
-				fighter->spawnNewBrain<FighterBrain>(); 
 				//fighter->spawnNewBrain<EvadeTestBrain>();
+				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
+				fighter->spawnNewBrain<DogfightTestBrain>();
+				//fighter->spawnNewBrain<FighterBrain>(); 
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);
@@ -179,8 +192,36 @@ namespace SA
 			}
 		}
 
+		//DEBUG assign targets to each other to test dogfighting
+		size_t targetsToSet = teamTargets[0].size() < teamTargets[1].size() ? teamTargets[0].size() : teamTargets[1].size();
+		for (size_t idx = 0; idx < targetsToSet ; idx++)
+		{
+			sp<Ship> a = teamTargets[0][idx];
+			sp<Ship> b = teamTargets[1][idx];
+
+			const BrainComponent* aBrainComp = a->getGameComponent<BrainComponent>();
+			const BrainComponent* bBrainComp = b->getGameComponent<BrainComponent>();
+			if (aBrainComp && bBrainComp)
+			{
+				BehaviorTreeBrain* aBrain = dynamic_cast<BehaviorTreeBrain*>(aBrainComp->getBrain());
+				BehaviorTreeBrain* bBrain = dynamic_cast<BehaviorTreeBrain*>(bBrainComp->getBrain());
+				if (aBrain && bBrain)
+				{
+					BehaviorTree::Memory& aMem = aBrain->getBehaviorTree().getMemory();
+					BehaviorTree::Memory& bMem = bBrain->getBehaviorTree().getMemory();
+
+					sp<WorldEntity> aWE = a;
+					sp<WorldEntity> bWE = b;
+
+					WorldEntity* bAsTarget = aMem.replaceValue("target", bWE);
+					WorldEntity* aAsTarget = bMem.replaceValue("target", aWE);
+				}
+			}
+		}
+
+
 		//follow a target from the start
-		const size_t targetIdx = 15;
+		const size_t targetIdx = 0;
 		size_t pickIdx = 0;
 		for (sp<WorldEntity> entity : worldEntities)
 		{

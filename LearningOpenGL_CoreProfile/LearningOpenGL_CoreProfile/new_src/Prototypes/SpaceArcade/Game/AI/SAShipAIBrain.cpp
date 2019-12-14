@@ -10,6 +10,7 @@
 #include "../../GameFramework/SABehaviorTreeHelpers.h"
 #include "../../GameFramework/BehaviorTree_ProvidedNodes.h"
 #include "../../GameFramework/SAWorldEntity.h"
+#include "SADogfightNodes_LargeTree.h"
 
 namespace SA
 {
@@ -169,8 +170,8 @@ namespace SA
 				const Transform& transform = myShip->getTransform();
 
 				glm::vec3 rotDir = glm::vec3(myShip->getForwardDir());
-				glm::vec3 velocity = rotDir * speed;
-				myShip->setVelocity(velocity);
+				myShip->setMaxSpeed(speed);
+				myShip->setVelocityDir(rotDir);
 			}
 
 			return true;
@@ -274,6 +275,146 @@ namespace SA
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// dogfight test brain - large tree
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	void DogfightTestBrain_VerboseTree::postConstruct()
+	{
+		const char* const brainKey = "selfBrain";
+		const char* const stateKey = "stateKey";
+		const char* const originKey = "origin";
+		const char* const wanderLocKey = "wander_loc";
+		const char* const targetKey = "target";
+		const char* const targetLocKey = "target_loc";
+		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
+		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const dogFightLoc_Key = "dogFightLocKey";
+
+		const char* const positionArrangementKey = "posPhaseKey";
+		const char* const comboListKey = "comboList";
+		const char* const dogfightInputHandler= "dfShipDriver";
+		const char* const inputRequestsKey = "inputRequests";
+
+		using namespace BehaviorTree;
+		behaviorTree =
+			new_sp<Tree>("fighter-tree-root",
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+					new_sp<Loop>("fighter-inf-loop", 0,
+						new_sp<Selector>("state_selector", MakeChildren{
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
+								new_sp<Loop>("dogfight_loop", 0, 
+									new_sp<Sequence>("Seq_Dogfight", MakeChildren{
+										new_sp<Task_CalculateTargetArrangment>("Task_CalculateTargetArrangment", positionArrangementKey, brainKey, targetKey),
+										new_sp<Selector>("Selector_TargetArrangement", MakeChildren{
+											new_sp<Decorator_TargetIs>("dec_BehindTarget", positionArrangementKey, TargetIs::BEHIND,
+												new_sp<Selector>("sel_WhatToDo_BehindTarget", MakeChildren{
+													new_sp<Task_ComboProcessor>("task_ProcCombo_Behind", comboListKey, inputRequestsKey, TargetIs::BEHIND, positionArrangementKey, brainKey, targetKey),
+													new_sp<Task_StartDefenseCombo>("task_startAvoidanceCombo", comboListKey),
+													new_sp<Task_DefaultDogfightInput>("Task_DefaultDogfightInput", inputRequestsKey, positionArrangementKey, brainKey, targetKey)
+												})
+											),
+											new_sp<Decorator_TargetIs>("dec_TargetInFront", positionArrangementKey, TargetIs::INFRONT,
+												new_sp<Selector>("sel_WhatToDo_TargetInFront", MakeChildren{
+													new_sp<Task_ComboProcessor>("task_ProcCombo_Front", comboListKey, inputRequestsKey, TargetIs::INFRONT, positionArrangementKey, brainKey, targetKey),
+													new_sp<Task_DefaultDogfightInput>("Task_DefaultDogfightInput", inputRequestsKey, positionArrangementKey, brainKey, targetKey)
+												})
+											),
+											new_sp<Decorator_TargetIs>("dec_FacingTarget", positionArrangementKey, TargetIs::FACING,
+												new_sp<Selector>("sel_WhatToDo_IsFacingTarget", MakeChildren{
+													new_sp<Task_ComboProcessor>("task_ProcCombo_Facing", comboListKey, inputRequestsKey, TargetIs::FACING, positionArrangementKey, brainKey, targetKey),
+													new_sp<Task_DefaultDogfightInput>("Task_DefaultDogfightInput", inputRequestsKey, positionArrangementKey, brainKey, targetKey)
+												})
+											),
+											new_sp<Decorator_TargetIs>("dec_TargetInOpposing", positionArrangementKey, TargetIs::OPPOSING,
+												new_sp<Selector>("sel_WhatToDo_TargetOpposing", MakeChildren{
+													new_sp<Task_ComboProcessor>("task_ProcCombo_Opposing", comboListKey, inputRequestsKey, TargetIs::OPPOSING, positionArrangementKey, brainKey, targetKey),
+													new_sp<Task_DefaultDogfightInput>("Task_DefaultDogfightInput", inputRequestsKey, positionArrangementKey, brainKey, targetKey)
+												})
+											),
+										}),
+										new_sp<Task_ApplyInputRequest>("Task_ApplyInputRequest", positionArrangementKey, brainKey, targetKey, inputRequestsKey),
+										new_sp<Task_WaitForNextFrame>("Task_SleepFrame")
+									})
+								)
+							),
+						})
+					)
+				),
+				MemoryInitializer
+				{
+					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::ATTACK)},
+					{ brainKey, sp_this() },
+					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetKey, sp<WorldEntity>(nullptr) },
+					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) },
+
+					//these use shared pointers so they can be cached to bypass update event notifications for efficiency, perhaps this should be a supported feature
+					{ positionArrangementKey,	new_sp<PrimitiveWrapper<sp<TargetIs>>>(new_sp<TargetIs>(TargetIs::BEHIND)) },
+					{ comboListKey,				new_sp<PrimitiveWrapper<sp<ComboList>>>(new_sp<ComboList>()) },
+					{ inputRequestsKey,			new_sp<PrimitiveWrapper<sp<ShipInputRequest>>>(new_sp<ShipInputRequest>()) }
+
+				}
+			);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// dogfight test brain - tree with ticking nodes
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	void DogfightTestBrain::postConstruct()
+	{
+		const char* const brainKey = "selfBrain";
+		const char* const stateKey = "stateKey";
+		const char* const originKey = "origin";
+		const char* const wanderLocKey = "wander_loc";
+		const char* const targetKey = "target";
+		const char* const targetLocKey = "target_loc";
+		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
+		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const dogFightLoc_Key = "dogFightLocKey";
+
+		const char* const positionArrangementKey = "posPhaseKey";
+		const char* const comboListKey = "comboList";
+		const char* const dogfightInputHandler= "dfShipDriver";
+		const char* const inputRequestsKey = "inputRequests";
+
+		using namespace BehaviorTree;
+		behaviorTree =
+			new_sp<Tree>("fighter-tree-root",
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+					new_sp<Loop>("fighter-inf-loop", 0,
+						new_sp<Selector>("state_selector", MakeChildren{
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
+								new_sp<Task_DogfightNode>("Task_Dogfight", brainKey, targetKey, secondaryTargetsKey)
+							),
+						})
+					)
+				),
+				MemoryInitializer
+				{
+					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::ATTACK)},
+					{ brainKey, sp_this() },
+					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
+					{ targetKey, sp<WorldEntity>(nullptr) },
+					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) },
+
+					//these use shared pointers so they can be cached to bypass update event notifications for efficiency, perhaps this should be a supported feature
+					{ positionArrangementKey,	new_sp<PrimitiveWrapper<sp<TargetIs>>>(new_sp<TargetIs>(TargetIs::BEHIND)) },
+					{ comboListKey,				new_sp<PrimitiveWrapper<sp<ComboList>>>(new_sp<ComboList>()) },
+					{ inputRequestsKey,			new_sp<PrimitiveWrapper<sp<ShipInputRequest>>>(new_sp<ShipInputRequest>()) }
+
+				}
+			);
+	}
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Fighter Brain
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -295,7 +436,7 @@ namespace SA
 			new_sp<Tree>("fighter-tree-root",
 				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey, activeAttackers_MemoryKey,
 				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
-					new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey,
+					new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_evade_state", stateKey, OP::EQUAL, MentalState_Fighter::EVADE, AbortPreference::ABORT_ON_MODIFY,
@@ -308,8 +449,8 @@ namespace SA
 												{"spiral_spin", 1}
 											},
 											MakeChildren{
-												new_sp<Task_EvadePatternSpiral>("spiral_evade", dogFightLoc_Key, brainKey, 15.0f),
-												new_sp<Task_EvadePatternSpin>("spiral_spin", dogFightLoc_Key, brainKey, 15.0f)
+												new_sp<Task_EvadePatternSpiral>("spiral_evade", dogFightLoc_Key, brainKey, 5.0f),
+												new_sp<Task_EvadePatternSpin>("spiral_spin", dogFightLoc_Key, brainKey, 5.0f)
 											}
 										)
 									)
@@ -341,6 +482,8 @@ namespace SA
 				}
 			);
 	}
+
+
 
 }
 

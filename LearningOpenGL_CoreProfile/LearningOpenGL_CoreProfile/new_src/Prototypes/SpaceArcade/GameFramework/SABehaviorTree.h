@@ -46,7 +46,6 @@ namespace SA
 
 			/* Notifies users that abort happened; cancel any pending timers in your override. */
 			virtual void handleNodeAborted() = 0;
-		private:
 			virtual void notifyTreeEstablished() {}; //override for memory value initialization
 
 		public:
@@ -101,6 +100,7 @@ namespace SA
 			virtual void resetNode() override
 			{
 				bChildReturned = false;
+				bChildExecutionResult = false;
 				NodeBase::resetNode();
 			}
 
@@ -186,11 +186,11 @@ namespace SA
 		private: //required node methods
 			virtual bool hasPendingChildren() const override { return false; }			//tasks cannot have pending children
 			virtual void notifyCurrentChildResult(bool childResult) override {};		//tasks cannot have pending children
-
 		protected:
 			/** present of value in optional signals that task is completed*/
 			std::optional<bool> evaluationResult;
 			bool bStartedTask = false;
+
 		};
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -471,6 +471,11 @@ namespace SA
 					-Must return const pointer so that user cannot modify it without OnModified/OnReplaced delegates firing
 					-must provide PrimitiveWrapper<T> as argument for non gameentity values
 					-do not const-cast the result; doing so will bypass the modified/replaced delegates; instead get writeable reference if you need to call non-const functions
+				REFACTOR CONSIDERATION:
+					-it has become clear, through use, that reading/writing memory every frame is expensive. Perhaps there should be an interface where
+						one can cache memory values (since I'm doing that anyways in space arcade through the backdoor or requesting a reference). Such an interface should expose a way to broadcast
+						that the memory value was updated or replaced. Perhaps a direct handle to the memory entry?
+
 			*/
 			template<typename T>
 			sp<const T> getMemoryReference(const std::string& key)
@@ -625,7 +630,7 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		// The behavior tree composed of nodes.
 		/////////////////////////////////////////////////////////////////////////////////////
-		static constexpr bool LOG_TREE_STATE = true;	//if true, this will hit performance hard, but gives a stream of state changes.
+		static constexpr bool LOG_TREE_STATE = false;	//if true, this will hit performance hard, but gives a stream of state changes.
 		extern Tree* volatile targetDebugTree;			//use a debugger to set this tree and logging will only print for this instance. hint1: set by name "SA::BehaviorTree::targetDebugTree ptr_address_value". hint2 set conditional breakpoints in nodes using "owningTree == SA::BehaviorTree::targetDebugTree"
 		/////////////////////////////////////////////////////////////////////////////////////
 		class Tree : public NodeBase
@@ -641,6 +646,7 @@ namespace SA
 			void abort(uint32_t priority, NodeBase* abortInstigator = nullptr);
 			uint32_t getCurrentPriority();
 			Memory& getMemory() const;
+			float getFrameDeltaTimeSecs() const { return frame_dt_sec; }
 
 		public: //debug utils
 			void makeTreeDebugTarget() { targetDebugTree = this; }
@@ -676,6 +682,8 @@ namespace SA
 			bool bExecutingTree = false;
 			uint32_t numNodes = 0;
 			std::optional<ResumeStateData> resumeData;
+
+			float frame_dt_sec = 1.f;
 		};
 
 	}

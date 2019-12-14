@@ -31,7 +31,7 @@ namespace SA
 			forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
 			forwardShadedModelShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
 			forwardShadedModelShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
-			forwardShadedModelShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0));
+			forwardShadedModelShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0)); //perhaps drive this from level information
 
 			forwardShadedModelShader->setUniform3f("cameraPosition", camera->getPosition());
 			forwardShadedModelShader->setUniform1i("material.shininess", 32);

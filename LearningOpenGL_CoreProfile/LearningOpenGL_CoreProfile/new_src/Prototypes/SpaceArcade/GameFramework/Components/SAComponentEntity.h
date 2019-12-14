@@ -140,10 +140,10 @@ namespace SA
 	public:
 		/** note: intentionally doesn't return created component to prevent misuse of API (using create instead of get). Use getGameComponent to get the component created*/
 		template<typename ComponentType>
-		void createGameComponent()
+		ComponentType* createGameComponent()
 		{
 			static_assert(std::is_base_of<GameComponentBase, ComponentType>::value);
-			_componentOperation<ComponentType>(ComponentOp::CREATE_OP);
+			return _componentOperation<ComponentType>(ComponentOp::CREATE_OP);
 		}
 
 		template<typename ComponentType>
@@ -214,7 +214,7 @@ namespace SA
 
 			ComponentType* ret = nullptr;
 
-			//avoid switch because I heard they suck with cache... probably should try and test that.
+			//avoid switch because I heard they aren't great with cache... probably should try and test that.
 			if (operation == ComponentOp::GET_OP)
 			{
 				//static cast is safe since we're using index look up as a proxy for RTTI

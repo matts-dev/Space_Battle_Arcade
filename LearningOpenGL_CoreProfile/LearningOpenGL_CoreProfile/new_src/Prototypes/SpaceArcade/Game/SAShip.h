@@ -7,6 +7,7 @@
 #include "../Tools/DataStructures/SATransform.h"
 #include "AssetConfigs/SASpawnConfig.h"
 #include "../GameFramework/Components/GameplayComponents.h"
+#include <optional>
 
 
 namespace SA
@@ -16,7 +17,8 @@ namespace SA
 	class ShipAIBrain;
 	class ProjectileConfig;
 	class ActiveParticleGroup;
-
+	class ShipEnergyComponent;
+	class RNG;
 
 	struct HitPoints
 	{
@@ -53,12 +55,6 @@ namespace SA
 		virtual void draw(Shader& shader) override;
 
 		////////////////////////////////////////////////////////
-		// Functions for AI/Player brains
-		////////////////////////////////////////////////////////
-		void fireProjectile(class BrainKey privateKey); //#todo perhaps remove this in favor of fire in direction; #todo don't delete without cleaning up brain key
-		void fireProjectileInDirection(glm::vec3 dir_n) const; //#todo reconsider limiting this so only brains
-
-		////////////////////////////////////////////////////////
 		//AI
 		////////////////////////////////////////////////////////
 	public:
@@ -75,9 +71,17 @@ namespace SA
 
 	public:
 
-		//control functions
-		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true);
+		////////////////////////////////////////////////////////
+		//Control functions
+		////////////////////////////////////////////////////////
+		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true, float rollAmplifier = 1.f);
 		void roll(float roll_rad, float dt_sec);
+		void adjustSpeedFraction(float targetSpeedFactor, float dt_sec);
+		void setNextFrameBoost(float targetSpeedFactor);
+
+		bool fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> fireRadius_cosTheta = std::optional<float>{}, float shootRandomOffsetStrength = 1.f) const;
+		void fireProjectile(class BrainKey privateKey); //#todo perhaps remove this in favor of fire in direction; #todo don't delete without cleaning up brain key
+		void fireProjectileInDirection(glm::vec3 dir_n) const; //#todo reconsider limiting this so only brains
 
 		////////////////////////////////////////////////////////
 		//Collision
@@ -91,12 +95,19 @@ namespace SA
 		inline glm::vec4 localForwardDir_n() const { return glm::vec4(0, 0, 1, 0); }
 		glm::vec4 getForwardDir() const;
 		glm::vec4 getUpDir() const;
+		glm::vec4 getRightDir() const;
 		glm::vec4 rotateLocalVec(const glm::vec4& localVec);
 		float getMaxTurnAngle_PerSec() const;
-		void setVelocity(glm::vec3 inVelocity);
-		glm::vec3 getVelocity() { return velocity; }
+
+		void setVelocityDir(glm::vec3 inVelocity);
+		glm::vec3 getVelocityDir() { return velocityDir_n; }
+		glm::vec3 getVelocity();
+
+		void setMaxSpeed(float inMaxSpeed) { maxSpeed = inMaxSpeed; }
 		float getMaxSpeed() const { return maxSpeed; }
 
+		void setSpeedFactor(float inSpeedFactor) { currentSpeedFactor = glm::clamp(inSpeedFactor,0.f, 1.f); }
+		float getSpeed() const{ return getMaxSpeed() * currentSpeedFactor;}
 
 		////////////////////////////////////////////////////////
 		// Projectiles 
@@ -128,14 +139,28 @@ namespace SA
 		const sp<ModelCollisionInfo> collisionData;
 		const sp<const ModelCollisionInfo> constViewCollisionData;
 		sp<ShipAIBrain> brain; 
-		glm::vec3 velocity;
+		glm::vec3 velocityDir_n;
 		glm::vec3 shieldOffset = glm::vec3(0.f);
 		float maxSpeed = 10.0f; //#TODO make part of spawn config
+		float currentSpeedFactor = 1.0f;
+		float speedGamifier = 1.0f;
+		float engineSpeedChangeFactor = 0.1f; //somewhat like acceleration, but linear and gamified.
 		HitPoints hp = { /*current*/100, /*max*/100 };
+		sp<RNG> rng;
 
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;
 		sp<const SpawnConfig> shipData;
+
+		ShipEnergyComponent* energyComp = nullptr;
+
+		//boost
+		const float ENERGY_BOOST_RATIO_SEC = 50.f / 1.0f; // ( energy_cost / speed_increase). eg a speed up for 1.0 could cost 50 energy per sec
+		const float BOOST_DECREASE_PER_SEC = 1.0f; //speed factor per sec
+		const float BOOST_RAMPUP_PER_SEC = 4.0f; //speed factor per sec
+		float adjustedBoost = 1.0f;
+		float targetBoost = 1.0f;
+		std::optional<float> boostNextFrame;
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;

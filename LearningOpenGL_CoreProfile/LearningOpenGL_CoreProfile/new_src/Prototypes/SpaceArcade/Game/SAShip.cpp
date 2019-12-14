@@ -13,6 +13,9 @@
 #include "../GameFramework/Components/GameplayComponents.h"
 #include "../Tools/SAUtilities.h"
 #include "../GameFramework/SABehaviorTree.h"
+#include "Components/ShipEnergyComponent.h"
+#include "../GameFramework/SAGameBase.h"
+#include "../GameFramework/SARandomNumberGenerationSystem.h"
 
 namespace
 {
@@ -40,8 +43,7 @@ namespace SA
 
 		glm::vec4 rotDir = rotMatrix * pointingDir;
 
-		const float speed = 1.0f;
-		velocity = rotDir * speed;
+		velocityDir_n = glm::normalize(rotDir);
 
 		//staticInitCheck();
 	}
@@ -59,6 +61,7 @@ namespace SA
 
 		createGameComponent<BrainComponent>();
 		createGameComponent<TeamComponent>();
+		energyComp = createGameComponent<ShipEnergyComponent>();
 		if (TeamComponent* teamComp = getGameComponent<TeamComponent>())
 		{
 			//bound to delegate in post construct
@@ -100,6 +103,16 @@ namespace SA
 		return rotDir;
 	}
 
+	glm::vec4 Ship::getRightDir() const
+	{
+		//#optimize follow optimizations done in getForwardDir if any are made
+		const Transform& transform = getTransform();
+		glm::vec4 upDir{ 1, 0, 0, 0 }; //#TODO this should could from spawn config in case models are not aligned properly
+		glm::mat4 rotMatrix = glm::toMat4(transform.rotQuat);
+		glm::vec4 rotDir = rotMatrix * upDir;
+		return rotDir;
+	}
+
 	glm::vec4 Ship::rotateLocalVec(const glm::vec4& localVec)
 	{
 		const Transform& transform = getTransform();
@@ -110,14 +123,26 @@ namespace SA
 
 	float Ship::getMaxTurnAngle_PerSec() const
 	{
-		//this perhaps should be related to speed, but for now just returning a reasonable 
-		return glm::pi<float>();
+		//if speeds are slower than 1.0, we increase the max turn radius. eg 1/0.5  = 2;
+		return glm::pi<float>() * glm::clamp(1.f / (currentSpeedFactor+0.0001f), 0.f, 3.f);
 	}
 
-	void Ship::setVelocity(glm::vec3 inVelocity)
+	void Ship::setVelocityDir(glm::vec3 inVelocity)
 	{
-		NAN_BREAK(velocity);
-		velocity = inVelocity;
+		NAN_BREAK(inVelocity);
+		velocityDir_n = glm::normalize(inVelocity);
+	}
+
+	glm::vec3 Ship::getVelocity()
+	{
+		//apply a speed increase if you have a full tank of energy (this helps create distance when two ai's are dogfighting)
+		constexpr float energyThresholdForBoost = 75.f;
+		float highEnergyBoost = glm::clamp(energyComp->getEnergy() / 75.f, 1.0f, 1.1f);
+
+		return velocityDir_n 
+			* currentSpeedFactor * getMaxSpeed() * speedGamifier
+			* highEnergyBoost 
+			* adjustedBoost;
 	}
 
 	void Ship::setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig)
@@ -126,7 +151,9 @@ namespace SA
 	}
 
 	void Ship::updateTeamDataCache()
-{
+	{
+		//#TODO perhaps just cache temp comp directly?
+
 		if (TeamComponent* teamComp = getGameComponent<TeamComponent>())
 		{
 			cachedTeamIdx = teamComp->getTeam();
@@ -160,7 +187,7 @@ namespace SA
 
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
-			spawnData.direction_n = glm::normalize(velocity);
+			spawnData.direction_n = velocityDir_n;
 			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
@@ -188,7 +215,7 @@ namespace SA
 		}
 	}
 
-	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedFactor, bool bRoll)
+	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedAmplifier, bool bRoll, float turnAmplifier)
 	{
 		using namespace glm;
 
@@ -197,14 +224,14 @@ namespace SA
 
 		vec3 forwardDir_n = glm::normalize(vec3(getForwardDir()));
 		vec3 targetDir_n = glm::normalize(targetDir);
-		bool bPointingTowardsMoveLoc = glm::dot(forwardDir_n, targetDir_n) >= 0.99f;
+		bool bPointingTowardsMoveLoc = glm::dot(forwardDir_n, targetDir_n) >= 0.999f;
 
 		if (!bPointingTowardsMoveLoc)
 		{
 			vec3 rotationAxis_n = glm::cross(forwardDir_n, targetDir_n);
 
 			float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
-			float maxTurn_Rad = getMaxTurnAngle_PerSec() * dt_sec;
+			float maxTurn_Rad = getMaxTurnAngle_PerSec() * turnAmplifier * dt_sec;
 			float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
 
 			quat completedRot = Utils::getRotationBetween(forwardDir_n, targetDir_n) * xform.rotQuat;
@@ -214,7 +241,7 @@ namespace SA
 			vec3 rightVec_n = newRot * vec3(1, 0, 0);
 			bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
 
-			vec3 newForwardVec_n = newRot * vec3(localForwardDir_n());
+			vec3 newForwardVec_n = glm::normalize(newRot * vec3(localForwardDir_n()));
 			if (!bRollMatchesTurnAxis && bRoll)
 			{
 				float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
@@ -226,11 +253,13 @@ namespace SA
 			Transform newXform = xform;
 			newXform.rotQuat = newRot;
 			setTransform(newXform);
-			setVelocity(newForwardVec_n * getMaxSpeed() * speedFactor);
+			setVelocityDir(newForwardVec_n);
+			speedGamifier = speedAmplifier;
 		}
 		else
 		{
-			setVelocity(forwardDir_n * getMaxSpeed() * speedFactor);
+			setVelocityDir(forwardDir_n);
+			speedGamifier = speedAmplifier;
 		}
 	}
 
@@ -246,8 +275,70 @@ namespace SA
 		setTransform(newXform);
 	}
 
+	void Ship::adjustSpeedFraction(float targetSpeedFactor, float dt_sec)
+	{
+		/*targetSpeedFactor = glm::clamp<float>(targetSpeedFactor, 0.f, 1.f);
+
+		float toTarget = targetSpeedFactor - currentSpeedFactor;
+		float deltaSpeed = engineSpeedChangeFactor * dt_sec;
+		if (glm::abs(deltaSpeed) < glm::abs(toTarget))
+		{
+			float sign = toTarget > 0 ? 1.f : -1.f;
+			currentSpeedFactor = currentSpeedFactor + sign * deltaSpeed;
+		}
+		else
+		{
+			currentSpeedFactor = currentSpeedFactor + toTarget;
+		}*/
+	}
+
+	void Ship::setNextFrameBoost(float targetSpeedFactor)
+	{
+		boostNextFrame = targetSpeedFactor;
+	}
+
+	bool Ship::fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> inFireRadius_cosTheta /*=empty*/, float shootRandomOffsetStrength /*= 1.f*/) const
+	{
+		using namespace glm;
+		static float defaultFireRadius_cosTheta = glm::cos(10 * glm::pi<float>() / 180);
+
+		float fireRadius_cosTheta = inFireRadius_cosTheta.value_or(defaultFireRadius_cosTheta);
+		vec3 myPos = getWorldPosition();
+		vec3 targetPos = myTarget.getWorldPosition();
+		vec3 toTarget_n = glm::normalize(targetPos - myPos);
+		vec3 myForward_n = vec3(getForwardDir());
+
+		float toTarget_cosTheta = glm::dot(toTarget_n, myForward_n);
+		if (toTarget_cosTheta >= fireRadius_cosTheta)
+		{
+			//correct for velocity
+			//#TODO, perhaps get a kinematic component or something to get an idea of the velocity
+			vec3 correctTargetPos = targetPos;
+			vec3 toFirePos_un = correctTargetPos - myPos;
+
+			//construct basis around target direction
+			vec3 fireRight_n = glm::normalize(glm::cross(toFirePos_un, vec3(getUpDir())));
+			vec3 fireUp_n = glm::normalize(glm::cross(fireRight_n, toFirePos_un));
+
+			//add some randomness to fire direction, more random of easier AI; randomness also helps correct for twitch movements done by target
+			//we could apply this directly the fire direction we pass to ship, but this has a more intuitive meaning and will probably perform better for getting actual hits
+			correctTargetPos += fireRight_n * rng->getFloat<float>(-1.f, 1.f) * shootRandomOffsetStrength;
+			correctTargetPos += fireUp_n * rng->getFloat<float>(-1.f, 1.f) * shootRandomOffsetStrength;
+
+			//fire in direction
+			vec3 toFirePos_n = glm::normalize(correctTargetPos - myPos);
+			fireProjectileInDirection(toFirePos_n);
+
+			return true;
+		}
+
+		return false;
+	}
+
 	void Ship::postConstruct()
 	{
+		rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+
 		//WARNING: caching world sp will create cyclic reference
 		if (LevelBase* world = getWorld())
 		{
@@ -267,11 +358,38 @@ namespace SA
 		}
 	}
 	
-	void Ship::tick(float deltaTimeSecs)
+	void Ship::tick(float dt_sec)
 	{
+		energyComp->notify_tick(dt_sec);
+
+		////////////////////////////////////////////////////////
+		// handle boost
+		////////////////////////////////////////////////////////
+		float boostForFrame = boostNextFrame.value_or(targetBoost);
+		boostNextFrame.reset();
+		float requestedBoost = boostForFrame - 1.0f; //#TODO this needs adjustment so we don't spend more energy than we actually can use in acceleration
+		float requestedBoostCost_sec = ENERGY_BOOST_RATIO_SEC * requestedBoost * dt_sec;
+		float boostDelta = 0.f;
+		if (energyComp->getEnergy() > requestedBoostCost_sec) //#optimize avoid branch here
+		{
+			energyComp->spendEnergy(requestedBoostCost_sec);
+			boostDelta = boostForFrame - adjustedBoost;
+		}
+		else
+		{
+			boostDelta = 1.f - adjustedBoost; //think of this as a 1d vector
+		}
+		boostDelta = glm::clamp<float>(boostDelta, -BOOST_DECREASE_PER_SEC, BOOST_RAMPUP_PER_SEC);
+		adjustedBoost += boostDelta * dt_sec;
+
+		////////////////////////////////////////////////////////
+		// handle kinematics
+		////////////////////////////////////////////////////////
 		Transform xform = getTransform();
-		xform.position += velocity * deltaTimeSecs;
+		xform.position += getVelocity() * dt_sec;
 		glm::mat4 movedXform_m = xform.getModelMatrix();
+
+		NAN_BREAK(xform.position);
 
 		//update collision data
 		collisionData->updateToNewWorldTransform(movedXform_m);
@@ -341,7 +459,7 @@ namespace SA
 					ParticleSystem::SpawnParams particleSpawnParams;
 					particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
 					particleSpawnParams.xform.position = this->getTransform().position;
-					particleSpawnParams.velocity = this->velocity;
+					particleSpawnParams.velocity = getVelocity();
 					GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 
 					if (BrainComponent* brainComp = getGameComponent<BrainComponent>())

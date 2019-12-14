@@ -100,6 +100,32 @@ namespace SA
 		virtual void postConstruct() override;
 	};
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Dogfight test brain using very verbose tree
+	//		-this has massive hit on performance even with memory read optimizations
+	/////////////////////////////////////////////////////////////////////////////////////
+	class DogfightTestBrain_VerboseTree : public ShipAIBrain
+	{
+	public:
+		DogfightTestBrain_VerboseTree(const sp<Ship>& controlledShip) : ShipAIBrain(controlledShip) {}
+
+	protected:
+		virtual void postConstruct() override;
+	};
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Dogfight Test Brain - ticking nodes
+	/////////////////////////////////////////////////////////////////////////////////////
+
+	class DogfightTestBrain : public ShipAIBrain
+	{
+	public:
+		DogfightTestBrain(const sp<Ship>& controlledShip) : ShipAIBrain(controlledShip) {}
+
+	protected:
+		virtual void postConstruct() override;
+	};
+
 	////////////////////////////////////////////////////////
 	// The primary behavior tree for a fighter ship.
 	////////////////////////////////////////////////////////

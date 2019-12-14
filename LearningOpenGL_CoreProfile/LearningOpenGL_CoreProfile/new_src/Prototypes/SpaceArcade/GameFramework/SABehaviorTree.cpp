@@ -115,6 +115,7 @@ namespace SA
 		*/
 		void Tree::tick(float delta_sec)
 		{
+			frame_dt_sec = delta_sec;
 			/*
 			Design considerations:
 				-only a single tree walk should be permitted per tick; otherwise a tree can get into an inifite loop.
@@ -243,7 +244,7 @@ namespace SA
 					stateString = "< EXECUTING";
 					break;
 				case ExecutionState::POPPED_CHILD:
-					stateString = "- POPPED_CHILD";
+					stateString = "- POP_TO_PARENT";
 					break;
 				case ExecutionState::PUSHED_CHILD:
 					stateString = "+ PUSHED_CHILD";

@@ -159,6 +159,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASystemBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.h" />
@@ -167,6 +168,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipBehaviorTreeNodes.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAConfigBase.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Components\ShipEnergyComponent.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.h" />
@@ -194,12 +196,14 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\Algorithms.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ChoiceChoosingHelper.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\IterableHashSet.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ObjectPools.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\RemoveSpecialMemberFunctionUtils.h" />
@@ -417,8 +421,9 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\EngineTests\DelegateTests.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestRunner.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\FastWeakPtr.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\FastWeakPtrSyntaxTests.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\GameEntityAndSharedPtrIncludeOrder.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\LifetimePointerSyntaxTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\DelegateTesting_MultiDelegate_Broadcasting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\GameBaseTesting.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\WindowTesting_Callbacks.cpp" />
@@ -443,6 +448,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSystem.cpp" />
@@ -450,6 +456,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipBehaviorTreeNodes.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAConfigBase.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Components\ShipEnergyComponent.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.cpp" />
@@ -473,6 +480,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAShader.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\SpaceArcadeModels\test_spacearcade_models.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.cpp" />

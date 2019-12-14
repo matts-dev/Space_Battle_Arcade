@@ -166,6 +166,21 @@ namespace SA
 			const AbortPreference abortPref;
 		};
 
-
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Task_SleepThisFrame Sleeps the behavior tree for a single frame
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		class Task_WaitForNextFrame : public Task
+		{
+		public:
+			Task_WaitForNextFrame(const std::string& nodeName): Task(nodeName)
+			{}
+		protected:
+			virtual void beginTask() override;
+			virtual bool isProcessing() const override;
+			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
+		private:
+			uint64_t startFrameNumber = 0;
+		};		
 	}
 }

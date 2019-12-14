@@ -961,9 +961,16 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 		};
 
 		glm::vec3 intersectPoint = start;
-		const glm::vec3 dir = glm::normalize(end - start);
+		const glm::vec3 toEnd = end - start;
+		const float distToEnd = glm::length(toEnd);
+		const glm::vec3 dir = toEnd / distToEnd;
+		constexpr float ZERO_THRESHOLD = 0.0001f;
+		if (distToEnd < ZERO_THRESHOLD) return;
+
 		//endX = startX + t * dirX;			//solve for t
-		float endT = (end.x - start.x) / dir.x;
+		float endT = glm::abs(toEnd.x) > ZERO_THRESHOLD ? (end.x - start.x) / dir.x :
+					glm::abs(toEnd.y) > ZERO_THRESHOLD ? (end.y - start.y) / dir.y :
+														(end.z - start.z) / dir.z;
 		float previousT = 0;
 		do
 		{
@@ -978,9 +985,9 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			//account for when intersection point lies exactly on grid value; 
 			// direct float comparisions should be okay -- if they're slightly different 
 			//then logic above determining cX will have worked.
-			if (fX == cX) { cX += fX < 0 ? -gridCellSize.x : gridCellSize.x; };
-			if (fY == cY) { cY += fY < 0 ? -gridCellSize.y : gridCellSize.y; };
-			if (fZ == cZ) { cZ += fZ < 0 ? -gridCellSize.z : gridCellSize.z; };
+			if (fX == cX) { cX += (fX < 0) ? -gridCellSize.x : gridCellSize.x; };
+			if (fY == cY) { cY += (fY < 0) ? -gridCellSize.y : gridCellSize.y; };
+			if (fZ == cZ) { cZ += (fZ < 0) ? -gridCellSize.z : gridCellSize.z; };
 
 			//use algbra to calculate T when these planes are hit; similar to above example -- looking at single components
 			// pnt = s + t * d;			t = (pnt - s)/d
@@ -1039,6 +1046,16 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 				if (previousT <= endT)
 				{
 					glm::ivec3 cellLoc = convertPntToCellLoc(intersectPoint);
+					if (outCells.size() > 0)
+					{
+						if (outCells.back() == cellLoc)
+						{
+#if SH_THROW_ERRORS
+							std::cerr << "Logic flaw : line trace generated same cell loc as previous iteration\n";
+#endif //SH_THROW_ERRORS
+							return;
+						}
+					}
 					outCells.push_back(cellLoc);
 				}
 			}
@@ -1046,7 +1063,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 			{
 #if SH_THROW_ERRORS
 				//throw std::logic_error("Logic flaw: there was no intersect with cube during line trace -- this should never happen since cubes should surround");
-				std::cerr << "Logic flaw : there was no intersect with cube during line trace -- this should never happen since cubes should surround" << std::endl;
+				std::cerr << "Logic flaw : there was no intersect with cube during line trace -- this should never happen since cubes should surround\n";
 #endif //SH_THROW_ERRORS
 				break;
 			}

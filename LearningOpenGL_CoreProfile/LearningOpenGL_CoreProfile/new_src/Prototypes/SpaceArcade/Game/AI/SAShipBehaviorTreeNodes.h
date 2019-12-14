@@ -4,6 +4,7 @@
 #include "../SAShip.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/AdvancedPtrs.h"
+#include <assimp/Compiler/pstdint.h>
 
 
 
@@ -257,9 +258,16 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		{
 		public:
 			Service_OpportunisiticShots(const std::string& name, float tickSecs, bool bLoop,
-				const std::string& brainKey, const std::string& targetKey, const std::string& secondaryTargetsKey, const sp<NodeBase>& child)
+				const std::string& brainKey,
+				const std::string& targetKey,
+				const std::string& secondaryTargetsKey,
+				const std::string& stateKey,
+				const sp<NodeBase>& child)
 				: Service(name, tickSecs, bLoop, child),
-				brainKey(brainKey), targetKey(targetKey), secondaryTargetsKey(secondaryTargetsKey)
+				brainKey(brainKey),
+				targetKey(targetKey),
+				secondaryTargetsKey(secondaryTargetsKey),
+				stateKey(stateKey)
 			{
 			}
 
@@ -268,12 +276,11 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			virtual void stopService() override;
 			virtual void serviceTick() override;
 			virtual void handleNodeAborted() override {}
-
-
 			virtual void postConstruct() override;
 
 		private:
 			void handleTargetModified(const std::string& key, const GameEntity* value);
+			void handleStateModified(const std::string& key, const GameEntity* value);
 			void handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue);
 
 			bool canShoot() const;
@@ -284,9 +291,10 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			float lastShotTimestamp = 0.f;
 
 		private: //node properties
-			std::string brainKey;
-			std::string targetKey;
-			std::string secondaryTargetsKey;
+			const std::string brainKey;
+			const std::string targetKey;
+			const std::string secondaryTargetsKey;
+			const std::string stateKey;
 			float fireRadius_cosTheta = glm::cos(10 * glm::pi<float>()/180);
 			float shootRandomOffsetStrength = 1.0f;
 			float shootCooldown = 1.1f;
@@ -295,6 +303,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			const ShipAIBrain* owningBrain;
 			sp<const PrimitiveWrapper<std::vector<sp<TargetType>>>> secondaryTargets;
 			sp<const TargetType> primaryTarget = nullptr; //#todo #releasing_ptr
+			sp<const PrimitiveWrapper<MentalState_Fighter>> stateRef = nullptr; //#todo #releasing_ptr
 		};
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -519,6 +528,224 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 				bool bFirstTick = true;
 			}spin;
 
+		};
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// DogfightNode
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		enum class TargetDirection : uint8_t { FAILURE=0, INFRONT=1, BEHIND=1<<1, FACING=1<<2, OPPOSING=1<<3};
+
+		struct ComboStepData
+		{
+			uint8_t arrangements_bitvector = 0;
+			glm::vec4 optionalFloats = glm::vec4(0.f);
+		};
+
+		struct ComboStepBase
+		{
+		public:
+			ComboStepBase(){}
+
+		public:
+			void updateTimeAlive(float dt_sec, TargetDirection arrangement);
+			bool isInArrangement(TargetDirection arrangement) const;
+
+			void setComboData(const ComboStepData& inComboData);
+			virtual bool inGracePeriod() const;
+			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip) {}
+
+		protected:
+			ComboStepData data;
+			float wrongPhaseTimeout = 0.1f;
+			std::optional<float> inPhaseTimeout;
+			struct BasePOD
+			{
+				float totalActiveTime = 0.f;
+				float timeInWrongPhase = 0.f;
+				bool bForceStepEnd = false;
+			} basePOD;
+		};
+
+		////////////////////////////////////////////////////////
+		// sharp turn
+		////////////////////////////////////////////////////////
+		class SharpTurnStep : public ComboStepBase
+		{
+		public:
+			SharpTurnStep() : ComboStepBase(){}
+			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+		};
+
+		////////////////////////////////////////////////////////
+		// slow when facing
+		////////////////////////////////////////////////////////
+		class SlowWhenFacingStep : public ComboStepBase
+		{
+		public:
+			SlowWhenFacingStep() : ComboStepBase() {}
+			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+
+		private:
+			float slowdownDist2 = 20 * 20;
+		};
+
+		////////////////////////////////////////////////////////
+		// Faceoff collision avoidance
+		////////////////////////////////////////////////////////
+		class FaceoffCollisionAvoidanceStep : public ComboStepBase
+		{
+		public:
+			FaceoffCollisionAvoidanceStep() : ComboStepBase() {}
+			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+
+		private:
+			float startAvoidDist2 = 20 * 20;
+		};
+
+		////////////////////////////////////////////////////////
+		// Faceoff boost after avoidance
+		////////////////////////////////////////////////////////
+		class BoostAwayStep : public ComboStepBase
+		{
+		public:
+			BoostAwayStep() : ComboStepBase(){}
+			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+
+		private:
+			float startAvoidDist2 = 20 * 20;
+		};
+		
+		////////////////////////////////////////////////////////
+		// follow and attack
+		////////////////////////////////////////////////////////
+		class FollowAndAttackStep : public ComboStepBase
+		{
+		public:
+			FollowAndAttackStep() : ComboStepBase() { }
+			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+		};
+
+
+		/**
+			Processes combo steps. Combo steps can be used to define a series of actions given an arrangment of two fighting ships.
+
+			notes about efficiency:
+				Defining this with a normal behavior tree node structure is very slow because of all the tree node changes per tick. Thus this is all done internally to the ticking DogfightNode (ie the outer of this class)
+				My optimizations make this a little strange to read. please see below.
+
+				For efficiency, these steps are shared per instance (see getSharedStepObj). This avoid new/mallocs. But means that we
+				must pass data to the step object when it gets activated. The same step may appear in a combo list; eg [stepA, stepB, stepA].
+				passing [StepA, StepA] is an error because we cannot set up the nextStep data and currentStep data because they steps are actually one shared object.
+			
+				ComboStepData is the data each step has access to. To override values in ComboStepBase, one can populate the optionalFloats vector
+				and override the value in its tick function.
+		 */
+		class DogFightComboProccessor
+		{
+		public:
+			DogFightComboProccessor();
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Current combo list
+			/////////////////////////////////////////////////////////////////////////////////////
+		public:
+			template<typename Step>
+			void addStep(const ComboStepData& data)
+			{
+				static_assert(std::is_base_of<ComboStepBase, Step>::value);
+				activeSteps.push_back(getSharedStepObj<Step>());
+				stepData.push_back(data);
+
+				//if a second step is added, we need to set up its data too so we can detect if we should transition.
+				if (activeSteps.size() == 1 || activeSteps.size() == 2) { advanceToState(0); }
+			}
+			void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+			void resetComboList();
+			bool hasActiveCombo() { return activeSteps.size() > 0; }
+		private:
+			void advanceToState(size_t idx);
+		private:
+			size_t activeStepIdx = 0;
+			std::vector<ComboStepBase*> activeSteps;
+			std::vector<ComboStepData> stepData;
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Shared Step Storage
+			/////////////////////////////////////////////////////////////////////////////////////
+		private:
+			template<typename STEP>
+			STEP* getSharedStepObj()
+			{
+				static size_t typedStepIdx = currentGeneratedStepIdx++;	//a different index for every type requested from this function
+				if (typedStorage.size() <= typedStepIdx) { typedStorage.resize(typedStepIdx + 1, nullptr); }
+				if (typedStorage[typedStepIdx] == nullptr) { typedStorage[typedStepIdx] = new_sp<STEP>(); }
+				return static_cast<STEP*>(typedStorage[typedStepIdx].get());
+			}
+			static size_t currentGeneratedStepIdx;			
+			std::vector<sp<ComboStepBase>> typedStorage;	
+		};
+
+		////////////////////////////////////////////////////////
+		// Dogfight node
+		////////////////////////////////////////////////////////
+		class Task_DogfightNode : public Task_TickingTaskBase
+		{
+		public:
+			Task_DogfightNode(const std::string& nodeName,
+				const std::string& brain_key,
+				const std::string& target_key,
+				const std::string& secondaryTarget_key
+			): Task_TickingTaskBase(nodeName),
+				brain_key(brain_key),
+				target_key(target_key),
+				secondaryTarget_key(secondaryTarget_key)
+			{	}
+		protected:
+			virtual void notifyTreeEstablished() override;
+			virtual void beginTask() override;
+			virtual void handleNodeAborted() override {}
+			virtual void taskCleanup() override {};
+			virtual bool tick(float dt_sec) override;
+		private:
+			void handleTargetReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue);
+			void updateTargetPointer();
+			void generateDefensiveCombo();
+			void generateFacingCombo();
+			void defaultBehavior(float dt_sec, Ship& myTarget, Ship& myShip);
+		private:
+			TargetDirection calculateShipArangement(Ship& myTarget, Ship& myShip);
+		private:
+			float cur_TimeStamp = 0;
+			sp<RNG> rng;
+		private: 
+			enum class FireState : uint8_t{ NORMAL, BURST };
+			struct FireData
+			{
+				float lastFire_TimeStamp = 0;
+				float burstTimeoutDuration = 1.0f;
+				float lastBurst_TimeStamp = 0.f;
+				uint16_t currentShotInBurst = 0;
+				uint16_t burstShotsNum = 3;
+				FireState state = FireState::BURST;
+
+				static inline float MIN_BURST_TIMEOUT_RANDOMIZATION()	{ return 1.f; }
+				static inline float MAX_BURST_TIMEOUT_RANDOMIZATION()	{ return 2.f; }
+				static inline uint16_t MIN_BURST_SHOT_RANDOMIZATION()	{ return 2; }
+				static inline uint16_t MAX_BURST_SHOT_RANDOMIZATION()	{ return 5; }
+				static inline float MIN_TIME_BETWEEN_NORMAL_SHOTS()		{ return 0.50f; }
+				static inline float MIN_TIME_BETWEEN_BURST_SHOTS()		{ return 0.10f; }
+				void randomizeControllingParameters(RNG& rng);
+			};
+			FireData fireData;
+
+		private: //cached values
+			fwp<Ship> myTarget_Cache = nullptr;
+			fwp<Ship> myShip_Cache = nullptr;
+			DogFightComboProccessor comboProcessor;
+		private: //node properties
+			const std::string brain_key;
+			const std::string target_key;
+			const std::string secondaryTarget_key;
 		};
 
 	}

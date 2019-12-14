@@ -2,10 +2,9 @@
 #include <iostream>
 #include <string>
 
-namespace SA
+namespace
 {
-
-	struct TestEntityBase_fwp : public GameEntity
+	struct TestEntityBase_fwp : public SA::GameEntity
 	{
 		TestEntityBase_fwp(const std::string& name) : name(name) {}
 		std::string name;
@@ -16,7 +15,10 @@ namespace SA
 	{
 		TestFWPChild() : TestEntityBase_fwp("child test") {}
 	};
+}
 
+namespace SA
+{
 	void FastWeakPointerCompileTest()
 	{
 		sp<TestEntityBase_fwp> objA = new_sp<TestEntityBase_fwp>("A");
@@ -45,9 +47,8 @@ namespace SA
 		//test implicit conversions
 		sp<TestFWPChild> childA = new_sp<TestFWPChild>();
 		wp<TestFWPChild> weakChild = childA;
-		wp<TestEntityBase_fwp> weakBase1 = childA;
-		wp<TestEntityBase_fwp> weakBase2 = weakChild;
-
+		fwp<TestEntityBase_fwp> weakBase1 = childA;
+		fwp<TestEntityBase_fwp> weakBase2 = weakChild;
 	}
 
 }

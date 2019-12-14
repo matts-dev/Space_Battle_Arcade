@@ -63,7 +63,10 @@ namespace SA
 
 		/** WARNING: think twice before using this; if you're given a ref/rawptr then the API may be trying to prevent you from holding a reference
 		 * subclasses can deny this request by overriding the virtual method to return nullptr.*/
-		virtual wp<GameEntity> requestReference() { return sp_this(); }
+		wp<GameEntity> requestReference() { return sp_this(); }
+		template<typename T> wp<T> requestTypedReference_Safe() { return std::dynamic_pointer_cast<T>(sp_this()); }
+		template<typename T> wp<T> requestTypedReference_Nonsafe() { return std::static_pointer_cast<T>(sp_this()); }
+
 
 	protected:
 		/* new_sp will call this function after the object has been created, allowing GameEntities 
