@@ -675,6 +675,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\LifetimePointer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\LifetimePointerSyntaxTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1734,6 +1740,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\LifetimePointerSyntaxTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\LifetimePointer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

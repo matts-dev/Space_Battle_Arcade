@@ -5,7 +5,7 @@
 #include "SASystemBase.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 
-#define SA_ENABLE_AUTOMATED_TESTS 0
+#define SA_ENABLE_AUTOMATED_TESTS 1
 
 namespace SA
 {
@@ -35,13 +35,14 @@ namespace SA
 	public:
 		virtual bool isComplete() { return bComplete;}
 		virtual bool passedTest() { return bAllPasing;}
-		virtual bool hasStarted() = 0;
+		virtual bool hasStarted() { return bStarted; }
 		virtual void tick() = 0;
 		virtual void beginTest() = 0;
 
 	protected:
-		bool bComplete;
-		bool bAllPasing;
+		bool bStarted = false;
+		bool bComplete = false;
+		bool bAllPasing = false;
 	};
 
 

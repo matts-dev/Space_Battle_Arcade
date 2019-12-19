@@ -138,6 +138,7 @@
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\LoadedMesh_NM.h" />
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\LifetimePointerSyntaxTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\SABehaviorTreeTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\TimerTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.h" />
@@ -198,6 +199,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ChoiceChoosingHelper.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\IterableHashSet.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\LifetimePointer.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ObjectPools.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
@@ -448,6 +450,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\LifetimePointer.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SATimeManagementSystem.cpp" />

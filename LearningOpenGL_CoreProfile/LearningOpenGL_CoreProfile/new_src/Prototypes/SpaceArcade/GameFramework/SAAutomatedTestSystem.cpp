@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "AutomatedTests/TimerTest.h"
 #include "AutomatedTests/SABehaviorTreeTest.h"
+#include "0.TestsFiles/CompilationTests/LifetimePointerSyntaxTest.h"
 
 
 
@@ -81,6 +82,7 @@ namespace SA
 	{
 		log("AutomatedTestSystem", LogLevel::LOG, "Live Testing Started");
 
+		liveTests.push_back(new_sp<LifetimePtrTest>());
 		liveTests.push_back(new_sp<BehaviorTreeTest>());
 		liveTests.push_back(new_sp<TimerTest>());
 
@@ -94,6 +96,11 @@ namespace SA
 		{
 			log("AutomatedTestSystem", LogLevel::LOG_ERROR, "!!! - Unexpected level change while testing --- this will break any timer based tests - !!!");
 		}
+	}
+
+	void LiveTest::beginTest()
+	{
+		bStarted = true;
 	}
 
 }
