@@ -1,6 +1,7 @@
 #pragma once
 #include "../../GameFramework/SAAIBrainBase.h"
 #include "../../GameFramework/SATimeManagementSystem.h"
+#include "../../Tools/DataStructures/LifetimePointer.h"
 
 namespace SA
 {
@@ -34,8 +35,7 @@ namespace SA
 		wp<Ship> getWeakControlledTarget() { return controlledTarget; }
 		
 	protected:
-		//#TODO use a softPtr rather than weak pointer, so that not "locking" every tick. but those don't exist yet
-		wp<Ship> controlledTarget;
+		lp<Ship> controlledTarget;
 		wp<LevelBase> wpLevel;
 	};
 

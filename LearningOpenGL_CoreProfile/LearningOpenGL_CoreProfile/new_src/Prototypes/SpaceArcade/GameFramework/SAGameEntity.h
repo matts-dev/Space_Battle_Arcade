@@ -47,7 +47,7 @@ namespace SA
 	template<typename... Args>
 	class MultiDelegate;
 
-	/* Root level object that most classe should derive from to take advantage of the engine convenience structures
+	/* Root level object that most class should derive from to take advantage of the engine convenience structures
 		eg: new_sp post construction callbacks, multidelegate subscription, etc.
 	*/
 	class GameEntity : public std::enable_shared_from_this<GameEntity>
@@ -58,7 +58,7 @@ namespace SA
 		virtual ~GameEntity(){}
 
 	public:
-		const sp< MultiDelegate<const sp<GameEntity>&> > onDestroyedEvent;
+		const sp< MultiDelegate<const sp<GameEntity>&> > onDestroyedEvent;//pointer because this will create circular include if we define type here; MultiDelegates operator on game entities
 		bool isPendingDestroy() const { return bPendingDestroy; }
 
 		/** WARNING: think twice before using this; if you're given a ref/rawptr then the API may be trying to prevent you from holding a reference

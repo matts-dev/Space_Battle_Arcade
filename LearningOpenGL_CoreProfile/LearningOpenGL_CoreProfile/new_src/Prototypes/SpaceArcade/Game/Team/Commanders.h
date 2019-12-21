@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../../GameFramework/Components/SAComponentEntity.h"
-#include "../../GameFramework/Components/GameplayComponents.h"
 #include <vector>
 #include <stack>
+
+#include "../../GameFramework/Components/SAComponentEntity.h"
+#include "../../GameFramework/Components/GameplayComponents.h"
 #include "../../Tools/DataStructures/SATransform.h"
+#include "../../Tools/DataStructures/LifetimePointer.h"
 
 namespace SA
 {
@@ -30,7 +32,7 @@ namespace SA
 		size_t cachedTeamId;
 
 		//indices represent team number
-		std::vector<std::stack<wp<WorldEntity>>> pendingTargetsByTeam;
+		std::vector<std::stack<lp<WorldEntity>>> pendingTargetsByTeam;
 
 	};
 

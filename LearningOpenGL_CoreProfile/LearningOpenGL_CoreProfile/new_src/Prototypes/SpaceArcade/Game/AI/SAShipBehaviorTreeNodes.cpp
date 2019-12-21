@@ -293,7 +293,7 @@ namespace SA
 
 		void Service_TargetFinder::handleTargetDestroyed(const sp<GameEntity>& entity)
 		{
-			currentTarget = nullptr;
+			setTarget(nullptr);
 		}
 
 		void Service_TargetFinder::resetSearchData()
@@ -424,7 +424,6 @@ namespace SA
 
 			if (currentTarget)
 			{
-				//#TODO make this a releasing pointer when that gets implemented
 				currentTarget->onDestroyedEvent->removeWeak(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
 			}
 	
@@ -433,7 +432,10 @@ namespace SA
 			//make sure write to memory happens AFTER updating current target. This is to prevent the handler for target modified from updating current target twice.
 			getMemory().replaceValue(targetKey, currentTarget);
 
-			target->onDestroyedEvent->addWeakObj(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
+			if (target)
+			{
+				target->onDestroyedEvent->addWeakObj(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +448,7 @@ namespace SA
 			owningBrain = memory.getReadValueAs<ShipAIBrain>(brainKey);
 
 			primaryTarget = memory.getMemoryReference<TargetType>(targetKey);
-			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<std::vector<sp<TargetType>>>>(secondaryTargetsKey);
+			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<SecondaryTargetContainer>>(secondaryTargetsKey);
 			handleStateModified("directly calling handler to init state", nullptr);
 			
 			memory.getModifiedDelegate(targetKey).addStrongObj(sp_this(), &Service_OpportunisiticShots::handleTargetModified);
@@ -487,7 +489,7 @@ namespace SA
 		void Service_OpportunisiticShots::handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
 		{
 			Memory& memory = getMemory();
-			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<std::vector<sp<TargetType>>>>(secondaryTargetsKey);
+			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<SecondaryTargetContainer>>(secondaryTargetsKey);
 		}
 
 

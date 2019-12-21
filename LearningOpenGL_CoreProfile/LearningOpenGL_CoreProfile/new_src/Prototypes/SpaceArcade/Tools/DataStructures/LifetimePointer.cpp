@@ -10,7 +10,7 @@ namespace SA
 		return *theDeleter;
 	}
 
-	void FrameDeferredEntityDeleter::deleteLater(const sp<GameEntity>& entity)
+	void FrameDeferredEntityDeleter::deleteLater(const sp<const GameEntity>& entity)
 	{
 		pendingDelete.push_back(entity);
 	}

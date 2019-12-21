@@ -16,6 +16,8 @@
 #include "Components/ShipEnergyComponent.h"
 #include "../GameFramework/SAGameBase.h"
 #include "../GameFramework/SARandomNumberGenerationSystem.h"
+#include "../Tools/color_utils.h"
+#include "../GameFramework/SADebugRenderSystem.h"
 
 namespace
 {
@@ -68,6 +70,16 @@ namespace SA
 			teamComp->setTeam(spawnData.team);
 			updateTeamDataCache();
 		}
+	}
+
+	Ship::~Ship()
+	{
+		//#TODO create LP bindings for delegates. Have ships ticked via LP ticker. Draw debug box for LP ticker to quickly spot meory leaks when they happen. #memory_leaks
+		//adding for debug 
+#define LOG_SHIP_DTOR 1
+#ifdef LOG_SHIP_DTOR 
+		log("logShip", LogLevel::LOG, "ship destroyed");
+#endif 
 	}
 
 	const sp<const ModelCollisionInfo>& Ship::getCollisionInfo() const
@@ -176,6 +188,12 @@ namespace SA
 	{
 		shader.setUniform3f("objectTint", cachedTeamData.teamTint);
 		RenderModelEntity::draw(shader);
+	}
+
+	void Ship::onDestroyed()
+	{
+		RenderModelEntity::onDestroyed();
+		collisionHandle = nullptr; //release spatial hashing information
 	}
 
 	void Ship::fireProjectile(BrainKey privateKey)
@@ -360,6 +378,8 @@ namespace SA
 	
 	void Ship::tick(float dt_sec)
 	{
+		using namespace glm;
+
 		energyComp->notify_tick(dt_sec);
 
 		////////////////////////////////////////////////////////
@@ -395,7 +415,8 @@ namespace SA
 		collisionData->updateToNewWorldTransform(movedXform_m);
 
 		//update the spatial hash
-		if (LevelBase* world = getWorld())
+		LevelBase* world = getWorld();
+		if (world && collisionHandle)
 		{
 			SH::SpatialHashGrid<WorldEntity>& worldGrid = world->getWorldGrid();
 			//worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));
@@ -426,6 +447,13 @@ namespace SA
 			//offset for non-centered scaling issues
 			activeShield_sp->xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f))); //#optimize rotating dir is expensive; perhaps cache with dirty flag?
 		}
+#define EXTRA_SHIP_DEBUG_INFO 0
+#if EXTRA_SHIP_DEBUG_INFO
+		{
+			DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+			debug.renderCube(movedXform_m, color::brightGreen());
+		}
+#endif
 	} 
 
 	//const std::array<glm::vec4, 8> Ship::getWorldOBB(const glm::mat4 xform) const

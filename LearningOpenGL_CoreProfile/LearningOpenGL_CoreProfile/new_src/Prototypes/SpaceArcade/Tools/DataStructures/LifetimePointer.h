@@ -19,13 +19,13 @@
 		static FrameDeferredEntityDeleter& get();
 		/** Public for new_sp syntax. Recommended you use the static getter rather than creating your own instances of this */
 		FrameDeferredEntityDeleter() = default;
-		void deleteLater(const sp<GameEntity>& entity);
+		void deleteLater(const sp<const GameEntity>& entity);
 	private:
 		virtual bool tick(float dt_sec);
 	protected:
 		virtual void postConstruct() override;
 	private:
-		std::vector<sp<GameEntity>> pendingDelete;
+		std::vector<sp<const GameEntity>> pendingDelete;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +85,8 @@
 
 		LifetimePointer(LifetimePointer&& move)
 		{
+			//#TODO implement moves where the event forwarder is shared -- this will be a perf win for containers of LP;
+			//#TODO move will need to be unit tested which is why I cannot do it right now; short on time before heading in for holidays.
 			//create a fresh new event forwarder so we can just references to owner, rather than pointers.
 			if (*this != move)
 			{
@@ -170,8 +172,15 @@
 		struct EventForwarder : public GameEntity
 		{
 			EventForwarder(LifetimePointer<T>& owner) : owningLP(owner) {}
-			void bind(GameEntity& entity) { entity.onDestroyedEvent->addStrongObj(sp_this(), &EventForwarder::handleDestroyed); }
-			void release(GameEntity& entity) { entity.onDestroyedEvent->removeStrong(sp_this(), &EventForwarder::handleDestroyed); }
+			void bind(const GameEntity& entity) { 
+				//the destroyed event is created as non-const within GameEntity constructor. So this const-cast should always be safe
+				//I'd prefer to keep subscriptions forbidden on intentionally const delegates, so doing the cast here.
+				const_cast<GameEntity&>(entity).onDestroyedEvent->addStrongObj(sp_this(), &EventForwarder::handleDestroyed); 
+			}
+			void release(const GameEntity& entity) {
+				//see note about const cast in bind
+				const_cast<GameEntity&>(entity).onDestroyedEvent->removeStrong(sp_this(), &EventForwarder::handleDestroyed);
+			}
 			void handleDestroyed(const sp<GameEntity>&) { owningLP.notifyDestroyed(); }
 			LifetimePointer<T>& owningLP;
 		};

@@ -23,18 +23,18 @@ namespace SA
 	{
 		if (pendingTargetsByTeam.size() >= team + 1)
 		{
-			std::stack<wp<WorldEntity>>& targetStack = pendingTargetsByTeam[team];
+			std::stack<lp<WorldEntity>>& targetStack = pendingTargetsByTeam[team];
 			
-			wp<WorldEntity> target;
-			while (target.expired() && targetStack.size() > 0)
+			lp<WorldEntity> target;
+			while (!target && targetStack.size() > 0)
 			{
 				target = targetStack.top();
 				targetStack.pop();
 			}
 
-			if (!target.expired())
+			if (target)
 			{
-				return target.lock();
+				return target.toSP();
 			}
 		}
 
@@ -88,7 +88,7 @@ namespace SA
 					pendingTargetsByTeam.resize(spawnedTeam + 1);
 				}
 
-				std::stack<wp<WorldEntity>>& targets = pendingTargetsByTeam[spawnedTeam];
+				std::stack<lp<WorldEntity>>& targets = pendingTargetsByTeam[spawnedTeam];
 				targets.push(spawned);
 			}
 		}

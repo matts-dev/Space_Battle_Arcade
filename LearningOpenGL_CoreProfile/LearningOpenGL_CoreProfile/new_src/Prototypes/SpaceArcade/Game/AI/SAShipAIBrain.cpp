@@ -51,14 +51,7 @@ namespace SA
 
 	const SA::Ship* ShipAIBrain::getControlledTarget() const
 	{
-		if (!controlledTarget.expired())
-		{
-			if (sp<Ship> myTarget = controlledTarget.lock())
-			{
-				return myTarget.get();
-			}
-		}
-		return nullptr;
+		return controlledTarget.get();
 	}
 
 	////////////////////////////////////////////////////////
@@ -127,10 +120,9 @@ namespace SA
 
 	void ContinuousFireBrain::handleTimeToFire()
 	{
-		if (!controlledTarget.expired())
+		if (controlledTarget)
 		{
-			sp<Ship> myShip = controlledTarget.lock();
-			myShip->fireProjectile(getBrainKey());
+			controlledTarget->fireProjectile(getBrainKey());
 		}
 	}
 
@@ -164,14 +156,13 @@ namespace SA
 	{
 		if (ShipAIBrain::onAwaken())
 		{
-			if (!controlledTarget.expired())
+			if (controlledTarget)
 			{
-				sp<Ship> myShip = controlledTarget.lock();
-				const Transform& transform = myShip->getTransform();
+				const Transform& transform = controlledTarget->getTransform();
 
-				glm::vec3 rotDir = glm::vec3(myShip->getForwardDir());
-				myShip->setMaxSpeed(speed);
-				myShip->setVelocityDir(rotDir);
+				glm::vec3 rotDir = glm::vec3(controlledTarget->getForwardDir());
+				controlledTarget->setMaxSpeed(speed);
+				controlledTarget->setVelocityDir(rotDir);
 			}
 
 			return true;
@@ -269,7 +260,7 @@ namespace SA
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
 					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
-					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) } //#TODO perhaps should be releasing pointers instead of shared ptr when those are a thing
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) }
 				}
 			);
 	}
@@ -349,7 +340,7 @@ namespace SA
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
 					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
-					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) },
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) },
 
 					//these use shared pointers so they can be cached to bypass update event notifications for efficiency, perhaps this should be a supported feature
 					{ positionArrangementKey,	new_sp<PrimitiveWrapper<sp<TargetIs>>>(new_sp<TargetIs>(TargetIs::BEHIND)) },
@@ -402,7 +393,7 @@ namespace SA
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
 					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
-					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) },
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) },
 
 					//these use shared pointers so they can be cached to bypass update event notifications for efficiency, perhaps this should be a supported feature
 					{ positionArrangementKey,	new_sp<PrimitiveWrapper<sp<TargetIs>>>(new_sp<TargetIs>(TargetIs::BEHIND)) },
@@ -478,7 +469,7 @@ namespace SA
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
 					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
-					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<std::vector<sp<WorldEntity>>>>(std::vector<sp<WorldEntity>>{}) } //#TODO perhaps should be releasing pointers instead of shared ptr when those are a thing
+					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) } 
 				}
 			);
 	}

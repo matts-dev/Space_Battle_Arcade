@@ -4,6 +4,7 @@
 #include "../../Tools/DataStructures/AdvancedPtrs.h"
 #include "../../GameFramework/SABehaviorTree.h"
 #include "../../GameFramework/SAWorldEntity.h"
+#include "SAShipBehaviorTreeNodes.h"
 
 namespace SA
 {
@@ -12,7 +13,6 @@ namespace SA
 
 	namespace BehaviorTree
 	{
-		using TargetType = WorldEntity;
 		class BehaviorTreeBrain;
 
 		enum class TargetIs : uint8_t

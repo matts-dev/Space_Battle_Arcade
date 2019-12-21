@@ -46,6 +46,7 @@ namespace SA
 
 		/*preferred method of construction*/
 		Ship(const SpawnData& spawnData);
+		~Ship();
 
 	public: 
 
@@ -53,10 +54,8 @@ namespace SA
 		// Interface and Virtuals
 		////////////////////////////////////////////////////////
 		virtual void draw(Shader& shader) override;
+		void onDestroyed() override;
 
-		////////////////////////////////////////////////////////
-		//AI
-		////////////////////////////////////////////////////////
 	public:
 		template <typename BrainType>
 		void spawnNewBrain()

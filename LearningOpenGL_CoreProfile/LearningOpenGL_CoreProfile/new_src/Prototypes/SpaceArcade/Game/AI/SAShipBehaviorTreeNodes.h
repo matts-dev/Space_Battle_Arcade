@@ -5,6 +5,7 @@
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/AdvancedPtrs.h"
 #include <assimp/Compiler/pstdint.h>
+#include "../../Tools/DataStructures/LifetimePointer.h"
 
 
 
@@ -25,6 +26,7 @@ namespace SA
 		constexpr bool ENABLE_DEBUG_LINES = true;
 
 		using TargetType = WorldEntity;
+		using SecondaryTargetContainer = std::vector<lp<TargetType>>;
 
 		//constexpr bool SHIP_TREE_DEBUG_LOG = true;
 		void LogShipNodeDebugMessage(const Tree& tree, const NodeBase& node, const std::string& msg);
@@ -234,7 +236,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			std::string brainKey;
 			std::string targetKey;
 			const ShipAIBrain* owningBrain;
-			sp<WorldEntity> currentTarget;
+			sp<TargetType> currentTarget;
 			float preferredTargetMaxDistance = 50.f;
 			SearchMethod currentSearchMethod;
 
@@ -301,9 +303,9 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 
 		private: //node cached values
 			const ShipAIBrain* owningBrain;
-			sp<const PrimitiveWrapper<std::vector<sp<TargetType>>>> secondaryTargets;
-			sp<const TargetType> primaryTarget = nullptr; //#todo #releasing_ptr
-			sp<const PrimitiveWrapper<MentalState_Fighter>> stateRef = nullptr; //#todo #releasing_ptr
+			sp<const PrimitiveWrapper<SecondaryTargetContainer>> secondaryTargets; 
+			lp<const TargetType> primaryTarget = nullptr;
+			lp<const PrimitiveWrapper<MentalState_Fighter>> stateRef = nullptr;
 		};
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -703,8 +705,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		protected:
 			virtual void notifyTreeEstablished() override;
 			virtual void beginTask() override;
-			virtual void handleNodeAborted() override {}
-			virtual void taskCleanup() override {};
+			virtual void taskCleanup() override { Task_TickingTaskBase::taskCleanup(); };
 			virtual bool tick(float dt_sec) override;
 		private:
 			void handleTargetReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue);
