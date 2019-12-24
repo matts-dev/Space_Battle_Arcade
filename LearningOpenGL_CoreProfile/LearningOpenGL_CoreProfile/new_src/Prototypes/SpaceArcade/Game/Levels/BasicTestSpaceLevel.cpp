@@ -131,8 +131,8 @@ namespace SA
 		//numFighterShipsToSpawn = 250;
 		//numFighterShipsToSpawn = 20;
 		//numFighterShipsToSpawn = 10;
-		//numFighterShipsToSpawn = 4;
-		numFighterShipsToSpawn = 2;
+		numFighterShipsToSpawn = 4;
+		//numFighterShipsToSpawn = 2;
 #endif//NDEBUG 
 
 		uint32_t numTeams = 2;

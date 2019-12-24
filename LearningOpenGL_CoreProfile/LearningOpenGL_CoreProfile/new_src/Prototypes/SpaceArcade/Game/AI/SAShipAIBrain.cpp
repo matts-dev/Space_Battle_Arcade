@@ -421,6 +421,11 @@ namespace SA
 		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
 		const char* const dogFightLoc_Key = "dogFightLocKey";
 
+		const char* const positionArrangementKey = "posPhaseKey";
+		const char* const comboListKey = "comboList";
+		const char* const dogfightInputHandler = "dfShipDriver";
+		const char* const inputRequestsKey = "inputRequests";
+
 
 		using namespace BehaviorTree;
 		behaviorTree =
@@ -448,7 +453,7 @@ namespace SA
 								})
 							),
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
-								new_sp<Task_Ship_FollowTarget_Indefinitely>("task_followTarget", brainKey, targetKey, activeAttackers_MemoryKey)
+								new_sp<Task_DogfightNode>("Task_Dogfight", brainKey, targetKey, secondaryTargetsKey)
 							),
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_wander_state", stateKey, OP::EQUAL, MentalState_Fighter::WANDER, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{

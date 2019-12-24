@@ -26,13 +26,14 @@ namespace SA
 
 	GameEntity::GameEntity() 
 		: onDestroyedEvent(new_sp<MultiDelegate<const sp<GameEntity>&>>())
+		, onLifetimeOverEvent(new_sp<MultiDelegate<>>())
 	{
-
 	}
 
 	void GameEntity::destroy()
 	{
 		onDestroyed();
+		bPendingDestroy = true;
 
 		//broadcast of destroyed needs to be delayed to next tick so that sp doesn't call dtor within during member function call
 		// eg:
@@ -54,6 +55,9 @@ namespace SA
 		//#TODO with static ticker, there's not need for cleanup key -- so it can be removed
 		for (sp<GameEntity>& entity : staticImplementation.pendingDestroy)
 		{
+			//lifetime over event happens separately so that no race condition will exist on the onDestroyedEvent. 
+			//By separating events, all life time pointers will be cleared before the destroyed events happen.
+			entity->onLifetimeOverEvent->broadcast();
 			entity->onDestroyedEvent->broadcast(entity);
 		}
 

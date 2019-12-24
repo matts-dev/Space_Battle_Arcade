@@ -5,7 +5,7 @@
 #include "SASystemBase.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 
-#define SA_ENABLE_AUTOMATED_TESTS 0
+#define SA_ENABLE_AUTOMATED_TESTS 1
 
 namespace SA
 {

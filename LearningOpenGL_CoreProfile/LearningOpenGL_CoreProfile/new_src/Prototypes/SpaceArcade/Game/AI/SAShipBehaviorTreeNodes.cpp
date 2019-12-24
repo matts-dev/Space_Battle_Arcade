@@ -259,9 +259,16 @@ namespace SA
 
 		void Service_TargetFinder::stopService()
 		{
-			owningBrain = nullptr;
-			currentTarget.reset();
+			//when stopping service, remove delegates first so we don't hit target changed events when clearing target
 			getMemory().getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_TargetFinder::handleTargetModified);
+
+			//#TODO it is a little backwards that we give the command back a target we the ship is destroyed
+			//ideally the commander would pass out handles, and then on destroy that handle would give
+			//the target back to the commander if it is still around. This is similar to how the spatial hashing 
+			//handles work, but slightly different. Spatial hashing handles release some internal state when destroyed
+			//anyways, there is very little gain in engineering that right now, so just having this clean its own resources up.
+			setTarget(nullptr);
+			owningBrain = nullptr;
 		}
 
 		void Service_TargetFinder::handleTargetModified(const std::string& key, const GameEntity* value)
@@ -330,7 +337,7 @@ namespace SA
 							if (sp<WorldEntity> target = teamCommander->getTarget())
 							{
 								bestSoFar = target;
-								setTarget(target);
+								setTarget(target, true);
 							}
 							else
 							{
@@ -415,19 +422,33 @@ namespace SA
 			}
 		}
 
-		void Service_TargetFinder::setTarget(const sp<WorldEntity>& target)
+		void Service_TargetFinder::setTarget(const sp<WorldEntity>& target, bool bCommanderAssignment /*= false*/)
 		{
 			if (target == currentTarget)
 			{
 				return;
 			}
 
-			if (currentTarget)
+			if (currentTarget && !currentTarget->isPendingDestroy())
 			{
 				currentTarget->onDestroyedEvent->removeWeak(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
+
+				if (bCommanderProvidedTarget)
+				{
+					//return this target to the list of targets the commander wants destroyed
+					static LevelSystem& LevelSys = GameBase::get().getLevelSystem();
+					const sp<LevelBase>& level = LevelSys.getCurrentLevel();
+					SpaceLevelBase* spaceLevel = level ? dynamic_cast<SpaceLevelBase*>(level.get()) : nullptr;
+					TeamCommander* teamCommander = spaceLevel ? spaceLevel->getTeamCommander(cachedTeamIdx) : nullptr;
+					if (teamCommander)
+					{
+						teamCommander->queueTarget(currentTarget);
+					}
+				}
 			}
-	
+
 			currentTarget = target;
+			bCommanderProvidedTarget = bCommanderAssignment;
 
 			//make sure write to memory happens AFTER updating current target. This is to prevent the handler for target modified from updating current target twice.
 			getMemory().replaceValue(targetKey, currentTarget);

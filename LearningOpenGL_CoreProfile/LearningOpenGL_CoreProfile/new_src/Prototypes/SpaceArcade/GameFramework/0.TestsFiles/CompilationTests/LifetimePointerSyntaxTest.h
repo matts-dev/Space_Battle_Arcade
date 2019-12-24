@@ -1,4 +1,5 @@
 #pragma once
+#include <stack>
 #include "../../SAAutomatedTestSystem.h"
 #include "../../../Tools/DataStructures/LifetimePointer.h"
 
@@ -23,6 +24,8 @@ namespace SA
 		wp<GameEntity> destroy_wp;
 		lp<GameEntity> destroy_lp;
 		bool bIsNonNullAtStart_destroyTest = false;
+
+		std::stack<lp<GameEntity>> lifetimePointerStack;
 
 		wp<GameEntity> cleanup_wp;
 	private:

@@ -202,7 +202,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			enum class SearchMethod
 			{
 				COMMANDER_ASSIGNED,
-				NEARBY_HASH_CELLS,
+				NEARBY_HASH_CELLS, //#TODO remove these if they don't get used
 				LINEAR_SEARCH,
 			};
 
@@ -226,7 +226,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			void resetSearchData();
 			void tickFindNewTarget_slow();
 
-			void setTarget(const sp<WorldEntity>& target);
+			void setTarget(const sp<WorldEntity>& target, bool bCommanderAssignment = false);
 
 		private: //search data
 			size_t cachedTeamIdx;
@@ -238,6 +238,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			const ShipAIBrain* owningBrain;
 			sp<TargetType> currentTarget;
 			float preferredTargetMaxDistance = 50.f;
+			bool bCommanderProvidedTarget = false;
 			SearchMethod currentSearchMethod;
 
 		private: //helper data for navigating 3d world to find target over successful ticks

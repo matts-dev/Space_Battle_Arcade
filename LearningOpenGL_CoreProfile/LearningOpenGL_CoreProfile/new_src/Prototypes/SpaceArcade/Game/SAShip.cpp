@@ -76,8 +76,8 @@ namespace SA
 	{
 		//#TODO create LP bindings for delegates. Have ships ticked via LP ticker. Draw debug box for LP ticker to quickly spot meory leaks when they happen. #memory_leaks
 		//adding for debug 
-#define LOG_SHIP_DTOR 1
-#ifdef LOG_SHIP_DTOR 
+#define LOG_SHIP_DTOR 0
+#if LOG_SHIP_DTOR 
 		log("logShip", LogLevel::LOG, "ship destroyed");
 #endif 
 	}

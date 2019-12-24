@@ -175,13 +175,13 @@
 			void bind(const GameEntity& entity) { 
 				//the destroyed event is created as non-const within GameEntity constructor. So this const-cast should always be safe
 				//I'd prefer to keep subscriptions forbidden on intentionally const delegates, so doing the cast here.
-				const_cast<GameEntity&>(entity).onDestroyedEvent->addStrongObj(sp_this(), &EventForwarder::handleDestroyed); 
+				const_cast<GameEntity&>(entity).onLifetimeOverEvent->addStrongObj(sp_this(), &EventForwarder::handleLifetimeOver); 
 			}
 			void release(const GameEntity& entity) {
 				//see note about const cast in bind
-				const_cast<GameEntity&>(entity).onDestroyedEvent->removeStrong(sp_this(), &EventForwarder::handleDestroyed);
+				const_cast<GameEntity&>(entity).onLifetimeOverEvent->removeStrong(sp_this(), &EventForwarder::handleLifetimeOver);
 			}
-			void handleDestroyed(const sp<GameEntity>&) { owningLP.notifyDestroyed(); }
+			void handleLifetimeOver() { owningLP.notifyDestroyed(); }
 			LifetimePointer<T>& owningLP;
 		};
 
@@ -189,8 +189,13 @@
 		void notifyDestroyed()
 		{
 			eventForwarder->release(*sharedPtr);
+			if (sharedPtr.use_count() == 1)
+			{
+				FrameDeferredEntityDeleter::get().deleteLater(sharedPtr);
+			}
 			sharedPtr = nullptr;
 		}
+
 		template <typename Y>
 		void bindToPtr(const sp<Y>& newPtr)
 		{
@@ -205,10 +210,14 @@
 				eventForwarder->release(*sharedPtr);
 			}
 
-			sharedPtr = newPtr;
-			if (newPtr)
+			if (newPtr && !newPtr->isPendingDestroy())
 			{
+				sharedPtr = newPtr;
 				eventForwarder->bind(*sharedPtr);
+			}
+			else
+			{
+				sharedPtr = nullptr;
 			}
 		}
 	private:

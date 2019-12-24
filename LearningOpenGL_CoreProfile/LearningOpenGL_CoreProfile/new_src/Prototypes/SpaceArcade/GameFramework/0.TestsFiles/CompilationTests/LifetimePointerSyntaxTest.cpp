@@ -149,9 +149,28 @@ namespace SA
 		cleanup_wp = cleanup_lp.toSP();
 		cleanup_lp->requestDestroy();
 
+		//test that lp reject pointers that are pending destroy
+		sp<TestChild> toDelete = new_sp<TestChild>();
+		toDelete->requestDestroy();
+		lp<TestChild> shouldBeNull = toDelete;
+		completeTest(!bool(shouldBeNull), "Test lp construct to null on pending delete", "lp did not become null when provided a pending delete pointer");
+
 		//test deferred delete
 		{
 			lp<DeleteOnDtor> deferredDelete = new_sp<DeleteOnDtor>(*this); //when this leaves scope it will try to delete, but the deferred delete system will cause it ot delete on next tick.
+		}
+
+
+		//test container of lifetime pointer updates -- observing container isnt clearing pointer
+		{
+			sp<TestChild> childInStack1 = new_sp<TestChild>();
+			sp<TestChild> childInStack2 = new_sp<TestChild>();
+
+			lifetimePointerStack.push(childInStack1);
+			lifetimePointerStack.push(childInStack2);
+
+			childInStack1->requestDestroy();
+			childInStack2->requestDestroy();
 		}
 	}
 
@@ -191,13 +210,22 @@ namespace SA
 			completeTest(bDeferredDeleteComplete, "deferred delete test", "failed to delete pointer on next tick");
 
 			//test that the destroy event correctly clears out lp
-			bool bNullAfterDestroy = !bool(destroy_lp);
-			completeTest(bNullAfterDestroy && bIsNonNullAtStart_destroyTest, "destroy test", "destroying the object did not null out the lifetime pointer");
-			completeTest(bool(destroy_sp), "destroy test", "the destroyed sp was not valid; something is likely wrong with the test");
-			destroy_sp = nullptr;
-			completeTest(destroy_wp.expired(), "destroy test", "the weak pointer to destroyed object was still valid after all references should have been cleaned up");
+			{
+				bool bNullAfterDestroy = !bool(destroy_lp);
+				completeTest(bNullAfterDestroy && bIsNonNullAtStart_destroyTest, "destroy test", "destroying the object did not null out the lifetime pointer");
+				completeTest(bool(destroy_sp), "destroy test", "the destroyed sp was not valid; something is likely wrong with the test");
+				destroy_sp = nullptr;
+				completeTest(destroy_wp.expired(), "destroy test", "the weak pointer to destroyed object was still valid after all references should have been cleaned up");
+				completeTest(cleanup_wp.expired(), "lp owned cleanup test", "the weak pointer pointing to the resource to be cleaned up by the lp was non null after cleanup");
+			}
 
-			completeTest(cleanup_wp.expired(), "lp owned cleanup test", "the weak pointer pointing to the resource to be cleaned up by the lp was non null after cleanup");
+			//test container updating 
+			{
+				lp<GameEntity> stackPtr1 = lifetimePointerStack.top();
+				lifetimePointerStack.pop();
+				lp<GameEntity> stackPtr2 = lifetimePointerStack.top();
+				completeTest((!stackPtr1 && !stackPtr2), "test container of lp destroy updates", "pointers wre still valid after being destroyed");
+			}
 
 			char msg[2048];
 			constexpr size_t msgSize = sizeof(msg) / sizeof(msg[0]);

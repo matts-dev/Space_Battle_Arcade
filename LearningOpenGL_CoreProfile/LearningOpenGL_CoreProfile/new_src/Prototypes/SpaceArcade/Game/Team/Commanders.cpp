@@ -41,13 +41,36 @@ namespace SA
 		return sp<WorldEntity>(nullptr);
 	}
 
+	bool TeamCommander::queueTarget(const sp<WorldEntity>& target)
+	{
+		TeamComponent* myTeamComp = getGameComponent<TeamComponent>();
+		if (TeamComponent* spawnTeamCom = target->getGameComponent<TeamComponent>())
+		{
+			size_t spawnedTeam = spawnTeamCom->getTeam();
+			if (spawnedTeam != myTeamComp->getTeam())
+			{
+				if (pendingTargetsByTeam.size() < spawnedTeam + 1)
+				{
+					pendingTargetsByTeam.resize(spawnedTeam + 1);
+				}
+
+				std::stack<lp<WorldEntity>>& targets = pendingTargetsByTeam[spawnedTeam];
+				targets.push(target);
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	sp<SA::WorldEntity> TeamCommander::getTarget()
 	{
 		for (size_t teamId = 0; teamId < pendingTargetsByTeam.size(); ++teamId)
 		{
 			if (teamId == cachedTeamId) continue;
 
-			if (sp<SA::WorldEntity> target = getTargetOnTeam(teamId))
+			if (sp<WorldEntity> target = getTargetOnTeam(teamId))
 			{
 				return target;
 			}
@@ -77,21 +100,7 @@ namespace SA
 
 	void TeamCommander::handleEntitySpawned(const sp<WorldEntity>& spawned)
 	{
-		TeamComponent* myTeamComp = getGameComponent<TeamComponent>();
-		if (TeamComponent* spawnTeamCom = spawned->getGameComponent<TeamComponent>())
-		{
-			size_t spawnedTeam = spawnTeamCom->getTeam();
-			if (spawnedTeam != myTeamComp->getTeam())
-			{
-				if (pendingTargetsByTeam.size() < spawnedTeam + 1)
-				{
-					pendingTargetsByTeam.resize(spawnedTeam + 1);
-				}
-
-				std::stack<lp<WorldEntity>>& targets = pendingTargetsByTeam[spawnedTeam];
-				targets.push(spawned);
-			}
-		}
+		queueTarget(spawned);
 	}
 
 }

@@ -57,10 +57,13 @@ namespace SA
 		GameEntity();
 		virtual ~GameEntity(){}
 
+	private:
+		/** lifetime pointers get a special event that fires before the destroyed event; this prevents race conditions that may be rely on lifetime pointer features; this must remain private. See notes at broadcast. */
+		const sp< MultiDelegate<> > onLifetimeOverEvent;
 	public:
 		const sp< MultiDelegate<const sp<GameEntity>&> > onDestroyedEvent;//pointer because this will create circular include if we define type here; MultiDelegates operator on game entities
 		bool isPendingDestroy() const { return bPendingDestroy; }
-
+		
 		/** WARNING: think twice before using this; if you're given a ref/rawptr then the API may be trying to prevent you from holding a reference
 		 * subclasses can deny this request by overriding the virtual method to return nullptr.*/
 		wp<GameEntity> requestReference() { return sp_this(); }
@@ -91,6 +94,9 @@ namespace SA
 	private:
 		template<typename T, typename... Args>
 		friend sp<T> new_sp(Args&&... args);
+
+		template<typename T>
+		friend class LifetimePointer;
 
 	public:
 		struct CleanKey { friend class GameBase;  private: CleanKey() {} };
