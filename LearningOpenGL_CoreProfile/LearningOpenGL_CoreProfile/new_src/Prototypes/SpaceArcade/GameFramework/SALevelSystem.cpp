@@ -4,6 +4,11 @@
 
 namespace SA
 {
+	LevelSystem::~LevelSystem()
+	{
+		unloadLevel(loadedLevel);
+	}
+
 	void LevelSystem::loadLevel(sp<LevelBase>& newLevel)
 	{
 		if (newLevel)

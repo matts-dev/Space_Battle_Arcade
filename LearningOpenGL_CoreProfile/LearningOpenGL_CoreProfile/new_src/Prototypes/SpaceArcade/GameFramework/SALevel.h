@@ -59,6 +59,7 @@ namespace SA
 		virtual void endLevel_v() = 0;
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned);
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned);
+		virtual bool isLevelActive() { return bLevelActive; }
 	private: //virtuals; private indicates subclasses inherit when function called, but now how function is completed.
 		virtual void tick(float dt_sec);
 	public:
@@ -74,7 +75,7 @@ namespace SA
 		sp<TimeManager> worldTimeManager;
 
 	private:
-		bool bLevelStarted = false;
+		bool bLevelActive = false;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////

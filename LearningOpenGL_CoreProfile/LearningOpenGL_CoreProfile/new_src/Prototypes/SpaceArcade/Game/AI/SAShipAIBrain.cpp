@@ -432,7 +432,7 @@ namespace SA
 			new_sp<Tree>("fighter-tree-root",
 				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey, activeAttackers_MemoryKey,
 				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
-					new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey, stateKey,
+				new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_evade_state", stateKey, OP::EQUAL, MentalState_Fighter::EVADE, AbortPreference::ABORT_ON_MODIFY,
@@ -466,8 +466,8 @@ namespace SA
 				))),
 				MemoryInitializer
 				{
-					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::WANDER)},
 					{ brainKey, sp_this() },
+					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::WANDER)},
 					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },

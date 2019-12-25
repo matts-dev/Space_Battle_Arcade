@@ -1,5 +1,6 @@
 #include "SALevel.h"
 #include "SAGameBase.h"
+#include "SALog.h"
 
 namespace SA
 {
@@ -19,11 +20,11 @@ namespace SA
 		//I hope to make special pointers that set themselves to null when marked destroy, but until then
 		//be very careful about accessing/destroying resources from gamebase in ctor/dtor
 
-		//make sure that the collision entities are cleared before we destroy the hash map.
-
-		if (bLevelStarted)
+		if (bLevelActive)
 		{
-			endLevel();
+			//Do not call endLevel here because it calls a virtual; which will not invoke subclass behavior as it has subclass portion has already been destroyed
+			log("LevelBase", LogLevel::LOG_ERROR, "Level was active during dtor; this should have been shutdown by level system.");
+			assert(false);
 		}
 
 	}
@@ -31,7 +32,7 @@ namespace SA
 	void LevelBase::startLevel()
 	{
 		//base behavior should go here, before the subclass callbacks
-		bLevelStarted = true;
+		bLevelActive = true;
 
 		//start subclass specific behavior after base behavior (ctor/dtor pattern)
 		startLevel_v();
@@ -40,9 +41,10 @@ namespace SA
 	void LevelBase::endLevel()
 	{
 		//end subclass specific behavior before base behavior (ctor/dtor pattern)
+		//reminder: if this is being called by a dtor the virtual will not be a subclass function call
 		endLevel_v();
 
-		bLevelStarted = false;
+		bLevelActive = false;
 
 		//clear out the spawned entities so they are cleaned up before the spatial hash is cleaned up
 		worldEntities.clear();

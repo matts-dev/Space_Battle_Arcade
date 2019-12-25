@@ -504,7 +504,7 @@ namespace SA
 		void Service_OpportunisiticShots::handleStateModified(const std::string& key, const GameEntity* value)
 		{
 			Memory& memory = getMemory();
-			stateRef = memory.getMemoryReference<PrimitiveWrapper<MentalState_Fighter>>(targetKey);
+			stateRef = memory.getMemoryReference<PrimitiveWrapper<MentalState_Fighter>>(stateKey);
 		}
 
 		void Service_OpportunisiticShots::handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)

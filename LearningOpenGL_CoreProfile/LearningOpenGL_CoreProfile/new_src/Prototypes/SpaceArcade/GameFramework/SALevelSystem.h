@@ -8,8 +8,10 @@ namespace SA
 {
 	class LevelBase;
 
-	class LevelSystem : public SystemBase
+	class LevelSystem final : public SystemBase
 	{
+	public:
+		~LevelSystem();
 	public:
 		/** Broadcasts just before level is changed */
 		MultiDelegate<const sp<LevelBase>& /*currentLevel*/, const sp<LevelBase>& /*newLevel*/> onPreLevelChange;
