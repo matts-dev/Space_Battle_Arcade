@@ -280,7 +280,7 @@ namespace SA
 		{
 			Memory& memory = getMemory();
 			memory.getModifiedDelegate(targetKey).addStrongObj(sp_this(), &Service_TargetFinder::handleTargetModified);
-			memory.getModifiedDelegate(activeAttackersKey).addStrongObj(sp_this(), &Service_TargetFinder::handleActiveAttackersChanged);
+			memory.getModifiedDelegate(activeAttackersKey).addStrongObj(sp_this(), &Service_TargetFinder::handleActiveAttackersModified);
 
 			resetSearchData();
 			{
@@ -327,7 +327,7 @@ namespace SA
 			//when stopping service, remove delegates first so we don't hit target changed events when clearing target
 			Memory& memory = getMemory();
 			memory.getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_TargetFinder::handleTargetModified);
-			memory.getModifiedDelegate(activeAttackersKey).removeStrong(sp_this(), &Service_TargetFinder::handleActiveAttackersChanged);
+			memory.getModifiedDelegate(activeAttackersKey).removeStrong(sp_this(), &Service_TargetFinder::handleActiveAttackersModified);
 
 			//#TODO it is a little backwards that we give the command back a target we the ship is destroyed
 			//ideally the commander would pass out handles, and then on destroy that handle would give
@@ -366,7 +366,7 @@ namespace SA
 			}
 		}
 
-		void Service_TargetFinder::handleActiveAttackersChanged(const std::string& key, const GameEntity* value)
+		void Service_TargetFinder::handleActiveAttackersModified(const std::string& key, const GameEntity* value)
 		{
 			if (!bEvaluateActiveAttackersOnNextTick && myShip)
 			{

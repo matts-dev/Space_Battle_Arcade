@@ -232,7 +232,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			virtual void handleNodeAborted() override {}
 
 			void handleTargetModified(const std::string& key, const GameEntity* value);
-			void handleActiveAttackersChanged(const std::string& key, const GameEntity* value);
+			void handleActiveAttackersModified(const std::string& key, const GameEntity* value);
 			void handleTargetDestroyed(const sp<GameEntity>& entity);
 
 			void resetSearchData();
