@@ -217,7 +217,7 @@ namespace SA
 
 	void Ship::fireProjectileInDirection(glm::vec3 dir_n) const
 	{
-		if (primaryProjectile && length2(dir_n) > 0.001)
+		if (primaryProjectile && length2(dir_n) > 0.001 && FIRE_PROJECTILE_ENABLED)
 		{
 			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
 

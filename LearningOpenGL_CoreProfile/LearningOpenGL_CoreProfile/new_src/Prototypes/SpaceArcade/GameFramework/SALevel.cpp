@@ -71,13 +71,13 @@ namespace SA
 
 	void LevelBase::tick(float dt_sec)
 	{
-		float dialated_dt_sec = worldTimeManager->getDeltaTimeSecs();
+		float dilated_dt_sec = worldTimeManager->getDeltaTimeSecs();
 
 		if (!worldTimeManager->isTimeFrozen())
 		{
 			for (const sp<WorldEntity>& entity : worldEntities)
 			{
-				entity->tick(dialated_dt_sec);
+				entity->tick(dilated_dt_sec);
 			}
 		}
 	}

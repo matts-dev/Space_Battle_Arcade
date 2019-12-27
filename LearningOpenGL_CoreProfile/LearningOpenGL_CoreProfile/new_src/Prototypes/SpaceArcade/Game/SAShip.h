@@ -29,6 +29,9 @@ namespace SA
  	class Ship : public RenderModelEntity, public IProjectileHitNotifiable
 	{
 	public:
+		const bool FIRE_PROJECTILE_ENABLED = true;
+
+	public:
 		struct SpawnData
 		{
 			sp<SpawnConfig> spawnConfig;

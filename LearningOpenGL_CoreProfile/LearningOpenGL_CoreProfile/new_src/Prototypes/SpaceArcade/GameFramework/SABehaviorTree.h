@@ -129,9 +129,9 @@ namespace SA
 			virtual void startService() = 0;	// Tree has started service start; subclasses can initiate any extra timers here.
 			virtual void stopService() = 0;		// Tree has ended service; subclasses should clean up their custom timers here.
 		protected:
-			float tickSecs = 0.1f;
-			bool bLoop = true;
-			bool bExecuteOnStart = true;
+			const float tickSecs = 0.1f;
+			const bool bLoop = true;
+			const bool bExecuteOnStart = true;
 			sp<MultiDelegate<>> timerDelegate = new_sp<MultiDelegate<>>();
 		};
 
@@ -645,7 +645,7 @@ namespace SA
 			/* Aborts all nodes with this priority or larger magnitude values; note lower numbers mean higher priority in behavior trees */
 			void abort(uint32_t priority, NodeBase* abortInstigator = nullptr);
 			uint32_t getCurrentPriority();
-			Memory& getMemory() const;
+			Memory& getMemory() const;	//marked as const and memory should be considered mutable
 			float getFrameDeltaTimeSecs() const { return frame_dt_sec; }
 
 		public: //debug utils

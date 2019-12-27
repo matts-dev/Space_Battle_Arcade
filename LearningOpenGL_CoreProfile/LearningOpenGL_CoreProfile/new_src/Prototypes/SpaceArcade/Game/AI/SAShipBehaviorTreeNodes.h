@@ -35,6 +35,7 @@ namespace SA
 		{
 			CurrentAttackerDatum(const sp<TargetType>& inAttacker) : attacker(inAttacker) {}
 			fwp<TargetType> attacker;
+			//extra meta data here
 		};
 		using ActiveAttackers = std::map<const TargetType*, CurrentAttackerDatum>;
 
@@ -218,6 +219,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 
 		private:
 			static const bool DEBUG_TARGET_FINDER = true;
+			static const bool TARGET_ATTACKERS_FEATURE_ENABLED = true; //prevents cyclic targeting
 		public:
 			Service_TargetFinder(const std::string& name, float tickSecs, bool bLoop, 
 				const std::string& brainKey, const std::string& targetKey, const std::string& activeAttackersKey, const sp<NodeBase>& child)
@@ -256,14 +258,73 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			ActiveAttackers* attackers = nullptr;
 			fwp<TargetType> attackerToTarget = nullptr;
 			sp<TargetType> currentTarget;
-			float preferredTargetMaxDistance = 50.f;
+			float preferredTargetMaxDistance = 200.f;
 			bool bCommanderProvidedTarget = false;
 			bool bEvaluateActiveAttackersOnNextTick = false;
 			SearchMethod currentSearchMethod;
+			float timeTicked = 0;
+
+			//check to make sure that are target is targeting us, if not see if there is anyone that is trying to target us
+			//float nextAttackerRefreshTimeStamp = 0;
+			//float attackerRefreshRateSec = 5.0f;
 
 		private: //helper data for navigating 3d world to find target over successful ticks
 		};
 
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Servvice_AttackerSetter
+		//
+		// This exists so that no matter what node set or external source sets a target, the attackers data structure will
+		// be updated.
+		//
+		// Perhaps it would be better if these were a decorator. But I would like the setting of attackers to happen 
+		// on another frame from when the target is set up to prevent any sort of edge cases where recursive flip flopping 
+		// between targets may happen. At time of writing, start/stopping timers for next tick slightly expensive based
+		// on profiling. Having a service that ticks at a reasonable rate will smooth out any hitches and give us the benfit
+		// of updating on next tick. Unfortunately it is slightly a polling mechanism. 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		class Service_AttackerSetter final : public Service
+		{
+		public:
+			Service_AttackerSetter(const std::string& nodeName,
+			float tickSecs,	bool bLoop, 
+			const std::string& attackersKey,
+			const std::string& targetKey,
+			const std::string& brainKey,
+			const sp<NodeBase>& child)
+				: Service(nodeName, tickSecs, bLoop, child),
+				attackersKey(attackersKey),
+				targetKey(targetKey),
+				brainKey(brainKey)
+			{ }
+		
+		protected:
+			virtual void startService() override;
+			virtual void stopService() override;
+			virtual void serviceTick() override;
+
+			void handleTargetReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue);
+			
+			virtual void handleNodeAborted() override {}
+		private: //keys
+			const std::string attackersKey;
+			const std::string targetKey;
+			const std::string brainKey;
+		private: //data
+			struct Data
+			{
+				//invariant
+				ShipAIBrain* brain = nullptr;
+				ActiveAttackers* attackers = nullptr;
+				//variable
+				lp<TargetType> myShip = nullptr;
+				lp<TargetType> lastTarget = nullptr;
+				lp<TargetType> currentTarget = nullptr;
+				//state
+				bool bNeedsRefresh = false;
+			} data;
+		};
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Service that fires projectiles when targets align with crosshairs

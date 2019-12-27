@@ -374,6 +374,7 @@ namespace SA
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
+				new_sp<Service_AttackerSetter>("service_attacker_setter", 0.5f, true, activeAttackers_Key, targetKey, brainKey,
 				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
@@ -382,7 +383,7 @@ namespace SA
 							),
 						})
 					)
-				),
+				)),
 				MemoryInitializer
 				{
 					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::ATTACK)},
@@ -432,6 +433,7 @@ namespace SA
 			new_sp<Tree>("fighter-tree-root",
 				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey, activeAttackers_Key,
 				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
+				new_sp<Service_AttackerSetter>("service_attacker_setter", 0.5f, true, activeAttackers_Key, targetKey, brainKey,
 				new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
@@ -463,7 +465,7 @@ namespace SA
 							)
 						})
 					)
-				))),
+				)))),
 				MemoryInitializer
 				{
 					{ brainKey, sp_this() },

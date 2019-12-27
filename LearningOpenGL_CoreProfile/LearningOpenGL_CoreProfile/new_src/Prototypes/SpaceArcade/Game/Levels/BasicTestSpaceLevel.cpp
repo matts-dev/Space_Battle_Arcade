@@ -164,9 +164,9 @@ namespace SA
 				//fighter->spawnNewBrain<WanderBrain>();
 				//fighter->spawnNewBrain<EvadeTestBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
-				//fighter->spawnNewBrain<DogfightTestBrain>();
+				fighter->spawnNewBrain<DogfightTestBrain>();
 
-				fighter->spawnNewBrain<FighterBrain>(); 
+				//fighter->spawnNewBrain<FighterBrain>(); 
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);

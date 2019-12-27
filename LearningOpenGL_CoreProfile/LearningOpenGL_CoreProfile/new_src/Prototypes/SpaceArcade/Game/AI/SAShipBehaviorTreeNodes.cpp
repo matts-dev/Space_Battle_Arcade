@@ -216,12 +216,18 @@ namespace SA
 		void Service_TargetFinder::serviceTick()
 		{
 			using namespace glm;
+			timeTicked += tickSecs;
+			//if (timeTicked > nextAttackerRefreshTimeStamp)
+			//{
+			//	nextAttackerRefreshTimeStamp += attackerRefreshRateSec;
+			//	handleActiveAttackersModified(activeAttackersKey, nullptr);
+			//}
 
 			//this service should always have a brain available while it is ticking; if it doesn't this is a design error.
 			assert(owningBrain);
 			assert(attackers); //there is not a race condition here; service removes callback from timer when stopping
 
-			if (bEvaluateActiveAttackersOnNextTick)
+			if (bEvaluateActiveAttackersOnNextTick && TARGET_ATTACKERS_FEATURE_ENABLED)
 			{
 				bEvaluateActiveAttackersOnNextTick = false;
 
@@ -266,7 +272,7 @@ namespace SA
 					wp<TargetType> weakNewTarget = attackerToTarget;
 					sp<TargetType> newTarget = weakNewTarget.lock();
 					attackerToTarget = nullptr; 
-					setTarget(newTarget);
+					setTarget(newTarget); 
 				}
 			}
 
@@ -290,8 +296,12 @@ namespace SA
 				if (memory.getWriteValueAs(brainKey, brain_writable)
 					&& memory.getWriteValueAs(activeAttackersKey, attackers_writable))
 				{
-					owningBrain = &brain_writable.get();
 					attackers = &attackers_writable.get().value;
+					owningBrain = &brain_writable.get();
+					if (Ship* myShipRaw = owningBrain->getControlledTarget())
+					{
+						myShip = myShipRaw->requestTypedReference_Nonsafe<Ship>().lock();
+					}
 
 					if(memory.getWriteValueAs(targetKey, target_writable))
 					{
@@ -386,6 +396,7 @@ namespace SA
 		void Service_TargetFinder::handleTargetDestroyed(const sp<GameEntity>& entity)
 		{
 			setTarget(nullptr);
+			bEvaluateActiveAttackersOnNextTick = true;
 		}
 
 		void Service_TargetFinder::resetSearchData()
@@ -514,11 +525,11 @@ namespace SA
 				return;
 			}
 
-			if (currentTarget && !currentTarget->isPendingDestroy())
+			if (currentTarget)
 			{
 				currentTarget->onDestroyedEvent->removeWeak(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
 
-				if (bCommanderProvidedTarget)
+				if (bCommanderProvidedTarget && !currentTarget->isPendingDestroy())
 				{
 					//return this target to the list of targets the commander wants destroyed
 					static LevelSystem& LevelSys = GameBase::get().getLevelSystem();
@@ -562,6 +573,116 @@ namespace SA
 			}
 
 			return false;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Service_AttackerSetter
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		void Service_AttackerSetter::startService()
+		{
+			Memory& memory = getMemory();
+			memory.getReplacedDelegate(targetKey).addStrongObj(sp_this(), &Service_AttackerSetter::handleTargetReplaced);
+			{
+				ScopedUpdateNotifier<PrimitiveWrapper<ActiveAttackers>> activeAttackers_writable;
+				ScopedUpdateNotifier<ShipAIBrain> brain_writable;
+				
+				//memory that must be present
+				if (memory.getWriteValueAs(attackersKey, activeAttackers_writable)
+					&& memory.getWriteValueAs(brainKey, brain_writable)
+					)
+				{
+					data.attackers = &(activeAttackers_writable.get().value);
+					data.brain = &brain_writable.get();
+					if (Ship* myShipRaw = data.brain->getControlledTarget())
+					{
+						data.myShip = myShipRaw->requestTypedReference_Nonsafe<Ship>().lock();
+					}
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get required memory from keys.");
+					throw std::runtime_error("behavior tree node failed to get invariant memory");
+				}
+				
+				//memory that may be present
+				ScopedUpdateNotifier<TargetType> target_writable;
+				if (memory.getWriteValueAs(targetKey, target_writable))
+				{
+					handleTargetReplaced(targetKey, nullptr, &target_writable.get());
+				}
+			}
+		}
+
+		void Service_AttackerSetter::stopService()
+		{
+			//unbinding handlers before anything else is generally a good idea, as write won't cause handlers to be invoked.
+			Memory& memory = getMemory();
+			memory.getReplacedDelegate(targetKey).removeStrong(sp_this(), &Service_AttackerSetter::handleTargetReplaced);
+
+			data = Data{};
+		}
+
+		void Service_AttackerSetter::handleTargetReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue)
+		{
+			Memory& memory = getMemory();
+
+			data.lastTarget = data.currentTarget;
+
+			ScopedUpdateNotifier<TargetType> target_writable;
+			if (memory.getWriteValueAs(targetKey, target_writable))
+			{
+				data.currentTarget = target_writable.get().requestTypedReference_Nonsafe<TargetType>().lock();
+			}
+
+			data.bNeedsRefresh = true;
+		}
+
+		void Service_AttackerSetter::serviceTick()
+		{
+			if (data.bNeedsRefresh)
+			{
+				data.bNeedsRefresh = false;
+
+				if (data.myShip)
+				{
+					auto modifyAttackers = [](lp<TargetType>& target, bool bAdd, sp<TargetType>& myShip, const std::string& attackersKey)
+					{
+						if (BrainComponent* brainComp = target->getGameComponent<BrainComponent>())
+						{
+							if (const BehaviorTree::Tree* tree = brainComp->getTree())
+							{
+								Memory& targetMemory = tree->getMemory();
+								ScopedUpdateNotifier<PrimitiveWrapper<ActiveAttackers>> attackers_writable;
+								if (targetMemory.getWriteValueAs(attackersKey, attackers_writable))
+								{
+									ActiveAttackers& targetsAttackers = attackers_writable.get().value;
+									if (bAdd)
+									{
+										targetsAttackers.insert({ myShip.get(), CurrentAttackerDatum{ myShip } });
+									}
+									else
+									{
+										targetsAttackers.erase(myShip.get());
+									}
+								}
+							}
+						}
+					};
+
+					sp<TargetType> myShipSp = data.myShip;
+					if (data.lastTarget)
+					{
+						modifyAttackers(data.lastTarget, false, myShipSp, attackersKey);
+					}
+					if (data.currentTarget)
+					{
+						modifyAttackers(data.currentTarget, true, myShipSp, attackersKey);
+					}
+
+					data.lastTarget = nullptr;
+				}
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -1627,14 +1748,6 @@ namespace SA
 				// Handle movement
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				const TargetDirection arrangment = calculateShipArangement(myTarget, myShip);
-				//if (arrangment == TargetDirection::BEHIND) //#TODO perhaps just remove this as the facing combo with default behavior is sufficient to get reasonable AI dogfighting
-				//{
-				//	if (!comboProcessor.hasActiveCombo())
-				//	{
-				//		generateDefensiveCombo();
-				//	}
-				//}
-				//else 
 				if (arrangment == TargetDirection::FACING)
 				{
 					if (!comboProcessor.hasActiveCombo())
@@ -1642,10 +1755,9 @@ namespace SA
 						generateFacingCombo();
 					}
 				}
-				//else if (arrangment == TargetArrangement::OPPOSING)
-				//{}
-				//else if (arrangment == TargetArrangement::INFRONT)
-				//{}
+				//else if (arrangment == TargetDirection::BEHIND) {}
+				//else if (arrangment == TargetArrangement::OPPOSING){}
+				//else if (arrangment == TargetArrangement::INFRONT){}
 
 				if (comboProcessor.hasActiveCombo())
 				{
