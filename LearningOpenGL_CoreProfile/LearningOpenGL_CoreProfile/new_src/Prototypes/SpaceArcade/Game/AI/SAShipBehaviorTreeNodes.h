@@ -28,6 +28,16 @@ namespace SA
 		using TargetType = WorldEntity;
 		using SecondaryTargetContainer = std::vector<lp<TargetType>>;
 
+		////////////////////////////////////////////////////////
+		// Data types for tracking current attackers.
+		////////////////////////////////////////////////////////
+		struct CurrentAttackerDatum
+		{
+			CurrentAttackerDatum(const sp<TargetType>& inAttacker) : attacker(inAttacker) {}
+			fwp<TargetType> attacker;
+		};
+		using ActiveAttackers = std::map<const TargetType*, CurrentAttackerDatum>;
+
 		//constexpr bool SHIP_TREE_DEBUG_LOG = true;
 		void LogShipNodeDebugMessage(const Tree& tree, const NodeBase& node, const std::string& msg);
 /** These messages get compiled out and cause no performance lose when not enabled.*/
@@ -210,9 +220,9 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			static const bool DEBUG_TARGET_FINDER = true;
 		public:
 			Service_TargetFinder(const std::string& name, float tickSecs, bool bLoop, 
-				const std::string& brainKey, const std::string& targetKey, const sp<NodeBase>& child)
+				const std::string& brainKey, const std::string& targetKey, const std::string& activeAttackersKey, const sp<NodeBase>& child)
 				: Service(name, tickSecs, bLoop, child),
-				brainKey(brainKey), targetKey(targetKey)
+				brainKey(brainKey), targetKey(targetKey), activeAttackersKey(activeAttackersKey)
 			{ }
 
 		protected:
@@ -222,37 +232,38 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			virtual void handleNodeAborted() override {}
 
 			void handleTargetModified(const std::string& key, const GameEntity* value);
+			void handleActiveAttackersChanged(const std::string& key, const GameEntity* value);
 			void handleTargetDestroyed(const sp<GameEntity>& entity);
+
 			void resetSearchData();
 			void tickFindNewTarget_slow();
 
 			void setTarget(const sp<WorldEntity>& target, bool bCommanderAssignment = false);
+		private: //utils
+			bool XisTargetingY(const sp<TargetType>& x, const lp<const TargetType>& y);
 
 		private: //search data
 			size_t cachedTeamIdx;
 			float cachedPrefDist2;
-
+			lp<TargetType> myShip;
+			
 		private:
-			std::string brainKey;
-			std::string targetKey;
-			const ShipAIBrain* owningBrain;
+			const std::string brainKey;
+			const std::string targetKey;
+			const std::string activeAttackersKey;
+		private:
+			ShipAIBrain* owningBrain = nullptr;
+			ActiveAttackers* attackers = nullptr;
+			fwp<TargetType> attackerToTarget = nullptr;
 			sp<TargetType> currentTarget;
 			float preferredTargetMaxDistance = 50.f;
 			bool bCommanderProvidedTarget = false;
+			bool bEvaluateActiveAttackersOnNextTick = false;
 			SearchMethod currentSearchMethod;
 
 		private: //helper data for navigating 3d world to find target over successful ticks
 		};
 
-		////////////////////////////////////////////////////////
-		// Data types for tracking current attackers.
-		////////////////////////////////////////////////////////
-		struct CurrentAttackerDatum
-		{
-			CurrentAttackerDatum(const sp<TargetType>& inAttacker) : attacker(inAttacker) {}
-			fwp<TargetType> attacker;
-		};
-		using ActiveAttackers = std::map<const TargetType*, CurrentAttackerDatum>;
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Service that fires projectiles when targets align with crosshairs

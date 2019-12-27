@@ -222,14 +222,14 @@ namespace SA
 		const char* const targetKey = "target";
 		const char* const targetLocKey = "target_loc";
 		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
-		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const activeAttackers_Key = "activeAttackersKey";
 		const char* const dogFightLoc_Key = "dogFightLocKey";
 
 
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_evade_state", stateKey, OP::EQUAL, MentalState_Fighter::EVADE, AbortPreference::ABORT_ON_MODIFY,
@@ -259,7 +259,7 @@ namespace SA
 					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
-					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
+					{ activeAttackers_Key, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
 					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) }
 				}
 			);
@@ -277,7 +277,7 @@ namespace SA
 		const char* const targetKey = "target";
 		const char* const targetLocKey = "target_loc";
 		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
-		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const activeAttackers_Key = "activeAttackersKey";
 		const char* const dogFightLoc_Key = "dogFightLocKey";
 
 		const char* const positionArrangementKey = "posPhaseKey";
@@ -288,7 +288,7 @@ namespace SA
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
@@ -339,7 +339,7 @@ namespace SA
 					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
-					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
+					{ activeAttackers_Key, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
 					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) },
 
 					//these use shared pointers so they can be cached to bypass update event notifications for efficiency, perhaps this should be a supported feature
@@ -363,7 +363,7 @@ namespace SA
 		const char* const targetKey = "target";
 		const char* const targetLocKey = "target_loc";
 		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
-		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const activeAttackers_Key = "activeAttackersKey";
 		const char* const dogFightLoc_Key = "dogFightLocKey";
 
 		const char* const positionArrangementKey = "posPhaseKey";
@@ -374,7 +374,7 @@ namespace SA
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
@@ -392,7 +392,7 @@ namespace SA
 					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
-					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
+					{ activeAttackers_Key, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
 					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) },
 
 					//these use shared pointers so they can be cached to bypass update event notifications for efficiency, perhaps this should be a supported feature
@@ -418,7 +418,7 @@ namespace SA
 		const char* const targetKey = "target";
 		const char* const targetLocKey = "target_loc";
 		const char* const secondaryTargetsKey = "secondaryTargetsKeys";
-		const char* const activeAttackers_MemoryKey = "activeAttackersKey";
+		const char* const activeAttackers_Key = "activeAttackersKey";
 		const char* const dogFightLoc_Key = "dogFightLocKey";
 
 		const char* const positionArrangementKey = "posPhaseKey";
@@ -430,8 +430,8 @@ namespace SA
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey, activeAttackers_MemoryKey,
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey,
+				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey, activeAttackers_Key,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
 				new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
@@ -473,7 +473,7 @@ namespace SA
 					{ dogFightLoc_Key, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ targetKey, sp<WorldEntity>(nullptr) },
-					{ activeAttackers_MemoryKey, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
+					{ activeAttackers_Key, new_sp<PrimitiveWrapper<ActiveAttackers>>(ActiveAttackers{})},
 					{ secondaryTargetsKey, new_sp<PrimitiveWrapper<SecondaryTargetContainer>>(SecondaryTargetContainer{}) } 
 				}
 			);

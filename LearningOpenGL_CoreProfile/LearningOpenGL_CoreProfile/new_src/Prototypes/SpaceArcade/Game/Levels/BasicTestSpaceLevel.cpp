@@ -129,9 +129,9 @@ namespace SA
 		uint32_t numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		//numFighterShipsToSpawn = 250;
-		//numFighterShipsToSpawn = 20;
+		numFighterShipsToSpawn = 20;
 		//numFighterShipsToSpawn = 10;
-		numFighterShipsToSpawn = 4;
+		//numFighterShipsToSpawn = 4;
 		//numFighterShipsToSpawn = 2;
 #endif//NDEBUG 
 
@@ -165,6 +165,7 @@ namespace SA
 				//fighter->spawnNewBrain<EvadeTestBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
 				//fighter->spawnNewBrain<DogfightTestBrain>();
+
 				fighter->spawnNewBrain<FighterBrain>(); 
 			}
 		};
@@ -193,28 +194,32 @@ namespace SA
 		}
 
 		//DEBUG assign targets to each other to test dogfighting
-		size_t targetsToSet = teamTargets[0].size() < teamTargets[1].size() ? teamTargets[0].size() : teamTargets[1].size();
-		for (size_t idx = 0; idx < targetsToSet ; idx++)
+		bool bEnableDebugTargets = false;
+		if(bEnableDebugTargets)
 		{
-			sp<Ship> a = teamTargets[0][idx];
-			sp<Ship> b = teamTargets[1][idx];
-
-			const BrainComponent* aBrainComp = a->getGameComponent<BrainComponent>();
-			const BrainComponent* bBrainComp = b->getGameComponent<BrainComponent>();
-			if (aBrainComp && bBrainComp)
+			size_t targetsToSet = teamTargets[0].size() < teamTargets[1].size() ? teamTargets[0].size() : teamTargets[1].size();
+			for (size_t idx = 0; idx < targetsToSet ; idx++)
 			{
-				BehaviorTreeBrain* aBrain = dynamic_cast<BehaviorTreeBrain*>(aBrainComp->getBrain());
-				BehaviorTreeBrain* bBrain = dynamic_cast<BehaviorTreeBrain*>(bBrainComp->getBrain());
-				if (aBrain && bBrain)
+				sp<Ship> a = teamTargets[0][idx];
+				sp<Ship> b = teamTargets[1][idx];
+
+				const BrainComponent* aBrainComp = a->getGameComponent<BrainComponent>();
+				const BrainComponent* bBrainComp = b->getGameComponent<BrainComponent>();
+				if (aBrainComp && bBrainComp)
 				{
-					BehaviorTree::Memory& aMem = aBrain->getBehaviorTree().getMemory();
-					BehaviorTree::Memory& bMem = bBrain->getBehaviorTree().getMemory();
+					BehaviorTreeBrain* aBrain = dynamic_cast<BehaviorTreeBrain*>(aBrainComp->getBrain());
+					BehaviorTreeBrain* bBrain = dynamic_cast<BehaviorTreeBrain*>(bBrainComp->getBrain());
+					if (aBrain && bBrain)
+					{
+						BehaviorTree::Memory& aMem = aBrain->getBehaviorTree().getMemory();
+						BehaviorTree::Memory& bMem = bBrain->getBehaviorTree().getMemory();
 
-					sp<WorldEntity> aWE = a;
-					sp<WorldEntity> bWE = b;
+						sp<WorldEntity> aWE = a;
+						sp<WorldEntity> bWE = b;
 
-					WorldEntity* bAsTarget = aMem.replaceValue("target", bWE);
-					WorldEntity* aAsTarget = bMem.replaceValue("target", aWE);
+						WorldEntity* bAsTarget = aMem.replaceValue("target", bWE);
+						WorldEntity* aAsTarget = bMem.replaceValue("target", aWE);
+					}
 				}
 			}
 		}

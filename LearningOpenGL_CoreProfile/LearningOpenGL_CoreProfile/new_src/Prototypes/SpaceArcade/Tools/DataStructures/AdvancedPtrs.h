@@ -49,7 +49,8 @@ namespace SA
 		FastWeakPointer& operator=(FastWeakPointer&& move) = default;
 
 	public:
-		operator bool() const noexcept { return !weakptr.expired(); }
+		inline operator bool() const noexcept { return !weakptr.expired(); }
+		inline operator wp<T>() const noexcept { return weakptr; }
 		T* operator->() const noexcept { return rawPtr; }
 		T& operator*() const noexcept { return *rawPtr; }
 	private:

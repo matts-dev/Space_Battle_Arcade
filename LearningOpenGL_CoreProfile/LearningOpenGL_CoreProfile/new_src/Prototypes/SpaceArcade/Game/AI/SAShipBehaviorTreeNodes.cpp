@@ -215,9 +215,61 @@ namespace SA
 
 		void Service_TargetFinder::serviceTick()
 		{
+			using namespace glm;
+
 			//this service should always have a brain available while it is ticking; if it doesn't this is a design error.
 			assert(owningBrain);
-			Memory& memory = getMemory();
+			assert(attackers); //there is not a race condition here; service removes callback from timer when stopping
+
+			if (bEvaluateActiveAttackersOnNextTick)
+			{
+				bEvaluateActiveAttackersOnNextTick = false;
+
+				if (attackers && myShip)
+				{
+					vec3 myWorldPos = myShip->getWorldPosition();
+					fwp<TargetType> bestSoFar = nullptr;
+					float bestSoFarDist2 = std::numeric_limits<float>::infinity();
+
+					//find best target
+					for (auto& attacker_pair : *attackers)
+					{
+						CurrentAttackerDatum& attackerDatum = attacker_pair.second;
+						if (attackerDatum.attacker)
+						{
+							vec3 toAttacker = attackerDatum.attacker->getWorldPosition() - myWorldPos;
+							float attackerDist2 = glm::length2(toAttacker);
+							if (attackerDist2 < bestSoFarDist2)
+							{
+								bestSoFarDist2 = attackerDist2;
+								bestSoFar = attackerDatum.attacker;
+							}
+						}
+					}
+
+					if (bestSoFar)
+					{
+						attackerToTarget = bestSoFar;
+					}
+				}
+			}
+
+			//if someone is targeting, try to use them as a target if appropraite
+			if (attackerToTarget)
+			{
+				//if our current target has engaged us, the handler for attackers changing will have cleared the staged attacker to target
+				vec3 toAttacker = attackerToTarget->getWorldPosition() - myShip->getWorldPosition();
+
+				//if attacker has gotten in range, target it to engage a dogfight
+				if (glm::length2(toAttacker) < cachedPrefDist2)
+				{
+					wp<TargetType> weakNewTarget = attackerToTarget;
+					sp<TargetType> newTarget = weakNewTarget.lock();
+					attackerToTarget = nullptr; 
+					setTarget(newTarget);
+				}
+			}
+
 			if (!currentTarget)
 			{
 				tickFindNewTarget_slow();
@@ -227,29 +279,42 @@ namespace SA
 		void Service_TargetFinder::startService()
 		{
 			Memory& memory = getMemory();
-			owningBrain = memory.getReadValueAs<ShipAIBrain>(brainKey);
 			memory.getModifiedDelegate(targetKey).addStrongObj(sp_this(), &Service_TargetFinder::handleTargetModified);
+			memory.getModifiedDelegate(activeAttackersKey).addStrongObj(sp_this(), &Service_TargetFinder::handleActiveAttackersChanged);
 
 			resetSearchData();
-
-			{ScopedUpdateNotifier<TargetType> target_writable;
-				if (memory.getWriteValueAs(targetKey, target_writable))
+			{
+				ScopedUpdateNotifier<TargetType> target_writable;
+				ScopedUpdateNotifier<ShipAIBrain> brain_writable;
+				ScopedUpdateNotifier<PrimitiveWrapper<ActiveAttackers>> attackers_writable;
+				if (memory.getWriteValueAs(brainKey, brain_writable)
+					&& memory.getWriteValueAs(activeAttackersKey, attackers_writable))
 				{
-					TargetType& target = target_writable.get();
-					wp<TargetType> weakTarget = target.requestTypedReference_Nonsafe<TargetType>();
-					if (!weakTarget.expired())
+					owningBrain = &brain_writable.get();
+					attackers = &attackers_writable.get().value;
+
+					if(memory.getWriteValueAs(targetKey, target_writable))
 					{
-						setTarget(weakTarget.lock());
+						TargetType& target = target_writable.get();
+						wp<TargetType> weakTarget = target.requestTypedReference_Nonsafe<TargetType>();
+						if (!weakTarget.expired())
+						{
+							setTarget(weakTarget.lock());
+						}
 					}
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get required memory");
 				}
 			}
 
 			cachedPrefDist2 = preferredTargetMaxDistance * preferredTargetMaxDistance;
 			if (owningBrain)
 			{
-				if (const Ship* myShip = owningBrain->getControlledTarget())
+				if (const Ship* myShipRaw = owningBrain->getControlledTarget())
 				{
-					if(const TeamComponent* teamCom = myShip->getGameComponent<TeamComponent>())
+					if(const TeamComponent* teamCom = myShipRaw->getGameComponent<TeamComponent>())
 					{
 						cachedTeamIdx = teamCom->getTeam();
 					}
@@ -260,7 +325,9 @@ namespace SA
 		void Service_TargetFinder::stopService()
 		{
 			//when stopping service, remove delegates first so we don't hit target changed events when clearing target
-			getMemory().getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_TargetFinder::handleTargetModified);
+			Memory& memory = getMemory();
+			memory.getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_TargetFinder::handleTargetModified);
+			memory.getModifiedDelegate(activeAttackersKey).removeStrong(sp_this(), &Service_TargetFinder::handleActiveAttackersChanged);
 
 			//#TODO it is a little backwards that we give the command back a target we the ship is destroyed
 			//ideally the commander would pass out handles, and then on destroy that handle would give
@@ -269,6 +336,7 @@ namespace SA
 			//anyways, there is very little gain in engineering that right now, so just having this clean its own resources up.
 			setTarget(nullptr);
 			owningBrain = nullptr;
+			attackers = nullptr;
 		}
 
 		void Service_TargetFinder::handleTargetModified(const std::string& key, const GameEntity* value)
@@ -295,6 +363,23 @@ namespace SA
 					currentTarget = std::static_pointer_cast<WorldEntity>(outWriteAccess.get().requestReference().lock()); 
 				}
 				else{log("Service_TargetFinder", LogLevel::LOG_ERROR, "detected target change from outside, but could not acquire handle to it.");}
+			}
+		}
+
+		void Service_TargetFinder::handleActiveAttackersChanged(const std::string& key, const GameEntity* value)
+		{
+			if (!bEvaluateActiveAttackersOnNextTick && myShip)
+			{
+				if (!XisTargetingY(currentTarget, myShip))
+				{
+					//our target isn't attacking us, prepare to target a current attacker based on distance
+					bEvaluateActiveAttackersOnNextTick = true;
+				}
+				else
+				{
+					//our current target is now targeting us, abandon any attackers we were about to target
+					attackerToTarget = nullptr;
+				}
 			}
 		}
 
@@ -457,6 +542,26 @@ namespace SA
 			{
 				target->onDestroyedEvent->addWeakObj(sp_this(), &Service_TargetFinder::handleTargetDestroyed);
 			}
+		}
+
+		bool Service_TargetFinder::XisTargetingY(const sp<TargetType>& x, const lp<const TargetType>& y)
+		{
+			if (x && y) 
+			{ 
+				if (const BrainComponent* brainComp = x->getGameComponent<BrainComponent>())
+				{
+					if (const BehaviorTree::Tree* xTree = brainComp->getTree())
+					{
+						Memory& memory = xTree->getMemory();
+						if (const TargetType* targetOfX = memory.getReadValueAs<TargetType>(targetKey))
+						{
+							return targetOfX == y.get();
+						}
+					}
+				}
+			}
+
+			return false;
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
