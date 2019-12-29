@@ -73,36 +73,43 @@ namespace SA
 			mutableFOV = 45.0f;
 	}
 
-	void CameraFPS::handleInput(GLFWwindow* window, float deltaTime)
+	void CameraFPS::tickKeyboardInput(float dt_sec)
 	{
-		float bSpeedAccerlationFactor = 1.0f;
-		if (bAllowSpeedModifier && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		static WindowSystem& windowSystem = GameBase::get().getWindowSystem();
+		const sp<Window>& primaryWindow = windowSystem.getPrimaryWindow();
+		if (primaryWindow)
 		{
-			bSpeedAccerlationFactor = 10.0f;
-		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		{
-			//cameraPosition -= cameraFront_n * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
-			adjustPosition(-(getFront() * cameraSpeed * bSpeedAccerlationFactor * deltaTime));
-		}
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		{
-			//cameraPosition += cameraFront_n * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
-			adjustPosition(getFront() * cameraSpeed * bSpeedAccerlationFactor  * deltaTime);
-		}
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		{
-			//the w basis vector is the -cameraFront
-			glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
-			//cameraPosition += cameraRight * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
-			adjustPosition(cameraRight * cameraSpeed * bSpeedAccerlationFactor  * deltaTime);
-		}
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		{
-			//the w basis vector is the -cameraFront
-			glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
-			//cameraPosition -= cameraRight * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
-			adjustPosition(-(cameraRight * cameraSpeed * bSpeedAccerlationFactor * deltaTime));
+			GLFWwindow* window = primaryWindow->get();
+
+			float bSpeedAccerlationFactor = 1.0f;
+			if (bAllowSpeedModifier && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+			{
+				bSpeedAccerlationFactor = 10.0f;
+			}
+			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			{
+				//cameraPosition -= cameraFront_n * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
+				adjustPosition(-(getFront() * cameraSpeed * bSpeedAccerlationFactor * dt_sec));
+			}
+			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			{
+				//cameraPosition += cameraFront_n * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
+				adjustPosition(getFront() * cameraSpeed * bSpeedAccerlationFactor  * dt_sec);
+			}
+			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			{
+				//the w basis vector is the -cameraFront
+				glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
+				//cameraPosition += cameraRight * cameraSpeed * bSpeedAccerlationFactor  * deltaTime;
+				adjustPosition(cameraRight * cameraSpeed * bSpeedAccerlationFactor  * dt_sec);
+			}
+			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+			{
+				//the w basis vector is the -cameraFront
+				glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
+				//cameraPosition -= cameraRight * cameraSpeed * bSpeedAccerlationFactor * deltaTime;
+				adjustPosition(-(cameraRight * cameraSpeed * bSpeedAccerlationFactor * dt_sec));
+			}
 		}
 	}
 

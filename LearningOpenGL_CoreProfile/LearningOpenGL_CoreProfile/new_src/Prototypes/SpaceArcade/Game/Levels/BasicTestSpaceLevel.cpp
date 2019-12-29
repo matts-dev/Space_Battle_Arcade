@@ -30,6 +30,10 @@
 #include "../../GameFramework/SAAIBrainBase.h"
 #include "../../GameFramework/SABehaviorTree.h"
 #include "../AI/SADogfightNodes_LargeTree.h"
+#include "../../Rendering/Camera/SAQuaternionCamera.h"
+#include "../../GameFramework/SAGameBase.h"
+#include "../../GameFramework/SAWindowSystem.h"
+#include "../../GameFramework/Interfaces/SAIControllable.h"
 
 namespace SA
 {
@@ -164,9 +168,9 @@ namespace SA
 				//fighter->spawnNewBrain<WanderBrain>();
 				//fighter->spawnNewBrain<EvadeTestBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
-				fighter->spawnNewBrain<DogfightTestBrain>();
+				//fighter->spawnNewBrain<DogfightTestBrain>();
 
-				//fighter->spawnNewBrain<FighterBrain>(); 
+				fighter->spawnNewBrain<FighterBrain>();
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);
@@ -176,6 +180,9 @@ namespace SA
 		{
 			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleLeftMouseButton);
 			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleRightMouseButton);
+			player->getInput().getKeyEvent(GLFW_KEY_P).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleDebugCameraRequested);
+			player->getInput().getKeyEvent(GLFW_KEY_X).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleSpectateDetachPressed);
+			player->getInput().getKeyEvent(GLFW_KEY_C).addWeakObj(sp_this(), &BasicTestSpaceLevel::handlePlayerControlTarget);
 		}
 
 		//pick a projectile to test with
@@ -497,9 +504,46 @@ namespace SA
 		}
 	}
 
+	void BasicTestSpaceLevel::handleDebugCameraRequested(int state, int modifier_keys, int scancode)
+	{
+		if (state == GLFW_RELEASE)
+		{
+			const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0);
+			const sp<Window>& primaryWindow = GameBase::get().getWindowSystem().getPrimaryWindow();
+			if (player && primaryWindow)
+			{
+				sp<CameraBase> newCamera = new_sp<QuaternionCamera>();
+				newCamera->registerToWindowCallbacks_v(primaryWindow);
+				player->setCamera(newCamera);
+			}
+		}
+	}
+
+	void BasicTestSpaceLevel::handleSpectateDetachPressed(int state, int modifier_keys, int scancode)
+	{
+		if (state == GLFW_RELEASE)
+		{
+			hitboxPickerWidget->setPickTarget(sp<WorldEntity>(nullptr));
+		}
+	}
+
+	void BasicTestSpaceLevel::handlePlayerControlTarget(int state, int modifier_keys, int scancode)
+	{
+		if (state == GLFW_RELEASE && !(modifier_keys & GLFW_MOD_ALT))
+		{
+			if (hitboxPickerWidget)
+			{
+				sp<WorldEntity> pickTarget = hitboxPickerWidget->getPickTarget();
+				if (sp<IControllable> controllable = std::dynamic_pointer_cast<IControllable>(pickTarget))
+				{
+					GameBase::get().getPlayerSystem().getPlayer(0)->setControlTarget(controllable);
+				}
+			}
+		}
+	}
+
 	void BasicTestSpaceLevel::refreshShipContinuousFireState()
 	{
-
 		std::random_device rng;
 		std::seed_seq seed{ 7 };
 		std::mt19937 rng_eng = std::mt19937(seed);

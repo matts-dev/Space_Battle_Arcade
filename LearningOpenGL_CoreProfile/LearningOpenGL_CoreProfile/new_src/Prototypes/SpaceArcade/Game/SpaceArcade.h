@@ -25,6 +25,8 @@ namespace SA
 
 	class UIRootWindow;
 
+	class HUD;
+
 	class SpaceArcade : public GameBase
 	{
 	public:
@@ -82,16 +84,17 @@ namespace SA
 		sp<SA::CameraFPS> fpsCamera;
 
 		//shaders
-		sp<SA::Shader> litObjShader;
-		sp<SA::Shader> lampObjShader;
-		sp<SA::Shader> forwardShaded_EmissiveModelShader;
-		sp<SA::Shader> debugLineShader;
+		sp<Shader> litObjShader;
+		sp<Shader> lampObjShader;
+		sp<Shader> forwardShaded_EmissiveModelShader;
+		sp<Shader> debugLineShader;
 
 		////unit cube data
 		//GLuint cubeVAO, cubeVBO;
 
 		//ui
 		sp<UIRootWindow> ui_root;
+		sp<HUD> hud;
 	};
 
 }

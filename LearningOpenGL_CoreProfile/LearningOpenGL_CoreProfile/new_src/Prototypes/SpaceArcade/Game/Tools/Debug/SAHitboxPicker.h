@@ -14,6 +14,7 @@ namespace SA
 	{
 	public:
 		inline void setPickTarget(const sp<WorldEntity>& newTarget) { pickedObject = newTarget; }
+		inline sp<WorldEntity> getPickTarget() { return pickedObject; }
 
 	protected:
 		virtual void postConstruct() override;

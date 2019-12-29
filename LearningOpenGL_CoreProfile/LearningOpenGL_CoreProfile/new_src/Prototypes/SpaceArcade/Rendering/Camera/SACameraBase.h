@@ -25,11 +25,13 @@ namespace SA
 		virtual ~CameraBase();
 
 		/* When overridding registration, call super CamerBase::Method to get default registrations*/
-		virtual void registerToWindowCallbacks_v(sp<Window>& window);
+		virtual void registerToWindowCallbacks_v(const sp<Window>& window);
 		virtual void deregisterToWindowCallbacks_v();
 		virtual void lookAt_v(glm::vec3 point) = 0;
 
 	public:
+		void activate();
+		void deactivate();
 		const glm::vec3& getPosition() const { return cameraPosition; }
 		void setPosition(float x, float y, float z);
 		void setPosition(const glm::vec3& newPos);
@@ -37,9 +39,9 @@ namespace SA
 		void setFar(float newFar) { farZ = newFar; }
 
 		//camera axes/bases
-		const glm::vec3 getFront() const { return cameraFront_n; }
-		const glm::vec3 getRight() const;
-		const glm::vec3 getUp() const;
+		virtual const glm::vec3 getFront() const;
+		virtual const glm::vec3 getRight() const;
+		virtual const glm::vec3 getUp() const;
 
 		const glm::vec3 getWorldUp_n() const { return worldUp_n; }
 
@@ -47,8 +49,8 @@ namespace SA
 		float getFOV() const { return FOV; }
 		float getNear() const { return nearZ; }
 		float getFar() const { return farZ; }
-		glm::mat4 getView() const;
-		glm::mat4 getPerspective() const;
+		virtual glm::mat4 getView() const;
+		virtual glm::mat4 getPerspective() const;
 
 		bool isInCursorMode() { return cursorMode; }
 		void setCursorMode(bool inCursorMode);
@@ -68,6 +70,8 @@ namespace SA
 		virtual void onPositionSet_v(const glm::vec3& newPosition) {}
 		virtual void onFOVSet_v(float FOV) {}
 		virtual void onCursorModeSet_v(bool inCursorMode) {};
+		virtual void tick(float dt_sec);
+		virtual void tickKeyboardInput(float dt_sec) {};
 
 	protected: //protected so subclasses can call super
 		virtual void onMouseMoved_v(double xpos, double ypos);
@@ -75,13 +79,14 @@ namespace SA
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset);
 
 	private:
-		glm::vec3 cameraPosition;
+		glm::vec3 cameraPosition{0.f};
 		glm::vec3 cameraFront_n;
 		glm::vec3 worldUp_n = glm::vec3(0.f, 1.f, 0.f);
 		float FOV = 45.0f;
 		float nearZ = 1.f;
 		float farZ = 500.f;
 		bool cursorMode = false;
+		bool bActive = false;
 		wp<SA::Window> registeredWindow;
 
 	};

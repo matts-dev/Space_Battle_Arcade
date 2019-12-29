@@ -39,15 +39,12 @@ namespace SA
 		void releaseOpenGLResources();
 		void acquireOpenGLResources();
 
-	private:
+	protected:
 		virtual void postConstruct() override;
 
 	private: //subclass provided
 		virtual void onReleaseOpenGLResources() = 0;
 		virtual void onAcquireOpenGLResources() = 0;
-
-	private:
-
 	};
 
 	///////////////////////////////////////////////////////////////////////
@@ -124,6 +121,31 @@ namespace SA
 		//no copies/moves allowed for ShapeBase; so safe to hold these references
 		Model3D& model;
 		Shader& shader;
+	};
+
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Textured Quad
+	/////////////////////////////////////////////////////////////////////////////////////
+	class TexturedQuad final : public ShapeMesh
+	{
+	public:
+		TexturedQuad();
+
+		virtual void render() const override;
+		virtual void instanceRender(int instanceCount) const override;
+		virtual const std::vector<unsigned int>& getVAOs() override;
+	private:
+		virtual void onAcquireOpenGLResources() override;
+		virtual void onReleaseOpenGLResources() override;
+	private:
+		std::vector<float> vertices;
+		std::vector<unsigned int> indices;
+		std::vector<unsigned int> vaos;
+
+		unsigned int vao;
+		unsigned int ebo;
+		unsigned int vbo;
 	};
 }
 

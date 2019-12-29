@@ -1,6 +1,6 @@
 #pragma once
-#include "..\GameFramework\SAGameEntity.h"
-#include "..\GameFramework\SAPlayerBase.h"
+#include "../GameFramework/SAGameEntity.h"
+#include "../GameFramework/SAPlayerBase.h"
 
 namespace SA
 {
@@ -8,6 +8,7 @@ namespace SA
 	{
 	public:
 		virtual ~Player() {}
+		virtual sp<CameraBase> generateDefaultCamera() const;
 	};
 }
 

@@ -81,6 +81,20 @@ namespace SA
 			return vec.x || vec.y || vec.z || vec.w;
 		};
 
+		inline bool valuesAreSame(float first, float second, float episilonScale = 100)
+		{
+			const float epi = episilonScale * std::numeric_limits<float>::epsilon();
+			return abs(first - second) < epi;
+		}
+		inline bool vectorsAreSame(glm::vec3 first, glm::vec3 second, float episilonScale = 100)
+		{
+			return valuesAreSame(first.x, second.x, episilonScale)
+				&& valuesAreSame(first.y, second.y, episilonScale) 
+				&& valuesAreSame(first.z, second.z, episilonScale);
+		}
+
+
+
 #if _DEBUG | ERROR_CHECK_GL_RELEASE 
 #define NAN_BREAK(value)\
 if(SA::Utils::anyValueNAN(value))\

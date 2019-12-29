@@ -7,6 +7,8 @@
 #include "../SAWindow.h"
 #include <gtc/matrix_transform.hpp>
 #include "../../GameFramework/SALog.h"
+#include "../../GameFramework/SAGameBase.h"
+#include "../../GameFramework/SAWindowSystem.h"
 
 namespace SA
 {
@@ -15,7 +17,7 @@ namespace SA
 	{
 	}
 
-	void CameraBase::registerToWindowCallbacks_v(sp<Window>& window)
+	void CameraBase::registerToWindowCallbacks_v(const sp<Window>& window)
 	{
 		deregisterToWindowCallbacks_v();
 
@@ -41,12 +43,39 @@ namespace SA
 		}
 	}
 
+	void CameraBase::activate()
+	{
+		if (!bActive)
+		{
+			bActive = true;
+
+			static GameBase& game = GameBase::get();
+			game.PreGameloopTick.addWeakObj(sp_this(), &CameraBase::tick);
+		}
+	}
+
+	void CameraBase::deactivate()
+	{
+		if (bActive)
+		{
+			bActive = false;
+
+			static GameBase& game = GameBase::get();
+			game.PreGameloopTick.removeWeak(sp_this(), &CameraBase::tick);
+		}
+	}
+
 	void CameraBase::setPosition(float x, float y, float z)
 	{
 		cameraPosition.x = x;
 		cameraPosition.y = y;
 		cameraPosition.z = z;
 		onPositionSet_v(cameraPosition);
+	}
+
+	const glm::vec3 CameraBase::getFront() const
+	{
+		return cameraFront_n;
 	}
 
 	const glm::vec3 CameraBase::getRight() const
@@ -148,6 +177,11 @@ namespace SA
 			}
 		}
 		onCursorModeSet_v(inCursorMode);
+	}
+
+	void CameraBase::tick(float dt_sec)
+	{
+		tickKeyboardInput(dt_sec);
 	}
 
 	void CameraBase::onMouseMoved_v(double xpos, double ypos)

@@ -56,7 +56,6 @@ namespace SA
 	// Textured Sphere
 	///////////////////////////////////////////////////////////////////////
 
-
 	SphereMeshTextured::SphereMeshTextured(float tolerance)
 	{
 		this->tolerance = tolerance;
@@ -361,6 +360,77 @@ namespace SA
 		{
 			throw std::runtime_error("ModelWrapper created without a shader");
 		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Textured Quad
+	/////////////////////////////////////////////////////////////////////////////////////
+
+	TexturedQuad::TexturedQuad()
+	{
+		using namespace glm;
+
+		vertices = {
+			// positions          // texture coords
+			0.5f,  0.5f, 0.0f,   1.0f, 1.0f,   // top right
+			0.5f, -0.5f, 0.0f,   1.0f, 0.0f,   // bottom right
+			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f,   // bottom left
+			-0.5f,  0.5f, 0.0f,   0.0f, 1.0f    // top left 
+		};
+
+		indices = {
+			0, 1, 3, //first triangle
+			1, 2, 3  //second triangle
+		};
+
+		vaos = { 0 };
+	}
+
+	void TexturedQuad::onAcquireOpenGLResources()
+	{
+		ec(glGenVertexArrays(1, &vao));
+		ec(glBindVertexArray(vao));
+		vaos[0] = vao;
+
+		ec(glGenBuffers(1, &vbo));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float)*vertices.size(), &vertices[0], GL_STATIC_DRAW));
+
+		ec(glGenBuffers(1, &ebo));
+		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+		ec(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW));
+
+		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(0));
+		ec(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))));
+		ec(glEnableVertexAttribArray(1));
+
+		ec(glBindVertexArray(0)); 
+		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+	}
+	void TexturedQuad::onReleaseOpenGLResources()
+	{
+		ec(glDeleteVertexArrays(1, &vao));
+		ec(glDeleteBuffers(1, &vbo));
+		ec(glDeleteBuffers(1, &ebo));
+	}
+	void TexturedQuad::render() const
+	{
+		ec(glBindVertexArray(vao));
+		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+		ec(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(0)));
+	}
+
+	void TexturedQuad::instanceRender(int instanceCount) const
+	{
+		ec(glBindVertexArray(vao));
+		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+		ec(glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(0), instanceCount));
+	}
+
+	const std::vector<unsigned int>& TexturedQuad::getVAOs()
+	{
+		return vaos;
 	}
 
 }

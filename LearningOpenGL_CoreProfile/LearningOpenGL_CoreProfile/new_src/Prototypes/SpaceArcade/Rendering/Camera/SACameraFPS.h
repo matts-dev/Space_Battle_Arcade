@@ -10,15 +10,14 @@ namespace SA
 	class CameraFPS : public CameraBase
 	{
 	public:
-		CameraFPS(float inFOV, float inYaw, float inPitch);
+		CameraFPS(float inFOV=45.f, float inYaw=0.f, float inPitch=0.f);
 		~CameraFPS();
 
 		//callbacks
 		virtual void onMouseMoved_v(double xpos, double ypos) override;
 		virtual void onWindowFocusedChanged_v(int focusEntered) override;
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset) override;
-
-		void handleInput(GLFWwindow* window, float deltaTime);
+		virtual void tickKeyboardInput(float dt_sec) override;
 
 		//setters and getters
 		void setYaw(float inYaw);
@@ -35,11 +34,12 @@ namespace SA
 
 		//virtual void registerToWindowCallbacks(sp<Window>& window) override;
 		//virtual void deregisterToWindowCallbacks() override;
-
+	private:
 	private: //helper fields
 		double lastX;
 		double lastY;
 		void calculateEulerAngles();
+
 
 	private:
 		float pitch = 0.f;

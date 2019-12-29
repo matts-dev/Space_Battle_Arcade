@@ -2,11 +2,13 @@
 #include "SAGameEntity.h"
 
 #include "..\Tools\DataStructures\MultiDelegate.h"
+#include "..\Tools\DataStructures\LifetimePointer.h"
 
 namespace SA
 {
 	class InputProcessor;
 	class CameraBase;
+	class IControllable;
 
 	class PlayerBase : public GameEntity
 	{
@@ -21,12 +23,16 @@ namespace SA
 
 		/** Camera related */
 		void setCamera(const sp<CameraBase>& newCamera);
-		const sp<CameraBase>& getCamera();
+		const sp<CameraBase>& getCamera() const;
 		MultiDelegate<const sp<CameraBase>& /*old_camera*/, const sp<CameraBase>& /*new_camera*/> onCameraChanging;
-
-
+		void setControlTarget(const sp<IControllable>& newControlTarget);
+	protected:
+		virtual sp<CameraBase> generateDefaultCamera() const = 0;
+	public:
+		//MultiDelegate<const lp<IControllable>& /*previousTarget*/, const lp<IControllable>& /*newTarget*/> onControlTargetChanging; //#TODO will need virtual inheritance on IControllable for GameEntity
 	private:
 		sp<InputProcessor> input;
 		sp<CameraBase> camera;
+		sp<IControllable> controlTarget;
 	};
 }

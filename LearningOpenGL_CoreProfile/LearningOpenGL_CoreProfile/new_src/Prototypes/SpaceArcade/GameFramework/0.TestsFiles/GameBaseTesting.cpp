@@ -206,7 +206,7 @@ namespace
 				window->markWindowForClose(true);
 			}
 
-			fpsCamera->handleInput(window->get(), deltaTimeSecs);
+			fpsCamera->tickKeyboardInput(deltaTimeSecs);
 
 			//RENDER
 			ec(glEnable(GL_DEPTH_TEST));

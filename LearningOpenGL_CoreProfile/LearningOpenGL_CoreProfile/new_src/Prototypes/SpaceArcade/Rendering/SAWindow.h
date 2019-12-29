@@ -1,8 +1,11 @@
 #pragma once
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
+
 #include<cstdint>
+#include <utility>
 #include <unordered_map>
+
 #include "../GameFramework/SAGameEntity.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 
@@ -53,6 +56,7 @@ namespace SA
 		void markWindowForClose(bool bClose);
 		bool shouldClose();
 		float getAspect();
+		std::pair<int, int> getFramebufferSize();
 
 		void setViewportToWindowSize();
 

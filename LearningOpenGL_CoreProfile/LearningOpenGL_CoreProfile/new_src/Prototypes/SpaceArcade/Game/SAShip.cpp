@@ -18,6 +18,8 @@
 #include "../GameFramework/SARandomNumberGenerationSystem.h"
 #include "../Tools/color_utils.h"
 #include "../GameFramework/SADebugRenderSystem.h"
+#include "Cameras/SAShipCamera.h"
+#include "../GameFramework/SAWindowSystem.h"
 
 namespace
 {
@@ -194,6 +196,40 @@ namespace SA
 	{
 		RenderModelEntity::onDestroyed();
 		collisionHandle = nullptr; //release spatial hashing information
+	}
+
+	void Ship::onPlayerControlTaken()
+	{
+		if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
+		{
+			if (AIBrain* brain = brainComp->getBrain())
+			{
+				brain->sleep();
+			}
+		}
+	}
+
+	void Ship::onPlayerControlReleased()
+	{
+		if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
+		{
+			if (AIBrain* brain = brainComp->getBrain())
+			{
+				brain->awaken();
+			}
+		}
+	}
+
+	sp<CameraBase> Ship::getCamera()
+	{
+		if (!shipCamera)
+		{
+			shipCamera = new_sp<ShipCamera>();
+
+			const sp<Window>& primaryWindow = GameBase::get().getWindowSystem().getPrimaryWindow();
+			shipCamera->registerToWindowCallbacks_v(primaryWindow);
+		}
+		return shipCamera;
 	}
 
 	void Ship::fireProjectile(BrainKey privateKey)

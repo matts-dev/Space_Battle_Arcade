@@ -1,14 +1,14 @@
 #pragma once
+#include <optional>
+#include "SAProjectileSystem.h"
+#include "AssetConfigs/SASpawnConfig.h"
 #include "../GameFramework/SAWorldEntity.h"
-#include "../Tools/ModelLoading/SAModel.h"
 #include "../GameFramework/RenderModelEntity.h"
 #include "../GameFramework/SACollisionUtils.h"
-#include "SAProjectileSystem.h"
-#include "../Tools/DataStructures/SATransform.h"
-#include "AssetConfigs/SASpawnConfig.h"
 #include "../GameFramework/Components/GameplayComponents.h"
-#include <optional>
-
+#include "../GameFramework/Interfaces/SAIControllable.h"
+#include "../Tools/ModelLoading/SAModel.h"
+#include "../Tools/DataStructures/SATransform.h"
 
 namespace SA
 {
@@ -19,6 +19,7 @@ namespace SA
 	class ActiveParticleGroup;
 	class ShipEnergyComponent;
 	class RNG;
+	class ShipCamera;
 
 	struct HitPoints
 	{
@@ -26,7 +27,7 @@ namespace SA
 		int max;
 	};
 
- 	class Ship : public RenderModelEntity, public IProjectileHitNotifiable
+ 	class Ship : public RenderModelEntity, public IProjectileHitNotifiable, public IControllable
 	{
 	public:
 		const bool FIRE_PROJECTILE_ENABLED = true;
@@ -58,6 +59,11 @@ namespace SA
 		////////////////////////////////////////////////////////
 		virtual void draw(Shader& shader) override;
 		void onDestroyed() override;
+
+		//IControllable
+		virtual void onPlayerControlTaken() override;
+		virtual void onPlayerControlReleased() override;
+		virtual sp<CameraBase> getCamera() override;
 
 	public:
 		template <typename BrainType>
@@ -155,6 +161,8 @@ namespace SA
 		sp<const SpawnConfig> shipData;
 
 		ShipEnergyComponent* energyComp = nullptr;
+
+		sp<ShipCamera> shipCamera = nullptr;
 
 		//boost
 		const float ENERGY_BOOST_RATIO_SEC = 50.f / 1.0f; // ( energy_cost / speed_increase). eg a speed up for 1.0 could cost 50 energy per sec

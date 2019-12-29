@@ -36,6 +36,10 @@ namespace SA
 		void handleUIFrameStarted();
 		void handleEntityDestroyed(const sp<GameEntity>& entity);
 
+		void handleDebugCameraRequested(int state, int modifier_keys, int scancode);
+		void handleSpectateDetachPressed(int state, int modifier_keys, int scancode);
+		void handlePlayerControlTarget(int state, int modifier_keys, int scancode);
+		
 
 		void refreshShipContinuousFireState();
 		void refreshProjectiles();

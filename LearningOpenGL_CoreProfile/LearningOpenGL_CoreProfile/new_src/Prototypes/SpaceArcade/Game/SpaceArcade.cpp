@@ -34,6 +34,7 @@
 #include "SAPlayer.h"
 #include "../GameFramework/SAPlayerSystem.h"
 #include "../GameFramework/SATimeManagementSystem.h"
+#include "UI/SAHUD.h"
 
 namespace SA
 {
@@ -95,10 +96,12 @@ namespace SA
 		}
 
 		ui_root = new_sp<UIRootWindow>();
+		hud = new_sp<HUD>();
 
 		//make sure resources are loaded before the level starts
 		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		getLevelSystem().loadLevel(startupLevel);
+
 
 		return window;
 	}
@@ -136,7 +139,6 @@ namespace SA
 		}
 	}
 
-	//putting tick below rest class so it will be close to bottom of file.
 	void SpaceArcade::tickGameLoop(float deltaTimeSecs) 
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
@@ -151,7 +153,7 @@ namespace SA
 		//this probably will need to become event based and have handler stack
 		updateInput(deltaTimeSecs);
 
-		fpsCamera->handleInput(window->get(), deltaTimeSecs);
+		//fpsCamera->tickKeyboardInput(deltaTimeSecs);
 
 		ui_root->tick(deltaTimeSecs);
 
@@ -171,10 +173,16 @@ namespace SA
 		ec(glClearColor(0, 0, 0, 1));
 		ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
- 		mat4 view = fpsCamera->getView();
-
-		//mat4 projection = glm::perspective(fpsCamera->getFOV(), window->getAspect(), 0.1f, 500.0f);
-		mat4 projection = fpsCamera->getPerspective();
+		mat4 view{ 1.f };
+		mat4 projection{ 1.f };
+		if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
+		{
+			if (const sp<CameraBase>& camera = player->getCamera())
+			{
+				view = camera->getView();
+				projection = camera->getPerspective();
+			}
+		}
 
 		renderDebug(view, projection);
 
@@ -202,6 +210,8 @@ namespace SA
 		{
 			loadedLevel->render(deltaTimeSecs, view, projection);
 		}
+
+		hud->render(deltaTimeSecs);
 	}
 
 	void SpaceArcade::onRegisterCustomSystem()

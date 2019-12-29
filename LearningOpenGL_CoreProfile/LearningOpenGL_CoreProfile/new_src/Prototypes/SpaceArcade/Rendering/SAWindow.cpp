@@ -282,12 +282,18 @@ namespace SA
 		return aspect;
 	}
 
-	void Window::setViewportToWindowSize()
+	std::pair<int, int> Window::getFramebufferSize()
 	{
-		//window size is not in pixels, but frame size returns the framebuffer size which is pixels.
+		static bool bLoggedAspectError = false;
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
+		return std::make_pair(width, height);
+	}
 
+	void Window::setViewportToWindowSize()
+	{
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
 		ec(glViewport(0, 0, width, height));
 	}
 

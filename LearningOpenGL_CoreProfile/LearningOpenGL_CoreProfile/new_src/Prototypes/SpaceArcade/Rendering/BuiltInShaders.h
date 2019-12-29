@@ -431,4 +431,40 @@ namespace SA
 				}
 			)";
 
+
+	char const* const spriteVS_src= R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;				
+				layout (location = 1) in vec2 inTexCoord;		
+				
+				out vec2 texCoord;
+
+				uniform mat4 model;
+				uniform mat4 projection;
+
+				void main(){
+					texCoord = inTexCoord;
+					gl_Position = projection * model * vec4(position, 1.f);
+				}
+			)";
+	char const* const spriteFS_src = R"(
+				#version 330 core
+
+				out vec4 fragmentColor;
+
+				in vec2 texCoord;
+
+				uniform sampler2D textureData;   
+
+				void main(){
+					//fragmentColor = vec4(1.0f, 1.f, 1.f, 1.f);//debug
+
+					fragmentColor = texture(textureData, texCoord);
+					if(fragmentColor.a < 0.05)
+					{
+						discard;
+					}
+				}
+			)";
+
 }
