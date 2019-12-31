@@ -179,6 +179,15 @@ namespace SA
 		onCursorModeSet_v(inCursorMode);
 	}
 
+	void CameraBase::onCursorModeSet_v(bool inCursorMode)
+	{
+		if (!inCursorMode)
+		{
+			//don't jitter camera
+			refocused = true;
+		}
+	}
+
 	void CameraBase::tick(float dt_sec)
 	{
 		tickKeyboardInput(dt_sec);
@@ -190,6 +199,7 @@ namespace SA
 
 	void CameraBase::onWindowFocusedChanged_v(int focusEntered)
 	{
+		refocused = focusEntered;
 	}
 
 	void CameraBase::onMouseWheelUpdate_v(double xOffset, double yOffset)

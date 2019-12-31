@@ -69,7 +69,8 @@ namespace SA
 	private:
 		virtual void onPositionSet_v(const glm::vec3& newPosition) {}
 		virtual void onFOVSet_v(float FOV) {}
-		virtual void onCursorModeSet_v(bool inCursorMode) {};
+		virtual void onCursorModeSet_v(bool inCursorMode);;
+	protected:
 		virtual void tick(float dt_sec);
 		virtual void tickKeyboardInput(float dt_sec) {};
 
@@ -77,6 +78,9 @@ namespace SA
 		virtual void onMouseMoved_v(double xpos, double ypos);
 		virtual void onWindowFocusedChanged_v(int focusEntered);
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset);
+
+	protected:
+		bool refocused = true;
 
 	private:
 		glm::vec3 cameraPosition{0.f};

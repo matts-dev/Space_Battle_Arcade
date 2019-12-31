@@ -1,6 +1,7 @@
 #pragma once
 #include "SAGameEntity.h"
 #include "../Tools/DataStructures/SATransform.h"
+#include "../Tools/DataStructures/MultiDelegate.h"
 #include "Interfaces/SATickable.h"
 #include "Components/SAComponentEntity.h"
 
@@ -28,8 +29,8 @@ namespace SA
 		{}
 		virtual void tick(float deltaTimeSecs) {};
 
-		inline const Transform& getTransform() const noexcept				{ return transform; }
-		void					setTransform(const Transform& inTransform);
+		inline const Transform& getTransform() const noexcept { return transform; }
+		virtual void setTransform(const Transform& inTransform);
 
 		//#scenenodes this will need updating to get final parent-child transformed position
 		glm::vec3 getWorldPosition() const { return transform.position; } //#scenenodes todo update
@@ -44,6 +45,8 @@ namespace SA
 		/** World returns a raw pointer because caching a world sp will often result cyclic references. 
 			A raw pointer should make a programmer think about how to safely cache it and find this message.*/
 		LevelBase* getWorld();
+	public:
+		MultiDelegate<const Transform& /*xform*/> onTransformUpdated;
 
 	private:
 		Transform transform;

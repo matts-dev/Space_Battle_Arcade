@@ -15,7 +15,6 @@ namespace SA
 
 		//callbacks
 		virtual void onMouseMoved_v(double xpos, double ypos) override;
-		virtual void onWindowFocusedChanged_v(int focusEntered) override;
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset) override;
 		virtual void tickKeyboardInput(float dt_sec) override;
 
@@ -23,18 +22,11 @@ namespace SA
 		void setYaw(float inYaw);
 		void setPitch(float inPitch);
 		void setSpeed(float speed);
-		virtual void onCursorModeSet_v(bool inCursorMode) override;
-
 		float getYaw() const { return yaw; }
 		float getPitch() const { return pitch; }
 
 		virtual void lookAt_v(glm::vec3 point) override;
 
-	public:
-
-		//virtual void registerToWindowCallbacks(sp<Window>& window) override;
-		//virtual void deregisterToWindowCallbacks() override;
-	private:
 	private: //helper fields
 		double lastX;
 		double lastY;
@@ -48,6 +40,5 @@ namespace SA
 		float mouseSensitivity = 0.05f;
 		float cameraSpeed = 2.5f;
 		bool bAllowSpeedModifier = true;
-		bool refocused = true;
 	};
 }

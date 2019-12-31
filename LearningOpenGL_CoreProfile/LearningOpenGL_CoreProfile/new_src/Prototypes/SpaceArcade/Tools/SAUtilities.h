@@ -66,6 +66,12 @@ namespace SA
 			float delta = std::abs(value - compareValue);
 			return delta < epsilon;
 		}
+		inline bool vectorsAreSame(glm::vec3 first, glm::vec3 second, float epsilon = 0.001)
+		{
+			return float_equals(first.x, second.x, epsilon)
+				&& float_equals(first.y, second.y, epsilon)
+				&& float_equals(first.z, second.z, epsilon);
+		}
 
 		glm::vec3 getDifferentVector(glm::vec3 vec);
 		float getDegreeAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n);
@@ -80,19 +86,6 @@ namespace SA
 			glm::bvec4 vec = glm::isnan(quat);
 			return vec.x || vec.y || vec.z || vec.w;
 		};
-
-		inline bool valuesAreSame(float first, float second, float episilonScale = 100)
-		{
-			const float epi = episilonScale * std::numeric_limits<float>::epsilon();
-			return abs(first - second) < epi;
-		}
-		inline bool vectorsAreSame(glm::vec3 first, glm::vec3 second, float episilonScale = 100)
-		{
-			return valuesAreSame(first.x, second.x, episilonScale)
-				&& valuesAreSame(first.y, second.y, episilonScale) 
-				&& valuesAreSame(first.z, second.z, episilonScale);
-		}
-
 
 
 #if _DEBUG | ERROR_CHECK_GL_RELEASE 

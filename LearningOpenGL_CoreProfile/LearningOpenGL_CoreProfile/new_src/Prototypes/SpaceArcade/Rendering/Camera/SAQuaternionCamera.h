@@ -23,7 +23,6 @@ namespace SA
 
 	protected:
 		virtual void onMouseMoved_v(double xpos, double ypos) override;
-		virtual void onWindowFocusedChanged_v(int focusEntered) override;
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset) override;
 	private:
 		virtual void tickKeyboardInput(float dt_sec) override;
@@ -43,8 +42,6 @@ namespace SA
 	private: //helper fields
 		double lastX;
 		double lastY;
-		bool refocused = true;
-
 	private:
 		const glm::vec3 DEFAULT_AXIS_U = glm::vec3(1.f, 0, 0);
 		const glm::vec3 DEFAULT_AXIS_V = glm::vec3(0, 1.f, 0);
@@ -54,7 +51,7 @@ namespace SA
 		glm::vec3 v_axis;
 		glm::vec3 w_axis;
 
-		glm::quat quaternion;
+		glm::quat myQuat;
 
 		float mouseSensitivity = 0.00125f;
 		float freeRoamSpeed = 10.0f;

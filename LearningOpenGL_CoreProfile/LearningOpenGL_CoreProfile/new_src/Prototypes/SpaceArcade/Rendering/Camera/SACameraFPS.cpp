@@ -54,12 +54,6 @@ namespace SA
 		calculateEulerAngles();
 	}
 
-	void CameraFPS::onWindowFocusedChanged_v(int focusEntered)
-	{
-		CameraBase::onWindowFocusedChanged_v(focusEntered);
-		refocused = focusEntered;
-	}
-
 	void CameraFPS::onMouseWheelUpdate_v(double xOffset, double yOffset)
 	{
 		float sensitivity = 0.5f;
@@ -138,15 +132,6 @@ namespace SA
 	void CameraFPS::setSpeed(float speed)
 	{
 		cameraSpeed = speed;
-	}
-
-	void CameraFPS::onCursorModeSet_v(bool inCursorMode)
-	{
-		if (!inCursorMode)
-		{
-			//don't jitter camera
-			refocused = true;
-		}
 	}
 
 	void CameraFPS::lookAt_v(glm::vec3 point)

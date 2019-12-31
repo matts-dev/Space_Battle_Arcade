@@ -17,6 +17,11 @@ namespace SA
 		NAN_BREAK(inTransform.position);
 		NAN_BREAK(inTransform.rotQuat);
 		transform = inTransform;
+
+		if (onTransformUpdated.numBound() > 0)
+		{
+			onTransformUpdated.broadcast(transform);
+		}
 	}
 
 	const sp<const ModelCollisionInfo>& WorldEntity::getCollisionInfo() const

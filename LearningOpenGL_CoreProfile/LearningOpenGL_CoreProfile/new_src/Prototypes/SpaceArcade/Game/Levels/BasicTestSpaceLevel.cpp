@@ -133,7 +133,8 @@ namespace SA
 		uint32_t numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		//numFighterShipsToSpawn = 250;
-		numFighterShipsToSpawn = 20;
+		numFighterShipsToSpawn = 50;
+		//numFighterShipsToSpawn = 20;
 		//numFighterShipsToSpawn = 10;
 		//numFighterShipsToSpawn = 4;
 		//numFighterShipsToSpawn = 2;
@@ -165,12 +166,12 @@ namespace SA
 				teamTargets[teamIdx].push_back(fighter);
 
 				//fighter->spawnNewBrain<FlyInDirectionBrain>();
-				//fighter->spawnNewBrain<WanderBrain>();
-				//fighter->spawnNewBrain<EvadeTestBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
+				//fighter->spawnNewBrain<WanderBrain>();
+				fighter->spawnNewBrain<EvadeTestBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain>();
 
-				fighter->spawnNewBrain<FighterBrain>();
+				//fighter->spawnNewBrain<FighterBrain>();
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);

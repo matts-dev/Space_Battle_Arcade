@@ -228,6 +228,7 @@ namespace SA
 
 			const sp<Window>& primaryWindow = GameBase::get().getWindowSystem().getPrimaryWindow();
 			shipCamera->registerToWindowCallbacks_v(primaryWindow);
+			shipCamera->followShip(sp_this());
 		}
 		return shipCamera;
 	}
@@ -269,7 +270,7 @@ namespace SA
 		}
 	}
 
-	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedAmplifier, bool bRoll, float turnAmplifier)
+	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedAmplifier, bool bRoll, float turnAmplifier, float viscosity)
 	{
 		using namespace glm;
 
@@ -287,6 +288,10 @@ namespace SA
 			float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
 			float maxTurn_Rad = getMaxTurnAngle_PerSec() * turnAmplifier * dt_sec;
 			float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
+
+			//slow down turn if some viscosity is being applied
+			float fluidity = glm::clamp(1.f - viscosity, 0.f, 1.f);
+			possibleRotThisTick *= fluidity;
 
 			quat completedRot = Utils::getRotationBetween(forwardDir_n, targetDir_n) * xform.rotQuat;
 			quat newRot = glm::slerp(xform.rotQuat, completedRot, possibleRotThisTick);
@@ -317,33 +322,34 @@ namespace SA
 		}
 	}
 
-	void Ship::roll(float rollspeed_rad, float dt_sec)
+	void Ship::roll(float rollspeed_rad, float dt_sec, float clamp_rad /*= 3.14f*/)
 	{
 		using namespace glm;
 		Transform newXform = getTransform();
 		vec3 forwardDir_n = glm::normalize(vec3(getForwardDir()));
 
-		float rollThisTick = glm::clamp(rollspeed_rad * dt_sec, -1.f, 1.f);
-		glm::quat roll = glm::angleAxis(rollThisTick, forwardDir_n);
-		newXform.rotQuat = roll * newXform.rotQuat;
+		float roll_rad = glm::clamp(rollspeed_rad * dt_sec, -clamp_rad, clamp_rad);
+		glm::quat roll_q = glm::angleAxis(roll_rad, forwardDir_n);
+		newXform.rotQuat = roll_q * newXform.rotQuat;
 		setTransform(newXform);
 	}
 
 	void Ship::adjustSpeedFraction(float targetSpeedFactor, float dt_sec)
 	{
-		/*targetSpeedFactor = glm::clamp<float>(targetSpeedFactor, 0.f, 1.f);
+		targetSpeedFactor = glm::clamp<float>(targetSpeedFactor, -0.1f, 1.f);
 
 		float toTarget = targetSpeedFactor - currentSpeedFactor;
 		float deltaSpeed = engineSpeedChangeFactor * dt_sec;
 		if (glm::abs(deltaSpeed) < glm::abs(toTarget))
 		{
-			float sign = toTarget > 0 ? 1.f : -1.f;
+			//float sign = toTarget > 0 ? 1.f : -1.f; 
+			float sign = glm::sign<float>(toTarget);
 			currentSpeedFactor = currentSpeedFactor + sign * deltaSpeed;
 		}
 		else
 		{
 			currentSpeedFactor = currentSpeedFactor + toTarget;
-		}*/
+		}
 	}
 
 	void Ship::setNextFrameBoost(float targetSpeedFactor)

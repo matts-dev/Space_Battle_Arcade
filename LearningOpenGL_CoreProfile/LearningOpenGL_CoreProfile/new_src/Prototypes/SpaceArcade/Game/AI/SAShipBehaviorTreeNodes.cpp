@@ -1581,13 +1581,13 @@ namespace SA
 			}
 			else /* out of arrangment*/
 			{
-				float turnLimit = (basePOD.timeInWrongPhase + 0.001f) / wrongPhaseTimeout;
+				float rollLimit = (basePOD.timeInWrongPhase + 0.001f) / wrongPhaseTimeout;
 
 				//do not let full turn happen, otherwise combo step will reengage when again facing
 				const float maximumTurnFactor = 0.25f;
-				turnLimit *= maximumTurnFactor; 
+				rollLimit *= maximumTurnFactor; 
 
-				myShip.moveTowardsPoint(targetPos, dt_sec, 1.f, true, turnLimit);
+				myShip.moveTowardsPoint(targetPos, dt_sec, 1.f, true, rollLimit);
 
 				debugColor *= 0.25f;
 			}

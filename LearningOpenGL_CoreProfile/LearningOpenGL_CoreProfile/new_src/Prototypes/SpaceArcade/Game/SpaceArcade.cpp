@@ -245,7 +245,13 @@ namespace SA
 				else
 				{
 					ui_root->toggleUIVisible();
-					fpsCamera->setCursorMode(ui_root->getUIVisible());
+					if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
+					{
+						if (sp<CameraBase> camera = player->getCamera())
+						{
+							camera->setCursorMode(ui_root->getUIVisible());
+						}
+					}
 				}
 			}
 			 

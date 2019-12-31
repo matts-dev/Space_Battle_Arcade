@@ -15,7 +15,7 @@ namespace SA
 	{
 		using namespace glm;
 
-		mat4 transform = toMat4(quaternion);
+		mat4 transform = toMat4(myQuat);
 		u_axis = normalize(vec3(transform * vec4(DEFAULT_AXIS_U, 0))); //#optimize the normalization of the basis may be superfluous, but needs testing due to floating point error
 		v_axis = normalize(vec3(transform * vec4(DEFAULT_AXIS_V, 0)));
 		w_axis = normalize(vec3(transform * vec4(DEFAULT_AXIS_W, 0)));
@@ -26,6 +26,10 @@ namespace SA
 		//u_axis = vec3(transformedAxes[0]); //#TODO consider whether these need to be normalized.
 		//v_axis = vec3(transformedAxes[1]);
 		//w_axis = vec3(transformedAxes[2]);
+
+		NAN_BREAK(u_axis);
+		NAN_BREAK(v_axis);
+		NAN_BREAK(w_axis);
 	}
 
 	void QuaternionCamera::updateRoll(float rollAmount_rad)
@@ -33,7 +37,8 @@ namespace SA
 		using namespace glm;
 
 		quat roll = angleAxis(rollAmount_rad, w_axis);
-		quaternion = roll * quaternion;
+		NAN_BREAK(roll);
+		myQuat = roll * myQuat;
 		updateAxes();
 	}
 
@@ -66,7 +71,11 @@ namespace SA
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		vec3 rotationAxis = normalize(cross(currentLooking, newLookAt)); 
 		quat q = angleAxis(theta_radians, rotationAxis);	//glm expects normalized axis.
-		quaternion = q * quaternion;
+		myQuat = q * myQuat;
+
+		NAN_BREAK(q);
+		NAN_BREAK(myQuat);
+
 		updateAxes(); //rebuild based on new quaternion
 	}
 
@@ -95,6 +104,7 @@ namespace SA
 		vec3 uvPlaneVec = u_axis * yawFactor;
 		uvPlaneVec += v_axis * pitchFactor;
 		float rotationMagnitude = length(uvPlaneVec);
+		if (rotationMagnitude == 0.0f) { return; }
 		uvPlaneVec = normalize(uvPlaneVec);
 
 		//get a rotation axis between the vector in the screen and the direction of the camera.
@@ -103,9 +113,10 @@ namespace SA
 		//rotate the w_axis
 		//quat q1(0, 0, 0, 1);
 		quat q1 = angleAxis(mouseSensitivity * rotationMagnitude, rotationAxis); //#TODO rotationMagnitude is adhoc, it needs to be converted to an angle
+		NAN_BREAK(q1);
 
 		//update the quaternion transform
-		quaternion = q1 * quaternion;
+		myQuat = q1 * myQuat;
 
 		//update all axes
 		updateAxes();
@@ -117,13 +128,6 @@ namespace SA
 		//std::cout << "u:" << u_axis.x << " " << u_axis.y << " " << u_axis.z << " ";
 		//std::cout << "v:" << v_axis.x << " " << v_axis.y << " " << v_axis.z << " ";
 		//std::cout << "w:" << w_axis.x << " " << w_axis.y << " " << w_axis.z << " " << std::endl;
-	}
-
-	void QuaternionCamera::onWindowFocusedChanged_v(int focusEntered)
-	{
-		//#TODO perhaps this functionality can be moved to base.
-		CameraBase::onWindowFocusedChanged_v(focusEntered);
-		refocused = focusEntered;
 	}
 
 	void QuaternionCamera::onMouseWheelUpdate_v(double xOffset, double yOffset)

@@ -82,8 +82,8 @@ namespace SA
 		////////////////////////////////////////////////////////
 		//Control functions
 		////////////////////////////////////////////////////////
-		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true, float rollAmplifier = 1.f);
-		void roll(float roll_rad, float dt_sec);
+		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true, float rollAmplifier = 1.f, float viscosity = 0.f);
+		void roll(float rollspeed_rad, float dt_sec, float clamp_rad = 3.14f);
 		void adjustSpeedFraction(float targetSpeedFactor, float dt_sec);
 		void setNextFrameBoost(float targetSpeedFactor);
 
@@ -152,7 +152,7 @@ namespace SA
 		float maxSpeed = 10.0f; //#TODO make part of spawn config
 		float currentSpeedFactor = 1.0f;
 		float speedGamifier = 1.0f;
-		float engineSpeedChangeFactor = 0.1f; //somewhat like acceleration, but linear and gamified.
+		float engineSpeedChangeFactor = 1.0f; //somewhat like acceleration, but linear and gamified.
 		HitPoints hp = { /*current*/100, /*max*/100 };
 		sp<RNG> rng;
 
