@@ -168,8 +168,8 @@ namespace SA
 				//fighter->spawnNewBrain<FlyInDirectionBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
 				//fighter->spawnNewBrain<WanderBrain>();
-				fighter->spawnNewBrain<EvadeTestBrain>();
-				//fighter->spawnNewBrain<DogfightTestBrain>();
+				//fighter->spawnNewBrain<EvadeTestBrain>();
+				fighter->spawnNewBrain<DogfightTestBrain>();
 
 				//fighter->spawnNewBrain<FighterBrain>();
 			}

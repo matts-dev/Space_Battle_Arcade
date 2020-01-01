@@ -34,13 +34,18 @@ namespace SA
 		friend class ShipCameraTweakerWidget;
 		lp<ShipCameraTweakerWidget> cameraTweaker;
 #endif
-	private: 
+	private: //controlling parameters 
 		float MIN_FOLLOW = 1.55f;
 		float MAX_FOLLOW = 30.f;
 		float VISCOSITY_THRESHOLD = 0.75f; //should be in range [0, 1] as viscosity is in that range
 		float MAX_VISOCITY = 0.90f;		//should be in range [0, 1]
 		float rollSpeed_rad = glm::radians(180.0f);
 		float verticalOffsetFactor = 0.5f;
+	private:
+		//float last
+		float worldTimeTicked = 0.f;
+		float lastFireTimestamp = 0.f;
+		bool bFireHeld = false;
 	private:
 		lp<Ship> myShip;
 		float followDistance = 10.f;

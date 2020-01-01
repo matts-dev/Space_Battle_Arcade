@@ -117,6 +117,8 @@ namespace SA
 		void setSpeedFactor(float inSpeedFactor) { currentSpeedFactor = glm::clamp(inSpeedFactor,0.f, 1.f); }
 		float getSpeed() const{ return getMaxSpeed() * currentSpeedFactor;}
 
+		inline float getFireCooldownSec() const { return fireCooldownSec; }
+
 		////////////////////////////////////////////////////////
 		// Projectiles 
 		////////////////////////////////////////////////////////
@@ -133,6 +135,9 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
+
+	private:
+		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
 
 	private:
 		//const std::array<glm::vec4, 8> getWorldOBB(const glm::mat4 xform) const;
@@ -153,6 +158,7 @@ namespace SA
 		float currentSpeedFactor = 1.0f;
 		float speedGamifier = 1.0f;
 		float engineSpeedChangeFactor = 1.0f; //somewhat like acceleration, but linear and gamified.
+		float fireCooldownSec = 0.15f;
 		HitPoints hp = { /*current*/100, /*max*/100 };
 		sp<RNG> rng;
 

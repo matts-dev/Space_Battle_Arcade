@@ -3,19 +3,19 @@
 #include "../SAShip.h"
 #include "../SpaceArcade.h"
 #include "../SAUISystem.h"
+#include "../SAPlayer.h"
 #include "../../Tools/DataStructures/SATransform.h"
+#include "../../Tools/color_utils.h"
+#include "../../Tools/SAUtilities.h"
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../GameFramework/SAGameBase.h"
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../GameFramework/SALevel.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
-#include "../../Tools/color_utils.h"
-#include "../../Tools/SAUtilities.h"
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
-#include "../../GameFramework/SAPlayerSystem.h"
-#include "../SAPlayer.h"
 #include "../../GameFramework/Input/SAInput.h"
+#include "../../GameFramework/SAPlayerSystem.h"
+#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 
 namespace SA
 {
@@ -128,6 +128,23 @@ namespace SA
 		QuaternionCamera::tick(dt_sec);
 
 		updateShipFacingDirection();
+
+		if (myShip)
+		{
+			static LevelSystem& levelSys = GameBase::get().getLevelSystem();
+			if (const sp<LevelBase>& currentLevel = levelSys.getCurrentLevel())
+			{
+				float world_dt_sec = currentLevel->getWorldTimeManager()->getDeltaTimeSecs();
+				worldTimeTicked += world_dt_sec;
+				if (bFireHeld && (worldTimeTicked - lastFireTimestamp) > myShip->getFireCooldownSec())
+				{
+					myShip->fireProjectileInDirection(normalize(getFront()));
+					lastFireTimestamp = worldTimeTicked;
+				}
+			}
+		}
+		
+
 	}
 
 	void ShipCamera::handleShipTransformChanged(const Transform& xform)
@@ -138,10 +155,16 @@ namespace SA
 
 	void ShipCamera::handleShootPressed(int state, int modifier_keys)
 	{
-		if (state == GLFW_PRESS && myShip)
+		if (myShip)
 		{
-			//#TODO this will need fixing up to match crosshair
-			myShip->fireProjectileInDirection(normalize(getFront()));
+			if (state == GLFW_PRESS)
+			{
+				bFireHeld = true;
+			}
+			if (state == GLFW_RELEASE)
+			{
+				bFireHeld = false;
+			}
 		}
 	}
 
@@ -233,6 +256,10 @@ namespace SA
 				ImGui::SliderFloat("MAX_VISOCITY", &targetCamera->MAX_VISOCITY, 0.0f, 1.0f);
 				ImGui::SliderAngle("rollSpeed_rad", &targetCamera->rollSpeed_rad);
 				ImGui::SliderFloat("verticalOffsetFactor", &targetCamera->verticalOffsetFactor, 0.0f, 5.0f);
+				if (targetCamera->myShip)
+				{
+					ImGui::SliderFloat("fireCooldownSec", &targetCamera->myShip->fireCooldownSec, 0.01f, 3.f);
+				}
 				
 				if (ImGui::Button("close")) { if(!isPendingDestroy()) destroy(); }
 			}
