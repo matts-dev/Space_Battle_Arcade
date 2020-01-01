@@ -10,8 +10,14 @@ namespace SA
 	class CameraBase;
 	class IControllable;
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// The base class representing a player
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class PlayerBase : public GameEntity
 	{
+	public:
+		PlayerBase(int32_t index) : myIndex(index) {}
+		
 	private:
 		virtual void postConstruct() override;
 
@@ -26,11 +32,14 @@ namespace SA
 		const sp<CameraBase>& getCamera() const;
 		MultiDelegate<const sp<CameraBase>& /*old_camera*/, const sp<CameraBase>& /*new_camera*/> onCameraChanging;
 		void setControlTarget(const sp<IControllable>& newControlTarget);
+		bool hasControlTarget() const;
+
 	protected:
 		virtual sp<CameraBase> generateDefaultCamera() const = 0;
 	public:
 		//MultiDelegate<const lp<IControllable>& /*previousTarget*/, const lp<IControllable>& /*newTarget*/> onControlTargetChanging; //#TODO will need virtual inheritance on IControllable for GameEntity
 	private:
+		int32_t myIndex = 0;
 		sp<InputProcessor> input;
 		sp<CameraBase> camera;
 		sp<IControllable> controlTarget;

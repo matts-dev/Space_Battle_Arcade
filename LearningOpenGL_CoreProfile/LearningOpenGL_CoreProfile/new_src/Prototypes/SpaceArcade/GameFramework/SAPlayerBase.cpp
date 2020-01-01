@@ -16,10 +16,12 @@ namespace SA
 		if (camera)
 		{
 			camera->deactivate();
+			camera->setOwningPlayerIndex({});
 		}
 		camera = newCamera;
 		if (newCamera)
 		{
+			camera->setOwningPlayerIndex(myIndex);
 			newCamera->activate();
 		}
 	}
@@ -53,4 +55,11 @@ namespace SA
 			}
 		}
 	}
+
+	bool PlayerBase::hasControlTarget() const
+	{
+		return bool(controlTarget);
+	}
+
+
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <optional>
+#include <cstdint>
+
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
 
@@ -7,7 +10,7 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
-#include "..\..\GameFramework\SAGameEntity.h"
+#include "../../GameFramework/SAGameEntity.h"
 
 struct GLFWwindow;
 
@@ -20,7 +23,6 @@ namespace SA
 	*/
 	class CameraBase : public GameEntity
 	{
-
 	public:
 		virtual ~CameraBase();
 
@@ -55,6 +57,8 @@ namespace SA
 		bool isInCursorMode() { return cursorMode; }
 		void setCursorMode(bool inCursorMode);
 
+		void setOwningPlayerIndex(std::optional<int32_t> playerIndex) { this->owningPlayerIndex = playerIndex; }
+
 	protected:
 		/** The setter virtuals are provided for recalcuation when things outside of the camera are setting values. In some cases
 		values have just been calculated, and it would be redundant to call the virtuals. In this case, the base class may set values
@@ -69,7 +73,9 @@ namespace SA
 	private:
 		virtual void onPositionSet_v(const glm::vec3& newPosition) {}
 		virtual void onFOVSet_v(float FOV) {}
-		virtual void onCursorModeSet_v(bool inCursorMode);;
+		virtual void onCursorModeSet_v(bool inCursorMode);
+		virtual void onActivated() {};
+		virtual void onDeactivated() {};
 	protected:
 		virtual void tick(float dt_sec);
 		virtual void tickKeyboardInput(float dt_sec) {};
@@ -78,6 +84,7 @@ namespace SA
 		virtual void onMouseMoved_v(double xpos, double ypos);
 		virtual void onWindowFocusedChanged_v(int focusEntered);
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset);
+		const std::optional<uint32_t>& getOwningPlayerIndex() { return owningPlayerIndex; }
 
 	protected:
 		bool refocused = true;
@@ -89,6 +96,7 @@ namespace SA
 		float FOV = 45.0f;
 		float nearZ = 1.f;
 		float farZ = 500.f;
+		std::optional<uint32_t> owningPlayerIndex;
 		bool cursorMode = false;
 		bool bActive = false;
 		wp<SA::Window> registeredWindow;

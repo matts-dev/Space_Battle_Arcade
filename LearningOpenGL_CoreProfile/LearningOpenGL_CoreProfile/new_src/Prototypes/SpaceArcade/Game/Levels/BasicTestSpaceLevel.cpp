@@ -281,7 +281,7 @@ namespace SA
 			{
 				if (const sp<CameraBase>& camera = player->getCamera())
 				{
-					if (!camera->isInCursorMode())
+					if (!camera->isInCursorMode() && !player->hasControlTarget())
 					{
 						if (testProjectileConfig)
 						{

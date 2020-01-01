@@ -23,7 +23,10 @@ namespace SA
 		virtual void onMouseMoved_v(double xpos, double ypos) override;
 		virtual void tick(float dt_sec) override;
 		virtual void tickKeyboardInput(float dt_sec) override;
+		virtual void onActivated() override;
+		virtual void onDeactivated() override;
 		void handleShipTransformChanged(const Transform& xform);
+		void handleShootPressed(int state, int modifier_keys);
 		void updateRelativePositioning();
 		void updateShipFacingDirection();
 	private:
@@ -37,6 +40,7 @@ namespace SA
 		float VISCOSITY_THRESHOLD = 0.75f; //should be in range [0, 1] as viscosity is in that range
 		float MAX_VISOCITY = 0.90f;		//should be in range [0, 1]
 		float rollSpeed_rad = glm::radians(180.0f);
+		float verticalOffsetFactor = 0.5f;
 	private:
 		lp<Ship> myShip;
 		float followDistance = 10.f;

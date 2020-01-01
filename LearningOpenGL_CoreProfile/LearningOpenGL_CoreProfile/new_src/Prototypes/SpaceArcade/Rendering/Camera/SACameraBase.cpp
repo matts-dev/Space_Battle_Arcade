@@ -47,10 +47,11 @@ namespace SA
 	{
 		if (!bActive)
 		{
-			bActive = true;
-
 			static GameBase& game = GameBase::get();
 			game.PreGameloopTick.addWeakObj(sp_this(), &CameraBase::tick);
+
+			onActivated();
+			bActive = true;
 		}
 	}
 
@@ -58,10 +59,11 @@ namespace SA
 	{
 		if (bActive)
 		{
-			bActive = false;
-
 			static GameBase& game = GameBase::get();
 			game.PreGameloopTick.removeWeak(sp_this(), &CameraBase::tick);
+
+			onDeactivated();
+			bActive = false;
 		}
 	}
 

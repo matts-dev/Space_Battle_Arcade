@@ -13,6 +13,9 @@
 #include "../../Tools/color_utils.h"
 #include "../../Tools/SAUtilities.h"
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "../../GameFramework/SAPlayerSystem.h"
+#include "../SAPlayer.h"
+#include "../../GameFramework/Input/SAInput.h"
 
 namespace SA
 {
@@ -75,6 +78,35 @@ namespace SA
 		}
 	}
 
+	void ShipCamera::onActivated()
+	{
+		static PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
+
+		const std::optional<uint32_t>& myPlayerIdx = getOwningPlayerIndex();
+		if (myPlayerIdx.has_value())
+		{
+			const sp<PlayerBase>& player = playerSys.getPlayer(myPlayerIdx.value());
+			if (player)
+			{
+				player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT).addWeakObj(sp_this(), &ShipCamera::handleShootPressed);
+			}
+		}
+	}
+
+	void ShipCamera::onDeactivated()
+	{
+		static PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
+		const std::optional<uint32_t>& myPlayerIdx = getOwningPlayerIndex();
+		if (myPlayerIdx.has_value())
+		{
+			const sp<PlayerBase>& player = playerSys.getPlayer(myPlayerIdx.value());
+			if (player)
+			{
+				player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT).removeWeak(sp_this(), &ShipCamera::handleShootPressed);
+			}
+		}
+	}
+
 	void ShipCamera::onMouseWheelUpdate_v(double xOffset, double yOffset)
 	{
 		//don't dt_sec for zoom controls as we don't want it to slow down with time dilation
@@ -104,12 +136,22 @@ namespace SA
 		updateRelativePositioning();
 	}
 
+	void ShipCamera::handleShootPressed(int state, int modifier_keys)
+	{
+		if (state == GLFW_PRESS && myShip)
+		{
+			//#TODO this will need fixing up to match crosshair
+			myShip->fireProjectileInDirection(normalize(getFront()));
+		}
+	}
+
 	void ShipCamera::updateRelativePositioning()
 	{
 		if (myShip)
 		{
 			vec3 shipPos = myShip->getWorldPosition();
 			vec3 newCamPos = shipPos + (-getFront() * followDistance);
+			newCamPos += verticalOffsetFactor * normalize(getUp());
 			setPosition(newCamPos);
 		}
 	}
@@ -157,14 +199,6 @@ namespace SA
 					float signedRollSpeed_rad = rollSpeed_rad * rotationSign;
 
 					myShip->roll(signedRollSpeed_rad, dt_sec, absRot_rad);
-					//myShip->roll(rotationSign * absRot_rad, dt_sec, absRot_rad);
-
-					//myShip->roll(signedRollSpeed_rad * clamp(1.f - upRelatedness, 0.25f, 1.f) , dt_sec, absRot_rad);
-					//float upRelatedness = clamp(dot(shipUp_n, camUp_shipPlane_n),-1.f, 1.f); //[0,1] //TODO remove this if final, it is being done in 2 spots
-					//float rollSlowdown = 1.f - upRelatedness;
-					//rollSlowdown *= rollSlowdown;
-
-					//myShip->roll(signedRollSpeed_rad * rollSlowdown, dt_sec, absRot_rad);
 				}
 
 				//DEBUG
@@ -198,6 +232,8 @@ namespace SA
 				ImGui::SliderFloat("VISCOSITY_THRESHOLD", &targetCamera->VISCOSITY_THRESHOLD, 0.0f, 1.0f);
 				ImGui::SliderFloat("MAX_VISOCITY", &targetCamera->MAX_VISOCITY, 0.0f, 1.0f);
 				ImGui::SliderAngle("rollSpeed_rad", &targetCamera->rollSpeed_rad);
+				ImGui::SliderFloat("verticalOffsetFactor", &targetCamera->verticalOffsetFactor, 0.0f, 5.0f);
+				
 				if (ImGui::Button("close")) { if(!isPendingDestroy()) destroy(); }
 			}
 			ImGui::End();
