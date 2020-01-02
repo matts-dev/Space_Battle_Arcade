@@ -33,7 +33,7 @@ namespace SA
 
 	void PlayerBase::setControlTarget(const sp<IControllable>& newControlTarget)
 	{
-		if (controlTarget != newControlTarget)
+		if (controlTarget.get() != newControlTarget.get())
 		{
 			//onControlTargetChanging.broadcast(controlTarget, newControlTarget);
 

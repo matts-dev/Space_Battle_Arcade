@@ -34,10 +34,10 @@ namespace SA
 	// Quaternion Camera
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	protected:
+		void updateRoll(float rollAmount_rad);
 
 	private:
 		void updateAxes();
-		void updateRoll(float rollAmount_rad);
 
 	private: //helper fields
 		double lastX;

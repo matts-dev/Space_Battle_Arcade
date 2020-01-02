@@ -28,7 +28,9 @@ namespace SA
 		void handleShipTransformChanged(const Transform& xform);
 		void handleShootPressed(int state, int modifier_keys);
 		void updateRelativePositioning();
+		glm::vec3 getCameraOffset();
 		void updateShipFacingDirection();
+		void rollShip(float dt_sec, float direction);
 	private:
 #if ENABLE_SHIP_CAMERA_DEBUG_TWEAKER
 		friend class ShipCameraTweakerWidget;
@@ -39,12 +41,16 @@ namespace SA
 		float MAX_FOLLOW = 30.f;
 		float VISCOSITY_THRESHOLD = 0.75f; //should be in range [0, 1] as viscosity is in that range
 		float MAX_VISOCITY = 0.90f;		//should be in range [0, 1]
-		float rollSpeed_rad = glm::radians(180.0f);
+		float shipUpRollSpeed_rad = glm::radians(180.0f);
+		float camRollSpeed = glm::radians(180.0f);
 		float verticalOffsetFactor = 0.5f;
+		float crosshairRollSlowdownThresholdPerc = 0.25f;
 	private:
 		//float last
 		float worldTimeTicked = 0.f;
 		float lastFireTimestamp = 0.f;
+		bool bUseCrosshairRoll = true;
+		bool bSlowCrosshairRollWithSpeed = true;
 		bool bFireHeld = false;
 	private:
 		lp<Ship> myShip;

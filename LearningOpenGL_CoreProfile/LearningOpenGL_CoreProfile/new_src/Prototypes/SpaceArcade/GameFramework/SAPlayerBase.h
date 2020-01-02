@@ -3,6 +3,7 @@
 
 #include "..\Tools\DataStructures\MultiDelegate.h"
 #include "..\Tools\DataStructures\LifetimePointer.h"
+#include "..\Tools\DataStructures\AdvancedPtrs.h"
 
 namespace SA
 {
@@ -37,11 +38,11 @@ namespace SA
 	protected:
 		virtual sp<CameraBase> generateDefaultCamera() const = 0;
 	public:
-		//MultiDelegate<const lp<IControllable>& /*previousTarget*/, const lp<IControllable>& /*newTarget*/> onControlTargetChanging; //#TODO will need virtual inheritance on IControllable for GameEntity
+		//MultiDelegate<const lp<IControllable>& /*previousTarget*/, const lp<IControllable>& /*newTarget*/> onControlTargetChanging; //#TODO #pair_with_event_AAEF will need virtual inheritance on IControllable for GameEntity or some other mechanism 
 	private:
 		int32_t myIndex = 0;
 		sp<InputProcessor> input;
 		sp<CameraBase> camera;
-		sp<IControllable> controlTarget;
+		fwp<IControllable> controlTarget; //#TODO #releasing_ptr #pair_with_event_AAEF this lifetime pointer, perhaps by having IControllable virtual inherit from game entity
 	};
 }

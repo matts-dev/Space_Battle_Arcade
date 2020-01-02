@@ -63,11 +63,11 @@ namespace SA
 			{}
 			if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 			{
-				//updateRoll(dt_sec * freeRoamRollSpeed_radSec);
+				rollShip(dt_sec, 1.f);
 			}
 			if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 			{
-				//updateRoll(dt_sec * -freeRoamRollSpeed_radSec);
+				rollShip(dt_sec, -1.f);
 			}
 #if ENABLE_SHIP_CAMERA_DEBUG_TWEAKER
 			if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && !cameraTweaker)
@@ -143,8 +143,6 @@ namespace SA
 				}
 			}
 		}
-		
-
 	}
 
 	void ShipCamera::handleShipTransformChanged(const Transform& xform)
@@ -172,9 +170,7 @@ namespace SA
 	{
 		if (myShip)
 		{
-			vec3 shipPos = myShip->getWorldPosition();
-			vec3 newCamPos = shipPos + (-getFront() * followDistance);
-			newCamPos += verticalOffsetFactor * normalize(getUp());
+			vec3 newCamPos = myShip->getWorldPosition() + getCameraOffset();
 			setPosition(newCamPos);
 		}
 	}
@@ -219,7 +215,7 @@ namespace SA
 					float rotationSign = sign(dot(rotationAxis, camFront_n)); //-1.f, 0.f, or 1.f
 
 					float absRot_rad = glm::acos(clamp(dot(shipUp_n, camUp_shipPlane_n), -1.0f, 1.0f));
-					float signedRollSpeed_rad = rollSpeed_rad * rotationSign;
+					float signedRollSpeed_rad = shipUpRollSpeed_rad * rotationSign;
 
 					myShip->roll(signedRollSpeed_rad, dt_sec, absRot_rad);
 				}
@@ -233,6 +229,54 @@ namespace SA
 				}
 			}
 		}
+	}
+
+	void ShipCamera::rollShip(float dt_sec, float direction)
+	{
+		float deltaCameraRoll = dt_sec * camRollSpeed * direction; 
+		if (bUseCrosshairRoll)
+		{
+			//totally unrealistic, but perhaps okay with small offset distances?
+			// force the ship into a position under the rolled camera
+			if (myShip)
+			{
+				float shipRollSlowdownThreshold = myShip->getMaxSpeed() * crosshairRollSlowdownThresholdPerc; //take X% of the max speed and anything under that begins to slow roll
+				float shipCurrentSpeed = myShip->getSpeed();
+
+				float rollSlowdownFactor = 1.0f;
+				if (bSlowCrosshairRollWithSpeed)
+				{
+					rollSlowdownFactor = shipCurrentSpeed / (shipRollSlowdownThreshold + 0.001f);
+					rollSlowdownFactor -= 0.025f; //clip roll before ship completely stops; this will clip topend too though. Not sure but maybe better than branching?
+					rollSlowdownFactor = clamp(rollSlowdownFactor, 0.f, 1.f);
+				}
+				QuaternionCamera::updateRoll(deltaCameraRoll * rollSlowdownFactor);
+
+				//tried taking vector to ship and transforming that, but it seems to slightly calculate the wrong cam position. Probably a logical error on my end.
+				//instead just reversing the camera position calculation produces better results. 
+				vec3 newShipPos = getPosition() + -getCameraOffset(); //reverse the camera offset calculation
+				Transform transform = myShip->getTransform();
+				transform.position = newShipPos;
+				myShip->setTransform(transform);
+				//handler of transform change will call "updateRelativePositioning"
+			}
+			else
+			{
+				QuaternionCamera::updateRoll(deltaCameraRoll);
+			}
+		}
+		else
+		{
+			QuaternionCamera::updateRoll(deltaCameraRoll);
+			updateRelativePositioning();
+		}
+	}
+
+	glm::vec3 ShipCamera::getCameraOffset()
+	{
+		vec3 offset = (-getFront() * followDistance);			//go behind ship
+		offset += verticalOffsetFactor * normalize(getUp());	//hover above ship
+		return offset;
 	}
 
 	void ShipCameraTweakerWidget::postConstruct()
@@ -254,8 +298,11 @@ namespace SA
 				ImGui::SliderFloat("MAX_FOLLOW", &targetCamera->MAX_FOLLOW, 0.0f, 40.0f);
 				ImGui::SliderFloat("VISCOSITY_THRESHOLD", &targetCamera->VISCOSITY_THRESHOLD, 0.0f, 1.0f);
 				ImGui::SliderFloat("MAX_VISOCITY", &targetCamera->MAX_VISOCITY, 0.0f, 1.0f);
-				ImGui::SliderAngle("rollSpeed_rad", &targetCamera->rollSpeed_rad);
 				ImGui::SliderFloat("verticalOffsetFactor", &targetCamera->verticalOffsetFactor, 0.0f, 5.0f);
+				ImGui::SliderAngle("shipUpRollSpeed_rad", &targetCamera->shipUpRollSpeed_rad);
+				ImGui::SliderAngle("camRollSpeed", &targetCamera->camRollSpeed);
+				ImGui::Checkbox("Enable Crosshair Roll", &targetCamera->bUseCrosshairRoll);
+				ImGui::SliderFloat("crossRollSlowdownThresholdPerc", &targetCamera->crosshairRollSlowdownThresholdPerc, 0.001f, 0.99f);
 				if (targetCamera->myShip)
 				{
 					ImGui::SliderFloat("fireCooldownSec", &targetCamera->myShip->fireCooldownSec, 0.01f, 3.f);
