@@ -20,6 +20,12 @@ namespace SA
 		}
 	}
 
+	sp<SA::RNG> RNGSystem::getSeededRNG(uint32_t seed)
+	{
+		sp<RNG> newRNG{ new RNG({seed}) };
+		return newRNG;
+	}
+
 	sp<SA::RNG> RNGSystem::getTimeInfluencedRNG()
 	{
 		return createNewRNG(rootTimeInfluencedRNG);
@@ -29,7 +35,7 @@ namespace SA
 	{
 		SystemBase::postConstruct();
 
-		if (!SA_RNG_USE_TIME)
+		if (SA_RNG_USE_TIME)
 		{
 			rootNamedRNG = sp<RNG>(new RNG{ std::initializer_list			{ (uint32_t)std::time(nullptr) } });
 			rootTimeInfluencedRNG = sp<RNG>(new RNG{ std::initializer_list	{ 2*(uint32_t)std::time(nullptr)} });

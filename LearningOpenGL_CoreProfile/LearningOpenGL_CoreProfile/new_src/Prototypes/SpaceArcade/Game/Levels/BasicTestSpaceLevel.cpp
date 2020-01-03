@@ -34,6 +34,7 @@
 #include "../../GameFramework/SAGameBase.h"
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../GameFramework/Interfaces/SAIControllable.h"
+#include "../Environment/StarField.h"
 
 namespace SA
 {
@@ -184,6 +185,7 @@ namespace SA
 			player->getInput().getKeyEvent(GLFW_KEY_P).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleDebugCameraRequested);
 			player->getInput().getKeyEvent(GLFW_KEY_X).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleSpectateDetachPressed);
 			player->getInput().getKeyEvent(GLFW_KEY_C).addWeakObj(sp_this(), &BasicTestSpaceLevel::handlePlayerControlTarget);
+			player->getInput().getKeyEvent(GLFW_KEY_G).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleNavigateStarfieldPressed);
 		}
 
 		//pick a projectile to test with
@@ -543,6 +545,17 @@ namespace SA
 		}
 	}
 
+	void BasicTestSpaceLevel::handleNavigateStarfieldPressed(int state, int modifier_keys, int scancode)
+	{
+		if (state == GLFW_PRESS)
+		{
+			if (sp<StarField> starField = getStarField())
+			{
+				starField->setForceCentered(!starField->getForceCentered());
+			}
+		}
+	}
+
 	void BasicTestSpaceLevel::refreshShipContinuousFireState()
 	{
 		std::random_device rng;
@@ -668,6 +681,15 @@ namespace SA
 				spawnedShips.erase(iter);
 			}
 		}
+	}
+
+	sp<StarField> BasicTestSpaceLevel::onGenerateStarField()
+	{
+		if (bEnableStarField)
+		{
+			return SpaceLevelBase::onGenerateStarField();
+		}
+		return sp<StarField>(nullptr);
 	}
 
 	void BasicTestSpaceLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)

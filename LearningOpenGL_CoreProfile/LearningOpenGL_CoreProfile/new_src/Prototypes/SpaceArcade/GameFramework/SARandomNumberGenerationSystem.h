@@ -36,6 +36,7 @@ namespace SA
 		use this creation method to isolate them from the predictable named generators.*/
 		sp<RNG> getTimeInfluencedRNG();
 		sp<RNG> getNamedRNG(const std::string rngName);
+		sp<RNG> getSeededRNG(uint32_t seed);
 
 	protected:
 		virtual void postConstruct();

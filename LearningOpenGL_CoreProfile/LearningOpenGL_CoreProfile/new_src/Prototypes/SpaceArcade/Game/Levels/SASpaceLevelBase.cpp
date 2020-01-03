@@ -7,6 +7,7 @@
 #include "../../Rendering/Camera/SACameraBase.h"
 #include "../SAProjectileSystem.h"
 #include "../Team/Commanders.h"
+#include "../Environment/StarField.h"
 
 namespace SA
 {
@@ -23,6 +24,11 @@ namespace SA
 		if (zeroPlayer)
 		{
 			const sp<CameraBase>& camera = zeroPlayer->getCamera();
+
+			if (starField)
+			{
+				starField->render(dt_sec, view, projection);
+			}
 
 			//#todo a proper system for renderables should be set up; these uniforms only need to be set up front, not during each draw. It may also be advantageous to avoid virtual calls.
 			forwardShadedModelShader->use();
@@ -68,6 +74,23 @@ namespace SA
 		forwardShadedModelShader = nullptr;
 
 		LevelBase::endLevel_v();
+	}
+
+	void SpaceLevelBase::postConstruct()
+	{
+		starField = onGenerateStarField();
+	}
+
+	sp<SA::StarField> SpaceLevelBase::onGenerateStarField()
+	{
+		//by default generate a star field, if no star field should be in the level return null in an override;
+		sp<StarField> defaultStarfield = new_sp<StarField>();
+		return defaultStarfield;
+	}
+
+	sp<SA::StarField> SpaceLevelBase::getStarField()
+	{
+		return starField;
 	}
 
 }

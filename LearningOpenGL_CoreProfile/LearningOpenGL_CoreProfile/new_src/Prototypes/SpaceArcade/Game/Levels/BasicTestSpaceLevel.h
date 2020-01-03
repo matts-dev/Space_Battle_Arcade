@@ -24,6 +24,7 @@ namespace SA
 	protected:
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned) override;
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned) override;
+		virtual sp<StarField> onGenerateStarField();
 
 	private:
 		virtual void postConstruct() override;
@@ -39,6 +40,7 @@ namespace SA
 		void handleDebugCameraRequested(int state, int modifier_keys, int scancode);
 		void handleSpectateDetachPressed(int state, int modifier_keys, int scancode);
 		void handlePlayerControlTarget(int state, int modifier_keys, int scancode);
+		void handleNavigateStarfieldPressed(int state, int modifier_keys, int scancode);
 		
 
 		void refreshShipContinuousFireState();
@@ -53,6 +55,7 @@ namespace SA
 		bool bRenderCollisionShapes_ui = false;
 #endif //SA_RENDER_DEBUG_INFO
 		bool bForceShipsToFire_ui = false;
+		bool bEnableStarField = true;
 
 		//time dilation testing
 		float forceFireRateSecs_ui = 1.0;
