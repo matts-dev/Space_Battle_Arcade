@@ -14,6 +14,7 @@ class Texture2D;
 
 namespace SA
 {
+	//#TODO this shader class needs to be a GPU resource that can release and acquire GPU resources
 	class Shader : public RemoveCopies, public RemoveMoves
 	{
 	private:

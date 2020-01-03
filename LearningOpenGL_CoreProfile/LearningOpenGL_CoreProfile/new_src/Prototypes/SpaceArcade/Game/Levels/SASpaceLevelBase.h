@@ -6,6 +6,7 @@ namespace SA
 	class ProjectileSystem;
 	class TeamCommander;
 	class StarField;
+	class Star;
 
 	class SpaceLevelBase : public LevelBase
 	{
@@ -22,6 +23,8 @@ namespace SA
 		virtual void endLevel_v() override;
 		virtual void postConstruct() override;
 		virtual sp<StarField> onGenerateStarField();
+		virtual void onGenerateLocalStars();
+		void addStar(const sp<Star>& newStar);
 
 	protected: //debug
 		sp<StarField> getStarField();
@@ -30,8 +33,12 @@ namespace SA
 		sp<SA::Shader> forwardShadedModelShader;
 		size_t numTeams = 2;
 
-	private:
+	private: //implementation helpers
+		bool bGeneratingLocalStars = false;
+
+	private: //fields
 		sp<StarField> starField;
+		std::vector<sp<Star>> localStars;
 		std::vector<sp<TeamCommander>> commanders;
 	};
 }

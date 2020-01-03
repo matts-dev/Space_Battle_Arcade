@@ -13,7 +13,7 @@ namespace SA
 	using namespace glm;
 
 
-	static char const* const starShader_vs = R"(
+	static char const* const starFieldShader_vs = R"(
 		#version 330 core
 		layout (location = 0) in vec3 position;				
 		layout (location = 1) in vec3 normal;
@@ -32,7 +32,7 @@ namespace SA
 		}
 	)";
 
-	static char const* const starShader_fs = R"(
+	static char const* const starFieldShader_fs = R"(
 		#version 330 core
 		out vec4 fragColor;
 
@@ -53,14 +53,13 @@ namespace SA
 	{
 		if (hasAcquiredResources())
 		{
-			//ec(glDisable(GL_DEPTH_TEST)); //probably bad to assume that depth is enabled, but practically it will always be enabled when this is called.
 			ec(glClear(GL_DEPTH_BUFFER_BIT));
 
 			mat4 customView = view;
 
 			static PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
 			const sp<CameraBase>& camera = playerSys.getPlayer(0)->getCamera();
-			if (camera && bGetForceCentered)
+			if (camera && bForceCentered)
 			{
 				vec3 origin(0.f);
 				customView = glm::lookAt(origin, origin + camera->getFront(), camera->getUp());
@@ -73,14 +72,13 @@ namespace SA
 
 			starMesh->instanceRender(stars.xforms.size());
 
-			//ec(glEnable(GL_DEPTH_TEST));
 			ec(glClear(GL_DEPTH_BUFFER_BIT));
 		}
 	}
 
 	void StarField::postConstruct()
 	{
-		starShader = new_sp<Shader>(starShader_vs, starShader_fs, false);
+		starShader = new_sp<Shader>(starFieldShader_vs, starFieldShader_fs, false);
 
 		timerDelegate = new_sp<MultiDelegate<>>();
 		timerDelegate->addWeakObj(sp_this(), &StarField::handleAcquireInstanceVBOOnNextTick);

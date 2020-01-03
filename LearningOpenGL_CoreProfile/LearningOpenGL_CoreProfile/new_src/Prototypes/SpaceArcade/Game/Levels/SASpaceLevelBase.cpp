@@ -8,6 +8,8 @@
 #include "../SAProjectileSystem.h"
 #include "../Team/Commanders.h"
 #include "../Environment/StarField.h"
+#include "../Environment/Star.h"
+#include "../../Rendering/OpenGLHelpers.h"
 
 namespace SA
 {
@@ -29,6 +31,14 @@ namespace SA
 			{
 				starField->render(dt_sec, view, projection);
 			}
+
+			//stars may be overlapping each other, so only clear depth once we've rendered all the solar system stars.
+			ec(glClear(GL_DEPTH_BUFFER_BIT));
+			for (const sp<Star>& star : localStars)
+			{
+				star->render(dt_sec, view, projection);
+			}
+			ec(glClear(GL_DEPTH_BUFFER_BIT));
 
 			//#todo a proper system for renderables should be set up; these uniforms only need to be set up front, not during each draw. It may also be advantageous to avoid virtual calls.
 			forwardShadedModelShader->use();
@@ -79,6 +89,11 @@ namespace SA
 	void SpaceLevelBase::postConstruct()
 	{
 		starField = onGenerateStarField();
+		{ 
+			bGeneratingLocalStars = true;
+			onGenerateLocalStars();
+			bGeneratingLocalStars = false;
+		}
 	}
 
 	sp<SA::StarField> SpaceLevelBase::onGenerateStarField()
@@ -86,6 +101,36 @@ namespace SA
 		//by default generate a star field, if no star field should be in the level return null in an override;
 		sp<StarField> defaultStarfield = new_sp<StarField>();
 		return defaultStarfield;
+	}
+
+	void SpaceLevelBase::onGenerateLocalStars()
+	{
+		Transform defaultStarXform;
+		defaultStarXform.position = glm::vec3(50, 50, 50);
+
+		sp<Star> defaultStar = new_sp<Star>();
+		defaultStar->setXform(defaultStarXform);
+		addStar(defaultStar);
+	}
+
+	void SpaceLevelBase::addStar(const sp<Star>& newStar)
+	{
+		if (bGeneratingLocalStars)
+		{
+			auto foundIter = std::find_if(localStars.begin(), localStars.end(), [newStar](const sp<Star>& star) {return newStar == star; });
+			if (foundIter == localStars.end())
+			{
+				localStars.push_back(newStar);
+			}
+			else
+			{
+				log(__FUNCTION__, LogLevel::LOG_ERROR, "trying to add duplicate star");
+			}
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "trying to generate stars outside of level initialziation");
+		}
 	}
 
 	sp<SA::StarField> SpaceLevelBase::getStarField()

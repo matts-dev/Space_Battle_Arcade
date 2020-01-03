@@ -19,13 +19,18 @@ namespace SA
 		std::vector<glm::vec3> colors;
 	};
 
-	class StarField : public GPUResource
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Represents the environmental night sky of stars. Generates 3d points for stars and renders them using sphere meshes.
+	// Doing so in this way, rather than using a texture, allows for certain effects that require time exposure and 3d positions.
+	// stars use instanced rendering for performance.
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	class StarField final : public GPUResource
 	{
 	public:
 		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
 
-		bool getForceCentered() { return bGetForceCentered; }
-		void setForceCentered(bool bNewForceCentered) { bGetForceCentered = bNewForceCentered; }
+		bool getForceCentered() { return bForceCentered; }
+		void setForceCentered(bool bNewForceCentered) { bForceCentered = bNewForceCentered; }
 	protected:
 		virtual void postConstruct() override;
 	private:
@@ -43,7 +48,7 @@ namespace SA
 		bool bUseHDR = false;
 		bool bGenerated = false;
 		bool bDataBuffered = false;
-		bool bGetForceCentered = true;
+		bool bForceCentered = true;
 		uint32_t numStars = 50000;
 		uint32_t seed = 27;
 		std::array<glm::vec3, 3> colorScheme = { color::lightYellow(), color::red(), color::blue() };
