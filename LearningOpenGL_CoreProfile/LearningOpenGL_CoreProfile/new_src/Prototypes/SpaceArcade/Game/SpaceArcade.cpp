@@ -35,6 +35,10 @@
 #include "../GameFramework/SAPlayerSystem.h"
 #include "../GameFramework/SATimeManagementSystem.h"
 #include "UI/SAHUD.h"
+#include "SASpaceArcadeGlobalConstants.h"
+#include "../Rendering/Lights/SADirectionLight.h"
+#include "../Rendering/RenderData.h"
+#include "../GameFramework/SARenderSystem.h"
 
 namespace SA
 {
@@ -159,6 +163,39 @@ namespace SA
 
 	}
 
+	void SpaceArcade::cacheRenderDataForCurrentFrame(RenderData& FRD)
+	{
+		FRD.reset();
+
+		//perhaps this should just be automatically done by the level base?
+		if (const sp<LevelBase>& loadedLevel = getLevelSystem().getCurrentLevel())
+		{
+			const std::vector<DirectionLight>& levelDirLights = loadedLevel->getDirectionalLights();
+			for (uint32_t dirLightIdx = 0; dirLightIdx < GameBase::getConstants().MAX_DIR_LIGHTS; ++dirLightIdx)
+			{
+				if (dirLightIdx < levelDirLights.size())
+				{
+					FRD.dirLights[dirLightIdx] = levelDirLights[dirLightIdx];
+				}
+				else
+				{
+					FRD.dirLights[dirLightIdx] = DirectionLight{};
+				}
+			}
+
+			FRD.ambientLightIntensity = loadedLevel->getAmbientLight();
+
+			if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
+			{
+				if (const sp<CameraBase>& camera = player->getCamera())
+				{
+					FRD.view = camera->getView();
+					FRD.projection = camera->getPerspective();
+				}
+			}
+		}
+	}
+
 	void SpaceArcade::renderLoop(float deltaTimeSecs)
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
@@ -169,46 +206,28 @@ namespace SA
 			return;
 		}
 
+		//prepare directional lights
+
 		ec(glEnable(GL_DEPTH_TEST));
 		ec(glClearColor(0, 0, 0, 1));
 		ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
-		mat4 view{ 1.f };
-		mat4 projection{ 1.f };
-		if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
-		{
-			if (const sp<CameraBase>& camera = player->getCamera())
-			{
-				view = camera->getView();
-				projection = camera->getPerspective();
-			}
-		}
-
-		renderDebug(view, projection);
-
-		//{ //render cube
-		//	mat4 model = glm::mat4(1.f);
-		//	model = glm::translate(model, vec3(5.f, 0.f, -5.f));
-		//	litObjShader->use();
-		//	litObjShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-		//	litObjShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-		//	litObjShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-		//	litObjShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-		//	litObjShader->setUniform3f("cameraPosition", fpsCamera->getPosition());
-		//	ec(glBindVertexArray(cubeVAO));
-		//	ec(glDrawArrays(GL_TRIANGLES, 0, sizeof(Utils::unitCubeVertices_Position_Normal) / (6 * sizeof(float))));
-		//}
-
-		//render world entities
-		forwardShaded_EmissiveModelShader->use();
-		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-		forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-		forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
-		projectileSystem->renderProjectiles(*forwardShaded_EmissiveModelShader);
-
 		if (const sp<LevelBase>& loadedLevel = getLevelSystem().getCurrentLevel())
 		{
-			loadedLevel->render(deltaTimeSecs, view, projection);
+			if (const RenderData* FRD = getRenderSystem().getFrameRenderData_Read(getFrameNumber()))
+			{
+				//render world entities
+				loadedLevel->render(deltaTimeSecs, FRD->view, FRD->projection);
+
+				//#TODO rendering this needs to be done more intelligently, perhaps sorted render order or something that is extensible.
+				forwardShaded_EmissiveModelShader->use();
+				forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
+				forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
+				forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
+				projectileSystem->renderProjectiles(*forwardShaded_EmissiveModelShader);
+
+				renderDebug(FRD->view, FRD->projection);
+			}
 		}
 
 		hud->render(deltaTimeSecs);

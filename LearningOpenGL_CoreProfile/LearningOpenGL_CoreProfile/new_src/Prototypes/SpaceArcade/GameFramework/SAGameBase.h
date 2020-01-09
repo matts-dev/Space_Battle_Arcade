@@ -18,10 +18,25 @@ namespace SA
 	class RNGSystem;
 	class AutomatedTestSystem;
 	class DebugRenderSystem;
+	class RenderSystem;
 
 	class Window;
 
 	//////////////////////////////////////////////////////////////////////////////////////
+	struct EngineConstants
+	{
+		int8_t RENDER_DELAY_FRAMES = 0;
+		uint32_t MAX_DIR_LIGHTS = 4;
+	};
+	//////////////////////////////////////////////////////////////////////////////////////
+	struct GamebaseIdentityKey : public RemoveCopies, public RemoveMoves
+	{
+		friend class GameBase; //only the game base can construct this.
+	private:
+		GamebaseIdentityKey() {}
+	};
+	//////////////////////////////////////////////////////////////////////////////////////
+
 
 	/** 
 		The Game Base class; this is the root to the game systems and has a static getter. 
@@ -30,7 +45,6 @@ namespace SA
 	*/
 	class GameBase : public GameEntity, public RemoveCopies, public RemoveMoves
 	{
-
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Construction
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -79,10 +93,15 @@ namespace SA
 		void TickGameloop_GameBase();
 	protected:
 		virtual void tickGameLoop(float deltaTimeSecs) = 0;
+		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) = 0;
 		virtual void renderLoop(float deltaTimeSecs) = 0;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  SYSTEMS 
+	//		Each system has an explicit getter to for a reason. The core of this engine 
+	//		and the systems at play can be understood by simply reading this header. 
+	//		if making a templated getter (like with game components) will make it harder
+	//		to get a bigger picture of the interplay of systems, in my opinion.
 	//////////////////////////////////////////////////////////////////////////////////////
 	public:
 		//System getters (to prevent circular dependencies, be sure to use forward declared references)
@@ -93,6 +112,7 @@ namespace SA
 		inline ParticleSystem& getParticleSystem() noexcept { return *particleSystem;}
 		inline RNGSystem& getRNGSystem() noexcept { return *systemRNG; }
 		inline DebugRenderSystem& getDebugRenderSystem() noexcept { return *debugRenderSystem; }
+		inline RenderSystem& getRenderSystem() noexcept { return *renderSystem; }
 		
 		inline AutomatedTestSystem& getAutomatedTestSystem() noexcept { return *automatedTestSystem;  };
 
@@ -111,11 +131,24 @@ namespace SA
 		sp<PlayerSystem> playerSystem;
 		sp<ParticleSystem> particleSystem;
 		sp<RNGSystem> systemRNG;
-		sp<DebugRenderSystem> debugRenderSystem;
 		sp<AutomatedTestSystem> automatedTestSystem;
+		sp<DebugRenderSystem> debugRenderSystem;
+		sp<RenderSystem> renderSystem;
 
 		std::set< sp<SystemBase> > systems;
 		std::set< sp<SystemBase> > postRenderNotifys;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Constants
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public:
+		static inline const EngineConstants& getConstants() { return GameBase::get().configuredConstants; }
+		/** Game subclasses can only configure game constants at this point early in initialization
+			@Warning No systems will be initialized or available when this virtual is called.
+		*/
+		virtual void onInitEngineConstants(EngineConstants& config) {};
+	private:
+		EngineConstants configuredConstants;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// frame id
@@ -124,6 +157,14 @@ namespace SA
 		uint64_t getFrameNumber() const noexcept { return frameNumber; }
 	private:
 		uint64_t frameNumber = 0;
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Identity Key
+	//		Systems that want to restrict function calls to GameBase without friending can require this object as a key
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	protected: //grant subclasses access to this key. This prevents anyone from passing the GameBase object as a key.
+		GamebaseIdentityKey identityKey;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Time

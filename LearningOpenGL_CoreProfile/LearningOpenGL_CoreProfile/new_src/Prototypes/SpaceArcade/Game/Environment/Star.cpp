@@ -101,7 +101,7 @@ namespace SA
 		starShader->use();
 		starShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 		starShader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
-		starShader->setUniform3f("starColor", bUseHDR ? sdr_color * hdr_intensity : sdr_color);
+		starShader->setUniform3f("starColor", bUseHDR ? ldr_color * hdr_intensity : ldr_color);
 		starMesh->render();
 	}
 

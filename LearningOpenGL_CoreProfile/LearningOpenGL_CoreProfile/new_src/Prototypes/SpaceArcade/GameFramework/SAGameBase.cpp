@@ -14,6 +14,7 @@
 #include "SALog.h"
 #include "SARandomNumberGenerationSystem.h"
 #include "SADebugRenderSystem.h"
+#include "SARenderSystem.h"
 
 namespace SA
 {
@@ -56,6 +57,9 @@ namespace SA
 		debugRenderSystem = new_sp<DebugRenderSystem>();
 		systems.insert(debugRenderSystem);
 
+		renderSystem = new_sp<RenderSystem>();
+		systems.insert(renderSystem);
+
 		automatedTestSystem = new_sp<AutomatedTestSystem>();
 		systems.insert(automatedTestSystem);
 
@@ -76,6 +80,8 @@ namespace SA
 		//WARNING: any local objects (eg smart pointers) in this function will have lifetime of game!
 		if (!bStarted)
 		{
+			onInitEngineConstants(configuredConstants);	//this should happen before the subclass game has started. this means systems can read it.
+
 			bStarted = true;
 
 			//initialize systems; this is not done in gamebase ctor because it systemse may call gamebase virtuals
@@ -86,6 +92,7 @@ namespace SA
 			{
 				system->initSystem();
 			}
+
 
 			{ //prevent permanent window reference via scoped destruction
 				sp<Window> window = startUp();
@@ -131,6 +138,7 @@ namespace SA
 		tickGameLoop(deltaTimeSecs);
 		PostGameloopTick.broadcast(deltaTimeSecs);
 
+		cacheRenderDataForCurrentFrame(*renderSystem->getFrameRenderData_Write(frameNumber, identityKey));
 		renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
 		onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
 		onRenderDispatchEnding.broadcast(deltaTimeSecs);

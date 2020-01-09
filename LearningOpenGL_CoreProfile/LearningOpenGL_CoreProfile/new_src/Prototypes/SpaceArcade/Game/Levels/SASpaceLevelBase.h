@@ -7,12 +7,12 @@ namespace SA
 	class TeamCommander;
 	class StarField;
 	class Star;
+	class Planet;
 
 	class SpaceLevelBase : public LevelBase
 	{
 
 	public:
-		SpaceLevelBase();
 
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
 		
@@ -22,14 +22,21 @@ namespace SA
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
 		virtual void postConstruct() override;
-		virtual sp<StarField> onGenerateStarField();
-		virtual void onGenerateLocalStars();
-		void addStar(const sp<Star>& newStar);
-
-	protected: //debug
-		sp<StarField> getStarField();
 
 	protected:
+		//#TODO this will need to be read from a saved config file or something instead. Same for local stars.
+		virtual void onCreateLocalPlanets() {};
+		virtual void onCreateLocalStars();
+		virtual sp<StarField> onCreateStarField();
+
+		void refreshStarLightMapping();
+
+	protected:
+		//environment
+		sp<StarField> starField;
+		std::vector<sp<Star>> localStars;
+		std::vector<sp<Planet>> planets;
+
 		sp<SA::Shader> forwardShadedModelShader;
 		size_t numTeams = 2;
 
@@ -37,8 +44,6 @@ namespace SA
 		bool bGeneratingLocalStars = false;
 
 	private: //fields
-		sp<StarField> starField;
-		std::vector<sp<Star>> localStars;
 		std::vector<sp<TeamCommander>> commanders;
 	};
 }

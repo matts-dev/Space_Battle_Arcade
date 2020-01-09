@@ -13,11 +13,13 @@
 #include "SAWorldEntity.h"
 #include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
+#include "../Rendering/Lights/SADirectionLight.h"
 
 namespace SA
 {
 	class LevelSystem;
 	class TimeManager;
+	struct DirectionLight;
 
 	/** Base class for a level object */
 	class LevelBase : public GameEntity, public Tickable, public RemoveCopies, public RemoveMoves
@@ -49,7 +51,8 @@ namespace SA
 		/** returns const to prevent modification; use spawn and unspawn entity to add/remove. 
 			#concern this may be an encapsulation issue. Perhaps accessing entities should only be done through the world grid.*/
 		const std::set<sp<WorldEntity>>& getWorldEntities() { return worldEntities; }
-
+		const std::vector<DirectionLight>& getDirectionalLights() const { return dirLights; }
+		glm::vec3 getAmbientLight() const { return ambientLight; }
 	private:
 		void startLevel();
 		void endLevel();
@@ -66,14 +69,12 @@ namespace SA
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {};
 
 	protected: 
-		//O(n) walks, but walks will not be very cache friendly as a lot of indirection. 
-		std::set<sp<WorldEntity>> worldEntities;
+		std::set<sp<WorldEntity>> worldEntities; //O(n) walks, but walks will not be very cache friendly as a lot of indirection. 
 		std::set<sp<RenderModelEntity>> renderEntities;
-
 		SH::SpatialHashGrid<WorldEntity> worldCollisionGrid{ glm::vec3(4,4,4) };
-
 		sp<TimeManager> worldTimeManager;
-
+		std::vector<DirectionLight> dirLights;
+		glm::vec3 ambientLight{0.f};
 	private:
 		bool bLevelActive = false;
 	};

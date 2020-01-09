@@ -232,6 +232,7 @@ namespace
 
 		//adding this because changing interface of game, still letting prototype do its rendering within the game loop
 		virtual void renderLoop(float deltaTimeSecs) override {}
+		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) override {}
 	};
 
 

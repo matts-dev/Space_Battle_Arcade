@@ -15,6 +15,7 @@ namespace SA
 	class ProjectileTweakerWidget;
 	class HitboxPicker;
 	class ParticleConfig;
+	class RNG;
 
 	class BasicTestSpaceLevel : public SpaceLevelBase
 	{
@@ -24,7 +25,7 @@ namespace SA
 	protected:
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned) override;
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned) override;
-		virtual sp<StarField> onGenerateStarField();
+		virtual sp<StarField> onCreateStarField();
 
 	private:
 		virtual void postConstruct() override;
@@ -48,6 +49,9 @@ namespace SA
 
 		void toggleSpawnTestParticles();
 		void handleTestParticleSpawn();
+
+	private:
+		virtual void onCreateLocalPlanets() override;
 
 	private: //debug variables
 #if SA_RENDER_DEBUG_INFO

@@ -161,6 +161,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAGameEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASystemBase.h" />
@@ -172,6 +173,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAConfigBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Components\ShipEnergyComponent.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Planet.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.h" />
@@ -200,7 +202,10 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\BuiltInShaders.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SACameraFPS.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SALightBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\RenderData.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAGPUResource.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAShader.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.h" />
@@ -459,12 +464,17 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Planet.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAHUD.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SALightBase.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\RenderData.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAGPUResource.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\LifetimePointer.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.cpp" />

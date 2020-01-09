@@ -35,12 +35,17 @@
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../GameFramework/Interfaces/SAIControllable.h"
 #include "../Environment/StarField.h"
+#include "../Environment/Planet.h"
+#include "../../GameFramework/SARandomNumberGenerationSystem.h"
+#include "../Environment/Star.h"
 
 namespace SA
 {
 	void BasicTestSpaceLevel::postConstruct()
 	{
 		SpaceLevelBase::postConstruct();
+
+		ambientLight = glm::vec3(0.01f);
 
 		SpaceArcade& game = SpaceArcade::get();
 
@@ -549,9 +554,17 @@ namespace SA
 	{
 		if (state == GLFW_PRESS)
 		{
-			if (sp<StarField> starField = getStarField())
+			//make the environment on a similar scale as the ships for debugging.
+			bool bNavigable = !starField->getForceCentered();
+			starField->setForceCentered(bNavigable);
+			for (const sp<Star>& star : localStars)
 			{
-				starField->setForceCentered(!starField->getForceCentered());
+				star->setForceCentered(bNavigable);
+			}
+
+			for (const sp<Planet>& planet : planets)
+			{
+				planet->setForceCentered(bNavigable); //#TODO probably a good idea at this point to create an "CelestialEnvironmentObj" base class for the shared functionality
 			}
 		}
 	}
@@ -662,6 +675,15 @@ namespace SA
 		}
 	}
 
+	void BasicTestSpaceLevel::onCreateLocalPlanets()
+{
+		sp<RNG> rng = GameBase::get().getRNGSystem().getSeededRNG(13);
+		
+		planets.push_back(makeRandomPlanet(*rng));
+		planets.push_back(makeRandomPlanet(*rng));
+		planets.push_back(makeRandomPlanet(*rng));
+	}
+
 	void BasicTestSpaceLevel::onEntitySpawned_v(const sp<WorldEntity>& spawned)
 	{
 		if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(spawned))
@@ -683,11 +705,11 @@ namespace SA
 		}
 	}
 
-	sp<StarField> BasicTestSpaceLevel::onGenerateStarField()
+	sp<StarField> BasicTestSpaceLevel::onCreateStarField()
 	{
 		if (bEnableStarField)
 		{
-			return SpaceLevelBase::onGenerateStarField();
+			return SpaceLevelBase::onCreateStarField();
 		}
 		return sp<StarField>(nullptr);
 	}

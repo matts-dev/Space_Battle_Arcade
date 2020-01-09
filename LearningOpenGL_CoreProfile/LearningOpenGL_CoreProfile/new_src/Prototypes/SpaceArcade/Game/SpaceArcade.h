@@ -38,6 +38,7 @@ namespace SA
 		virtual sp<SA::Window> startUp() override; 
 		virtual void shutDown() override;
 		virtual void tickGameLoop(float deltaTimeSecs) override;
+		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) override;
 		virtual void renderLoop(float deltaTimeSecs) override;
 		virtual void onRegisterCustomSystem() override;
 
