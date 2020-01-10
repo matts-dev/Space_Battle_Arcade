@@ -24,6 +24,8 @@
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
 #include "../../GameFramework/SACollisionUtils.h"
+#include "../../Rendering/Camera/SACameraFPS.h"
+#include "../../Rendering/Camera/SAQuaternionCamera.h"
 
 
 namespace
@@ -64,6 +66,16 @@ namespace SA
 			cubeShape = new_sp<SAT::CubeShape>();
 		}
 		capsuleRenderer = new_sp<SAT::CapsuleRenderer>();
+
+		const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
+		if (zeroPlayer)
+		{
+			if (const sp<CameraBase>& camera = zeroPlayer->getCamera())
+			{
+				//set ability to view large models
+				camera->setFar(1000.f);
+			}
+		}
 	}
 
 	void ModelConfigurerEditor_Level::endLevel_v()
@@ -124,13 +136,13 @@ namespace SA
 			{
 				renderUI_Projectiles();
 			}
-			if (ImGui::CollapsingHeader("COLOR AND MATERIAL"))
-			{
-				renderUI_Material();
-			}
 			if (ImGui::CollapsingHeader("TEAM"))
 			{
 				renderUI_Team();
+			}
+			if (ImGui::CollapsingHeader("VIEWPORT UI", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				renderUI_ViewportUI();
 			}
 		}
 		ImGui::End();
@@ -487,7 +499,7 @@ namespace SA
 			ImGui::Checkbox("Render With Lines", &bRenderCollisionShapesLines);
 
 			ImGui::Dummy(ImVec2(0, 20));
-			if (ImGui::TreeNode("What's (3e 3f) mean?"))
+			if (ImGui::TreeNode("What's (3e 3f)?"))
 			{
 				const char* msg_3f3e = R"(
 The collision uses the "Separating Axis Theorem" (SAT) to determine if two objects are colliding. Without going into the specifics, SAT can test if two shapes are colliding via a set of tests. These tests involve the shape's faces and edges between faces. 3e 3f means this shape as 3 edges and 3 faces
@@ -550,13 +562,28 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		ImGui::Separator();
 	}
 
-	void ModelConfigurerEditor_Level::renderUI_Material()
+	void ModelConfigurerEditor_Level::renderUI_ViewportUI()
 	{
 		ImGui::Separator();
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
-		ImGui::Text("place-holder");
+		if (ImGui::SliderFloat("Camera Speed", &cameraSpeedModifier, 1.0f, 10.f))
+		{
+			const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
+			if (zeroPlayer)
+			{
+				float adjustedCameraSpeed = cameraSpeedModifier * 10;
+
+				//perhaps camera speed should be a concept of the base class.
+				CameraBase* rawCamera = zeroPlayer->getCamera().get();
+				if (CameraFPS* camera = dynamic_cast<CameraFPS*>(rawCamera))
+				{
+					camera->setSpeed(adjustedCameraSpeed);
+				}
+				else if (QuaternionCamera* camera = dynamic_cast<QuaternionCamera*>(rawCamera))
+				{
+					camera->setSpeed(adjustedCameraSpeed);
+				}
+			}
+		}
 		ImGui::Separator();
 	}
 

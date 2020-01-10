@@ -34,6 +34,8 @@ namespace SA
 		void handleWindowLosingOpenglContext(const sp<Window>& window);
 		void handleWindowAcquiredOpenglContext(const sp<Window>& window);
 		virtual const std::vector<unsigned int>& getVAOs() = 0;
+	protected:
+		bool hasAcquiredOpenglResources() { return bAcquiredOpenglResources; }
 	private:
 		bool bAcquiredOpenglResources = false;
 		void releaseOpenGLResources();

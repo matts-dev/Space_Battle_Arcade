@@ -44,7 +44,7 @@ namespace SA
 		void renderUI_LoadingSavingMenu();
 		void renderUI_Collision();
 		void renderUI_Projectiles();
-		void renderUI_Material();
+		void renderUI_ViewportUI();
 		void renderUI_Team();
 
 	private: 
@@ -62,6 +62,8 @@ namespace SA
 		bool bShowSlowShapes = false;
 		int selectedShapeIdx = -1;
 		TeamData activeTeamData;
+
+		float cameraSpeedModifier = 1.f;
 
 	private:
 		sp<Model3D> renderModel = nullptr;

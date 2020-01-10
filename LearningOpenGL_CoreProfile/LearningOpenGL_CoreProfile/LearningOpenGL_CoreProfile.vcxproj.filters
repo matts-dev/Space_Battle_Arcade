@@ -723,6 +723,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\DynamicCube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1821,6 +1824,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\DynamicCube.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

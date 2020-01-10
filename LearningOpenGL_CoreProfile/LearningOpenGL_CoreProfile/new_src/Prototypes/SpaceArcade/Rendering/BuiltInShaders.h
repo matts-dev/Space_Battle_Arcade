@@ -482,7 +482,6 @@ namespace SA
 					vec3 dirMapContrib = dirDiffuse + dirSpecular;
 					#define TONE_MAP_DIR 1
 					#if TONE_MAP_DIR
-						//TODO this tone mapping should be done at the end after all lights are considered. Outside of this function
 						dirMapContrib = (dirMapContrib) / (1 + dirMapContrib);
 					#endif
 					lightContribution += (dirMapContrib);

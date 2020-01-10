@@ -218,6 +218,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\DynamicCube.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.h" />
@@ -513,6 +514,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\DynamicCube.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.cpp" />
