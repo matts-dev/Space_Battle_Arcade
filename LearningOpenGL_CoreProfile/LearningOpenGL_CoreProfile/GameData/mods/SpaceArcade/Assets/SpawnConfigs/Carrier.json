@@ -28,7 +28,141 @@
             ]
         },
         "primaryProjectileConfigName": "",
-        "shapes": null,
+        "shapes": [
+            {
+                "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.boxbetweenboosters.obj",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shape": 6
+            },
+            {
+                "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.booster.left.obj",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shape": 6
+            },
+            {
+                "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.booster.right.obj",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shape": 6
+            },
+            {
+                "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.frontbox.obj",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shape": 6
+            },
+            {
+                "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.frontbuldge.obj",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shape": 6
+            },
+            {
+                "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.hull.obj",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shape": 6
+            },
+            {
+                "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.underbelly.obj",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "shape": 6
+            }
+        ],
         "teamData": null
     }
 }

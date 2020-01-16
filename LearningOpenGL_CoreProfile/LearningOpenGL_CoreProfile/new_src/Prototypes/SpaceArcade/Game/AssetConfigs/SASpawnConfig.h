@@ -23,6 +23,7 @@ namespace SA
 		glm::vec3 scale{ 1,1,1 };
 		glm::vec3 rotationDegrees{ 0,0,0 };
 		glm::vec3 position{ 0,0,0 };
+		std::string modelFilePath;
 	};
 
 	struct TeamData final 

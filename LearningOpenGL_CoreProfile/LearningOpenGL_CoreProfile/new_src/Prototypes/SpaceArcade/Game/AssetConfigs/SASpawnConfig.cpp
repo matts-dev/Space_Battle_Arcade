@@ -121,7 +121,8 @@ namespace SA
 				{"scale", {shapeCFG.scale.x, shapeCFG.scale.y, shapeCFG.scale.z}},
 				{"rotationDegrees", {shapeCFG.rotationDegrees.x, shapeCFG.rotationDegrees.y, shapeCFG.rotationDegrees.z}},
 				{"position" , {shapeCFG.position.x, shapeCFG.position.y, shapeCFG.position.z}},
-				{"shape", shapeCFG.shape }
+				{"shape", shapeCFG.shape },
+				{"modelFilePath", shapeCFG.shape == int(ECollisionShape::MODEL) ? shapeCFG.modelFilePath : std::string("")}
 			};
 
 			spawnData["shapes"].push_back(s);
@@ -202,6 +203,12 @@ namespace SA
 
 							const json& shapeIdx = shape["shape"];
 							if (!shapeIdx.is_null() && shapeIdx.is_number_integer()) { shapeConfig.shape = shape["shape"]; }
+
+							if (shape.contains("modelFilePath"))
+							{
+								const json& modelFilePath = shape["modelFilePath"];
+								if (!modelFilePath.is_null() && modelFilePath.is_string()) { shapeConfig.modelFilePath = shape["modelFilePath"]; }
+							}
 
 							shapes.push_back(shapeConfig);
 						}

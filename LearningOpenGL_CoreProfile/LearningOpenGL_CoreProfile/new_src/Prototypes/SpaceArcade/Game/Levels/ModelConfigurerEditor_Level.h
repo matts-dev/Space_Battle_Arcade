@@ -1,7 +1,9 @@
 #pragma once
-#include "..\..\GameFramework\SALevel.h"
+#include <map>
 #include "SASpaceLevelBase.h"
-#include "..\AssetConfigs\SASpawnConfig.h"
+
+#include "../AssetConfigs/SASpawnConfig.h"
+#include "../../GameFramework/SALevel.h"
 
 namespace SAT
 {
@@ -10,6 +12,7 @@ namespace SAT
 	class PolygonCapsuleShape;
 	class ShapeRender;
 	class CapsuleRenderer;
+	class Shape;
 }
 
 namespace SA
@@ -21,6 +24,7 @@ namespace SA
 	class ProjectileConfig;
 	class Shader;
 	class PrimitiveShapeRenderer;
+	class ShapeRenderWrapper;
 
 	struct ConfigDefaults
 	{
@@ -52,6 +56,7 @@ namespace SA
 		void createNewSpawnConfig(const std::string& name, const std::string& fullModelPath);
 
 		void onActiveConfigSet(const SpawnConfig& newConfig);
+		void tryLoadCollisionModel(const char* filePath);
 
 
 	private: 
@@ -60,6 +65,7 @@ namespace SA
 		bool bRenderCollisionShapesLines = true;
 		bool bShowCustomShapes = false;
 		bool bShowSlowShapes = false;
+		bool bModelXray = false;
 		int selectedShapeIdx = -1;
 		TeamData activeTeamData;
 
@@ -69,7 +75,9 @@ namespace SA
 		sp<Model3D> renderModel = nullptr;
 		sp<SpawnConfig> activeConfig = nullptr;
 		sp<ProjectileConfig> primaryProjectileConfig = nullptr;
-		
+		std::map<std::string, sp<Model3D>> collisionModels;
+		//std::map<std::string, sp<SAT::Shape>> collisionModelSATShapes;
+		std::map<std::string, sp<ShapeRenderWrapper>> collisionModelSATShapesRenders; 
 
 		sp<Shader> model3DShader;
 		sp<Shader> collisionShapeShader;

@@ -26,6 +26,10 @@
 #include "../../GameFramework/SACollisionUtils.h"
 #include "../../Rendering/Camera/SACameraFPS.h"
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
+#include "../../Tools/SACollisionHelpers.h"
+#include "../../GameFramework/SARenderSystem.h"
+#include "../../Rendering/RenderData.h"
+#include "../../Rendering/SAShader.h"
 
 
 namespace
@@ -40,6 +44,8 @@ namespace
 
 	char tempTextBuffer[4096];
 }
+
+using TriangleProcessor = SAT::DynamicTriangleMeshShape::TriangleProcessor;
 
 namespace SA
 {
@@ -451,7 +457,34 @@ namespace SA
 			ImGui::Separator();
 			for (CollisionShapeConfig& shapeConfig : activeConfig->shapes)
 			{
-				snprintf(tempTextBuffer, sizeof(tempTextBuffer), "shape %d : %s", shapeIdx, shapeToStr((ECollisionShape) shapeConfig.shape));
+				if (shapeConfig.shape == int(ECollisionShape::MODEL))
+				{
+					size_t lastSlashIndex = shapeConfig.modelFilePath.find_last_of("/");
+					if (lastSlashIndex == std::string::npos)
+					{
+						lastSlashIndex = shapeConfig.modelFilePath.find_last_of("\\");
+					}
+					std::string modelFileName = "";
+					if (lastSlashIndex != std::string::npos
+						&& lastSlashIndex != shapeConfig.modelFilePath.size())
+					{
+						modelFileName = shapeConfig.modelFilePath.substr(lastSlashIndex);
+					}
+					if (modelFileName.length() == 0)
+					{
+						modelFileName = "NA";
+					}
+
+					snprintf(tempTextBuffer, sizeof(tempTextBuffer), "shape %d : %s - %s",
+						shapeIdx,
+						shapeToStr((ECollisionShape)shapeConfig.shape),
+						modelFileName.c_str()
+						);
+				}
+				else
+				{
+					snprintf(tempTextBuffer, sizeof(tempTextBuffer), "shape %d : %s", shapeIdx, shapeToStr((ECollisionShape) shapeConfig.shape));
+				}
 				if (ImGui::Selectable(tempTextBuffer, shapeIdx == selectedShapeIdx))
 				{
 					if (selectedShapeIdx != shapeIdx)
@@ -467,6 +500,41 @@ namespace SA
 				{
 					if (selectedShapeIdx >= 0 && selectedShapeIdx < (int)activeConfig->shapes.size())
 					{
+						if (activeConfig->shapes[selectedShapeIdx].shape == int(ECollisionShape::MODEL))
+						{
+							ImGui::Text("Model Path: "); 
+							ImGui::SameLine();
+
+							constexpr size_t fileLengthLimit = 1024;
+							static char collisionModelFilePath[fileLengthLimit + 1];
+							static int lastIndex = -1;
+							if (collisionModelFilePath[0] == 0 || lastIndex != selectedShapeIdx)
+							{
+								lastIndex = selectedShapeIdx;
+								std::string loadedModelFilePath = activeConfig->shapes[selectedShapeIdx].modelFilePath;
+
+								if (loadedModelFilePath.length() > fileLengthLimit)
+								{
+									log(__FUNCTION__, LogLevel::LOG, "loaded file length of collision model too large, trimming");
+									loadedModelFilePath = loadedModelFilePath.substr(0, fileLengthLimit - 1); //-1 because I'm going quick atm, probably can be just limit; but better safe than sorry
+									activeConfig->shapes[selectedShapeIdx].modelFilePath = loadedModelFilePath;
+								}
+								else if(loadedModelFilePath.length() == 0)
+								{ 
+									std::memset(&collisionModelFilePath, '\0', sizeof(char)*fileLengthLimit);
+									loadedModelFilePath = "no_filepath";
+								}
+								std::memcpy(collisionModelFilePath, loadedModelFilePath.c_str(), loadedModelFilePath.size());
+							}
+
+							ImGui::InputText("Collision Model Path", collisionModelFilePath, fileLengthLimit, ImGuiInputTextFlags_CharsNoBlank);
+							if (ImGui::Button("Load Collision Model"))
+							{
+								tryLoadCollisionModel(collisionModelFilePath);
+								collisionModelFilePath[0] = 0; //make length 0 so it will read the actual model file path
+							}
+						}
+
 						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Scale Shape %d", selectedShapeIdx);
 						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].scale.x);
 
@@ -478,6 +546,7 @@ namespace SA
 
 						ImGui::RadioButton("Cube (3e 3f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::CUBE);
 						ImGui::SameLine(); ImGui::RadioButton("PolyCapsule (7e 6f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::POLYCAPSULE);
+						ImGui::SameLine(); ImGui::RadioButton("model", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::MODEL);
 						if (bShowCustomShapes)
 						{
 							ImGui::RadioButton("Wedge (12e 5f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::WEDGE);
@@ -584,6 +653,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				}
 			}
 		}
+		ImGui::Checkbox("Model X-ray", &bModelXray);
 		ImGui::Separator();
 	}
 
@@ -686,6 +756,41 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 	}
 
+	void ModelConfigurerEditor_Level::tryLoadCollisionModel(const char* filePath)
+	{
+		//try load even if a file is already in the map. This way we can do file refreshes while running.
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+		if (activeMod)
+		{
+			try
+			{
+				std::string fullRelativeAssetPath = activeMod->getModDirectoryPath() + filePath;
+
+				sp<Model3D> newModel = new_sp<Model3D>(fullRelativeAssetPath.c_str());
+				if (newModel)
+				{
+					TriangleProcessor processedModel = modelToCollisionTriangles(*newModel);
+					sp<SAT::Shape> modelCollision = new_sp<SAT::DynamicTriangleMeshShape>(processedModel);
+
+					std::string filePathAsStr{ filePath };
+					collisionModels[filePathAsStr] = newModel;
+					//collisionModelSATShapes[filePathAsStr] = modelCollision;
+					collisionModelSATShapesRenders[filePathAsStr] = new_sp<ShapeRenderWrapper>(modelCollision);
+
+					if (selectedShapeIdx >= 0 && size_t(selectedShapeIdx) < activeConfig->shapes.size())
+					{
+						activeConfig->shapes[size_t(selectedShapeIdx)].modelFilePath = std::string(filePath);
+					}
+
+					return; //early out so failure log isn't printed at end of this function.
+				}
+			}
+			catch (...)
+			{}
+		}
+		log(__FUNCTION__, LogLevel::LOG, "Failed to load collision model");
+	}
+
 	void ModelConfigurerEditor_Level::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
@@ -719,7 +824,9 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					model3DShader->setUniform3f("cameraPosition", camera->getPosition());
 					model3DShader->setUniform3f("tint", activeTeamData.teamTint);
 					model3DShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(rootModelMat));
+					if (bModelXray){glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);}
 					renderModel->draw(*model3DShader);
+					if (bModelXray) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 				}
 
 				if (bRenderAABB)
@@ -757,7 +864,6 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						collisionShapeShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 						collisionShapeShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(shapeModelMatrix));
 						collisionShapeShader->setUniform3f("color", color);
-
 
 						SpaceArcade& game = SpaceArcade::get();
 						static auto renderShape = [](ECollisionShape shape, const sp<Shader>& shader) {
@@ -799,6 +905,38 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 									renderShape(ECollisionShape::ICOSPHERE, collisionShapeShader);
 									break;
 								}
+							case ECollisionShape::MODEL:
+								{
+									//this will spam logs when model can't be found. :( but not wanting to over engineer this system right now.
+									if (shape.modelFilePath.length() != 0)
+									{
+										auto findResult = collisionModels.find(shape.modelFilePath);
+										if (findResult == collisionModels.end())
+										{
+											tryLoadCollisionModel(shape.modelFilePath.c_str());
+										}
+
+										findResult = collisionModels.find(shape.modelFilePath);
+										if(findResult != collisionModels.end())
+										{
+											auto findSR = collisionModelSATShapesRenders.find(shape.modelFilePath);
+											if (findSR != collisionModelSATShapesRenders.end())
+											{
+												Transform xform;
+												xform.position = shape.position;
+												xform.scale = shape.scale;
+												xform.rotQuat = getRotQuatFromDegrees(shape.rotationDegrees);
+												findSR->second->setXform(xform);
+
+												ShapeRenderWrapper::RenderOverrides overrides;
+												overrides.shader = collisionShapeShader.get();
+												overrides.parentXform = &rootModelMat;
+												findSR->second->render(overrides); //use collision model shader to get selection color features
+											}
+										}
+									}
+									break;
+								}
 							default:
 								{
 									//show a cube if something went wrong
@@ -814,5 +952,9 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			}
 		}
 	}
+
+
+
+
 }
 

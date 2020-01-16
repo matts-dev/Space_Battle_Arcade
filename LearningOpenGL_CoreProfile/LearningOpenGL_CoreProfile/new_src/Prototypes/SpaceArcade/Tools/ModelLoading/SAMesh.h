@@ -57,6 +57,25 @@ namespace SA
 
 	class Mesh3D
 	{
+	public:
+		Mesh3D(
+			std::vector<Vertex>& vertices,
+			std::vector<MaterialTexture>& textures,
+			std::vector<unsigned int>& indices,
+			std::vector<NormalData>& normalData,
+			std::vector<VertexBoneData>& vertexBoneData,
+			std::map<std::string, Bone>& nameToBoneMap
+		);
+		~Mesh3D();
+
+		void draw(Shader& shader, bool bBindMaterials = true) const;
+		void drawInstanced(Shader& shader, unsigned int instanceCount, bool bBindTextures=true) const;
+		GLuint getVAO();
+		void setInstancedModelMatrixVBO(GLuint modelVBO);
+		void setInstancedModelMatricesData(glm::mat4* modelMatrices, unsigned int count);
+
+		const std::vector<Vertex>& getVertices() const { return vertices; }
+		const std::vector<unsigned int>& getIndices() const { return indices; }
 	private:
 		//vertex data
 		std::vector<Vertex> vertices;
@@ -74,22 +93,5 @@ namespace SA
 
 		//helpers
 		std::map<std::string, Bone>& nameToBoneMap;
-
-	public:
-		Mesh3D(
-			std::vector<Vertex>& vertices,
-			std::vector<MaterialTexture>& textures,
-			std::vector<unsigned int>& indices,
-			std::vector<NormalData>& normalData,
-			std::vector<VertexBoneData>& vertexBoneData,
-			std::map<std::string, Bone>& nameToBoneMap
-		);
-		~Mesh3D();
-
-		void draw(Shader& shader, bool bBindMaterials = true) const;
-		void drawInstanced(Shader& shader, unsigned int instanceCount, bool bBindTextures=true) const;
-		GLuint getVAO();
-		void setInstancedModelMatrixVBO(GLuint modelVBO);
-		void setInstancedModelMatricesData(glm::mat4* modelMatrices, unsigned int count);
 	};
 }

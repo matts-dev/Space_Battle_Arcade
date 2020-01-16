@@ -228,6 +228,7 @@ namespace SA
 			case ECollisionShape::PYRAMID: return "Pyramid";
 			case ECollisionShape::ICOSPHERE: return "IcoSphere";
 			case ECollisionShape::UVSPHERE: return "UVSphere";
+			case ECollisionShape::MODEL: return "model";
 			default: return "invalid";
 		}
 	}

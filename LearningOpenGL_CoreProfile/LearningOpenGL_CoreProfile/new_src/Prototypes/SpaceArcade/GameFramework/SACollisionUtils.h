@@ -35,7 +35,7 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	enum class ECollisionShape : int
 	{
-		CUBE, POLYCAPSULE, WEDGE, PYRAMID, ICOSPHERE, UVSPHERE
+		CUBE, POLYCAPSULE, WEDGE, PYRAMID, ICOSPHERE, UVSPHERE, MODEL
 	};
 	const char* const shapeToStr(ECollisionShape value);
 

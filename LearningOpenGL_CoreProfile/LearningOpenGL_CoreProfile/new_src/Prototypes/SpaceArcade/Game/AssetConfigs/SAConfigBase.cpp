@@ -48,8 +48,14 @@ namespace SA
 				std::stringstream ss;
 				ss << inFile.rdbuf();
 
+				std::string fileAsStr = ss.str();
+				if (fileAsStr.length() == 0)
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "loading empty config");
+				}
+
 				sp<ConfigBase> newConfig = configFactory();
-				newConfig->deserialize(ss.str());
+				newConfig->deserialize(fileAsStr);
 				newConfig->owningModDir = modPath;
 
 				return newConfig;

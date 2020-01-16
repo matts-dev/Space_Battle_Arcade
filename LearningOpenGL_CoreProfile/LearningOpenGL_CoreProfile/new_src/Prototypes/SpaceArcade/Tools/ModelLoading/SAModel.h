@@ -50,6 +50,7 @@ namespace SA
 		std::tuple<glm::vec3, glm::vec3> getAABB() const;
 
 		void getMeshVAOS(std::vector<unsigned int>& outVAOs);
+		const std::vector<Mesh3D>& getMeshes() const { return meshes; };
 
 	private://model/mesh methods
 
