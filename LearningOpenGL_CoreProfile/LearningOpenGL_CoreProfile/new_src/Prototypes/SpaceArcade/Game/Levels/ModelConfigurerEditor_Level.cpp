@@ -31,6 +31,9 @@
 #include "../../Rendering/RenderData.h"
 #include "../../Rendering/SAShader.h"
 
+#include "../../Rendering/Camera/SAQuaternionCamera.h"
+#include "../../GameFramework/SAWindowSystem.h"
+
 
 namespace
 {
@@ -43,18 +46,111 @@ namespace
 	};
 
 	char tempTextBuffer[4096];
+
 }
 
 using TriangleProcessor = SAT::DynamicTriangleMeshShape::TriangleProcessor;
 
 namespace SA
 {
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// A debug camera used to test collision within the model editor level
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	class CollisionDebugCamera final : public QuaternionCamera
+	{
+	public:
+		CollisionDebugCamera();
+	public:
+		void updateTrackedLevelCollision(const SpawnConfig& debugSpawnConfig);
+	protected:
+		virtual void tick(float dt_sec) override;
+	private:
+		sp<ModelCollisionInfo> debugWorldCollisionInfo;
+		sp<ModelCollisionInfo> cameraCollisionData;
+	};
+
+	CollisionDebugCamera::CollisionDebugCamera()
+	{
+		cameraCollisionData = createUnitCubeCollisionInfo();
+	}
+
+	void CollisionDebugCamera::tick(float dt_sec)
+	{
+		QuaternionCamera::tick(dt_sec);
+
+		if (cameraCollisionData && debugWorldCollisionInfo)
+		{
+			Transform cameraNewXform;
+			cameraNewXform.position = getPosition();
+			cameraNewXform.scale = glm::vec3(3.f); //scale up the collision by some amount so can detect it before clipping with the model.
+			//cameraNewXform.rotQuat; //ignore rotation as it shouldn't really matter for debugging purposes, we're just floating a cube around
+			cameraCollisionData->updateToNewWorldTransform(cameraNewXform.getModelMatrix());
+
+			using ShapeData = ModelCollisionInfo::ShapeData;
+			bool bCollision = false;
+			size_t numAttempts = 3;
+			size_t attempt = 0;
+			do
+			{
+				attempt++;
+				bCollision = false;
+
+				glm::vec4 largestMTV = glm::vec4(0.f);
+				float largestMTV_len2 = 0.f;
+				for (const ShapeData& cameraShape :	 cameraCollisionData->getShapeData())
+				{
+					for (const ShapeData& worldShape : debugWorldCollisionInfo->getShapeData())
+					{
+						assert(cameraShape.shape && worldShape.shape);
+						glm::vec4 mtv;
+						if (SAT::Shape::CollisionTest(*cameraShape.shape, *worldShape.shape, mtv))
+						{
+							float mtv_len2 = glm::length2(mtv);
+							if (mtv_len2 > largestMTV_len2)
+							{
+								largestMTV = mtv;
+								largestMTV_len2 = mtv_len2;
+								bCollision = true;
+							}
+						}
+					}
+				}
+				if (bCollision)
+				{
+					cameraNewXform.position += glm::vec3(largestMTV);
+					setPosition(cameraNewXform.position);
+					cameraCollisionData->updateToNewWorldTransform(cameraNewXform.getModelMatrix());
+				}
+			} while (bCollision && attempt < numAttempts);
+		}
+	}
+
+	void CollisionDebugCamera::updateTrackedLevelCollision(const SpawnConfig& debugSpawnConfig)
+	{
+		debugWorldCollisionInfo = debugSpawnConfig.toCollisionInfo();
+		debugWorldCollisionInfo->updateToNewWorldTransform(glm::mat4(1.f)); //perhaps should just be done in "toCollisionInfo()?"
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Model Configurer level
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void ModelConfigurerEditor_Level::startLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
 		game.getUISystem()->onUIFrameStarted.addStrongObj(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
-
 		game.getPlayerSystem().onPlayerCreated.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handlePlayerCreated);
+		game.getWindowSystem().onPrimaryWindowChangingEvent.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handlePrimaryWindowChanging);
+
+		levelCamera = new_sp<CollisionDebugCamera>();
+		if (levelCamera)
+		{
+			//configure camera to look at model
+			levelCamera->setPosition({ 5, 0, 0 });
+			levelCamera->lookAt_v((levelCamera->getPosition() + glm::vec3{ -1, 0, 0 }));
+			levelCamera->setFar(1000.f);
+			//levelCamera->registerToWindowCallbacks_v(game.getWindowSystem().getPrimaryWindow());
+		}
 		if (const sp<SA::PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{
 			handlePlayerCreated(player, 0);
@@ -72,16 +168,6 @@ namespace SA
 			cubeShape = new_sp<SAT::CubeShape>();
 		}
 		capsuleRenderer = new_sp<SAT::CapsuleRenderer>();
-
-		const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
-		if (zeroPlayer)
-		{
-			if (const sp<CameraBase>& camera = zeroPlayer->getCamera())
-			{
-				//set ability to view large models
-				camera->setFar(1000.f);
-			}
-		}
 	}
 
 	void ModelConfigurerEditor_Level::endLevel_v()
@@ -94,6 +180,9 @@ namespace SA
 		collisionShapeShader = nullptr;
 		shapeRenderer = nullptr;
 		capsuleRenderer = nullptr;
+
+		bUseCollisionCamera = false;
+		updateCameras(); //restore the player camera
 	}
 
 	void ModelConfigurerEditor_Level::handleUIFrameStarted()
@@ -152,6 +241,18 @@ namespace SA
 			}
 		}
 		ImGui::End();
+
+		//pretty terrible, but doing this every tick after UI has had change to update. This isn't so bad because this is just a model editor.
+		//but it will have performance issues when the model grows more complex and has many collision shapes. But that would be bad for 
+		//game performance, so this can be used as a proxy to know if the user is creating a model that will be bad for performance.
+		//-- the alternative to doing this every tick is to have each ui element above that potentially changes collision cause a rebuild.
+		//that's a lot of work for little gain at this point (it also muddys up the UI code as all widgets need to be in branches). So I'm doing 
+		//this every tick at the moment. Perhaps a different, more clever system, could be created but then again, for what gain? This is a model editor.
+		//and this project has went on for over a year now. In an effort to finish this up, just tick!
+		if (levelCamera && activeConfig)
+		{
+			levelCamera->updateTrackedLevelCollision(*activeConfig);
+		}
 	}
 
 	void ModelConfigurerEditor_Level::handlePlayerCreated(const sp<PlayerBase>& player, uint32_t playerIdx)
@@ -163,6 +264,8 @@ namespace SA
 			//configure camera to look at model
 			camera->setPosition({ 5, 0, 0 });
 			camera->lookAt_v((camera->getPosition() + glm::vec3{ -1, 0, 0 }));
+			camera->setFar(1000.f);
+			cachedPlayerCamera = camera;
 		}
 	}
 
@@ -190,6 +293,11 @@ namespace SA
 	{
 		renderModel = nullptr;
 		activeConfig = nullptr;
+	}
+
+	void ModelConfigurerEditor_Level::handlePrimaryWindowChanging(const sp<Window>& old_window, const sp<Window>& new_window)
+	{
+		updateCameras();
 	}
 
 	void ModelConfigurerEditor_Level::renderUI_LoadingSavingMenu()
@@ -600,6 +708,18 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		}
 		
 		ImGui::Separator();
+
+		//pretty terrible, but doing this every tick after UI has had change to update. This isn't so bad because this is just a model editor.
+		//but it will have performance issues when the model grows more complex and has many collision shapes. But that would be bad for 
+		//game performance, so this can be used as a proxy to know if the user is creating a model that will be bad for performance.
+		//-- the alternative to doing this every tick is to have each ui element above that potentially changes collision cause a rebuild.
+		//that's a lot of work for little gain at this point (it also muddys up the UI code as all widgets need to be in branches). So I'm doing 
+		//this every tick at the moment. Perhaps a different, more clever system, could be created but then again, for what gain? This is a model editor.
+		//and this project has went on for over a year now. In an effort to finish this up, just tick!
+		if (levelCamera && activeConfig)
+		{
+			levelCamera->updateTrackedLevelCollision(*activeConfig);
+		}
 	}
 
 	void ModelConfigurerEditor_Level::renderUI_Projectiles()
@@ -631,29 +751,39 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		ImGui::Separator();
 	}
 
+	void ModelConfigurerEditor_Level::updateCameraSpeed()
+	{
+		const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
+		if (zeroPlayer)
+		{
+			float adjustedCameraSpeed = cameraSpeedModifier * 10;
+
+			//perhaps camera speed should be a concept of the base class.
+			CameraBase* rawCamera = zeroPlayer->getCamera().get();
+			if (CameraFPS* camera = dynamic_cast<CameraFPS*>(rawCamera))
+			{
+				camera->setSpeed(adjustedCameraSpeed);
+			}
+			else if (QuaternionCamera* camera = dynamic_cast<QuaternionCamera*>(rawCamera))
+			{
+				camera->setSpeed(adjustedCameraSpeed);
+			}
+		}
+	}
+
 	void ModelConfigurerEditor_Level::renderUI_ViewportUI()
 	{
 		ImGui::Separator();
 		if (ImGui::SliderFloat("Camera Speed", &cameraSpeedModifier, 1.0f, 10.f))
 		{
-			const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
-			if (zeroPlayer)
-			{
-				float adjustedCameraSpeed = cameraSpeedModifier * 10;
-
-				//perhaps camera speed should be a concept of the base class.
-				CameraBase* rawCamera = zeroPlayer->getCamera().get();
-				if (CameraFPS* camera = dynamic_cast<CameraFPS*>(rawCamera))
-				{
-					camera->setSpeed(adjustedCameraSpeed);
-				}
-				else if (QuaternionCamera* camera = dynamic_cast<QuaternionCamera*>(rawCamera))
-				{
-					camera->setSpeed(adjustedCameraSpeed);
-				}
-			}
+			updateCameraSpeed();
 		}
 		ImGui::Checkbox("Model X-ray", &bModelXray);
+		ImGui::SameLine();
+		if (ImGui::Checkbox("use collision camera", &bUseCollisionCamera))
+		{
+			updateCameras();
+		}
 		ImGui::Separator();
 	}
 
@@ -789,6 +919,42 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			{}
 		}
 		log(__FUNCTION__, LogLevel::LOG, "Failed to load collision model");
+	}
+
+	void ModelConfigurerEditor_Level::updateCameras()
+	{
+		if (const sp<SA::PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+		{
+			sp<CameraBase> from = nullptr;
+			sp<CameraBase> to = nullptr;
+			if (bUseCollisionCamera)
+			{
+				from = cachedPlayerCamera;
+				to = levelCamera;
+			}
+			else
+			{
+				to = cachedPlayerCamera;
+				from = levelCamera;
+			}
+			if (from && to)
+			{
+				to->setPosition(from->getPosition());
+				to->lookAt_v(from->getPosition() + from->getFront());
+				player->setCamera(to);
+				updateCameraSpeed();
+
+				if (const sp<Window>& window = GameBase::get().getWindowSystem().getPrimaryWindow())
+				{
+					to->registerToWindowCallbacks_v(window);
+					from->deregisterToWindowCallbacks_v();
+				}
+			}
+			else
+			{
+				log(__FUNCTION__, LogLevel::LOG_ERROR, "missing camera");
+			}
+		}
 	}
 
 	void ModelConfigurerEditor_Level::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
@@ -952,8 +1118,6 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			}
 		}
 	}
-
-
 
 
 }

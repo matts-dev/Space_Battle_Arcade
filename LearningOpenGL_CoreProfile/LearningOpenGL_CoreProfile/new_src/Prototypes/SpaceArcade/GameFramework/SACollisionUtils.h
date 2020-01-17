@@ -39,6 +39,9 @@ namespace SA
 	};
 	const char* const shapeToStr(ECollisionShape value);
 
+	/** Try load collision shape using the full file path (eg including mod)*/
+	sp<SAT::Shape> tryLoadModelShape(const char* fullFilePath);
+	sp<SAT::Shape> tryLoadModelShapeModRelative(const char* modRelativeFilePath);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Collision information configured for a model; includes shapes for separating axis theorem 
@@ -99,7 +102,7 @@ namespace SA
 		/** const version returns an immutable SAT::Shape object
 			non-const version is mostly immutable, but the shape object can be manipulated (but not changed to a new shape)
 			In all cases vectors are const to prevent resizing outside of the addNewCollisionShape method*/
-		const std::vector<ConstShapeData>& getConstShapeData() const { return constShapeData; }
+		const std::vector<ConstShapeData>& getConstShapeData() const { return constShapeData; } //this is due to ptr-to-nonconst issue in shape data
 		const std::vector<ShapeData>& getShapeData(){ return shapeData; }
 		void addNewCollisionShape(ShapeData& newShape)
 		{
@@ -170,7 +173,7 @@ namespace SA
 		CollisionShapeFactory();
 
 	public:
-		sp<SAT::Shape> generateShape(ECollisionShape shape) const;
+		sp<SAT::Shape> generateShape(ECollisionShape shape, const std::string& optionalFilePath = std::string{}) const;
 
 		/* For debug rendering*/
 		sp<const SAT::Model> getModelForShape(ECollisionShape shape) const;

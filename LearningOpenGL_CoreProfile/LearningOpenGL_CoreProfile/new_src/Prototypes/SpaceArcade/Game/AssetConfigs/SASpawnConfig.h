@@ -48,7 +48,7 @@ namespace SA
 		virtual std::string getRepresentativeFilePath() override;
 
 	public: //utility functions
-		sp<SA::ModelCollisionInfo> toCollisionInfo();
+		sp<SA::ModelCollisionInfo> toCollisionInfo() const;
 		sp<Model3D> getModel() const;
 		sp<ProjectileConfig>& getPrimaryProjectileConfig();
 		inline glm::vec3 getShieldOffset() { return shieldOffset; }

@@ -42,8 +42,8 @@ namespace SA
 		void updateAxes();
 
 	private: //helper fields
-		double lastX;
-		double lastY;
+		double lastX = 0.f;
+		double lastY = 0.f;
 	private:
 		const glm::vec3 DEFAULT_AXIS_U = glm::vec3(1.f, 0, 0);
 		const glm::vec3 DEFAULT_AXIS_V = glm::vec3(0, 1.f, 0);

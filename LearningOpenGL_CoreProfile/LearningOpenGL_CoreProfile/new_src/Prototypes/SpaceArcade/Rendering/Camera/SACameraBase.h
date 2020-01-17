@@ -26,7 +26,8 @@ namespace SA
 	public:
 		virtual ~CameraBase();
 
-		/* When overridding registration, call super CamerBase::Method to get default registrations*/
+		/** Sets a camera to use window callbacks. This function exists because not all cameras represent what a viewport sees.
+			When overridding registration, call super CamerBase::Method to get default registrations */
 		virtual void registerToWindowCallbacks_v(const sp<Window>& window);
 		virtual void deregisterToWindowCallbacks_v();
 		virtual void lookAt_v(glm::vec3 point) = 0;

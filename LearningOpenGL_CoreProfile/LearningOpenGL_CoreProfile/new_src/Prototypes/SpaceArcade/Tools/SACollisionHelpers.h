@@ -8,6 +8,7 @@
 #include "RemoveSpecialMemberFunctionUtils.h"
 #include "../Rendering/SAGPUResource.h"
 
+//#TODO_minor rename this file to be ShapeRenderWrapper and move other functionality to SACollisionUtils
 namespace SAT
 {
 	class ShapeRender;
@@ -49,6 +50,4 @@ namespace SA
 		sp<SAT::ShapeRender> collisionShapeRenderer;
 		Transform xform;
 	};
-
-
 }

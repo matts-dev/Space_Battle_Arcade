@@ -25,21 +25,21 @@ namespace SA
 		{
 			registeredWindow = window;
 
-			//adding strong bindings for speed, but this will keep camera alive through shared_ptrs and must be cleared via deregister
-			window->cursorPosEvent.addStrongObj(sp_this(), &CameraBase::onMouseMoved_v);
-			window->mouseLeftEvent.addStrongObj(sp_this(), &CameraBase::onWindowFocusedChanged_v);
-			window->scrollChanged.addStrongObj(sp_this(), &CameraBase::onMouseWheelUpdate_v);
+			window->cursorPosEvent.addWeakObj(sp_this(), &CameraBase::onMouseMoved_v);
+			window->mouseLeftEvent.addWeakObj(sp_this(), &CameraBase::onWindowFocusedChanged_v);
+			window->scrollChanged.addWeakObj(sp_this(), &CameraBase::onMouseWheelUpdate_v);
 		}
 	}
 
 	void CameraBase::deregisterToWindowCallbacks_v()
 	{
+		//this should not be deleted even with weak bindings, as user may switch between cameras and will need to deregister events.
 		if (!registeredWindow.expired())
 		{
 			sp<Window> window = registeredWindow.lock();
-			window->cursorPosEvent.removeStrong(sp_this(), &CameraBase::onMouseMoved_v);
-			window->mouseLeftEvent.removeStrong(sp_this(), &CameraBase::onWindowFocusedChanged_v);
-			window->scrollChanged.removeStrong(sp_this(), &CameraBase::onMouseWheelUpdate_v);
+			window->cursorPosEvent.removeWeak(sp_this(), &CameraBase::onMouseMoved_v);
+			window->mouseLeftEvent.removeWeak(sp_this(), &CameraBase::onWindowFocusedChanged_v);
+			window->scrollChanged.removeWeak(sp_this(), &CameraBase::onMouseWheelUpdate_v);
 		}
 	}
 

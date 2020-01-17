@@ -9,6 +9,9 @@
 #include "../GameFramework/SALog.h"
 #include "../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
 #include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "../Game/SpaceArcade.h"
+#include "../Game/SAModSystem.h"
+#include "../Tools/SACollisionHelpers.h"
 
 
 
@@ -51,6 +54,38 @@ namespace
 
 namespace SA
 {
+	sp<SAT::Shape> tryLoadModelShape(const char* fullFilePath)
+	{
+		try
+		{
+			sp<Model3D> newModel = new_sp<Model3D>(fullFilePath);
+			if (newModel)
+			{
+				TriangleProcessor processedModel = modelToCollisionTriangles(*newModel); //#TODO_minor this function perhaps should exist in this file
+				sp<SAT::Shape> modelCollision = new_sp<SAT::DynamicTriangleMeshShape>(processedModel);
+				return modelCollision; //early out so failure log isn't printed at end of this function.
+			}
+		}
+		catch (...)
+		{
+			log(__FUNCTION__, LogLevel::LOG, "Failed to load collision model");
+		}
+		return sp<SAT::Shape>{nullptr};
+	}
+
+	sp<SAT::Shape> tryLoadModelShapeModRelative(const char* modRelativeFilePath)
+	{
+		//try load even if a file is already in the map. This way we can do file refreshes while running.
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+		if (activeMod)
+		{
+			std::string fullRelativeAssetPath = activeMod->getModDirectoryPath() + modRelativeFilePath;
+			return tryLoadModelShape(fullRelativeAssetPath.c_str());
+		}
+
+		log(__FUNCTION__, LogLevel::LOG, "Failed to load collision model");
+		return sp<SAT::Shape>{nullptr};
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -233,6 +268,7 @@ namespace SA
 		}
 	}
 
+
 	CollisionShapeFactory::CollisionShapeFactory()
 	{
 		if (::pyramidTriProc || ::wedgeTriProc || ::icosphereTriProc || ::uvsphereTriProc)
@@ -294,7 +330,7 @@ namespace SA
 	}
 
 
-	sp<SAT::Shape> CollisionShapeFactory::generateShape(ECollisionShape shape) const
+	sp<SAT::Shape> CollisionShapeFactory::generateShape(ECollisionShape shape, const std::string& optionalFilePath) const
 	{
 		switch (shape)
 		{
@@ -338,6 +374,10 @@ namespace SA
 						return new_sp<SAT::DynamicTriangleMeshShape>(*uvsphereTriProc);
 					}
 					return nullptr;
+				}
+			case ECollisionShape::MODEL:
+				{
+					return tryLoadModelShapeModRelative(optionalFilePath.c_str());
 				}
 			default:
 				{

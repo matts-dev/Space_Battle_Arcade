@@ -28,8 +28,8 @@ namespace SA
 		return game.getAssetSystem().loadModel(fullModelFilePath.c_str());
 	}
 
-	sp<SA::ModelCollisionInfo> SpawnConfig::toCollisionInfo()
-	{
+	sp<SA::ModelCollisionInfo> SpawnConfig::toCollisionInfo() const
+{
 		//#optimize: cache some of these matrix operations so that they're not calculated every time
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
@@ -57,7 +57,7 @@ namespace SA
 
 			ModelCollisionInfo::ShapeData shapeData;
 			shapeData.shapeType = static_cast<ECollisionShape>(shapeConfig.shape);
-			shapeData.shape = shapeFactory.generateShape(static_cast<ECollisionShape>(shapeConfig.shape));
+			shapeData.shape = shapeFactory.generateShape(static_cast<ECollisionShape>(shapeConfig.shape), shapeConfig.modelFilePath);
 			shapeData.localXform = shapeXform;
 			collisionInfo->addNewCollisionShape(shapeData);
 		}

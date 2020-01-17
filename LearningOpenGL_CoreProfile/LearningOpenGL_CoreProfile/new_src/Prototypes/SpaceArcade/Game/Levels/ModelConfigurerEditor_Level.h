@@ -25,6 +25,8 @@ namespace SA
 	class Shader;
 	class PrimitiveShapeRenderer;
 	class ShapeRenderWrapper;
+	class CameraBase;
+	class Window;
 
 	struct ConfigDefaults
 	{
@@ -43,6 +45,7 @@ namespace SA
 		void handleKey(int key, int state, int modifier_keys, int scancode);
 		void handleMouseButton(int button, int state, int modifier_keys);
 		void handleModChanging(const sp<Mod>& previous, const sp<Mod>& active);
+		void handlePrimaryWindowChanging(const sp<Window>& old_window, const sp<Window>& new_window);
 
 	private: //ui
 		void renderUI_LoadingSavingMenu();
@@ -57,6 +60,8 @@ namespace SA
 
 		void onActiveConfigSet(const SpawnConfig& newConfig);
 		void tryLoadCollisionModel(const char* filePath);
+		void updateCameras();
+		void updateCameraSpeed();
 
 
 	private: 
@@ -66,11 +71,14 @@ namespace SA
 		bool bShowCustomShapes = false;
 		bool bShowSlowShapes = false;
 		bool bModelXray = false;
+		bool bUseCollisionCamera = false;
 		int selectedShapeIdx = -1;
 		TeamData activeTeamData;
 
 		float cameraSpeedModifier = 1.f;
-
+	private:
+		sp<CameraBase> cachedPlayerCamera = nullptr;
+		sp<class CollisionDebugCamera> levelCamera = nullptr;
 	private:
 		sp<Model3D> renderModel = nullptr;
 		sp<SpawnConfig> activeConfig = nullptr;
