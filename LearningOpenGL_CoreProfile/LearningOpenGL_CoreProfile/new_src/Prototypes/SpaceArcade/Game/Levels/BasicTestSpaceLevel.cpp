@@ -737,7 +737,7 @@ namespace SA
 		{
 			for (const sp<Ship> ship : spawnedShips)
 			{
-				sp<const ModelCollisionInfo> collisionInfo = ship->getCollisionInfo();
+				sp<const CollisionInfo> collisionInfo = ship->getCollisionInfo();
 				if (collisionInfo) //#TODO this should always be valid, but until I migrate large ships over to new system it may not be valid
 				{
 					glm::mat4 shipModelMat = ship->getTransform().getModelMatrix();
@@ -751,7 +751,7 @@ namespace SA
 
 					if (bRenderCollisionShapes_ui)
 					{
-						using ConstShapeData = ModelCollisionInfo::ConstShapeData;
+						using ConstShapeData = CollisionInfo::ConstShapeData;
 						for (const ConstShapeData shapeData : collisionInfo->getConstShapeData())
 						{
 							collisionDebugRenderer->renderShape(

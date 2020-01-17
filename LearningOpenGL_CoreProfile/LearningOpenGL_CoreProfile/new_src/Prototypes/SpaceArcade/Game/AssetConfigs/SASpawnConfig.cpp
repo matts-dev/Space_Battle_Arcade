@@ -28,12 +28,12 @@ namespace SA
 		return game.getAssetSystem().loadModel(fullModelFilePath.c_str());
 	}
 
-	sp<SA::ModelCollisionInfo> SpawnConfig::toCollisionInfo() const
+	sp<SA::CollisionInfo> SpawnConfig::toCollisionInfo() const
 {
 		//#optimize: cache some of these matrix operations so that they're not calculated every time
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
-		sp<ModelCollisionInfo> collisionInfo = new_sp<ModelCollisionInfo>();
+		sp<CollisionInfo> collisionInfo = new_sp<CollisionInfo>();
 
 		Transform rootXform;
 		rootXform.position = modelPosition;
@@ -55,7 +55,7 @@ namespace SA
 			xform.rotQuat = getRotQuatFromDegrees(shapeConfig.rotationDegrees);
 			mat4 shapeXform = rootModelMat * xform.getModelMatrix();
 
-			ModelCollisionInfo::ShapeData shapeData;
+			CollisionInfo::ShapeData shapeData;
 			shapeData.shapeType = static_cast<ECollisionShape>(shapeConfig.shape);
 			shapeData.shape = shapeFactory.generateShape(static_cast<ECollisionShape>(shapeConfig.shape), shapeConfig.modelFilePath);
 			shapeData.localXform = shapeXform;

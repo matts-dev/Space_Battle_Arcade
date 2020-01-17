@@ -13,7 +13,7 @@
 namespace SA
 {
 	class SpawnConfig;
-	class ModelCollisionInfo;
+	class CollisionInfo;
 	class ShipAIBrain;
 	class ProjectileConfig;
 	class ActiveParticleGroup;
@@ -45,7 +45,7 @@ namespace SA
 		Ship(
 			const sp<Model3D>& model,
 			const Transform& spawnTransform,
-			const sp<ModelCollisionInfo>& inCollisionData
+			const sp<CollisionInfo>& inCollisionData
 			);
 
 		/*preferred method of construction*/
@@ -95,7 +95,7 @@ namespace SA
 		//Collision
 		////////////////////////////////////////////////////////
 		virtual bool hasCollisionInfo() const override { return true; }
-		virtual const sp<const ModelCollisionInfo>& getCollisionInfo() const override ;
+		virtual const sp<const CollisionInfo>& getCollisionInfo() const override ;
 
 		////////////////////////////////////////////////////////
 		// Kinematics
@@ -149,8 +149,8 @@ namespace SA
 
 	private:
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
-		const sp<ModelCollisionInfo> collisionData;
-		const sp<const ModelCollisionInfo> constViewCollisionData;
+		const sp<CollisionInfo> collisionData;
+		const sp<const CollisionInfo> constViewCollisionData;
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocityDir_n;
 		glm::vec3 shieldOffset = glm::vec3(0.f);

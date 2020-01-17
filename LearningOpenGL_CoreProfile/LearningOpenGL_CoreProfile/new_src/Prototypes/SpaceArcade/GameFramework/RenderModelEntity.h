@@ -37,7 +37,7 @@ namespace SA
 			: RenderModelEntity(inModel, spawnTransform)
 		{}
 
-		virtual const sp<const ModelCollisionInfo>& getCollisionInfo() const override;
+		virtual const sp<const CollisionInfo>& getCollisionInfo() const override;
 		virtual bool hasCollisionInfo() const override;
 	};
 }

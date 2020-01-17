@@ -34,7 +34,7 @@ namespace SA
 	Ship::Ship(
 		const sp<Model3D>& model,
 		const Transform& spawnTransform,
-		const sp<ModelCollisionInfo>& inCollisionData
+		const sp<CollisionInfo>& inCollisionData
 	)
 		: RenderModelEntity(model, spawnTransform),
 		collisionData(inCollisionData),
@@ -84,7 +84,7 @@ namespace SA
 #endif 
 	}
 
-	const sp<const ModelCollisionInfo>& Ship::getCollisionInfo() const
+	const sp<const CollisionInfo>& Ship::getCollisionInfo() const
 	{
 		//This will actually make a copy of the sp if we return collision data directly
 		//So, optimizing by storing a shared pointer that views owning data as const and returning that by reference

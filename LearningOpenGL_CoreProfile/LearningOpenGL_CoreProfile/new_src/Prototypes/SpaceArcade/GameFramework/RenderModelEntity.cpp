@@ -4,7 +4,7 @@
 
 namespace SA
 {
-	const sp<const ModelCollisionInfo>& RenderModelEntity_NoCollision::getCollisionInfo() const
+	const sp<const CollisionInfo>& RenderModelEntity_NoCollision::getCollisionInfo() const
 	{
 		return WorldEntity::getCollisionInfo();
 	}

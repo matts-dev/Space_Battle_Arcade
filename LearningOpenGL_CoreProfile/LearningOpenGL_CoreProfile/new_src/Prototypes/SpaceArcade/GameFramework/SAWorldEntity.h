@@ -8,7 +8,7 @@
 namespace SA
 {
 	class LevelBase;
-	class ModelCollisionInfo;
+	class CollisionInfo;
 
 	/**
 		A world entity is a game entity that has a physical presence in the game world.
@@ -38,7 +38,7 @@ namespace SA
 
 		/* returns reference for speed, to opt out of containing collision data, override hasCollisionData to false and
 		 use the default implementation WorldEntity::getCollisionInfo() to return nullptr;*/
-		virtual const sp<const ModelCollisionInfo>& getCollisionInfo() const = 0;
+		virtual const sp<const CollisionInfo>& getCollisionInfo() const = 0;
 		virtual bool hasCollisionInfo() const = 0;
 
 	protected:

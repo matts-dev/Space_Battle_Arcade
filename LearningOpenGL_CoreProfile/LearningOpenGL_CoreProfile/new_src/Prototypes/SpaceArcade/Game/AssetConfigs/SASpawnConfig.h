@@ -14,7 +14,7 @@ namespace SA
 {
 	class SpawnConfig;
 	class Model3D;
-	class ModelCollisionInfo;
+	class CollisionInfo;
 	class ProjectileConfig;
 
 	struct CollisionShapeConfig
@@ -48,7 +48,7 @@ namespace SA
 		virtual std::string getRepresentativeFilePath() override;
 
 	public: //utility functions
-		sp<SA::ModelCollisionInfo> toCollisionInfo() const;
+		sp<SA::CollisionInfo> toCollisionInfo() const;
 		sp<Model3D> getModel() const;
 		sp<ProjectileConfig>& getPrimaryProjectileConfig();
 		inline glm::vec3 getShieldOffset() { return shieldOffset; }
