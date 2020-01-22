@@ -10,7 +10,7 @@ namespace Utility
 	struct Transform
 	{
 		glm::vec3 position = { 0, 0, 0 };
-		glm::quat rotQuat;
+		glm::quat rotQuat{ 1,0,0,0 };
 		glm::vec3 scale = { 1, 1, 1 };
 
 		glm::mat4 getModelMatrix()
