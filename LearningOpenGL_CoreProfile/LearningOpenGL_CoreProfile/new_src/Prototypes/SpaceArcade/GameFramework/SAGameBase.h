@@ -50,6 +50,7 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////
 	public:
 		GameBase();
+		~GameBase();
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  Base Class Singleton
@@ -68,6 +69,7 @@ namespace SA
 	public: //starting system
 		/** Starts up systems and begins game loop */
 		void start();
+		static bool isEngineShutdown();
 	protected:
 		/** Child game classes should set up pre-gameloop state here.
 			#return value Provide an initial primary window on startup.	*/
@@ -90,7 +92,7 @@ namespace SA
 
 		void startShutdown();
 	private: 
-		void TickGameloop_GameBase();
+		void tickGameloop_GameBase();
 	protected:
 		virtual void tickGameLoop(float deltaTimeSecs) = 0;
 		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) = 0;

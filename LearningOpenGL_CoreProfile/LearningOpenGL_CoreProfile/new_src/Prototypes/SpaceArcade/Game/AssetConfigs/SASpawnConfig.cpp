@@ -29,7 +29,7 @@ namespace SA
 	}
 
 	sp<SA::CollisionInfo> SpawnConfig::toCollisionInfo() const
-{
+	{
 		//#optimize: cache some of these matrix operations so that they're not calculated every time
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
@@ -275,6 +275,15 @@ namespace SA
 		}
 
 		return primaryFireProjectile;
+	}
+
+	Transform SpawnConfig::getModelXform() const
+	{
+		Transform xform;
+		xform.position = modelPosition;
+		xform.scale = modelScale;
+		xform.rotQuat = getRotQuatFromDegrees(modelRotationDegrees);
+		return xform;
 	}
 
 }

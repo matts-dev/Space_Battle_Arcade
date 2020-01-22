@@ -18,9 +18,13 @@
 
 namespace SA
 {
+	//globally available check for systems that may require engine services but will not in the event the engine has been destroyed.
+	static bool bIsEngineShutdown = false;
 
 	GameBase::GameBase()
 	{
+		bIsEngineShutdown = false;
+
 		//allows subclasses to have local-static singleton getters
 		if(!RegisteredSingleton)
 		{
@@ -65,6 +69,11 @@ namespace SA
 
 	}
 
+	GameBase::~GameBase()
+	{
+		bIsEngineShutdown = true;
+	}
+
 	GameBase* GameBase::RegisteredSingleton = nullptr;
 	SA::GameBase& GameBase::get()
 	{
@@ -78,6 +87,7 @@ namespace SA
 	void GameBase::start()
 	{
 		//WARNING: any local objects (eg smart pointers) in this function will have lifetime of game!
+		//DEV-NOTE: this method should be kept simple, as it provides a high level overview of the engine.
 		if (!bStarted)
 		{
 			onInitEngineConstants(configuredConstants);	//this should happen before the subclass game has started. this means systems can read it.
@@ -93,7 +103,6 @@ namespace SA
 				system->initSystem();
 			}
 
-
 			{ //prevent permanent window reference via scoped destruction
 				sp<Window> window = startUp();
 				windowSystem->makeWindowPrimary(window);
@@ -103,7 +112,7 @@ namespace SA
 			onGameloopBeginning.broadcast();
 			while (!bExitGame)
 			{
-				TickGameloop_GameBase();
+				tickGameloop_GameBase();
 			}
 
 			//begin shutdown process
@@ -114,7 +123,15 @@ namespace SA
 			{
 				system->shutdown();
 			}
+
+			//tick a few more times for any frame deferred processes
+			for (size_t shutdownTick = 0; shutdownTick < 3; ++shutdownTick){ tickGameloop_GameBase(); }
 		}
+	}
+
+	bool GameBase::isEngineShutdown()
+	{
+		return bIsEngineShutdown;
 	}
 
 	void GameBase::startShutdown()
@@ -123,28 +140,32 @@ namespace SA
 		bExitGame = true;
 	}
 
-	void GameBase::TickGameloop_GameBase()
+	void GameBase::tickGameloop_GameBase()
 	{
 		timeSystem.updateTime(TimeSystem::PrivateKey{});
 		float deltaTimeSecs = systemTimeManager->getDeltaTimeSecs();
 
 		GameEntity::cleanupPendingDestroy(GameEntity::CleanKey{});
 
-		//#consider having system pass a reference to the system time manager, rather than a float; That way critical systems can ignore manipulation time effects or choose to use time affects. Passing raw time means systems will be forced to use time effects (such as dilation)
-		for (const sp<SystemBase>& system : systems) { system->tick(deltaTimeSecs);	}
+		//the engine will tick a few times after shutdown to clean up deferred tasks.
+		if (!bExitGame)
+		{
+			//#consider having system pass a reference to the system time manager, rather than a float; That way critical systems can ignore manipulation time effects or choose to use time affects. Passing raw time means systems will be forced to use time effects (such as dilation)
+			for (const sp<SystemBase>& system : systems) { system->tick(deltaTimeSecs);	}
 
-		//NOTE: there probably needs to be a priority based pre/post loop; but not needed yet so it is not implemented (priorities should probably be defined in a single file via template specliazations)
-		PreGameloopTick.broadcast(deltaTimeSecs);
-		tickGameLoop(deltaTimeSecs);
-		PostGameloopTick.broadcast(deltaTimeSecs);
+			//NOTE: there probably needs to be a priority based pre/post loop; but not needed yet so it is not implemented (priorities should probably be defined in a single file via template specliazations)
+			PreGameloopTick.broadcast(deltaTimeSecs);
+			tickGameLoop(deltaTimeSecs);
+			PostGameloopTick.broadcast(deltaTimeSecs);
 
-		cacheRenderDataForCurrentFrame(*renderSystem->getFrameRenderData_Write(frameNumber, identityKey));
-		renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
-		onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
-		onRenderDispatchEnding.broadcast(deltaTimeSecs);
+			cacheRenderDataForCurrentFrame(*renderSystem->getFrameRenderData_Write(frameNumber, identityKey));
+			renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
+			onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
+			onRenderDispatchEnding.broadcast(deltaTimeSecs);
 
-		//perhaps this should be a subscription service since few systems care about post render //TODO this sytem should probably be removed and instead just subscribe to delegate
-		for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}
+			//perhaps this should be a subscription service since few systems care about post render //TODO this sytem should probably be removed and instead just subscribe to delegate
+			for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}
+		}
 
 		//broadcast current frame and increment the frame number.
 		onFrameOver.broadcast(frameNumber++);

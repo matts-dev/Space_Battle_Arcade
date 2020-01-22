@@ -72,22 +72,34 @@ namespace SA
 
 	void UISystem::handleRawGLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
-		ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+		if (!imguiBoundWindow.expired())
+		{
+			ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+		}
 	}
 
 	void UISystem::handleRawGLFWCharCallback(GLFWwindow* window, unsigned int c)
 	{
-		ImGui_ImplGlfw_CharCallback(window, c);
+		if (!imguiBoundWindow.expired())
+		{
+			ImGui_ImplGlfw_CharCallback(window, c);
+		}
 	}
 
 	void UISystem::handleRawGLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	{
-		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+		if (!imguiBoundWindow.expired())
+		{
+			ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+		}
 	}
 
 	void UISystem::handleRawGLFWScroll(GLFWwindow* window, double xOffset, double yOffset)
 	{
-		ImGui_ImplGlfw_ScrollCallback(window, xOffset, yOffset);
+		if (!imguiBoundWindow.expired())
+		{
+			ImGui_ImplGlfw_ScrollCallback(window, xOffset, yOffset);
+		}
 	}
 
 	void UISystem::handleRenderDispatchEnding(float dt_sec)

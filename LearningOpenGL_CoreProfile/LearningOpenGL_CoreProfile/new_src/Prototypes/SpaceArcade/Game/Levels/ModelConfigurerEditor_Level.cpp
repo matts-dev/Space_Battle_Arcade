@@ -965,10 +965,10 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 		if (renderModel && shapeRenderer && activeConfig)
 		{
-			Transform rootXform;
-			rootXform.position = activeConfig->modelPosition;
-			rootXform.scale = activeConfig->modelScale;
-			rootXform.rotQuat = getRotQuatFromDegrees(activeConfig->modelRotationDegrees);
+			Transform rootXform = activeConfig->getModelXform();
+			//rootXform.position = activeConfig->modelPosition;
+			//rootXform.scale = activeConfig->modelScale;
+			//rootXform.rotQuat = getRotQuatFromDegrees(activeConfig->modelRotationDegrees);
 			mat4 rootModelMat = rootXform.getModelMatrix();
 
 			const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);

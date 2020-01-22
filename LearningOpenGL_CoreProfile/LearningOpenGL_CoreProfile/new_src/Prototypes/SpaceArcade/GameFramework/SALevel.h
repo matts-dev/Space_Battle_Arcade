@@ -21,12 +21,18 @@ namespace SA
 	class TimeManager;
 	struct DirectionLight;
 
+	struct LevelInitializer
+	{
+		//provide defaults to these arguments
+		glm::vec3 worldGridSize{ 16.f };
+	};
+
 	/** Base class for a level object */
 	class LevelBase : public GameEntity, public Tickable, public RemoveCopies, public RemoveMoves
 	{
 		friend LevelSystem;
 	public:
-		LevelBase();
+		LevelBase(const LevelInitializer& init = {});
 		virtual ~LevelBase();
 
 	public:
@@ -56,7 +62,6 @@ namespace SA
 	private:
 		void startLevel();
 		void endLevel();
-
 	protected: //virtuals; protected indicates that sub-classes may need to call super::virtual_method
 		virtual void startLevel_v() = 0;
 		virtual void endLevel_v() = 0;
@@ -67,11 +72,10 @@ namespace SA
 		virtual void tick(float dt_sec);
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {};
-
 	protected: 
 		std::set<sp<WorldEntity>> worldEntities; //O(n) walks, but walks will not be very cache friendly as a lot of indirection. 
 		std::set<sp<RenderModelEntity>> renderEntities;
-		SH::SpatialHashGrid<WorldEntity> worldCollisionGrid{ glm::vec3(4,4,4) };
+		SH::SpatialHashGrid<WorldEntity> worldCollisionGrid;
 		sp<TimeManager> worldTimeManager;
 		std::vector<DirectionLight> dirLights;
 		glm::vec3 ambientLight{0.f};

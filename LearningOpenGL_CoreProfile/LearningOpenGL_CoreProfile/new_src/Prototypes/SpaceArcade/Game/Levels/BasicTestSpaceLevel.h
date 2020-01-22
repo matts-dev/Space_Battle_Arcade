@@ -88,6 +88,7 @@ namespace SA
 	private:
 		//std::multimap<RenderModelEntity*, wp<RenderModelEntity>> cachedSpawnEntities;
 		sp<SpawnConfig> fighterSpawnConfig;
+		sp<SpawnConfig> carrierSpawnConfig;
 		sp<CollisionDebugRenderer> collisionDebugRenderer;
 		sp<ProjectileTweakerWidget> projectileWidget;
 		sp<HitboxPicker> hitboxPickerWidget;

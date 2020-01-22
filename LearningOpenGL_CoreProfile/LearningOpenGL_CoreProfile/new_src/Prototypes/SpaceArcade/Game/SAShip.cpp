@@ -175,10 +175,16 @@ namespace SA
 
 			if (cachedTeamIdx >= teams.size()) { cachedTeamIdx = 0;}
 		
-			assert(teams.size() > 0);
-			cachedTeamData = teams[cachedTeamIdx];
+			if (teams.size() > 0)
+			{
+				assert(teams.size() > cachedTeamIdx);
+				cachedTeamData = teams[cachedTeamIdx];
+			}
+			else
+			{
+				log(__FUNCTION__, LogLevel::LOG_ERROR, "NO TEAM DATA ASSIGNED TO SHIP");
+			}
 		}
-
 	}
 
 	void Ship::handleTeamChanged(size_t oldTeamId, size_t newTeamId)
@@ -188,6 +194,9 @@ namespace SA
 
 	void Ship::draw(Shader& shader)
 	{
+		glm::mat4 configuredModelXform = collisionData->getRootXform(); //#TODO #REFACTOR this ultimately comes from the spawn config, it is somewhat strange that we're reading this from collision data.But we need this to render models to scale.
+		glm::mat4 rawModel = getTransform().getModelMatrix();
+		shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(rawModel * configuredModelXform)); //unfortunately the spacearcade game is setting this uniform, so we're hitting this hot code twice.
 		shader.setUniform3f("objectTint", cachedTeamData.teamTint);
 		RenderModelEntity::draw(shader);
 	}
@@ -530,6 +539,7 @@ namespace SA
 					particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
 					particleSpawnParams.xform.position = this->getTransform().position;
 					particleSpawnParams.velocity = getVelocity();
+
 					GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 
 					if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
@@ -561,6 +571,11 @@ namespace SA
 					particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
 					particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
 					particleSpawnParams.xform.scale = shipXform.scale * 1.1f;  //scale up to see effect around ship
+
+					//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
+					//making the large ships show correct effect. Perhaps not even necessary.
+					Transform modelXform = shipData->getModelXform();
+					particleSpawnParams.xform.scale *= modelXform.scale;
 
 					activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 				}

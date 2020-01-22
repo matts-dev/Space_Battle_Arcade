@@ -9,6 +9,8 @@
 
 #include "../../GameFramework/SAGameEntity.h"
 #include "SAConfigBase.h"
+#include "../../Tools/DataStructures/SATransform.h"
+#include "../../Tools/DataStructures/SATransform.h"
 
 namespace SA
 {
@@ -53,6 +55,7 @@ namespace SA
 		sp<ProjectileConfig>& getPrimaryProjectileConfig();
 		inline glm::vec3 getShieldOffset() { return shieldOffset; }
 		const std::vector<TeamData>& getTeams() const { return teamData; };
+		Transform getModelXform() const;
 
 	protected:
 		virtual void onSerialize(json& outData) override;

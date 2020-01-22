@@ -19,7 +19,7 @@ namespace SA
 		}
 
 		glm::vec3 position = { 0, 0, 0 };
-		glm::quat rotQuat = glm::quat{};
+		glm::quat rotQuat = glm::quat{1, 0, 0, 0};
 		glm::vec3 scale = { 1, 1, 1 };
 	};
 
@@ -44,7 +44,7 @@ namespace SA
 
 	private:
 		glm::vec3 position = { 0, 0, 0 };
-		glm::quat rotQuat = glm::quat{};
+		glm::quat rotQuat = glm::quat{1,0,0,0};
 		glm::vec3 scale = { 1, 1, 1 };
 	};
 }

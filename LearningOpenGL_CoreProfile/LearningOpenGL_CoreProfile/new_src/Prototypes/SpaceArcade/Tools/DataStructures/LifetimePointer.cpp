@@ -19,8 +19,12 @@ namespace SA
 	{
 		pendingDelete.reserve(10);
 
-		GameBase& game = GameBase::get();
-		game.getSystemTimeManager().registerTicker(sp_this());
+		//if the engine has shut down, any memory should be cleaned up with cleaning up of file-scope static variables.
+		if (!GameBase::isEngineShutdown())
+		{
+			GameBase& game = GameBase::get();
+			game.getSystemTimeManager().registerTicker(sp_this());
+		}
 	}
 
 	bool FrameDeferredEntityDeleter::tick(float dt_sec)

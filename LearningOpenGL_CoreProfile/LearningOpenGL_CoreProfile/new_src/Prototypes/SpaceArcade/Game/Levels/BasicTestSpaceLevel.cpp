@@ -98,14 +98,18 @@ namespace SA
 		{
 			fighterSpawnConfig = iter->second;
 		}
+		if (const auto& iter = spawnConfigs.find("Carrier"); iter != spawnConfigs.end())
+		{
+			carrierSpawnConfig = iter->second;
+		}
 
 		if (!fighterSpawnConfig)
 		{
 			log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "Default Spawn Configs not available.");
 		}
 
-		//glm::vec3 carrierPosition_teamA = { 0,0, 150 };
-		glm::vec3 carrierPosition_teamA = { 0,0, 30 }; //testing dogfight
+		glm::vec3 carrierPosition_teamA = { 0,0, 150 };
+		//glm::vec3 carrierPosition_teamA = { 0,0, 30 }; //testing dogfight
 
 		if (const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{
@@ -116,19 +120,34 @@ namespace SA
 			camera->setPosition(carrierPosition_teamA + glm::vec3(10, 20, 20));
 			camera->lookAt_v(camera->getPosition() + glm::vec3(0,0,-1)); //carriers are currently separated along the z axis; so look down that axis
 		}
-		
 
+		////////////////////////////////////////////////////////
+		// Carriers
+		////////////////////////////////////////////////////////
+		constexpr bool bSpawnCarriers = true;
 		Transform carrierXform_TeamA;
 		carrierXform_TeamA.position = carrierPosition_teamA;
-		carrierXform_TeamA.scale = { 5, 5, 5 };
 		carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
-		//sp<Ship> carrierShip_TeamA = spawnEntity<Ship>(carrierModel, carrierXform_TeamA, createUnitCubeCollisionInfo());
 
+		Ship::SpawnData carrierSpawnData_A;
+		carrierSpawnData_A.team = 0;
+		carrierSpawnData_A.spawnConfig = carrierSpawnConfig;
+		carrierSpawnData_A.spawnTransform = carrierXform_TeamA;
+		sp<Ship> carrierShip_TeamA = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_A) : nullptr;
+
+		//#TODO #BUG passing same carrier spawn data shouldn't influence the other ships that were spawned. copying spawn data.
+		Ship::SpawnData carrierSpawnData_B = carrierSpawnData_A;
 		Transform carrierXform_TeamB = carrierXform_TeamA;
 		carrierXform_TeamB.position.z = -carrierXform_TeamB.position.z;
 		carrierXform_TeamB.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
+		carrierSpawnData_B.spawnTransform = carrierXform_TeamB;
+		carrierSpawnData_B.team = 1;
 		//sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
+		sp<Ship> carrierShip_TeamB = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_B) : nullptr;
 
+		////////////////////////////////////////////////////////
+		// fighters
+		////////////////////////////////////////////////////////
 		particleSpawnOffset = glm::vec3(0,0,0);
 
 		std::random_device rng;
@@ -173,11 +192,11 @@ namespace SA
 
 				//fighter->spawnNewBrain<FlyInDirectionBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
-				//fighter->spawnNewBrain<WanderBrain>();
+				fighter->spawnNewBrain<WanderBrain>();
 				//fighter->spawnNewBrain<EvadeTestBrain>();
 				//fighter->spawnNewBrain<DogfightTestBrain>();
 
-				fighter->spawnNewBrain<FighterBrain>();
+				//fighter->spawnNewBrain<FighterBrain>();
 			}
 		};
 		spawnFighters(0, carrierXform_TeamA.position);

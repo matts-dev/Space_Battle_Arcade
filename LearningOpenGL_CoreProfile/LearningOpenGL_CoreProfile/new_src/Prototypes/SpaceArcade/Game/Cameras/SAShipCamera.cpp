@@ -295,7 +295,7 @@ namespace SA
 			ImGui::Begin("Ship Camera Tweaker!", nullptr, flags);
 			{
 				ImGui::SliderFloat("MIN_FOLLOW", &targetCamera->MIN_FOLLOW, 0.0f, 40.0f);
-				ImGui::SliderFloat("MAX_FOLLOW", &targetCamera->MAX_FOLLOW, 0.0f, 40.0f);
+				ImGui::SliderFloat("MAX_FOLLOW", &targetCamera->MAX_FOLLOW, 0.0f, 400.0f);
 				ImGui::SliderFloat("VISCOSITY_THRESHOLD", &targetCamera->VISCOSITY_THRESHOLD, 0.0f, 1.0f);
 				ImGui::SliderFloat("MAX_VISOCITY", &targetCamera->MAX_VISOCITY, 0.0f, 1.0f);
 				ImGui::SliderFloat("verticalOffsetFactor", &targetCamera->verticalOffsetFactor, 0.0f, 5.0f);
