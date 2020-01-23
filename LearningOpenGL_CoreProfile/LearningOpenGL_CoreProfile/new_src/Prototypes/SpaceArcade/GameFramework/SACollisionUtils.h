@@ -49,9 +49,8 @@ namespace SA
 	//
 	// This class is designed to be strictly const-correct. Const objects have much access restricted,
 	// but enough access to be usable. Non-const objects are essentially modifiable like a struct
-	// #TODO refactor name to just CollisionData
 	/////////////////////////////////////////////////////////////////////////////////////////////
-	class CollisionInfo : public RemoveMoves, public RemoveCopies
+	class CollisionData : public RemoveMoves, public RemoveCopies
 	{
 	public:
 
@@ -76,7 +75,7 @@ namespace SA
 
 	public: //take a look at data members, these are accesses that provide struct-like access to non-const objs
 
-		CollisionInfo();
+		CollisionData();
 
 		const glm::mat4& getRootXform() const { return rootXform; }
 		void setRootXform(const glm::mat4& newXform) { rootXform = newXform; }
@@ -142,7 +141,7 @@ namespace SA
 	};
 
 	/** This should be used for quick testing, but proper collision should be configured per entity via an artist; this just returns a configured cube collision*/
-	sp<CollisionInfo> createUnitCubeCollisionInfo();
+	sp<CollisionData> createUnitCubeCollisionInfo();
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Spatial hashing debug information

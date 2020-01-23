@@ -13,7 +13,7 @@
 namespace SA
 {
 	class SpawnConfig;
-	class CollisionInfo;
+	class CollisionData;
 	class ShipAIBrain;
 	class ProjectileConfig;
 	class ActiveParticleGroup;
@@ -121,7 +121,7 @@ namespace SA
 		std::vector<sp<SH::GridNode<WorldEntity>>> overlappingNodes_SH;
 	private:
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr; //#TODO not sure if this should be on the collision component, keeping it off the component encapsulates it better.
-		const sp<CollisionInfo> collisionData; //#TODO perhaps just reference what's in the component so we don't have two pointers
+		const sp<CollisionData> collisionData; //#TODO perhaps just reference what's in the component so we don't have two pointers
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocityDir_n;
 		glm::vec3 shieldOffset = glm::vec3(0.f);

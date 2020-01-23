@@ -104,14 +104,14 @@ namespace SA
 				CollisionComponent* collisionComp = entity->getGameComponent<CollisionComponent>();
 				if (collisionComp && entity != owner)
 				{
-					const CollisionInfo* colisionData = collisionComp->getCollisionData();
+					const CollisionData* colisionData = collisionComp->getCollisionData();
 					const sp<const SAT::Shape>& OBBShape = colisionData->getOBBShape();
 
 					glm::vec4 obbMTV;
 					if (SAT::Shape::CollisionTest(*projectileShape, *OBBShape, obbMTV))
 					{
 						//#TODO perhaps this shouldn't find the closest shape it collided with? will be redundant
-						for (const CollisionInfo::ConstShapeData& shapeData : colisionData->getConstShapeData())
+						for (const CollisionData::ConstShapeData& shapeData : colisionData->getConstShapeData())
 						{
 							glm::vec4 mtv;
 							if (SAT::Shape::CollisionTest(*projectileShape, *shapeData.shape, mtv))

@@ -757,7 +757,7 @@ namespace SA
 		{
 			for (const sp<Ship> ship : spawnedShips)
 			{
-				const CollisionInfo* collisionData = ship->getGameComponent<CollisionComponent>()->getCollisionData(); //we know ships have collision components should never be null.
+				const CollisionData* collisionData = ship->getGameComponent<CollisionComponent>()->getCollisionData(); //we know ships have collision components should never be null.
 				assert(collisionData);
 				if (collisionData) //#TODO this should always be valid, but until I migrate large ships over to new system it may not be valid
 				{
@@ -772,7 +772,7 @@ namespace SA
 
 					if (bRenderCollisionShapes_ui)
 					{
-						using ConstShapeData = CollisionInfo::ConstShapeData;
+						using ConstShapeData = CollisionData::ConstShapeData;
 						for (const ConstShapeData shapeData : collisionData->getConstShapeData())
 						{
 							collisionDebugRenderer->renderShape(

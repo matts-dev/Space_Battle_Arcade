@@ -66,8 +66,8 @@ namespace SA
 	protected:
 		virtual void tick(float dt_sec) override;
 	private:
-		sp<CollisionInfo> debugWorldCollisionInfo;
-		sp<CollisionInfo> cameraCollisionData;
+		sp<CollisionData> debugWorldCollisionInfo;
+		sp<CollisionData> cameraCollisionData;
 	};
 
 	CollisionDebugCamera::CollisionDebugCamera()
@@ -87,7 +87,7 @@ namespace SA
 			//cameraNewXform.rotQuat; //ignore rotation as it shouldn't really matter for debugging purposes, we're just floating a cube around
 			cameraCollisionData->updateToNewWorldTransform(cameraNewXform.getModelMatrix());
 
-			using ShapeData = CollisionInfo::ShapeData;
+			using ShapeData = CollisionData::ShapeData;
 			bool bCollision = false;
 			size_t numAttempts = 3;
 			size_t attempt = 0;

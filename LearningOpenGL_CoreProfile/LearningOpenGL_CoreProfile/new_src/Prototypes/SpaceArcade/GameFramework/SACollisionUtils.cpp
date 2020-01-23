@@ -90,12 +90,12 @@ namespace SA
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	sp<SA::CollisionInfo> createUnitCubeCollisionInfo()
+	sp<SA::CollisionData> createUnitCubeCollisionInfo()
 	{
 		/** axis aligned bounding box(AABB); transform each point to get OBB */
-		sp<CollisionInfo> defaultInfo = new_sp<CollisionInfo>();
+		sp<CollisionData> defaultInfo = new_sp<CollisionData>();
 
-		CollisionInfo::ShapeData shapeData;
+		CollisionData::ShapeData shapeData;
 		shapeData.shapeType = ECollisionShape::CUBE;
 		shapeData.shape = new_sp<SAT::CubeShape>();
 		shapeData.localXform = glm::mat4{1.f};
@@ -174,14 +174,14 @@ namespace SA
 
 
 
-	CollisionInfo::CollisionInfo()
+	CollisionData::CollisionData()
 	{
 		setOBBShape(new_sp<SAT::CubeShape>());
 	}
 
-	void CollisionInfo::updateToNewWorldTransform(glm::mat4 worldXform)
+	void CollisionData::updateToNewWorldTransform(glm::mat4 worldXform)
 	{
-		for (const CollisionInfo::ShapeData& shapeData : shapeData)
+		for (const CollisionData::ShapeData& shapeData : shapeData)
 		{
 			shapeData.shape->updateTransform(worldXform * shapeData.localXform);
 		}
