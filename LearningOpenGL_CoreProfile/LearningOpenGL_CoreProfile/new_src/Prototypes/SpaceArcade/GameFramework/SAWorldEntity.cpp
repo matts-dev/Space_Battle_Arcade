@@ -24,11 +24,5 @@ namespace SA
 		}
 	}
 
-	const sp<const CollisionInfo>& WorldEntity::getCollisionInfo() const
-	{
-		static sp<const CollisionInfo> nullCollision = nullptr;
-		return nullCollision;
-	}
-
 }
 

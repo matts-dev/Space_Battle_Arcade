@@ -20,6 +20,7 @@
 #include "../GameFramework/SADebugRenderSystem.h"
 #include "Cameras/SAShipCamera.h"
 #include "../GameFramework/SAWindowSystem.h"
+#include "../GameFramework/Components/CollisionComponent.h"
 
 namespace
 {
@@ -31,31 +32,11 @@ namespace
 
 namespace SA
 {
-	Ship::Ship(
-		const sp<Model3D>& model,
-		const Transform& spawnTransform,
-		const sp<CollisionInfo>& inCollisionData
-	)
-		: RenderModelEntity(model, spawnTransform),
-		collisionData(inCollisionData),
-		constViewCollisionData(collisionData)
-	{
-		overlappingNodes_SH.reserve(10);
-
-		glm::vec4 pointingDir{ 0,0,1,0 };
-		glm::mat4 rotMatrix = glm::toMat4(spawnTransform.rotQuat);
-
-		glm::vec4 rotDir = rotMatrix * pointingDir;
-
-		velocityDir_n = glm::normalize(rotDir);
-
-		//staticInitCheck();
-	}
 
 	Ship::Ship(const SpawnData& spawnData)
 		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
 		collisionData(spawnData.spawnConfig->toCollisionInfo()), 
-		constViewCollisionData(collisionData),
+		//constViewCollisionData(collisionData),
 		cachedTeamIdx(spawnData.team)
 	{
 		overlappingNodes_SH.reserve(10);
@@ -63,15 +44,19 @@ namespace SA
 		shieldOffset = spawnData.spawnConfig->getShieldOffset();
 		shipData = spawnData.spawnConfig;
 
+		////////////////////////////////////////////////////////
+		// Make components
+		////////////////////////////////////////////////////////
 		createGameComponent<BrainComponent>();
 		createGameComponent<TeamComponent>();
+		createGameComponent<CollisionComponent>()->setCollisionData(collisionData);
 		energyComp = createGameComponent<ShipEnergyComponent>();
-		if (TeamComponent* teamComp = getGameComponent<TeamComponent>())
-		{
-			//bound to delegate in post construct
-			teamComp->setTeam(spawnData.team);
-			updateTeamDataCache();
-		}
+		getGameComponent<TeamComponent>()->setTeam(spawnData.team);
+
+		////////////////////////////////////////////////////////
+		// any extra component configuration
+		////////////////////////////////////////////////////////
+		updateTeamDataCache();
 	}
 
 	Ship::~Ship()
@@ -82,13 +67,6 @@ namespace SA
 #if LOG_SHIP_DTOR 
 		log("logShip", LogLevel::LOG, "ship destroyed");
 #endif 
-	}
-
-	const sp<const CollisionInfo>& Ship::getCollisionInfo() const
-	{
-		//This will actually make a copy of the sp if we return collision data directly
-		//So, optimizing by storing a shared pointer that views owning data as const and returning that by reference
-		return constViewCollisionData;
 	}
 
 	glm::vec4 Ship::getForwardDir() const
@@ -413,7 +391,6 @@ namespace SA
 		{
 			Transform xform = getTransform();
 			glm::mat4 xform_m = xform.getModelMatrix();
-			//collisionHandle = world->getWorldGrid().insert(*this, getWorldOBB(xform_m));
 			collisionHandle = world->getWorldGrid().insert(*this, collisionData->getWorldOBB()); 
 		}
 		else

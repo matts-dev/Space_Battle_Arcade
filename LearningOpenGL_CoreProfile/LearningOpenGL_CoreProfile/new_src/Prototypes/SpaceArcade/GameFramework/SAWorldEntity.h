@@ -36,11 +36,6 @@ namespace SA
 		glm::vec3 getWorldPosition() const { return transform.position; } //#scenenodes todo update
 		glm::mat4 getModelMatrix() const { return transform.getModelMatrix(); } //#scenenodes todo update
 
-		/* returns reference for speed, to opt out of containing collision data, override hasCollisionData to false and
-		 use the default implementation WorldEntity::getCollisionInfo() to return nullptr;*/
-		virtual const sp<const CollisionInfo>& getCollisionInfo() const = 0;
-		virtual bool hasCollisionInfo() const = 0;
-
 	protected:
 		/** World returns a raw pointer because caching a world sp will often result cyclic references. 
 			A raw pointer should make a programmer think about how to safely cache it and find this message.*/
@@ -49,6 +44,6 @@ namespace SA
 		MultiDelegate<const Transform& /*xform*/> onTransformUpdated;
 
 	private:
-		Transform transform;
+		Transform transform; //#TODO #scenenodes #componentize
 	};
 }

@@ -38,6 +38,7 @@
 #include "../Environment/Planet.h"
 #include "../../GameFramework/SARandomNumberGenerationSystem.h"
 #include "../Environment/Star.h"
+#include "../../GameFramework/Components/CollisionComponent.h"
 
 namespace SA
 {
@@ -756,14 +757,15 @@ namespace SA
 		{
 			for (const sp<Ship> ship : spawnedShips)
 			{
-				sp<const CollisionInfo> collisionInfo = ship->getCollisionInfo();
-				if (collisionInfo) //#TODO this should always be valid, but until I migrate large ships over to new system it may not be valid
+				const CollisionInfo* collisionData = ship->getGameComponent<CollisionComponent>()->getCollisionData(); //we know ships have collision components should never be null.
+				assert(collisionData);
+				if (collisionData) //#TODO this should always be valid, but until I migrate large ships over to new system it may not be valid
 				{
 					glm::mat4 shipModelMat = ship->getTransform().getModelMatrix();
 
 					if (bRenderCollisionOBB_ui)
 					{
-						const glm::mat4& aabbLocalXform = collisionInfo->getAABBLocalXform();
+						const glm::mat4& aabbLocalXform = collisionData->getAABBLocalXform();
 						collisionDebugRenderer->renderOBB(shipModelMat, aabbLocalXform, view, projection,
 							glm::vec3(0, 0, 1), GL_LINE, GL_FILL);
 					}
@@ -771,7 +773,7 @@ namespace SA
 					if (bRenderCollisionShapes_ui)
 					{
 						using ConstShapeData = CollisionInfo::ConstShapeData;
-						for (const ConstShapeData shapeData : collisionInfo->getConstShapeData())
+						for (const ConstShapeData shapeData : collisionData->getConstShapeData())
 						{
 							collisionDebugRenderer->renderShape(
 								shapeData.shapeType,

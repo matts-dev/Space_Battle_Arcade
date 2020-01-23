@@ -37,8 +37,7 @@ namespace SA
 
 		Transform worldTransform;
 
-		//collision is done in a very manual way, so we use a render entity without any collision
-		projectile = new_sp<RenderModelEntity_NoCollision>(projectileModel, worldTransform);
+		projectile = new_sp<RenderModelEntity>(projectileModel, worldTransform);
 		if (const sp<const Model3D>& model = projectile->getModel())
 		{
 			modelAABB = model->getAABB();

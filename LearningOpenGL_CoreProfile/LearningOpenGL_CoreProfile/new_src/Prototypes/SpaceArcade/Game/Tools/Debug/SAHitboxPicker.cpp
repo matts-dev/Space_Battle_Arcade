@@ -21,6 +21,7 @@
 #include "../../SAShip.h"
 #include "../../../GameFramework/SABehaviorTree.h"
 #include "../../../GameFramework/Components/GameplayComponents.h"
+#include "../../../GameFramework/Components/CollisionComponent.h"
 
 namespace SA
 {
@@ -119,7 +120,7 @@ namespace SA
 							//make sure ray actually hit worldobject, and not just the cell that the worldobject is in.
 
 							//use the AABB
-							const sp<const CollisionInfo>& collisionInfo = entityNode->element.getCollisionInfo();
+							const CollisionInfo* collisionInfo = entityNode->element.getGameComponent<CollisionComponent>()->getCollisionData(); //component should exist if we've found them in spatial hash
 
 							glm::mat4 inverseTransform = glm::inverse(entityNode->element.getModelMatrix());
 							glm::vec4 transformedStart = inverseTransform * glm::vec4(clickRay.start, 1.f);

@@ -31,7 +31,6 @@ namespace SA
 	{
 	public:
 		const bool FIRE_PROJECTILE_ENABLED = true;
-
 	public:
 		struct SpawnData
 		{
@@ -39,32 +38,21 @@ namespace SA
 			Transform spawnTransform;
 			size_t team = 0;
 		};
-
 	public:
-		/*deprecated*/
-		Ship(
-			const sp<Model3D>& model,
-			const Transform& spawnTransform,
-			const sp<CollisionInfo>& inCollisionData
-			);
-
-		/*preferred method of construction*/
 		Ship(const SpawnData& spawnData);
 		~Ship();
-
 	public: 
-
 		////////////////////////////////////////////////////////
 		// Interface and Virtuals
 		////////////////////////////////////////////////////////
 		virtual void draw(Shader& shader) override;
 		void onDestroyed() override;
-
+		////////////////////////////////////////////////////////
 		//IControllable
+		////////////////////////////////////////////////////////
 		virtual void onPlayerControlTaken() override;
 		virtual void onPlayerControlReleased() override;
 		virtual sp<CameraBase> getCamera() override;
-
 	public:
 		template <typename BrainType>
 		void spawnNewBrain()
@@ -76,9 +64,7 @@ namespace SA
 				brainComp->spawnNewBrain<BrainType>(sp_this());
 			}
 		}
-
 	public:
-
 		////////////////////////////////////////////////////////
 		//Control functions
 		////////////////////////////////////////////////////////
@@ -90,12 +76,6 @@ namespace SA
 		bool fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> fireRadius_cosTheta = std::optional<float>{}, float shootRandomOffsetStrength = 1.f) const;
 		void fireProjectile(class BrainKey privateKey); //#todo perhaps remove this in favor of fire in direction; #todo don't delete without cleaning up brain key
 		void fireProjectileInDirection(glm::vec3 dir_n) const; //#todo reconsider limiting this so only brains
-
-		////////////////////////////////////////////////////////
-		//Collision
-		////////////////////////////////////////////////////////
-		virtual bool hasCollisionInfo() const override { return true; }
-		virtual const sp<const CollisionInfo>& getCollisionInfo() const override ;
 
 		////////////////////////////////////////////////////////
 		// Kinematics
@@ -118,39 +98,30 @@ namespace SA
 		float getSpeed() const{ return getMaxSpeed() * currentSpeedFactor;}
 
 		inline float getFireCooldownSec() const { return fireCooldownSec; }
-
 		////////////////////////////////////////////////////////
 		// Projectiles 
 		////////////////////////////////////////////////////////
 		void setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig);
-
-
 		////////////////////////////////////////////////////////
 		// teams
 		////////////////////////////////////////////////////////
 		void updateTeamDataCache();
 		size_t getTeam() { return cachedTeamIdx; }
 		void handleTeamChanged(size_t oldTeamId, size_t newTeamId);
-
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
-
 	private:
 		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
-
 	private:
 		//const std::array<glm::vec4, 8> getWorldOBB(const glm::mat4 xform) const;
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
-
 	private:
 		//helper data structures
 		std::vector<sp<SH::GridNode<WorldEntity>>> overlappingNodes_SH;
-
 	private:
-		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
-		const sp<CollisionInfo> collisionData;
-		const sp<const CollisionInfo> constViewCollisionData;
+		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr; //#TODO not sure if this should be on the collision component, keeping it off the component encapsulates it better.
+		const sp<CollisionInfo> collisionData; //#TODO perhaps just reference what's in the component so we don't have two pointers
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocityDir_n;
 		glm::vec3 shieldOffset = glm::vec3(0.f);

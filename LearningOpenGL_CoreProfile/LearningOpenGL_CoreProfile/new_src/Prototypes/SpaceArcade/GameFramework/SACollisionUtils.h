@@ -49,7 +49,7 @@ namespace SA
 	//
 	// This class is designed to be strictly const-correct. Const objects have much access restricted,
 	// but enough access to be usable. Non-const objects are essentially modifiable like a struct
-	// #TODO refactor name to just collision info
+	// #TODO refactor name to just CollisionData
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	class CollisionInfo : public RemoveMoves, public RemoveCopies
 	{

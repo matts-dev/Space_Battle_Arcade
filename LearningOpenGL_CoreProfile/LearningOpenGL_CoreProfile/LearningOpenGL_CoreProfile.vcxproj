@@ -142,6 +142,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\SABehaviorTreeTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\TimerTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\CollisionComponent.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SAIControllable.h" />
@@ -447,6 +448,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\SABehaviorTreeTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\TimerTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\CollisionComponent.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
