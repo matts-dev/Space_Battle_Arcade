@@ -90,7 +90,7 @@ namespace SA
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	sp<SA::CollisionData> createUnitCubeCollisionInfo()
+	sp<SA::CollisionData> createUnitCubeCollisionData()
 	{
 		/** axis aligned bounding box(AABB); transform each point to get OBB */
 		sp<CollisionData> defaultInfo = new_sp<CollisionData>();
@@ -172,11 +172,9 @@ namespace SA
 		std::vector<glm::ivec3>
 	> SpatialHashCellDebugVisualizer::gridNameToCells;
 
-
-
 	CollisionData::CollisionData()
 	{
-		setOBBShape(new_sp<SAT::CubeShape>());
+		setOBBShape(new_sp<SAT::CubeShape>()); //would be nice if we didn't need to heap allocate every time, but each shape has a unique transform
 	}
 
 	void CollisionData::updateToNewWorldTransform(glm::mat4 worldXform)

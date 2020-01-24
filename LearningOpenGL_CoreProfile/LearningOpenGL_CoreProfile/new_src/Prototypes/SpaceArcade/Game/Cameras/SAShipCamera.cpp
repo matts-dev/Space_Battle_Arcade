@@ -26,6 +26,7 @@ namespace SA
 		if (myShip)
 		{
 			myShip->onTransformUpdated.removeWeak(sp_this(), &ShipCamera::handleShipTransformChanged);
+			myShip->onCollided.removeWeak(sp_this(), &ShipCamera::handleCollision);
 		}
 
 		myShip = ship;
@@ -33,6 +34,7 @@ namespace SA
 		if (ship)
 		{
 			ship->onTransformUpdated.addWeakObj(sp_this(), &ShipCamera::handleShipTransformChanged);
+			myShip->onCollided.addWeakObj(sp_this(), &ShipCamera::handleCollision);
 			handleShipTransformChanged(ship->getTransform());
 		}
 	}
@@ -127,7 +129,14 @@ namespace SA
 	{
 		QuaternionCamera::tick(dt_sec);
 
-		updateShipFacingDirection();
+		if (disableCameraForCollisionTimeRemainingSec > 0.f)
+		{
+			disableCameraForCollisionTimeRemainingSec -= dt_sec; //currently using engine time
+		}
+		else
+		{
+			updateShipFacingDirection();
+		}
 
 		if (myShip)
 		{
@@ -149,6 +158,11 @@ namespace SA
 	{
 		//be careful here not to update any state on the ship, otherwise this will be a recursive update
 		updateRelativePositioning();
+	}
+
+	void ShipCamera::handleCollision()
+	{
+		disableCameraForCollisionTimeRemainingSec = 5.0f;
 	}
 
 	void ShipCamera::handleShootPressed(int state, int modifier_keys)

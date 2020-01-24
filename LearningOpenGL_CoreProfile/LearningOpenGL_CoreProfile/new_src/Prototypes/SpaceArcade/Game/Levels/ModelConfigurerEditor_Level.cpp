@@ -72,7 +72,7 @@ namespace SA
 
 	CollisionDebugCamera::CollisionDebugCamera()
 	{
-		cameraCollisionData = createUnitCubeCollisionInfo();
+		cameraCollisionData = createUnitCubeCollisionData();
 	}
 
 	void CollisionDebugCamera::tick(float dt_sec)
@@ -533,6 +533,11 @@ namespace SA
 			ImGui::InputFloat3("Scale", &activeConfig->modelScale.x);
 			ImGui::InputFloat3("Rotation", &activeConfig->modelRotationDegrees.x);
 			ImGui::InputFloat3("Translation", &activeConfig->modelPosition.x);
+			ImGui::Dummy(ImVec2(0, 20));
+			////////////////////////////////////////////////////////
+			// use collision tests
+			////////////////////////////////////////////////////////
+			ImGui::Checkbox("Request collision tests against this object", &activeConfig->bRequestsCollisionTests);
 			ImGui::Dummy(ImVec2(0, 20));
 			////////////////////////////////////////////////////////
 			// AABB

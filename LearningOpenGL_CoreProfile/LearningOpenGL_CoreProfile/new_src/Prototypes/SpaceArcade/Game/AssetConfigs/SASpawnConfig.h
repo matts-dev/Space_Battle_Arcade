@@ -56,6 +56,8 @@ namespace SA
 		inline glm::vec3 getShieldOffset() { return shieldOffset; }
 		const std::vector<TeamData>& getTeams() const { return teamData; };
 		Transform getModelXform() const;
+		bool requestCollisionTests() const {return bRequestsCollisionTests;};
+		bool getCollisionReflectForward() const { return bCollisionReflectForward; }
 
 	protected:
 		virtual void onSerialize(json& outData) override;
@@ -73,6 +75,8 @@ namespace SA
 		std::string primaryProjectileConfigName;
 
 		std::vector<CollisionShapeConfig> shapes;
+		bool bRequestsCollisionTests = true;
+		bool bCollisionReflectForward = true;
 		
 		//color/material
 		//team

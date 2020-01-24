@@ -159,11 +159,11 @@ namespace SA
 		uint32_t numFighterShipsToSpawn = 5000;
 #ifdef _DEBUG
 		//numFighterShipsToSpawn = 250;
-		numFighterShipsToSpawn = 50;
+		//numFighterShipsToSpawn = 50;
 		//numFighterShipsToSpawn = 20;
 		//numFighterShipsToSpawn = 10;
 		//numFighterShipsToSpawn = 4;
-		//numFighterShipsToSpawn = 2;
+		numFighterShipsToSpawn = 2;
 #endif//NDEBUG 
 
 		uint32_t numTeams = 2;

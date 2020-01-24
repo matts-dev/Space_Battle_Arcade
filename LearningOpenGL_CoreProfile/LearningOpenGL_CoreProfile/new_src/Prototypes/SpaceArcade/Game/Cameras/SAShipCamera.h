@@ -26,6 +26,7 @@ namespace SA
 		virtual void onActivated() override;
 		virtual void onDeactivated() override;
 		void handleShipTransformChanged(const Transform& xform);
+		void handleCollision();
 		void handleShootPressed(int state, int modifier_keys);
 		void updateRelativePositioning();
 		glm::vec3 getCameraOffset();
@@ -46,9 +47,9 @@ namespace SA
 		float verticalOffsetFactor = 0.5f;
 		float crosshairRollSlowdownThresholdPerc = 0.25f;
 	private:
-		//float last
 		float worldTimeTicked = 0.f;
 		float lastFireTimestamp = 0.f;
+		float disableCameraForCollisionTimeRemainingSec = 0.f;
 		bool bUseCrosshairRoll = true;
 		bool bSlowCrosshairRollWithSpeed = true;
 		bool bFireHeld = false;

@@ -36,20 +36,20 @@ namespace SA
 	Ship::Ship(const SpawnData& spawnData)
 		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
 		collisionData(spawnData.spawnConfig->toCollisionInfo()), 
-		//constViewCollisionData(collisionData),
 		cachedTeamIdx(spawnData.team)
 	{
 		overlappingNodes_SH.reserve(10);
 		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
 		shieldOffset = spawnData.spawnConfig->getShieldOffset();
 		shipData = spawnData.spawnConfig;
+		bCollisionReflectForward = shipData->getCollisionReflectForward();
 
 		////////////////////////////////////////////////////////
 		// Make components
 		////////////////////////////////////////////////////////
 		createGameComponent<BrainComponent>();
 		createGameComponent<TeamComponent>();
-		createGameComponent<CollisionComponent>()->setCollisionData(collisionData);
+		CollisionComponent* collisionComp = createGameComponent<CollisionComponent>();
 		energyComp = createGameComponent<ShipEnergyComponent>();
 		getGameComponent<TeamComponent>()->setTeam(spawnData.team);
 
@@ -57,6 +57,30 @@ namespace SA
 		// any extra component configuration
 		////////////////////////////////////////////////////////
 		updateTeamDataCache();
+		collisionComp->setCollisionData(collisionData);
+		collisionComp->setKinematicCollision(spawnData.spawnConfig->requestCollisionTests());
+	}
+
+	void Ship::postConstruct()
+	{
+		rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+
+		//WARNING: caching world sp will create cyclic reference
+		if (LevelBase* world = getWorld())
+		{
+			Transform xform = getTransform();
+			glm::mat4 xform_m = xform.getModelMatrix();
+			collisionHandle = world->getWorldGrid().insert(*this, collisionData->getWorldOBB());
+		}
+		else
+		{
+			throw std::logic_error("World entity being created but there is no containing world");
+		}
+
+		if (TeamComponent* team = getGameComponent<TeamComponent>())
+		{
+			team->onTeamChanged.addWeakObj(sp_this(), &Ship::handleTeamChanged);
+		}
 	}
 
 	Ship::~Ship()
@@ -382,28 +406,6 @@ namespace SA
 		return false;
 	}
 
-	void Ship::postConstruct()
-	{
-		rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
-
-		//WARNING: caching world sp will create cyclic reference
-		if (LevelBase* world = getWorld())
-		{
-			Transform xform = getTransform();
-			glm::mat4 xform_m = xform.getModelMatrix();
-			collisionHandle = world->getWorldGrid().insert(*this, collisionData->getWorldOBB()); 
-		}
-		else
-		{
-			throw std::logic_error("World entity being created but there is no containing world");
-		}
-
-		if(TeamComponent* team = getGameComponent<TeamComponent>())
-		{
-			team->onTeamChanged.addWeakObj(sp_this(), &Ship::handleTeamChanged);
-		}
-	}
-	
 	void Ship::tick(float dt_sec)
 	{
 		using namespace glm;
@@ -433,39 +435,9 @@ namespace SA
 		////////////////////////////////////////////////////////
 		// handle kinematics
 		////////////////////////////////////////////////////////
+		tickKinematic(dt_sec);
+
 		Transform xform = getTransform();
-		xform.position += getVelocity() * dt_sec;
-		glm::mat4 movedXform_m = xform.getModelMatrix();
-
-		NAN_BREAK(xform.position);
-
-		//update collision data
-		collisionData->updateToNewWorldTransform(movedXform_m);
-
-		//update the spatial hash
-		LevelBase* world = getWorld();
-		if (world && collisionHandle)
-		{
-			SH::SpatialHashGrid<WorldEntity>& worldGrid = world->getWorldGrid();
-			//worldGrid.updateEntry(collisionHandle, getWorldOBB(xform.getModelMatrix()));
-			worldGrid.updateEntry(collisionHandle, collisionData->getWorldOBB());
-
-			//test if collisions occurred
-			overlappingNodes_SH.clear();
-			worldGrid.lookupNodesInCells(*collisionHandle, overlappingNodes_SH);
-			for (sp <SH::GridNode<WorldEntity>> node : overlappingNodes_SH)
-			{
-				//#TODO make sure this object's shape has been updated to transform! this should be done before the loop
-				//#TODO for each node, get their shape and do a collision tests
-				//#TODO if collision, make sure this object's SAT::Shapes are updated
-			}
-#if SA_CAPTURE_SPATIAL_HASH_CELLS
-			SpatialHashCellDebugVisualizer::appendCells(worldGrid, *collisionHandle);
-#endif //SA_CAPTURE_SPATIAL_HASH_CELLS
-		}
-
-		setTransform(xform);
-
 		if (!activeShieldEffect.expired())
 		{
 			//locking wp may be slow as it requires atomic reference count increment; may need to use soft-ptrs if I make that system
@@ -475,14 +447,116 @@ namespace SA
 			//offset for non-centered scaling issues
 			activeShield_sp->xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f))); //#optimize rotating dir is expensive; perhaps cache with dirty flag?
 		}
+	} 
+
+	void Ship::tickKinematic(float dt_sec)
+	{
+		using namespace glm;
+
+		bool bAnyCollision = false;
+		glm::vec4 lastMTV = glm::vec4(0.f);
+
+		Transform xform = getTransform();
+		xform.position += getVelocity() * dt_sec;
+		glm::mat4 movedXform_m = xform.getModelMatrix();
+
+		NAN_BREAK(xform.position);
+
+		//update collision data
+		collisionData->updateToNewWorldTransform(movedXform_m);
+
+		LevelBase* world = getWorld();
+		if (world && collisionHandle)
+		{
+			SH::SpatialHashGrid<WorldEntity>& worldGrid = world->getWorldGrid();
+			worldGrid.updateEntry(collisionHandle, collisionData->getWorldOBB());
+
+			//test against all overlapping grid nodes
+			overlappingNodes_SH.clear();
+			worldGrid.lookupNodesInCells(*collisionHandle, overlappingNodes_SH);
+			for (sp <SH::GridNode<WorldEntity>> node : overlappingNodes_SH)
+			{
+				CollisionComponent* otherCollisionComp = node->element.getGameComponent<CollisionComponent>();
+				if (otherCollisionComp && otherCollisionComp->requestsCollisionChecks())
+				{
+					if (CollisionData* otherCollisionData = otherCollisionComp->getCollisionData()) //#todo #optimize so component will always have this data, but it can contain no shapes, to avoid branches. similar to nullobject pattern
+					{
+						using ShapeData = CollisionData::ShapeData;
+						const std::vector<ShapeData>& myShapeData = collisionData->getShapeData();
+						const std::vector<ShapeData>& otherShapeData = otherCollisionData->getShapeData();
+
+						//make sure OOB's collide as an optimization
+						if (SAT::Shape::CollisionTest(*collisionData->getOBBShape(), *otherCollisionData->getOBBShape()))
+						{
+							bool bCollision = false;
+							size_t numAttempts = 3;
+							size_t attempt = 0;
+							do
+							{
+								attempt++;
+								bCollision = false;
+
+								glm::vec4 largestMTV = glm::vec4(0.f);
+								float largestMTV_len2 = 0.f;
+								for (const ShapeData& myShape : myShapeData)
+								{
+									for (const ShapeData& worldShape : otherShapeData)
+									{
+										assert(myShape.shape && worldShape.shape);
+										glm::vec4 mtv;
+										if (SAT::Shape::CollisionTest(*myShape.shape, *worldShape.shape, mtv))
+										{
+											float mtv_len2 = glm::length2(mtv);
+											if (mtv_len2 > largestMTV_len2)
+											{
+												largestMTV_len2 = mtv_len2;
+												largestMTV = lastMTV = mtv;
+												bCollision = bAnyCollision = true;
+											}
+										}
+									}
+								}
+								if (bCollision)
+								{
+									xform.position += glm::vec3(largestMTV);
+									collisionData->updateToNewWorldTransform(xform.getModelMatrix());
+								}
+							} while (bCollision && attempt < numAttempts);
+							//perhaps we should revert back to original xform is it fails collision tests for all attempts.
+						}
+					}
+				}
+			}
+#if SA_CAPTURE_SPATIAL_HASH_CELLS
+			SpatialHashCellDebugVisualizer::appendCells(worldGrid, *collisionHandle);
+#endif //SA_CAPTURE_SPATIAL_HASH_CELLS
+
+			if (bAnyCollision)
+			{
+				if (bCollisionReflectForward)
+				{
+					//MTV in the case of faces will be something like the face normal; however this may not look to great for deflecting off of edges
+					glm::vec4 forward_n = getForwardDir();
+					glm::vec4 reflectedForward_n = normalize(glm::reflect(forward_n, glm::normalize(lastMTV))); //may not need to normalize
+					setVelocityDir(reflectedForward_n);
+					xform.rotQuat = Utils::getRotationBetween(forward_n, reflectedForward_n) * xform.rotQuat;
+				}
+				doShieldFX();
+			}
+
+			setTransform(xform); //set after collision is handled so we do not continually update/broadcast events
+
+			if (bAnyCollision && onCollided.numBound() > 0) { onCollided.broadcast(); } //broadcasting after we've updated transform
+
 #define EXTRA_SHIP_DEBUG_INFO 0
 #if EXTRA_SHIP_DEBUG_INFO
-		{
-			DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
-			debug.renderCube(movedXform_m, color::brightGreen());
-		}
+			{
+				DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+				debug.renderCube(xform.getModelMatrix(), color::brightGreen());
+			}
 #endif
-	} 
+		}
+	}
 
 	//const std::array<glm::vec4, 8> Ship::getWorldOBB(const glm::mat4 xform) const
 	//{
@@ -528,35 +602,68 @@ namespace SA
 			}
 			else
 			{
-				if (!activeShieldEffect.expired())
-				{
-					sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
-					shieldEffect_sp->resetTimeAlive();
-				}
-				else
-				{
-					if (!activeShieldEffect.expired())
-					{
-						sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
-						//#TODO kill the shield effect
-					}
+				doShieldFX();
+				//if (!activeShieldEffect.expired())
+				//{
+				//	sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
+				//	shieldEffect_sp->resetTimeAlive();
+				//}
+				//else
+				//{
+				//	if (!activeShieldEffect.expired())
+				//	{
+				//		sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
+				//		//#TODO kill the shield effect
+				//	}
 
-					ParticleSystem::SpawnParams particleSpawnParams;
-					particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), cachedTeamData.shieldColor);
-					const Transform& shipXform = this->getTransform(); 
-					particleSpawnParams.xform.position = shipXform.position;
-					particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
-					particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
-					particleSpawnParams.xform.scale = shipXform.scale * 1.1f;  //scale up to see effect around ship
+				//	ParticleSystem::SpawnParams particleSpawnParams;
+				//	particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), cachedTeamData.shieldColor);
+				//	const Transform& shipXform = this->getTransform(); 
+				//	particleSpawnParams.xform.position = shipXform.position;
+				//	particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
+				//	particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
+				//	particleSpawnParams.xform.scale = shipXform.scale * 1.1f;  //scale up to see effect around ship
 
-					//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
-					//making the large ships show correct effect. Perhaps not even necessary.
-					Transform modelXform = shipData->getModelXform();
-					particleSpawnParams.xform.scale *= modelXform.scale;
+				//	//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
+				//	//making the large ships show correct effect. Perhaps not even necessary.
+				//	Transform modelXform = shipData->getModelXform();
+				//	particleSpawnParams.xform.scale *= modelXform.scale;
 
-					activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-				}
+				//	activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+				//}
 			}
+		}
+	}
+
+	void Ship::doShieldFX()
+	{
+		if (!activeShieldEffect.expired())
+		{
+			sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
+			shieldEffect_sp->resetTimeAlive();
+		}
+		else
+		{
+			if (!activeShieldEffect.expired())
+			{
+				sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
+				//#TODO kill the shield effect
+			}
+
+			ParticleSystem::SpawnParams particleSpawnParams;
+			particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), cachedTeamData.shieldColor);
+			const Transform& shipXform = this->getTransform();
+			particleSpawnParams.xform.position = shipXform.position;
+			particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
+			particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
+			particleSpawnParams.xform.scale = shipXform.scale * 1.1f;  //scale up to see effect around ship
+
+			//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
+			//making the large ships show correct effect. Perhaps not even necessary.
+			Transform modelXform = shipData->getModelXform();
+			particleSpawnParams.xform.scale *= modelXform.scale;
+
+			activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 		}
 	}
 

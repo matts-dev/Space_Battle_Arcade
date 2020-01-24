@@ -15,12 +15,12 @@ namespace SA
 		void setCollisionData(const sp<CollisionData>& inCollisionData) { collisionData = inCollisionData; }
 		CollisionData* getCollisionData() { return collisionData.get(); }
 		const CollisionData* getCollisionData() const { return collisionData.get(); }
-		void setKinematicCollision(bool bRequestCollisionTests) { bKinematicCollision = bRequestCollisionTests; }
-		bool getKinematicCollision() const { return bKinematicCollision; }
+		void setKinematicCollision(bool bRequestCollisionTests) { bRequestCollisionChecks = bRequestCollisionTests; }
+		bool requestsCollisionChecks() const { return bRequestCollisionChecks; }
 	private:
 		/*	Whether this component should try to claim it's space in the 3d world. When false this tells others that this object doesn't mind having spatial overlap.
 			But it has collision that can be used for things like projectiles*/
-		bool bKinematicCollision = true;		
+		bool bRequestCollisionChecks = true;		
 		sp<CollisionData> collisionData;
 	};
 

@@ -141,7 +141,7 @@ namespace SA
 	};
 
 	/** This should be used for quick testing, but proper collision should be configured per entity via an artist; this just returns a configured cube collision*/
-	sp<CollisionData> createUnitCubeCollisionInfo();
+	sp<CollisionData> createUnitCubeCollisionData();
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Spatial hashing debug information

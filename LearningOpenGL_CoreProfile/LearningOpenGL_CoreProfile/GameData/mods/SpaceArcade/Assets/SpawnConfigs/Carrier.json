@@ -4,6 +4,7 @@
         "name": "Carrier"
     },
     "SpawnConfig": {
+        "bRequestsCollisionTests": true,
         "fullModelFilePath": "GameData/mods/SpaceArcade//Assets/Models3D/Carrier/SGCarrier.obj",
         "modelAABB": {
             "modelPosition": [

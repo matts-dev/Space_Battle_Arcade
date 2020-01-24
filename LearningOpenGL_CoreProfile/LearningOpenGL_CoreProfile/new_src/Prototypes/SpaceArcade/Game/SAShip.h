@@ -41,19 +41,20 @@ namespace SA
 	public:
 		Ship(const SpawnData& spawnData);
 		~Ship();
-	public: 
+
 		////////////////////////////////////////////////////////
 		// Interface and Virtuals
 		////////////////////////////////////////////////////////
 		virtual void draw(Shader& shader) override;
 		void onDestroyed() override;
+
 		////////////////////////////////////////////////////////
 		//IControllable
 		////////////////////////////////////////////////////////
 		virtual void onPlayerControlTaken() override;
 		virtual void onPlayerControlReleased() override;
 		virtual sp<CameraBase> getCamera() override;
-	public:
+
 		template <typename BrainType>
 		void spawnNewBrain()
 		{
@@ -64,7 +65,6 @@ namespace SA
 				brainComp->spawnNewBrain<BrainType>(sp_this());
 			}
 		}
-	public:
 		////////////////////////////////////////////////////////
 		//Control functions
 		////////////////////////////////////////////////////////
@@ -113,9 +113,11 @@ namespace SA
 		virtual void tick(float deltatime) override;
 	private:
 		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
-	private:
-		//const std::array<glm::vec4, 8> getWorldOBB(const glm::mat4 xform) const;
+		void tickKinematic(float dt_sec);
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
+		void doShieldFX();
+	public:
+		MultiDelegate<> onCollided;
 	private:
 		//helper data structures
 		std::vector<sp<SH::GridNode<WorldEntity>>> overlappingNodes_SH;
@@ -148,6 +150,7 @@ namespace SA
 		float adjustedBoost = 1.0f;
 		float targetBoost = 1.0f;
 		std::optional<float> boostNextFrame;
+		bool bCollisionReflectForward:1;
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;

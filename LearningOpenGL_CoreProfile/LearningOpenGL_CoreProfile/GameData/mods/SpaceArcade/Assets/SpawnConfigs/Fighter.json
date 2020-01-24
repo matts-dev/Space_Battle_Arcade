@@ -4,6 +4,7 @@
         "name": "Fighter"
     },
     "SpawnConfig": {
+        "bRequestsCollisionTests": false,
         "fullModelFilePath": "GameData/mods/SpaceArcade/Assets/Models3D/Fighter/SGFighter.obj",
         "modelAABB": {
             "modelPosition": [
@@ -30,6 +31,7 @@
         "primaryProjectileConfigName": "FighterLaser",
         "shapes": [
             {
+                "modelFilePath": "",
                 "position": [
                     0.0,
                     0.0,
@@ -48,6 +50,7 @@
                 "shape": 0
             },
             {
+                "modelFilePath": "",
                 "position": [
                     0.0,
                     -0.20000000298023224,

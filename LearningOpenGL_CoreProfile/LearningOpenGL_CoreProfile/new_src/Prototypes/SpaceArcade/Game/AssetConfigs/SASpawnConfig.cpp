@@ -111,7 +111,8 @@ namespace SA
 			//#suggested perhaps rework this so primareFireProjectile has a setter to update the string name copy... this wouldn't follow the normal pattern of treating the config like a struct from within the editor
 			{"primaryProjectileConfigName", primaryFireProjectile ? primaryFireProjectile->getName() : primaryProjectileConfigName}, 
 			{ "shapes", {} },
-			{ "teamData", {} }
+			{ "teamData", {} },
+			{ "bRequestsCollisionTests", bRequestsCollisionTests}
 		};
 
 		for (CollisionShapeConfig& shapeCFG : shapes)
@@ -181,6 +182,11 @@ namespace SA
 					//WARNING: this cannot request the projectile config from this code because it will be a race condition; will the 
 					// race projectile configs deserialization vs spawn configs deserialization
 					primaryProjectileConfigName = spawnData["primaryProjectileConfigName"];
+				}
+
+				if (spawnData.contains("bRequestsCollisionTests") && spawnData["bRequestsCollisionTests"].is_boolean())
+				{
+					bRequestsCollisionTests = spawnData["bRequestsCollisionTests"];
 				}
 
 				//#TODO use lambda to load vec3s
