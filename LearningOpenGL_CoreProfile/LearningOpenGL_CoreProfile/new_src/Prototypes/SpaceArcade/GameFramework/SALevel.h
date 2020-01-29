@@ -11,6 +11,7 @@
 
 #include "RenderModelEntity.h"
 #include "SAWorldEntity.h"
+#include "mix_ins/CustomGrid_MixIn.h"
 #include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 #include "../Rendering/Lights/SADirectionLight.h"
@@ -28,7 +29,8 @@ namespace SA
 	};
 
 	/** Base class for a level object */
-	class LevelBase : public GameEntity, public Tickable, public RemoveCopies, public RemoveMoves
+	class LevelBase : public GameEntity, public Tickable, public RemoveCopies, public RemoveMoves,
+		public CustomGrid_MixIn
 	{
 		friend LevelSystem;
 	public:
@@ -68,7 +70,7 @@ namespace SA
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned);
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned);
 		virtual bool isLevelActive() { return bLevelActive; }
-	private: //virtuals; private indicates subclasses inherit when function called, but now how function is completed.
+	private: //virtuals; private indicates subclasses inherit when function called, but not how function is completed.
 		virtual void tick(float dt_sec);
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {};

@@ -241,7 +241,7 @@ namespace SA
 				}
 				else
 				{
-					log("component system", LogLevel::LOG_WARNING, "deleting component that already exists");
+					log("component system", LogLevel::LOG_WARNING, "deleting component that does't exist");
 					assert(false);
 				}
 			}

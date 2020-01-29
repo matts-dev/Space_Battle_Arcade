@@ -78,7 +78,7 @@ namespace SA
 	//	size_t nextSequentialIndex = 0;
 	//};
 
-	struct shapeData
+	struct ShapeData
 	{
 		std::vector<glm::mat4> models;
 		std::vector<glm::vec4> colors;
@@ -94,7 +94,8 @@ namespace SA
 	{
 		//line data is packaged shear matrices that transform the basis vectors into the end points of the line. third column is color.
 		std::vector<glm::mat4> lineData;
-		shapeData cubeData;
+		ShapeData cubeData;
+		ShapeData sphereData;
 	};
 
 	////////////////////////////////////////////////////////
@@ -113,50 +114,69 @@ namespace SA
 		GLuint vboInstancedVec4s = 0;
 	};
 
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// Handle rendering instanced lines.
-	/////////////////////////////////////////////////////////////////////////////////////
-	class DebugLineRender : public DebugShapeMesh
+	////////////////////////////////////////////////////////
+	// Shared functinality of the different renders goes here
+	//
+	//	While this reduces code duplication, it somehow still
+	//  feels worse that just doing this in each subclass. 
+	//	perhaps it is because it splits up the implemenation
+	//	between classes. I'm tempted to just move this back
+	//  to the subclasses so they're completely self contained.
+	////////////////////////////////////////////////////////
+	class DebugShapeMesh_SingleVAO : public DebugShapeMesh
 	{
 	public:
-		virtual void render() const override;
-		virtual void instanceRender(int instanceCount) const override;
-		virtual const std::vector<unsigned int>& getVAOs() override;
-
-	private:
-		virtual void onReleaseOpenGLResources() override;
-		virtual void onAcquireOpenGLResources() override;
-
-	private:
+		const std::vector<unsigned int>& getVAOs();
+	protected:
 		sp<Shader> shader = nullptr;
 		std::vector<unsigned int> vaos;
 		GLuint vao = 0;
 		GLuint vboPositions = 0;
+	};
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Handle rendering instanced lines.
+	/////////////////////////////////////////////////////////////////////////////////////
+	class DebugLineRender final : public DebugShapeMesh_SingleVAO
+	{
+	public:
+		virtual void render() const override;
+		virtual void instanceRender(int instanceCount) const override;
+	private:
+		virtual void onReleaseOpenGLResources() override;
+		virtual void onAcquireOpenGLResources() override;
 	};
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// handle rendering debug cubes
 	/////////////////////////////////////////////////////////////////////////////////////
-	class DebugCubeRender : public DebugShapeMesh
+	class DebugCubeRender : public DebugShapeMesh_SingleVAO
 	{
 	public:
 		virtual void render() const override;
 		virtual void instanceRender(int instanceCount) const override;
-		virtual const std::vector<unsigned int>& getVAOs() override;
-
-	public:
-
 	private:
 		virtual void onReleaseOpenGLResources() override;
 		virtual void onAcquireOpenGLResources() override;
-
-	private:
-		sp<Shader> shader = nullptr;
-		std::vector<unsigned int> vaos;
-		GLuint vao = 0;
-		GLuint vboPositions = 0;
 	};
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// handle rendering debug spheres
+	/////////////////////////////////////////////////////////////////////////////////////
+	class DebugSphereRender : public DebugShapeMesh_SingleVAO
+	{
+	public:
+		virtual void render() const override;
+		virtual void instanceRender(int instanceCount) const override;
+	private:
+		virtual void onReleaseOpenGLResources() override;
+		virtual void onAcquireOpenGLResources() override;
+	private:
+		std::vector<unsigned> triIndices;
+		size_t vertCount = 0;
+		GLuint eao;
+	};
+
 
 	struct TimedRenderDatum;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -217,6 +237,20 @@ namespace SA
 		virtual void render(float dtSec, class DebugRenderSystem& debugRenderSys) override;
 	};
 
+	struct SphereTimedRenderDatum : TimedRenderDatum
+	{
+		const glm::mat4 model;
+		const glm::vec3 color;
+		float accumulatedTime = 0.0f;
+
+		SphereTimedRenderDatum(const glm::mat4& model, const glm::vec3& color, float secs)
+			: TimedRenderDatum(secs),
+			model(model),
+			color(color)
+		{}
+		virtual void render(float dtSec, class DebugRenderSystem& debugRenderSys) override;
+	};
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Debug Render System - uses instanced rendering for efficiency.
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +263,9 @@ namespace SA
 		void renderCube(const glm::mat4& model, const glm::vec3& color);
 		void renderCubeOverTime(const glm::mat4& model, const glm::vec3& color, float secs);
 
+		void renderSphere(const glm::mat4& model, const glm::vec3& color);
+		void renderSphereOverTime(const glm::mat4& model, const glm::vec3& color, float secs);
+
 	private:
 		virtual void initSystem() override;
 		virtual void handleRenderDispatch(float dt_sec_system);
@@ -239,6 +276,7 @@ namespace SA
 		FrameShuffler<FrameData_VisualDebugging> frameSwitcher{ 1 };
 		sp<DebugLineRender> lineRenderer;
 		sp<DebugCubeRender> cubeRenderer;
+		sp<DebugSphereRender> sphereRenderer;
 		std::set<sp<TimedRenderDatum>> timedRenderData;
 	};
 

@@ -8,6 +8,7 @@
 #include "SALevel.h"
 #include "SALevelSystem.h"
 #include <detail/func_common.hpp>
+#include "../Tools/Geometry/SimpleShapes.h" //#TODO remove this once the sphereutils is mvoed to another file and include that.
 
 namespace SA
 {
@@ -15,6 +16,7 @@ namespace SA
 	{
 		lineRenderer = new_sp<DebugLineRender>();
 		cubeRenderer = new_sp<DebugCubeRender>();
+		sphereRenderer = new_sp<DebugSphereRender>();
 
 		GameBase& gameBase = GameBase::get();
 		gameBase.onRenderDispatch.addWeakObj(sp_this(), &DebugRenderSystem::handleRenderDispatch);
@@ -63,42 +65,47 @@ namespace SA
 			}
 			readFrame->lineData.clear();
 
-			if (readFrame->cubeData.models.size() > 0)
-			{
-				GLuint cubeVAO = cubeRenderer->getVAOs()[0];
-				ec(glBindVertexArray(cubeVAO));
+			static auto renderInstanceData = [](ShapeData& shapeData, DebugShapeMesh& shapeRenderer, CameraBase& camera) {
+				if (shapeData.models.size() > 0)
+				{
+					GLuint shapeVAO = shapeRenderer.getVAOs()[0];
+					ec(glBindVertexArray(shapeVAO));
 
-				ec(glBindBuffer(GL_ARRAY_BUFFER, cubeRenderer->getMat4InstanceVBO()));
-				ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * readFrame->cubeData.models.size(), &readFrame->cubeData.models[0], GL_STATIC_DRAW));
-				GLsizei numVec4AttribsInBuffer = 4;
-				size_t packagedVec4Idx_matbuffer = 0;
+					ec(glBindBuffer(GL_ARRAY_BUFFER, shapeRenderer.getMat4InstanceVBO()));
+					ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * shapeData.models.size(), &shapeData.models[0], GL_STATIC_DRAW));
+					GLsizei numVec4AttribsInBuffer = 4;
+					size_t packagedVec4Idx_matbuffer = 0;
 
-				//load model matrix
-				ec(glEnableVertexAttribArray(1));
-				ec(glEnableVertexAttribArray(2));
-				ec(glEnableVertexAttribArray(3));
-				ec(glEnableVertexAttribArray(4));
-				ec(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
-				ec(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
-				ec(glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
-				ec(glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
-				ec(glVertexAttribDivisor(1, 1));
-				ec(glVertexAttribDivisor(2, 1));
-				ec(glVertexAttribDivisor(3, 1));
-				ec(glVertexAttribDivisor(4, 1));
+					//load model matrix
+					ec(glEnableVertexAttribArray(1));
+					ec(glEnableVertexAttribArray(2));
+					ec(glEnableVertexAttribArray(3));
+					ec(glEnableVertexAttribArray(4));
+					ec(glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+					ec(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+					ec(glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+					ec(glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, numVec4AttribsInBuffer * sizeof(glm::vec4), reinterpret_cast<void*>(packagedVec4Idx_matbuffer++ * sizeof(glm::vec4))));
+					ec(glVertexAttribDivisor(1, 1));
+					ec(glVertexAttribDivisor(2, 1));
+					ec(glVertexAttribDivisor(3, 1));
+					ec(glVertexAttribDivisor(4, 1));
 
-				//load color
-				ec(glBindBuffer(GL_ARRAY_BUFFER, cubeRenderer->getVec4InstanceVBO()));
-				ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * readFrame->cubeData.colors.size(), &readFrame->cubeData.colors[0], GL_STATIC_DRAW));
+					//load color
+					ec(glBindBuffer(GL_ARRAY_BUFFER, shapeRenderer.getVec4InstanceVBO()));
+					ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * shapeData.colors.size(), &shapeData.colors[0], GL_STATIC_DRAW));
 
-				ec(glEnableVertexAttribArray(5));
-				ec(glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), reinterpret_cast<void*>(0)));
-				ec(glVertexAttribDivisor(5, 1));
-				cubeRenderer->setProjectionViewMatrix(camera->getPerspective() * camera->getView());
-				cubeRenderer->instanceRender(readFrame->cubeData.models.size());
-			}
+					ec(glEnableVertexAttribArray(5));
+					ec(glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), reinterpret_cast<void*>(0)));
+					ec(glVertexAttribDivisor(5, 1));
+					shapeRenderer.setProjectionViewMatrix(camera.getPerspective() * camera.getView());
+					shapeRenderer.instanceRender(shapeData.models.size());
+				}
+			};
+			renderInstanceData(readFrame->cubeData, *cubeRenderer, *camera);
 			readFrame->cubeData.clear();
 
+			renderInstanceData(readFrame->sphereData, *sphereRenderer, *camera);
+			readFrame->sphereData.clear();
 		}
 	}
 
@@ -169,6 +176,20 @@ namespace SA
 		timedRenderData.insert(cubeData);
 	}
 
+	void DebugRenderSystem::renderSphere(const glm::mat4& model, const glm::vec3& color)
+	{
+		FrameData_VisualDebugging& writeFrame = frameSwitcher.getWriteFrame();
+		writeFrame.sphereData.models.push_back(model);
+		writeFrame.sphereData.colors.push_back(glm::vec4(color, 1.f));
+	}
+
+	void DebugRenderSystem::renderSphereOverTime(const glm::mat4& model, const glm::vec3& color, float secs)
+	{
+		sp<TimedRenderDatum> sphereData = new_sp<SphereTimedRenderDatum>(model, color, secs);
+		sphereData->registerTimer();
+		timedRenderData.insert(sphereData);
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Debug line renderer
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,11 +209,6 @@ namespace SA
 			ec(glBindVertexArray(vao));
 			ec(glDrawArraysInstanced(GL_LINES, 0, 2, instanceCount));
 		}
-	}
-
-	const std::vector<unsigned int>& DebugLineRender::getVAOs()
-	{
-		return vaos;
 	}
 
 	void DebugLineRender::onReleaseOpenGLResources()
@@ -263,6 +279,35 @@ namespace SA
 	// Debug cube renderer
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	static const char* const cube_vert_src = R"(
+			#version 330 core
+
+			layout (location = 0) in vec3 position;
+			layout (location = 1) in mat4 instanceModel;			//consumes locations 1, 2, 3, 4
+			layout (location = 5) in vec4 instanceColor;			
+
+			out vec4 color;
+
+			uniform mat4 projection_view;
+
+			void main()
+			{
+				color = instanceColor;
+				gl_Position = projection_view * instanceModel * vec4(position, 1);
+			}
+		)";
+	static const char* const cube_frag_src = R"(
+			#version 330 core
+
+			in vec4 color;
+			out vec4 fragColor;
+
+			void main()
+			{
+				fragColor = color;
+			}
+		)";
+
 	void DebugCubeRender::render() const
 	{
 		throw std::logic_error("The method or operation is not implemented.");
@@ -284,10 +329,7 @@ namespace SA
 		}
 	}
 
-	const std::vector<unsigned int>& DebugCubeRender::getVAOs()
-	{
-		return vaos;
-	}
+	
 
 	void DebugCubeRender::onReleaseOpenGLResources()
 	{
@@ -363,38 +405,81 @@ namespace SA
 		vaos.clear();
 		vaos.push_back(vao);
 
+		shader = new_sp<Shader>(cube_vert_src, cube_frag_src, false);
+	}
 
-		const char* const cube_vert_src = R"(
-			#version 330 core
+	////////////////////////////////////////////////////////
+	// Debug Sphere Renderer
+	////////////////////////////////////////////////////////
 
-			layout (location = 0) in vec3 position;
-			layout (location = 1) in mat4 instanceModel;			//consumes locations 1, 2, 3, 4
-			layout (location = 5) in vec4 instanceColor;			
+	void DebugSphereRender::render() const
+	{
+		throw std::logic_error("The method or operation is not implemented.");
+	}
 
-			out vec4 color;
+	void DebugSphereRender::instanceRender(int instanceCount) const
+	{
+		if (shader)
+		{
+			shader->use();
+			shader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
 
-			uniform mat4 projection_view;
+			ec(glBindVertexArray(vao));
 
-			void main()
-			{
-				color = instanceColor;
-				gl_Position = projection_view * instanceModel * vec4(position, 1);
-			}
-		)";
-		const char* const cube_frag_src = R"(
-			#version 330 core
+			ec(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+			ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao)); 
+			ec(glDrawElementsInstanced(GL_TRIANGLES, triIndices.size(), GL_UNSIGNED_INT, reinterpret_cast<void*>(0), instanceCount));
+			ec(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+		}
+	}
 
-			in vec4 color;
-			out vec4 fragColor;
+	void DebugSphereRender::onReleaseOpenGLResources()
+	{
+		shader = nullptr;
+		ec(glDeleteBuffers(1, &vboPositions));
+		ec(glDeleteVertexArrays(1, &vao));
+		ec(glDeleteBuffers(1, &vboInstancedMat4s));
+		ec(glDeleteBuffers(1, &vboInstancedVec4s));
+		ec(glDeleteBuffers(1, &eao));
+	}
 
-			void main()
-			{
-				fragColor = color;
-			}
-		)";
+	void DebugSphereRender::onAcquireOpenGLResources()
+	{
+		std::vector<float> vertList;
+		std::vector<float> normalList;
+		std::vector<float> textureCoordsList;
+
+		SphereUtils::buildSphereMesh(glm::pi<float>() / 50.0f, vertList, normalList, textureCoordsList, triIndices);
+		vertCount = vertList.size();
+
+		ec(glGenVertexArrays(1, &vao));
+		ec(glBindVertexArray(vao));
+
+		ec(glGenBuffers(1, &vboPositions));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vboPositions));
+		ec(glBufferData(GL_ARRAY_BUFFER, vertList.size() * sizeof(decltype(vertList)::value_type), &vertList[0], GL_STATIC_DRAW));
+
+		ec(glGenBuffers(1, &vboInstancedMat4s));
+		ec(glGenBuffers(1, &vboInstancedVec4s));
+
+		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(0));
+
+		glGenBuffers(1, &eao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eao);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triIndices.size(), triIndices.data(), GL_STATIC_DRAW);
+
+		ec(glBindVertexArray(0));
+
+		vaos.clear();
+		vaos.push_back(vao);
 
 		shader = new_sp<Shader>(cube_vert_src, cube_frag_src, false);
 	}
+
+	////////////////////////////////////////////////////////
+	// Timed render structs
+	////////////////////////////////////////////////////////
 
 	float TimedRenderDatum::getColorScaledown(float accumulatedTime) const
 	{
@@ -403,11 +488,8 @@ namespace SA
 		return glm::clamp<float>(timeFactor, 0, 1.f);
 	}
 
-	////////////////////////////////////////////////////////
-	// Timed render structs
-	////////////////////////////////////////////////////////
 	void TimedRenderDatum::registerTimer()
-{
+	{
 		timerDelegate = new_sp<MultiDelegate<>>();
 		timerDelegate->addWeakObj(sp_this(), &TimedRenderDatum::HandleTimeUp);
 
@@ -438,5 +520,22 @@ namespace SA
 
 		debugRenderSys.renderCube(model, color * timeFactor);
 	}
+
+	void SphereTimedRenderDatum::render(float dtSec, class DebugRenderSystem& debugRenderSys)
+	{
+		accumulatedTime += dtSec;
+
+		//linearly fade color out over time
+		float timeFactor = getColorScaledown(accumulatedTime);
+
+		debugRenderSys.renderSphere(model, color * timeFactor);
+	}
+
+	const std::vector<unsigned int>& DebugShapeMesh_SingleVAO::getVAOs()
+	{
+		return vaos;
+	}
+
+
 
 }

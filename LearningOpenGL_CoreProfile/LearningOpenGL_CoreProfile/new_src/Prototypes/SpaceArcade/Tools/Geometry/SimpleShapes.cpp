@@ -63,14 +63,59 @@ namespace SA
 
 	void SphereMeshTextured::buildMesh(float TOLERANCE)
 	{
+		SphereUtils::buildSphereMesh(TOLERANCE, vertPositions, normals, textureCoords, triangleElementIndices);
+		configureDataForOpenGL();
+	}
+
+	void SphereMeshTextured::configureDataForOpenGL()
+	{
+		//You can use multiple VBOs within a single VAO. For simplicity that is what I am doing.
+		ec(glBindVertexArray(0));
+		ec(glGenVertexArrays(1, &vao));
+		ec(glBindVertexArray(vao));
+		vaos.push_back(vao);
+
+		ec(glGenBuffers(1, &vboPositions));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vboPositions));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertPositions.size(), vertPositions.data(), GL_STATIC_DRAW));
+		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(0));
+
+		ec(glGenBuffers(1, &vboNormals));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vboNormals));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * normals.size(), normals.data(), GL_STATIC_DRAW));
+		ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(1));
+
+		ec(glGenBuffers(1, &vboTexCoords));
+		ec(glBindBuffer(GL_ARRAY_BUFFER, vboTexCoords));
+		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * textureCoords.size(), textureCoords.data(), GL_STATIC_DRAW));
+		ec(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0)));
+		ec(glEnableVertexAttribArray(2));
+
+		ec(glGenBuffers(1, &ebo));
+		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+		ec(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triangleElementIndices.size(), triangleElementIndices.data(), GL_STATIC_DRAW));
+
+		//prevent other calls from corrupting this VAO state
+		ec(glBindVertexArray(0));
+	}
+
+	void SphereUtils::buildSphereMesh(float tolerance, std::vector<float>& vertPositions, std::vector<float>& inNormals, std::vector<float>& textureCoords, std::vector<unsigned int>& triangleElementIndices)
+	{
 		using namespace glm;
+
+		vertPositions.clear();
+		inNormals.clear();
+		textureCoords.clear();
+		triangleElementIndices.clear();
 
 		std::vector<vec3> sphereVerts;
 		std::vector<vec3> sphereNormals;
 		std::vector<vec2> sphereTextureCoords;
 
 		std::vector<int> rowIterations_numFacets;
-		generateUnitSphere(TOLERANCE, sphereVerts, sphereNormals, sphereTextureCoords, rowIterations_numFacets);
+		SphereUtils::generateUnitSphere(tolerance, sphereVerts, sphereNormals, sphereTextureCoords, rowIterations_numFacets);
 
 		int latitudeNum = rowIterations_numFacets[0];
 		int numFacetsInCircle = rowIterations_numFacets[1];
@@ -141,54 +186,18 @@ namespace SA
 			}
 		}
 
-		this->vertPositions = verts;
-		this->normals = normals;
-		this->textureCoords = uvs;
-		this->triangleElementIndices = triangles;
-
-		configureDataForOpenGL();
+		vertPositions = verts;
+		inNormals = normals;
+		textureCoords = uvs;
+		triangleElementIndices = triangles;
 	}
 
-	void SphereMeshTextured::configureDataForOpenGL()
-	{
-		//You can use multiple VBOs within a single VAO. For simplicity that is what I am doing.
-		ec(glBindVertexArray(0));
-		ec(glGenVertexArrays(1, &vao));
-		ec(glBindVertexArray(vao));
-		vaos.push_back(vao);
-
-		ec(glGenBuffers(1, &vboPositions));
-		ec(glBindBuffer(GL_ARRAY_BUFFER, vboPositions));
-		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertPositions.size(), vertPositions.data(), GL_STATIC_DRAW));
-		ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)));
-		ec(glEnableVertexAttribArray(0));
-
-		ec(glGenBuffers(1, &vboNormals));
-		ec(glBindBuffer(GL_ARRAY_BUFFER, vboNormals));
-		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * normals.size(), normals.data(), GL_STATIC_DRAW));
-		ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0)));
-		ec(glEnableVertexAttribArray(1));
-
-		ec(glGenBuffers(1, &vboTexCoords));
-		ec(glBindBuffer(GL_ARRAY_BUFFER, vboTexCoords));
-		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * textureCoords.size(), textureCoords.data(), GL_STATIC_DRAW));
-		ec(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0)));
-		ec(glEnableVertexAttribArray(2));
-
-		ec(glGenBuffers(1, &ebo));
-		ec(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-		ec(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * triangleElementIndices.size(), triangleElementIndices.data(), GL_STATIC_DRAW));
-
-		//prevent other calls from corrupting this VAO state
-		ec(glBindVertexArray(0));
-	}
-
-	int SphereMeshTextured::calculateNumFacets(float tolerance)
+	int SphereUtils::calculateNumFacets(float tolerance)
 	{
 		return static_cast<int>(round((glm::pi<float>() / (4 * tolerance))));
 	}
 
-	void SphereMeshTextured::generateUnitSphere(float tolerance,
+	void SphereUtils::generateUnitSphere(float tolerance,
 		std::vector<glm::vec3>& vertList,
 		std::vector<glm::vec3>& normalList,
 		std::vector<glm::vec2>& textureCoordsList,
@@ -243,7 +252,7 @@ namespace SA
 		rowIterations_numFacets.push_back(numFacets);
 	}
 
-	glm::vec3 SphereMeshTextured::copyAndRotatePointZAxis(const glm::vec3 toCopy, float rotationDegrees)
+	glm::vec3 SphereUtils::copyAndRotatePointZAxis(const glm::vec3 toCopy, float rotationDegrees)
 	{
 		using namespace glm;
 
@@ -252,7 +261,7 @@ namespace SA
 		return rotatePointZAxis(copy, rotationDegrees);
 	}
 
-	glm::vec3& SphereMeshTextured::rotatePointZAxis(glm::vec3& point, float rotationDegrees)
+	glm::vec3& SphereUtils::rotatePointZAxis(glm::vec3& point, float rotationDegrees)
 	{
 		using namespace glm;
 
@@ -265,7 +274,7 @@ namespace SA
 		return point;
 	}
 
-	glm::vec3 SphereMeshTextured::copyAndRotatePointXAxis(const glm::vec3& toCopy, float rotationDegrees)
+	glm::vec3 SphereUtils::copyAndRotatePointXAxis(const glm::vec3& toCopy, float rotationDegrees)
 	{
 		using namespace glm;
 

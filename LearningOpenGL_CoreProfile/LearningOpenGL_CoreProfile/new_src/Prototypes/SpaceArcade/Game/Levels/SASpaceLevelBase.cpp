@@ -13,11 +13,10 @@
 #include "../Environment/Planet.h"
 #include "../../Rendering/RenderData.h"
 #include "../../GameFramework/SARenderSystem.h"
+#include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 
 namespace SA
 {
-
-
 	void SpaceLevelBase::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		using glm::vec3; using glm::mat4;
@@ -104,6 +103,8 @@ namespace SA
 
 	void SpaceLevelBase::postConstruct()
 	{
+		createTypedGrid<AvoidanceSphere>(glm::vec3(32, 32, 32));
+		
 		starField = onCreateStarField();
 		{ 
 			bGeneratingLocalStars = true;

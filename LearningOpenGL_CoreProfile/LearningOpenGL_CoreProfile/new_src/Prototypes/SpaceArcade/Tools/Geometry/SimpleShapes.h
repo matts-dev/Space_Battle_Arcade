@@ -49,6 +49,22 @@ namespace SA
 		virtual void onAcquireOpenGLResources() = 0;
 	};
 
+	namespace SphereUtils
+	{
+		//#TODO move this to a different file set.
+		void buildSphereMesh(float tolerance,
+			std::vector<float>& vertPositions,
+			std::vector<float>& normals,
+			std::vector<float>& textureCoords,
+			std::vector<unsigned int>& triangleElementIndices);
+		int calculateNumFacets(float tolerance);
+		void generateUnitSphere(float tolerance, std::vector<glm::vec3>& vertList, std::vector<glm::vec3>& normalList, std::vector<glm::vec2>& textureCoordsList, std::vector<int>& rowIterations_numFacets);
+		glm::vec3 copyAndRotatePointZAxis(const glm::vec3 toCopy, float rotationDegrees);
+		glm::vec3& rotatePointZAxis(glm::vec3& point, float rotationDegrees);
+		glm::vec3 copyAndRotatePointXAxis(const glm::vec3& toCopy, float rotationDegrees);
+	}
+
+
 	///////////////////////////////////////////////////////////////////////
 	// Textured Sphere
 	///////////////////////////////////////////////////////////////////////
@@ -68,13 +84,6 @@ namespace SA
 		void buildMesh(float TOLERANCE);
 
 		void configureDataForOpenGL();
-
-		//helpers
-		static int calculateNumFacets(float tolerance);
-		static void generateUnitSphere(float tolerance, std::vector<glm::vec3>& vertList, std::vector<glm::vec3>& normalList, std::vector<glm::vec2>& textureCoordsList, std::vector<int>& rowIterations_numFacets);
-		static glm::vec3 copyAndRotatePointZAxis(const glm::vec3 toCopy, float rotationDegrees);
-		static glm::vec3& rotatePointZAxis(glm::vec3& point, float rotationDegrees);
-		static glm::vec3 copyAndRotatePointXAxis(const glm::vec3& toCopy, float rotationDegrees);
 
 	private:
 		float tolerance;

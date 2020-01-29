@@ -146,6 +146,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SAIControllable.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\mix_ins\CustomGrid_MixIn.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
@@ -211,6 +212,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAShader.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\Algorithms.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\SphereAvoidance\AvoidanceSphere.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ChoiceChoosingHelper.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\IterableHashSet.h" />
@@ -451,6 +453,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\CollisionComponent.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\mix_ins\CustomGrid_MixIn.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.cpp" />
@@ -479,6 +482,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SALightBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\RenderData.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAGPUResource.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\SphereAvoidance\AvoidanceSphere.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\LifetimePointer.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.cpp" />
