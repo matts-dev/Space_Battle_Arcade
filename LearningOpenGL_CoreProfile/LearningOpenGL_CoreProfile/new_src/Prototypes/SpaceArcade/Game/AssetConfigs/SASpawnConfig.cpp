@@ -129,6 +129,16 @@ namespace SA
 			spawnData["shapes"].push_back(s);
 		}
 
+		for(AvoidanceSphereConfig& avoidSphere : avoidanceSpheres)
+		{
+			json avoidSphereJson = 
+			{
+				{ "localPosition", {avoidSphere.localPosition.x, avoidSphere.localPosition.y, avoidSphere.localPosition.z} },
+				{ "radius", avoidSphere.radius }
+			};
+			spawnData["avoidanceSpheres"].push_back(avoidSphereJson);
+		}
+
 		for (const TeamData& teamDatum : teamData)
 		{
 			json t = 
@@ -153,7 +163,7 @@ namespace SA
 			{
 				//for backwards compatibility, make sure to null check all fields
 				fullModelFilePath = spawnData.contains("fullModelFilePath") ? spawnData["fullModelFilePath"] : "";
-
+				
 				////////////////////////////////////////////////////////
 				//MODEL AABB
 				////////////////////////////////////////////////////////
@@ -174,7 +184,6 @@ namespace SA
 						const json& readShieldOffset = modelAABB["shieldOffset"];
 						if (!readShieldOffset.is_null() && readShieldOffset.is_array()) { shieldOffset = { readShieldOffset[0], readShieldOffset[1], readShieldOffset[2] }; }
 					}
-
 				}
 
 				if (spawnData.contains("primaryProjectileConfigName") && spawnData["primaryProjectileConfigName"].is_string())
@@ -218,6 +227,31 @@ namespace SA
 
 							shapes.push_back(shapeConfig);
 						}
+					}
+ 				}
+
+				if (spawnData.contains("avoidanceSpheres"))
+				{
+					avoidanceSpheres.clear();
+					json avSpheres = spawnData["avoidanceSpheres"];
+					for (json av : avSpheres)
+					{
+						AvoidanceSphereConfig loadedSphere;
+						if (av.contains("radius") && av["radius"].is_number_float())
+						{
+							loadedSphere.radius = av["radius"];
+						}
+						if (av.contains("localPosition"))
+						{
+							json posJson = av["localPosition"];
+							if (posJson.is_array())
+							{
+								loadedSphere.localPosition.x = posJson[0];
+								loadedSphere.localPosition.y = posJson[1];
+								loadedSphere.localPosition.z = posJson[2];
+							}
+						}
+						avoidanceSpheres.push_back(loadedSphere);
 					}
 				}
 

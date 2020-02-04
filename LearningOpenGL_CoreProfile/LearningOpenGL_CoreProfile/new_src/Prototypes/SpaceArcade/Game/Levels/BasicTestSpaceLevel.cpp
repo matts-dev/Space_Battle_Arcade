@@ -160,10 +160,10 @@ namespace SA
 #ifdef _DEBUG
 		//numFighterShipsToSpawn = 250;
 		//numFighterShipsToSpawn = 50;
-		//numFighterShipsToSpawn = 20;
+		numFighterShipsToSpawn = 20;
 		//numFighterShipsToSpawn = 10;
 		//numFighterShipsToSpawn = 4;
-		numFighterShipsToSpawn = 2;
+		//numFighterShipsToSpawn = 2;
 #endif//NDEBUG 
 
 		uint32_t numTeams = 2;
@@ -395,6 +395,8 @@ namespace SA
 #if SA_CAPTURE_SPATIAL_HASH_CELLS
 				ImGui::Checkbox("Render Spatial Hash Cells", &game.bRenderDebugCells);
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
+				static bool bRenderAvoidanceSphereProxy = false;
+				if(ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSphereProxy)){Ship::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);}
 				ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
 
 				////////////////////////////////////////////////////////

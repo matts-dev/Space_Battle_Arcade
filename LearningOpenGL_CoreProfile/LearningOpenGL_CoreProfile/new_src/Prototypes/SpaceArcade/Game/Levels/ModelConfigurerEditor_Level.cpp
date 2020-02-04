@@ -33,6 +33,7 @@
 
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
 #include "../../GameFramework/SAWindowSystem.h"
+#include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 
 
 namespace
@@ -168,6 +169,7 @@ namespace SA
 			cubeShape = new_sp<SAT::CubeShape>();
 		}
 		capsuleRenderer = new_sp<SAT::CapsuleRenderer>();
+		sharedAvoidanceRenderer = new_sp<AvoidanceSphere>(1.0f, glm::vec3(0.f));
 	}
 
 	void ModelConfigurerEditor_Level::endLevel_v()
@@ -713,6 +715,48 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		}
 		
 		ImGui::Separator();
+		ImGui::Checkbox("Render Avoidancec Spheres", &bRenderAvoidanceSpheres);
+		if (ImGui::Button("Add avoidance sphere"))
+		{
+			activeConfig->avoidanceSpheres.push_back({});
+		}
+
+		if (selectedAvoidanceSphereIdx != -1)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button("Remove"))
+			{
+				activeConfig->avoidanceSpheres.erase(activeConfig->avoidanceSpheres.begin() + selectedAvoidanceSphereIdx);
+				selectedShapeIdx = -1;
+			}
+		}
+		int avoidanceIndex = 0;
+		for (AvoidanceSphereConfig& avoidSphereConfig : activeConfig->avoidanceSpheres)
+		{
+			snprintf(tempTextBuffer, sizeof(tempTextBuffer), "sphere %d : %f radius", avoidanceIndex, avoidSphereConfig.radius);
+			if (ImGui::Selectable(tempTextBuffer, avoidanceIndex == selectedAvoidanceSphereIdx))
+			{
+				//enter here if clicked the selectable
+				if (selectedAvoidanceSphereIdx != avoidanceIndex)
+				{
+					selectedAvoidanceSphereIdx = avoidanceIndex;
+				}
+				else
+				{
+					selectedAvoidanceSphereIdx = -1;
+				}
+			}
+			avoidanceIndex++;
+		}
+		if (selectedAvoidanceSphereIdx != -1)
+		{
+			ImGui::InputFloat3("position", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].localPosition.x);
+			ImGui::InputFloat("radius", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].radius);
+		}
+
+		ImGui::Dummy(ImVec2(0, 20));
+		ImGui::Separator();
+
 
 		//pretty terrible, but doing this every tick after UI has had change to update. This isn't so bad because this is just a model editor.
 		//but it will have performance issues when the model grows more complex and has many collision shapes. But that would be bad for 
@@ -1013,6 +1057,16 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					aabbModel = glm::scale(aabbModel, aabbMinToMax);
 
 					shapeRenderer->renderUnitCube({ aabbModel, view, projection, glm::vec3(0,0,1), GL_LINE, GL_FILL });
+				}
+
+				if (bRenderAvoidanceSpheres)
+				{
+					for (AvoidanceSphereConfig& avSphereCfg : activeConfig->avoidanceSpheres)
+					{
+						sharedAvoidanceRenderer->setRadius(avSphereCfg.radius);
+						sharedAvoidanceRenderer->setPosition(avSphereCfg.localPosition);
+						sharedAvoidanceRenderer->render();
+					}
 				}
 
 				if (bRenderCollisionShapes)

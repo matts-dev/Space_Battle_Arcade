@@ -108,6 +108,10 @@ namespace SA
 		void updateTeamDataCache();
 		size_t getTeam() { return cachedTeamIdx; }
 		void handleTeamChanged(size_t oldTeamId, size_t newTeamId);
+		////////////////////////////////////////////////////////
+		// avoidance
+		////////////////////////////////////////////////////////
+		static void setRenderAvoidanceSpheres(bool bNewRenderAvoidance);
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
@@ -118,6 +122,8 @@ namespace SA
 		void doShieldFX();
 	public:
 		MultiDelegate<> onCollided;
+	private: //statics
+		static bool bRenderAvoidanceSpheres;
 	private:
 		//helper data structures
 		std::vector<sp<SH::GridNode<WorldEntity>>> overlappingNodes_SH;
@@ -138,6 +144,7 @@ namespace SA
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;
 		sp<const SpawnConfig> shipData;
+		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
 
 		ShipEnergyComponent* energyComp = nullptr;
 

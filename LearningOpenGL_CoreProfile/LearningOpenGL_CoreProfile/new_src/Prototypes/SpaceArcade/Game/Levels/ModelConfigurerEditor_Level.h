@@ -27,6 +27,7 @@ namespace SA
 	class ShapeRenderWrapper;
 	class CameraBase;
 	class Window;
+	class AvoidanceSphere;
 
 	struct ConfigDefaults
 	{
@@ -67,12 +68,14 @@ namespace SA
 	private: 
 		bool bRenderAABB = true;
 		bool bRenderCollisionShapes = true;
+		bool bRenderAvoidanceSpheres = true;
 		bool bRenderCollisionShapesLines = true;
 		bool bShowCustomShapes = false;
 		bool bShowSlowShapes = false;
 		bool bModelXray = false;
 		bool bUseCollisionCamera = false;
 		int selectedShapeIdx = -1;
+		int selectedAvoidanceSphereIdx = -1;
 		TeamData activeTeamData;
 
 		float cameraSpeedModifier = 1.f;
@@ -94,6 +97,7 @@ namespace SA
 		sp<SAT::CubeShape> cubeShape;
 		sp<SAT::PolygonCapsuleShape> polyShape;
 		sp<SAT::CapsuleRenderer> capsuleRenderer;
+		sp<AvoidanceSphere> sharedAvoidanceRenderer;
 
 		bool bAutoSave = true;
 	public:

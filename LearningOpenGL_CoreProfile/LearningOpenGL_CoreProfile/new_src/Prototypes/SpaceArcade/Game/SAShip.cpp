@@ -21,6 +21,7 @@
 #include "Cameras/SAShipCamera.h"
 #include "../GameFramework/SAWindowSystem.h"
 #include "../GameFramework/Components/CollisionComponent.h"
+#include "../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 
 namespace
 {
@@ -43,6 +44,12 @@ namespace SA
 		shieldOffset = spawnData.spawnConfig->getShieldOffset();
 		shipData = spawnData.spawnConfig;
 		bCollisionReflectForward = shipData->getCollisionReflectForward();
+
+		for (const AvoidanceSphereConfig& sphereConfig : spawnData.spawnConfig->getAvoidanceSpheres())
+		{
+			sp<AvoidanceSphere> avoidanceSphere = new_sp<AvoidanceSphere>(sphereConfig.radius, sphereConfig.localPosition);
+			avoidanceSpheres.push_back(avoidanceSphere);
+		}
 
 		////////////////////////////////////////////////////////
 		// Make components
@@ -194,6 +201,11 @@ namespace SA
 		updateTeamDataCache();
 	}
 
+	void Ship::setRenderAvoidanceSpheres(bool bNewRenderAvoidance)
+	{
+		bRenderAvoidanceSpheres = bNewRenderAvoidance;
+	}
+
 	void Ship::draw(Shader& shader)
 	{
 		glm::mat4 configuredModelXform = collisionData->getRootXform(); //#TODO #REFACTOR this ultimately comes from the spawn config, it is somewhat strange that we're reading this from collision data.But we need this to render models to scale.
@@ -201,6 +213,14 @@ namespace SA
 		shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(rawModel * configuredModelXform)); //unfortunately the spacearcade game is setting this uniform, so we're hitting this hot code twice.
 		shader.setUniform3f("objectTint", cachedTeamData.teamTint);
 		RenderModelEntity::draw(shader);
+
+		if (avoidanceSpheres.size() > 0 && Ship::bRenderAvoidanceSpheres)
+		{
+			for (sp<AvoidanceSphere>& avoidSphere : avoidanceSpheres)
+			{
+				avoidSphere->render();
+			}
+		}
 	}
 
 	void Ship::onDestroyed()
@@ -447,6 +467,15 @@ namespace SA
 			//offset for non-centered scaling issues
 			activeShield_sp->xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f))); //#optimize rotating dir is expensive; perhaps cache with dirty flag?
 		}
+
+		if (avoidanceSpheres.size() > 0)
+		{
+			glm::mat4 modelMatrix = xform.getModelMatrix();
+			for (sp<AvoidanceSphere>& myAvoidSphere : avoidanceSpheres)
+			{
+				myAvoidSphere->setParentXform(modelMatrix);
+			}
+		}
 	} 
 
 	void Ship::tickKinematic(float dt_sec)
@@ -666,5 +695,7 @@ namespace SA
 			activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 		}
 	}
+
+	bool Ship::bRenderAvoidanceSpheres = false;
 
 }

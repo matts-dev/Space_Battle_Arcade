@@ -4,6 +4,24 @@
         "name": "Carrier"
     },
     "SpawnConfig": {
+        "avoidanceSpheres": [
+            {
+                "localPosition": [
+                    0.0,
+                    0.0,
+                    60.0
+                ],
+                "radius": 75.0
+            },
+            {
+                "localPosition": [
+                    0.0,
+                    0.0,
+                    -60.0
+                ],
+                "radius": 75.0
+            }
+        ],
         "bRequestsCollisionTests": true,
         "fullModelFilePath": "GameData/mods/SpaceArcade//Assets/Models3D/Carrier/SGCarrier.obj",
         "modelAABB": {

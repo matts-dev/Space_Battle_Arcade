@@ -28,6 +28,12 @@ namespace SA
 		std::string modelFilePath;
 	};
 
+	struct AvoidanceSphereConfig
+	{
+		float radius = 1.0f;
+		glm::vec3 localPosition{ 0.f };
+	};
+
 	struct TeamData final 
 	{
 		glm::vec3 shieldColor = glm::vec3(0.58, 0.51, 0.99);
@@ -58,7 +64,8 @@ namespace SA
 		Transform getModelXform() const;
 		bool requestCollisionTests() const {return bRequestsCollisionTests;};
 		bool getCollisionReflectForward() const { return bCollisionReflectForward; }
-
+		const std::vector<AvoidanceSphereConfig>& getAvoidanceSpheres() const { return avoidanceSpheres; }
+		
 	protected:
 		virtual void onSerialize(json& outData) override;
 		virtual void onDeserialize(const json& inData) override;
@@ -77,6 +84,8 @@ namespace SA
 		std::vector<CollisionShapeConfig> shapes;
 		bool bRequestsCollisionTests = true;
 		bool bCollisionReflectForward = true;
+
+		std::vector<AvoidanceSphereConfig> avoidanceSpheres;
 		
 		//color/material
 		//team
