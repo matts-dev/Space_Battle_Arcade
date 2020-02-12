@@ -46,6 +46,7 @@ namespace SA
 		if (primaryWindow && myShip)
 		{
 			GLFWwindow* window = primaryWindow->get();
+			bool bCtrl = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
 
 			if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 			{
@@ -53,7 +54,16 @@ namespace SA
 			}
 			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 			{
-				myShip->adjustSpeedFraction(-0.1f, dt_sec);
+				constexpr float stopThreshold = 1.0f;
+				float currentSpeed = myShip->getSpeed();
+				if (bCtrl && currentSpeed < stopThreshold && currentSpeed > -stopThreshold)
+				{
+					myShip->setSpeedFactor(0.f);
+				}
+				else
+				{
+					myShip->adjustSpeedFraction(-0.1f, dt_sec);
+				}
 			}
 			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 			{

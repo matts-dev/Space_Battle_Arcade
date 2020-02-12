@@ -22,6 +22,10 @@
 #include "../GameFramework/SAWindowSystem.h"
 #include "../GameFramework/Components/CollisionComponent.h"
 #include "../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
+#include "../GameFramework/SALevelSystem.h"
+#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "../GameFramework/SAPlayerSystem.h"
+#include "../GameFramework/SAPlayerBase.h"
 
 namespace
 {
@@ -45,12 +49,6 @@ namespace SA
 		shipData = spawnData.spawnConfig;
 		bCollisionReflectForward = shipData->getCollisionReflectForward();
 
-		for (const AvoidanceSphereConfig& sphereConfig : spawnData.spawnConfig->getAvoidanceSpheres())
-		{
-			sp<AvoidanceSphere> avoidanceSphere = new_sp<AvoidanceSphere>(sphereConfig.radius, sphereConfig.localPosition);
-			avoidanceSpheres.push_back(avoidanceSphere);
-		}
-
 		////////////////////////////////////////////////////////
 		// Make components
 		////////////////////////////////////////////////////////
@@ -71,6 +69,13 @@ namespace SA
 	void Ship::postConstruct()
 	{
 		rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+
+		for (const AvoidanceSphereConfig& sphereConfig : shipData->getAvoidanceSpheres())
+		{
+			//must wait for postConstruct because we need to pass sp_this() for owner field.
+			sp<AvoidanceSphere> avoidanceSphere = new_sp<AvoidanceSphere>(sphereConfig.radius, sphereConfig.localPosition, sp_this());
+			avoidanceSpheres.push_back(avoidanceSphere);
+		}
 
 		//WARNING: caching world sp will create cyclic reference
 		if (LevelBase* world = getWorld())
@@ -156,16 +161,21 @@ namespace SA
 		velocityDir_n = glm::normalize(inVelocity);
 	}
 
-	glm::vec3 Ship::getVelocity()
+	glm::vec3 Ship::getVelocity(const glm::vec3 customVelocityDir_n)
 	{
 		//apply a speed increase if you have a full tank of energy (this helps create distance when two ai's are dogfighting)
 		constexpr float energyThresholdForBoost = 75.f;
 		float highEnergyBoost = glm::clamp(energyComp->getEnergy() / 75.f, 1.0f, 1.1f);
 
-		return velocityDir_n 
+		return customVelocityDir_n
 			* currentSpeedFactor * getMaxSpeed() * speedGamifier
 			* highEnergyBoost 
 			* adjustedBoost;
+	}
+
+	glm::vec3 Ship::getVelocity()
+	{
+		return getVelocity(velocityDir_n);
 	}
 
 	void Ship::setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig)
@@ -238,6 +248,7 @@ namespace SA
 				brain->sleep();
 			}
 		}
+		bEnableAvoidanceFields = false;
 	}
 
 	void Ship::onPlayerControlReleased()
@@ -249,6 +260,13 @@ namespace SA
 				brain->awaken();
 			}
 		}
+		bEnableAvoidanceFields = true;
+
+		if (shipCamera)  //release ship camera so it doesn't affect ship any longer
+		{
+			shipCamera->followShip(sp<Ship>(nullptr));
+			shipCamera = nullptr;  //also set null in case the old camera is being cached, that way we always generate a new camera.
+		} 
 	}
 
 	sp<CameraBase> Ship::getCamera()
@@ -316,8 +334,11 @@ namespace SA
 		{
 			vec3 rotationAxis_n = glm::cross(forwardDir_n, targetDir_n);
 
+			//Avoid expensive avoidance query each time this is called, instead the tick will update and this will use 1 frame late data
+			float avoidanceAllowance = (lastFrameAvoidance.has_value() ? 1.0f - lastFrameAvoidance->strength : 1.0f);
+
 			float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
-			float maxTurn_Rad = getMaxTurnAngle_PerSec() * turnAmplifier * dt_sec;
+			float maxTurn_Rad = getMaxTurnAngle_PerSec() * turnAmplifier * avoidanceAllowance * dt_sec;
 			float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
 
 			//slow down turn if some viscosity is being applied
@@ -485,8 +506,11 @@ namespace SA
 		bool bAnyCollision = false;
 		glm::vec4 lastMTV = glm::vec4(0.f);
 
+		std::optional<glm::vec3> avoidanceVelDir_n = updateAvoidance(dt_sec);
+
 		Transform xform = getTransform();
-		xform.position += getVelocity() * dt_sec;
+
+		xform.position += getVelocity(avoidanceVelDir_n.value_or(velocityDir_n)) * dt_sec; //allow an avoidance corrected velocity dir to be used if one exists
 		glm::mat4 movedXform_m = xform.getModelMatrix();
 
 		NAN_BREAK(xform.position);
@@ -587,22 +611,66 @@ namespace SA
 		}
 	}
 
-	//const std::array<glm::vec4, 8> Ship::getWorldOBB(const glm::mat4 xform) const
-	//{
-	//	const std::array<glm::vec4, 8>& localAABB = collisionData->getLocalAABB();
-	//	const std::array<glm::vec4, 8> OBB =
-	//	{
-	//		xform * localAABB[0],
-	//		xform * localAABB[1],
-	//		xform * localAABB[2],
-	//		xform * localAABB[3],
-	//		xform * localAABB[4],
-	//		xform * localAABB[5],
-	//		xform * localAABB[6],
-	//		xform * localAABB[7],
-	//	};
-	//	return OBB;
-	//}
+	std::optional<glm::vec3> Ship::updateAvoidance(float dt_sec)
+	{
+		using namespace glm;
+		
+		//must clear this every frame so no avoidance lingers when they leave an avoidance sphere
+		lastFrameAvoidance = std::nullopt;
+
+		std::optional<glm::vec3> avoidance_n = std::nullopt;
+		float avoidFactor = 0.f;
+
+		std::optional<glm::vec3> correctedVelocityDir_n;
+		if (getAvoidanceVector(avoidance_n, avoidFactor))
+		{
+			avoidFactor = glm::clamp(avoidFactor, 0.f, 1.f);
+			correctedVelocityDir_n = glm::normalize(velocityDir_n*(1.f - avoidFactor) + avoidance_n.value()*(avoidFactor)); //should not div by zero because at this poitn we have an *some* avoid vector
+
+			////////////////////////////////////////////////////////
+			// adjust velocity so it can accumulate, but not instantly
+			//TODO if we do this, clean up this code and MoveTowardsPoint to be non-adhoc fashion
+				float angleBetween_rad = Utils::getRadianAngleBetween(velocityDir_n, *correctedVelocityDir_n);
+				float maxTurn_Rad = getMaxTurnAngle_PerSec() * dt_sec;
+
+				//float maxTurnUpScale = 
+				float possibleRotThisTick = glm::clamp((maxTurn_Rad) / angleBetween_rad, 0.f, 1.f);
+				quat fullRot = Utils::getRotationBetween(velocityDir_n, *correctedVelocityDir_n);
+				quat rotThisTick = glm::slerp(glm::quat(), fullRot, possibleRotThisTick);
+				correctedVelocityDir_n = rotThisTick * velocityDir_n;
+			////////////////////////////////////////////////////////
+
+
+			const Transform& xform_c = getTransform();
+			{ //manual update of ship direction without use of slerp
+				glm::vec3 forwardDir_n = vec3(getForwardDir());
+				vec3 rotationAxis_n = glm::cross(forwardDir_n, *correctedVelocityDir_n);
+
+				float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, *correctedVelocityDir_n);
+				quat newRot = Utils::getRotationBetween(forwardDir_n, *correctedVelocityDir_n) * xform_c.rotQuat;
+
+				vec3 rightVec_n = newRot * vec3(1, 0, 0);
+				bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
+				vec3 newForwardVec_n = glm::normalize(newRot* vec3(localForwardDir_n()));
+				//if (!bRollMatchesTurnAxis)
+				//{
+				//	float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
+				//	quat roll = glm::angleAxis(rollAngle_rad, newForwardVec_n);
+				//	newRot = roll * newRot;
+				//}
+
+				Transform newXform = xform_c;
+				newXform.rotQuat = newRot;
+				setTransform(newXform);
+			}
+
+			lastFrameAvoidance = AvoidaceData{};
+			lastFrameAvoidance->direction_n = *correctedVelocityDir_n;
+			lastFrameAvoidance->strength = avoidFactor;
+		}
+
+		return correctedVelocityDir_n;
+	}
 
 	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
@@ -694,6 +762,143 @@ namespace SA
 
 			activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 		}
+	}
+
+	bool Ship::getAvoidanceVector(std::optional<glm::vec3>& avoidVec_n, float& accumulatedStrength) const
+	{
+		using namespace glm;
+		avoidVec_n = std::nullopt;
+		accumulatedStrength = 0.f;
+		#define COMPILE_AVOIDANCE_VECTORS 1
+		#if COMPILE_AVOIDANCE_VECTORS
+		if (/*bEnableAvoidanceFields*/true && collisionData)
+		{
+			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+			if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
+			{
+				if (SH::SpatialHashGrid<AvoidanceSphere>* avoidGrid = currentLevel->getTypedGrid<AvoidanceSphere>())
+				{
+					static std::vector<sp<const SH::HashCell<AvoidanceSphere>>> nearbyCells;
+					static const int oneTimeInit = [](decltype(nearbyCells)& initVector) { initVector.reserve(10); return 0; } (nearbyCells);
+
+					const Transform& myXform = getTransform();
+
+					static std::vector<AvoidanceSphere*> uniqueNodes;
+					static int oneTimieInit = [](decltype(uniqueNodes)& container) {container.reserve(10); return 0; }(uniqueNodes);
+					uniqueNodes.clear();
+
+					avoidGrid->lookupCellsForOOB(collisionData->getWorldOBB(), nearbyCells);
+					for (const sp<const SH::HashCell<AvoidanceSphere>>& cell : nearbyCells)
+					{
+						for (const sp<SH::GridNode<AvoidanceSphere>>& node : cell->nodeBucket)
+						{
+							AvoidanceSphere& avoid = node->element;
+							if (avoid.getOwner().fastGet() != this)
+							{
+								if (std::find(uniqueNodes.begin(), uniqueNodes.end(), &avoid) == uniqueNodes.end()) //must filter as same sphere can be in two cells
+								{
+									uniqueNodes.push_back(&avoid); 
+								}
+							}
+						}
+					}
+
+					for (AvoidanceSphere* avoid : uniqueNodes)
+					{
+						vec3 toMe_v = myXform.position - avoid->getWorldPosition();
+						float toMeLen = glm::length(toMe_v);
+						float radiusFrac = toMeLen / avoid->getRadius(); //This needs clamping [0,1] after processing. should never be zero, avoidance sphere asserts if set to zero radius. 
+
+						//TODO delete if not used
+						//float avoidStrength = 1.f - radiusFrac;
+
+						//TODO delete remapping if not used
+						//map the radius fraction so that it maximum avoidance is reached at some specified depth into the sphere.
+						//mapping means it will still be a smooth transition for avoidance
+						radiusFrac = glm::clamp(radiusFrac, 0.f, 1.f);
+						float maxAvoidAtRadiusFrac = avoid->getRadiusFractForMaxAvoidance(); //range [0,1]
+						float remappedRadiusFrac = glm::clamp(radiusFrac - maxAvoidAtRadiusFrac, 0.f, 1.f); //makes a new range [0,1]
+						remappedRadiusFrac /= (1.0f - maxAvoidAtRadiusFrac); //bring this back to a [0,1] range
+						float avoidStrength = 1.f - remappedRadiusFrac;
+
+						//TODO delete if not used
+						//avoidStrength *= 1000; //scale up to bias the normal avoidance vectors (ie denormalize) so eventually previous velocity is ignored
+
+						if (avoidStrength > 0.01f)
+						{
+							accumulatedStrength += avoidStrength; //only accumulate positive strengths 
+							avoidVec_n = normalize(toMe_v) * avoidStrength + avoidVec_n.value_or(glm::vec3(0.f));
+							if constexpr (constexpr bool bDebugToMeVec = true) { SpaceArcade::get().getDebugRenderSystem().renderLine(myXform.position, avoid->getWorldPosition(), color::metalicgold()); }
+						}
+					}
+
+				}
+			}
+		}
+		if (avoidVec_n)
+		{
+			avoidVec_n = glm::normalize(*avoidVec_n);
+		}
+
+		constexpr bool bDebugAvoidance = true;
+		if constexpr (bDebugAvoidance) 
+		{ 
+			if (avoidVec_n) { debugRender_avoidance(accumulatedStrength); } 
+		}
+
+		#endif //COMPILE_AVOIDANCE_VECTORS
+
+		return avoidVec_n.has_value();
+	}
+
+	void Ship::debugRender_avoidance(float accumulatedAvoidanceStrength) const
+	{
+		using namespace glm;
+
+		float value = glm::clamp(accumulatedAvoidanceStrength, 0.f, 1.f);
+		float max = 1.0f;
+		float percFrac = value / max;
+		renderPercentageDebugWidget(1.f, percFrac);
+	}
+
+
+	void Ship::renderPercentageDebugWidget(float rightOffset, float percFrac) const
+	{
+		using namespace glm;
+		//param percFrac is on range [0,1]
+
+		static DebugRenderSystem& debugRenderer = GameBase::get().getDebugRenderSystem();
+		static PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
+
+		const Transform& shipXform = getTransform();
+		vec3 up_n = vec3(getUpDir());
+		vec3 right_n = vec3(getRightDir());
+		if (const sp<CameraBase> camera = playerSystem.getPlayer(0)->getCamera())
+		{
+			up_n = camera->getUp();
+			right_n = camera->getRight();
+		}
+		vec3 w_n = normalize(cross(right_n, up_n));
+
+		vec3 basePnt = shipXform.position + right_n * rightOffset;
+		vec3 maxPnt = basePnt + up_n * 2.f;
+		vec3 toMax = maxPnt - basePnt;
+
+		toMax *= percFrac; 
+		float curLen = glm::length(toMax);
+
+		//render total area that cube can occupy
+		debugRenderer.renderLine(basePnt, maxPnt, vec3(0, 1.f, 0));
+			
+		//render cube occupying area of line
+		mat4 cubeRotation{ vec4(right_n, 0), vec4(up_n, 0), vec4(w_n,0), vec4(vec3(0.f),1.f)};
+		//cubeRotation = transpose(cubeRotation);
+		mat4 cubeModel{ 1.f };
+		cubeModel = glm::translate(cubeModel, basePnt); //position cube at base point
+		cubeModel = glm::translate(cubeModel, (curLen / 2.f)* up_n); //reposition unit cube's center to be halfway along vector
+		cubeModel = cubeModel * cubeRotation;
+		cubeModel = glm::scale(cubeModel, vec3(1.f,curLen,1.f));
+		debugRenderer.renderCube(cubeModel, vec3(percFrac, 0, 1.f - percFrac));
 	}
 
 	bool Ship::bRenderAvoidanceSpheres = false;

@@ -740,6 +740,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 		//clearing out nodes to make api less fragile
 		outNodes.clear();
 
+		//#TODO #optimize -- it maybe faster to just use vector find set of unique, probably should at least provide option to choose filtering data structure. 
 		std::unordered_set<GridNode<T>*> nodesFoundThisCall; //dtor is O(n) for unique insertions
 
 		BEGIN_FOR_EVERY_CELL(cellSource.xGridCells, cellSource.yGridCells, cellSource.zGridCells)
@@ -826,6 +827,7 @@ for (int cellX = xCellIndices.min; cellX < xCellIndices.max; ++cellX)\
 	template<typename T>
 	inline void SpatialHashGrid<T>::lookupCellsForOOB(const std::array<glm::vec4, 8>& localSpaceOBB, std::vector<std::shared_ptr<const SH::HashCell<T>>>& outCells)
 	{
+		outCells.clear();
 		Range<int> xCellIndices, yCellIndices, zCellIndices;
 		projectOBBToCells(xCellIndices, yCellIndices, zCellIndices, localSpaceOBB);
 

@@ -449,7 +449,7 @@ namespace SA
 		std::vector<float> normalList;
 		std::vector<float> textureCoordsList;
 
-		SphereUtils::buildSphereMesh(glm::pi<float>() / 50.0f, vertList, normalList, textureCoordsList, triIndices);
+		SphereUtils::buildSphereMesh(glm::pi<float>() / 100.0f, vertList, normalList, textureCoordsList, triIndices);
 		vertCount = vertList.size();
 
 		ec(glGenVertexArrays(1, &vao));

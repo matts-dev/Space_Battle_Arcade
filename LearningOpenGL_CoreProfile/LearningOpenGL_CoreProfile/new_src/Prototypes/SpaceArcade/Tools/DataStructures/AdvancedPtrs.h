@@ -52,6 +52,7 @@ namespace SA
 		inline operator bool() const noexcept { return !weakptr.expired(); }
 		inline operator wp<T>() const noexcept { return weakptr; }
 		T* get() const { return weakptr.expired() ? nullptr : rawPtr; }
+		T* fastGet() const { return rawPtr; }
 		T* operator->() const noexcept { return rawPtr; }
 		T& operator*() const noexcept { return *rawPtr; }
 	private:

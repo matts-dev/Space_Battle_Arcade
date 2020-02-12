@@ -79,6 +79,7 @@ namespace SA
 		glm::quat getRotationBetween(const glm::vec3& a_n, const glm::vec3& b_n);
 		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees);
 
+		inline bool anyValueNAN(float a) { return glm::isnan(a); }
 		inline bool anyValueNAN(glm::vec3 vec) {return glm::isnan(vec.x) || glm::isnan(vec.y) || glm::isnan(vec.z);}
 		inline bool anyValueNAN(glm::vec4 vec) { return glm::isnan(vec.x) || glm::isnan(vec.y) || glm::isnan(vec.z) || glm::isnan(vec.w); };
 		inline bool anyValueNAN(glm::quat quat) 

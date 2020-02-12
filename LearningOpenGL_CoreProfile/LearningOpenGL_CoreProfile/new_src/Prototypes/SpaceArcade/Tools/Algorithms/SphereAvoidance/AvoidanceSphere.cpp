@@ -4,14 +4,16 @@
 #include "../../../GameFramework/SAGameBase.h"
 #include "../../../GameFramework/SALevelSystem.h"
 #include "../../../GameFramework/SALevel.h"
+#include "../../SAUtilities.h"
 
 namespace SA
 {
 	using namespace glm;
 
-	AvoidanceSphere::AvoidanceSphere(float radius, const glm::vec3& position) : 
-		radius(radius)
+	AvoidanceSphere::AvoidanceSphere(float radius, const glm::vec3& position, const sp<GameEntity>& owner) 
 	{
+		setRadius(radius);
+		owningEntity = owner;
 		localXform.position = position;
 		applyXform();
 	}
@@ -32,7 +34,29 @@ namespace SA
 		glm::mat4 model = getWorldMat();
 
 		DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
+
+		//take care not to apply scale of parent
+		glm::mat4 model_m = glm::translate(glm::mat4(1.0f), cachedWorldPos);
+		model_m = glm::scale(model_m, glm::vec3(radius));
 		debugRenderSystem.renderSphere(model, debugColor);
+
+		if constexpr (bCompileDebugDebugSpatialHashVisualizations)
+		{
+			if (myGridEntry && cachedAvoidanceGrid && bDebugSpatialHashVisualization)
+			{
+				static std::vector<sp<const SH::HashCell<AvoidanceSphere>>> outCells;
+				cachedAvoidanceGrid->lookupCellsForEntry(*myGridEntry, outCells);
+
+				vec3 gridCenterOffset = cachedAvoidanceGrid->gridCellSize / 2.f;
+				for (auto cell : outCells)
+				{
+					glm::mat4 cellModel_m{ 1.f };
+					cellModel_m = glm::translate(cellModel_m, glm::vec3(cell->location) * cachedAvoidanceGrid->gridCellSize + gridCenterOffset);
+					cellModel_m = glm::scale(cellModel_m, cachedAvoidanceGrid->gridCellSize);
+					debugRenderSystem.renderCube(cellModel_m, vec3(0, 0, 1));
+				}
+			}
+		}
 	}
 
 	void AvoidanceSphere::setPosition(glm::vec3 position)
@@ -46,6 +70,9 @@ namespace SA
 	void AvoidanceSphere::setRadius(float radius)
 	{
 		this->radius = radius;
+		this->radius2 = radius * radius;
+		assert(!Utils::float_equals(radius, 0.f));
+		assert(!Utils::float_equals(radius2, 0.f));
 		applyXform();
 	}
 
@@ -53,6 +80,12 @@ namespace SA
 	{
 		parentXform = newParentXform;
 		applyXform();
+	}
+
+	glm::vec3 AvoidanceSphere::getWorldPosition() const
+	{
+		//optmizing this with a cached value as it is a hot function that gets called frequently.
+		return cachedWorldPos;
 	}
 
 	void AvoidanceSphere::handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel)
@@ -86,28 +119,45 @@ namespace SA
 	}
 
 	glm::mat4 AvoidanceSphere::getWorldMat() const
-{
+	{
 		return parentXform * localXform.getModelMatrix();
+	}
+
+	glm::mat4 AvoidanceSphere::getOOBWorldMat() const
+	{
+		return parentXform * localOOBXform.getModelMatrix();
 	}
 
 	void AvoidanceSphere::applyXform()
 	{
-		static const float scaleUpFactor = 1.f / glm::length(vec3(SH::AABB[0])); //correct for cube verts not being length 1 from origin.
+		constexpr float scaleUpFactor = 1.f / 0.5f; //unit cube has length of 0.5 from center to face
 		float cubeScaleUp = radius * scaleUpFactor; //unit cube
-		localXform.scale = glm::vec3(cubeScaleUp);
 
-		glm::mat4 model_m = getWorldMat();
+		localOOBXform = localXform;
+		localOOBXform.scale = glm::vec3(cubeScaleUp);
+
+		localXform.scale = glm::vec3(radius);
+
+		glm::mat4 cubeModel_m = getOOBWorldMat();
 
 		for (size_t vert = 0; vert < SH::AABB.size(); ++vert)
 		{
-			AABB[vert] = model_m * SH::AABB[vert];
+			AABB[vert] = cubeModel_m * SH::AABB[vert];
 		}
 
 		if (myGridEntry && cachedAvoidanceGrid)
 		{
 			cachedAvoidanceGrid->updateEntry(myGridEntry, getOBB());
 		}
+
+		cacheProperties(getWorldMat());
 	}
 
+	void AvoidanceSphere::cacheProperties(const glm::mat4& sphereModel_m)
+	{
+		cachedWorldPos = vec3(parentXform * vec4(localXform.position, 1.f));
+	}
+
+	bool AvoidanceSphere::bDebugSpatialHashVisualization = false;
 }
 

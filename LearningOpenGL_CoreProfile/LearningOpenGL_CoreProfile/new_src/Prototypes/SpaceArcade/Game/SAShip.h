@@ -87,9 +87,10 @@ namespace SA
 		glm::vec4 rotateLocalVec(const glm::vec4& localVec);
 		float getMaxTurnAngle_PerSec() const;
 
-		void setVelocityDir(glm::vec3 inVelocity);
-		glm::vec3 getVelocityDir() { return velocityDir_n; }
+		glm::vec3 getVelocity(const glm::vec3 customVelocityDir_n);
 		glm::vec3 getVelocity();
+		glm::vec3 getVelocityDir() { return velocityDir_n; }
+		void setVelocityDir(glm::vec3 inVelocity);
 
 		void setMaxSpeed(float inMaxSpeed) { maxSpeed = inMaxSpeed; }
 		float getMaxSpeed() const { return maxSpeed; }
@@ -112,14 +113,28 @@ namespace SA
 		// avoidance
 		////////////////////////////////////////////////////////
 		static void setRenderAvoidanceSpheres(bool bNewRenderAvoidance);
+		void debugRender_avoidance(float accumulatedAvoidanceStrength) const;
+		bool hasAvoidanceSpheres() { return avoidanceSpheres.size() > 0; }
+		////////////////////////////////////////////////////////
+		// Debug
+		////////////////////////////////////////////////////////
+		void renderPercentageDebugWidget(float rightOffset, float percFrac) const;
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
 	private:
 		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
 		void tickKinematic(float dt_sec);
+		std::optional<glm::vec3> updateAvoidance(float dt_sec);
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
+		bool getAvoidanceVector(std::optional<glm::vec3>& avoidVec, float& accumulatedStrength) const;
+	private://helper structs
+		struct AvoidaceData
+		{
+			glm::vec3 direction_n;
+			float strength;			//[0,1]
+		};
 	public:
 		MultiDelegate<> onCollided;
 	private: //statics
@@ -143,6 +158,7 @@ namespace SA
 
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;
+		std::optional<AvoidaceData> lastFrameAvoidance;
 		sp<const SpawnConfig> shipData;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
 
@@ -157,7 +173,10 @@ namespace SA
 		float adjustedBoost = 1.0f;
 		float targetBoost = 1.0f;
 		std::optional<float> boostNextFrame;
+
+		//flags
 		bool bCollisionReflectForward:1;
+		bool bEnableAvoidanceFields = true;
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;

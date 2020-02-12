@@ -39,6 +39,8 @@
 #include "../../GameFramework/SARandomNumberGenerationSystem.h"
 #include "../Environment/Star.h"
 #include "../../GameFramework/Components/CollisionComponent.h"
+#include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
+#include "../Cameras/SAShipCamera.h"
 
 namespace SA
 {
@@ -118,7 +120,7 @@ namespace SA
 			camera->setFar(1000.f);
 
 			//camera->setPosition(glm::vec3(-300, 0, 0.f));
-			camera->setPosition(carrierPosition_teamA + glm::vec3(10, 20, 20));
+			camera->setPosition(carrierPosition_teamA + glm::vec3(15, 20, 20));
 			camera->lookAt_v(camera->getPosition() + glm::vec3(0,0,-1)); //carriers are currently separated along the z axis; so look down that axis
 		}
 
@@ -160,10 +162,10 @@ namespace SA
 #ifdef _DEBUG
 		//numFighterShipsToSpawn = 250;
 		//numFighterShipsToSpawn = 50;
-		numFighterShipsToSpawn = 20;
+		//numFighterShipsToSpawn = 20;
 		//numFighterShipsToSpawn = 10;
 		//numFighterShipsToSpawn = 4;
-		//numFighterShipsToSpawn = 2;
+		numFighterShipsToSpawn = 2;
 #endif//NDEBUG 
 
 		uint32_t numTeams = 2;
@@ -191,7 +193,7 @@ namespace SA
 				sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
 				teamTargets[teamIdx].push_back(fighter);
 
-				//fighter->spawnNewBrain<FlyInDirectionBrain>();
+				//fighter->spawnNewBrain<FlyInDirectionBrain>(); 
 				//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
 				fighter->spawnNewBrain<WanderBrain>();
 				//fighter->spawnNewBrain<EvadeTestBrain>();
@@ -261,14 +263,25 @@ namespace SA
 
 
 		//follow a target from the start
-		const size_t targetIdx = 0;
+		size_t targetIdx = 0;
 		size_t pickIdx = 0;
 		for (sp<WorldEntity> entity : worldEntities)
 		{
 			if (pickIdx == targetIdx)
 			{
-				hitboxPickerWidget->setPickTarget(entity);
-				break;
+				if (Ship* ship = dynamic_cast<Ship*>(entity.get()))
+				{
+					if (!ship->hasAvoidanceSpheres())
+					{
+						hitboxPickerWidget->setPickTarget(entity);
+						break;
+					}
+					else
+					{
+						//try the next one as this one is a large ship with avoidance attached
+						targetIdx++;
+					}
+				}
 			}
 			pickIdx++;
 		}
@@ -395,6 +408,11 @@ namespace SA
 #if SA_CAPTURE_SPATIAL_HASH_CELLS
 				ImGui::Checkbox("Render Spatial Hash Cells", &game.bRenderDebugCells);
 #endif //SA_CAPTURE_SPATIAL_HASH_CELLS
+				if constexpr (bCompileDebugDebugSpatialHashVisualizations)
+				{
+					ImGui::Checkbox("Render Avoidance Spatial Hash Cells", &AvoidanceSphere::bDebugSpatialHashVisualization);
+				}
+
 				static bool bRenderAvoidanceSphereProxy = false;
 				if(ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSphereProxy)){Ship::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);}
 				ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
@@ -554,6 +572,19 @@ namespace SA
 		if (state == GLFW_RELEASE)
 		{
 			hitboxPickerWidget->setPickTarget(sp<WorldEntity>(nullptr));
+
+			const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0);
+			player->setControlTarget(sp<IControllable>(nullptr));
+
+			if (ShipCamera* shipCamera = dynamic_cast<ShipCamera*>(player->getCamera().get()))
+			{
+				//only set up new camera if player has started controlling a ship.
+				//set up a new camera so that the ship camera is cleared from player.
+				const sp<Window>& primaryWindow = GameBase::get().getWindowSystem().getPrimaryWindow();
+				sp<CameraBase> newCamera = new_sp<QuaternionCamera>();
+				newCamera->registerToWindowCallbacks_v(primaryWindow);
+				player->setCamera(newCamera);
+			}
 		}
 	}
 

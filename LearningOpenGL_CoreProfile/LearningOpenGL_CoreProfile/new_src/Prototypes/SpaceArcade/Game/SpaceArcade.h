@@ -81,6 +81,7 @@ namespace SA
 
 	public: //debug state (public to allow sub-editor access)
 		bool bRenderDebugCells = false;
+		bool bRenderDebugAvoidanceSphereCells = false;
 		bool bRenderProjectileOBBs = false;
 
 	private:

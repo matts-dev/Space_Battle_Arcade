@@ -103,7 +103,7 @@ namespace SA
 
 	void SpaceLevelBase::postConstruct()
 	{
-		createTypedGrid<AvoidanceSphere>(glm::vec3(32, 32, 32));
+		createTypedGrid<AvoidanceSphere>(glm::vec3(128));
 		
 		starField = onCreateStarField();
 		{ 

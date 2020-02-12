@@ -450,7 +450,7 @@ namespace SA
 				{
 					SH::SpatialHashGrid<WorldEntity>& worldGrid = level->getWorldGrid();
 
-					std::vector<sp<const SH::HashCell<WorldEntity>>> nearbyCells;
+					std::vector<sp<const SH::HashCell<WorldEntity>>> nearbyCells; //#optimize constructing vectors has been seen to be slow before, perhaps make this static if it is only going to be used within a single thread
 					glm::vec4 center = glm::vec4(myPos, 1.0f);
 					float radius = 20.f;
 
