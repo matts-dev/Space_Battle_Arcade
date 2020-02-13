@@ -12,6 +12,20 @@
 
 namespace SA
 {
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Compile flags
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	constexpr bool bDebugAvoidance = true;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Runtime flags
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	extern bool bDrawAvoidance_debug;
+	extern bool bForcePlayerAvoidance_debug;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Forward Declarations
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class SpawnConfig;
 	class CollisionData;
 	class ShipAIBrain;
@@ -27,6 +41,9 @@ namespace SA
 		int max;
 	};
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Ship Class
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  	class Ship : public RenderModelEntity, public IProjectileHitNotifiable, public IControllable
 	{
 	public:
@@ -89,7 +106,7 @@ namespace SA
 
 		glm::vec3 getVelocity(const glm::vec3 customVelocityDir_n);
 		glm::vec3 getVelocity();
-		glm::vec3 getVelocityDir() { return velocityDir_n; }
+		glm::vec3 getVelocityDir() const { return velocityDir_n; }
 		void setVelocityDir(glm::vec3 inVelocity);
 
 		void setMaxSpeed(float inMaxSpeed) { maxSpeed = inMaxSpeed; }
@@ -128,13 +145,7 @@ namespace SA
 		std::optional<glm::vec3> updateAvoidance(float dt_sec);
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
-		bool getAvoidanceVector(std::optional<glm::vec3>& avoidVec, float& accumulatedStrength) const;
-	private://helper structs
-		struct AvoidaceData
-		{
-			glm::vec3 direction_n;
-			float strength;			//[0,1]
-		};
+		bool getAvoidanceDampenedVelocity(std::optional<glm::vec3>& avoidVec) const;
 	public:
 		MultiDelegate<> onCollided;
 	private: //statics
@@ -158,7 +169,6 @@ namespace SA
 
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;
-		std::optional<AvoidaceData> lastFrameAvoidance;
 		sp<const SpawnConfig> shipData;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
 

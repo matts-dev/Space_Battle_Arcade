@@ -37,6 +37,16 @@ namespace
 
 namespace SA
 {
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Runtime flags
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	bool bDrawAvoidance_debug = false;
+	bool bForcePlayerAvoidance_debug = false;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// methods
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	Ship::Ship(const SpawnData& spawnData)
 		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
@@ -248,7 +258,7 @@ namespace SA
 				brain->sleep();
 			}
 		}
-		bEnableAvoidanceFields = false;
+		bEnableAvoidanceFields = false || bForcePlayerAvoidance_debug;;
 	}
 
 	void Ship::onPlayerControlReleased()
@@ -321,6 +331,7 @@ namespace SA
 
 	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedAmplifier, bool bRoll, float turnAmplifier, float viscosity)
 	{
+		//#TODO #REFACTOR #cleancode #input_vector this should in influencing an input vector, rather than directly influencing the velocity; tick should do the visual updates and velocity changes based on input vector
 		using namespace glm;
 
 		const Transform& xform = getTransform();
@@ -334,11 +345,8 @@ namespace SA
 		{
 			vec3 rotationAxis_n = glm::cross(forwardDir_n, targetDir_n);
 
-			//Avoid expensive avoidance query each time this is called, instead the tick will update and this will use 1 frame late data
-			float avoidanceAllowance = (lastFrameAvoidance.has_value() ? 1.0f - lastFrameAvoidance->strength : 1.0f);
-
 			float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
-			float maxTurn_Rad = getMaxTurnAngle_PerSec() * turnAmplifier * avoidanceAllowance * dt_sec;
+			float maxTurn_Rad = getMaxTurnAngle_PerSec() * turnAmplifier * dt_sec;
 			float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
 
 			//slow down turn if some viscosity is being applied
@@ -613,63 +621,30 @@ namespace SA
 
 	std::optional<glm::vec3> Ship::updateAvoidance(float dt_sec)
 	{
+		//#TODO #REFACTOR #cleancode #input_vector this should in influencing an input vector, rather than directly influencing the velocity; tick should do the visual updates and velocity changes based on input vector
 		using namespace glm;
 		
-		//must clear this every frame so no avoidance lingers when they leave an avoidance sphere
-		lastFrameAvoidance = std::nullopt;
-
-		std::optional<glm::vec3> avoidance_n = std::nullopt;
-		float avoidFactor = 0.f;
-
-		std::optional<glm::vec3> correctedVelocityDir_n;
-		if (getAvoidanceVector(avoidance_n, avoidFactor))
+		std::optional<glm::vec3> newVelocity_n = std::nullopt;
+		if (getAvoidanceDampenedVelocity(newVelocity_n))
 		{
-			avoidFactor = glm::clamp(avoidFactor, 0.f, 1.f);
-			correctedVelocityDir_n = glm::normalize(velocityDir_n*(1.f - avoidFactor) + avoidance_n.value()*(avoidFactor)); //should not div by zero because at this poitn we have an *some* avoid vector
-
-			////////////////////////////////////////////////////////
-			// adjust velocity so it can accumulate, but not instantly
-			//TODO if we do this, clean up this code and MoveTowardsPoint to be non-adhoc fashion
-				float angleBetween_rad = Utils::getRadianAngleBetween(velocityDir_n, *correctedVelocityDir_n);
-				float maxTurn_Rad = getMaxTurnAngle_PerSec() * dt_sec;
-
-				//float maxTurnUpScale = 
-				float possibleRotThisTick = glm::clamp((maxTurn_Rad) / angleBetween_rad, 0.f, 1.f);
-				quat fullRot = Utils::getRotationBetween(velocityDir_n, *correctedVelocityDir_n);
-				quat rotThisTick = glm::slerp(glm::quat(), fullRot, possibleRotThisTick);
-				correctedVelocityDir_n = rotThisTick * velocityDir_n;
-			////////////////////////////////////////////////////////
-
-
 			const Transform& xform_c = getTransform();
 			{ //manual update of ship direction without use of slerp
 				glm::vec3 forwardDir_n = vec3(getForwardDir());
-				vec3 rotationAxis_n = glm::cross(forwardDir_n, *correctedVelocityDir_n);
+				vec3 rotationAxis_n = glm::cross(forwardDir_n, *newVelocity_n);
 
-				float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, *correctedVelocityDir_n);
-				quat newRot = Utils::getRotationBetween(forwardDir_n, *correctedVelocityDir_n) * xform_c.rotQuat;
+				float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, *newVelocity_n);
+				quat newRot = Utils::getRotationBetween(forwardDir_n, *newVelocity_n) * xform_c.rotQuat;
 
 				vec3 rightVec_n = newRot * vec3(1, 0, 0);
 				bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
 				vec3 newForwardVec_n = glm::normalize(newRot* vec3(localForwardDir_n()));
-				//if (!bRollMatchesTurnAxis)
-				//{
-				//	float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
-				//	quat roll = glm::angleAxis(rollAngle_rad, newForwardVec_n);
-				//	newRot = roll * newRot;
-				//}
 
 				Transform newXform = xform_c;
 				newXform.rotQuat = newRot;
 				setTransform(newXform);
 			}
-
-			lastFrameAvoidance = AvoidaceData{};
-			lastFrameAvoidance->direction_n = *correctedVelocityDir_n;
-			lastFrameAvoidance->strength = avoidFactor;
 		}
-
-		return correctedVelocityDir_n;
+		return newVelocity_n;
 	}
 
 	void Ship::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
@@ -764,14 +739,17 @@ namespace SA
 		}
 	}
 
-	bool Ship::getAvoidanceVector(std::optional<glm::vec3>& avoidVec_n, float& accumulatedStrength) const
+	bool Ship::getAvoidanceDampenedVelocity(std::optional<glm::vec3>& adjustVel_n) const
 	{
 		using namespace glm;
-		avoidVec_n = std::nullopt;
-		accumulatedStrength = 0.f;
+		adjustVel_n = std::nullopt;
+		float accumulatedStrength = 0.f;
+
+		bool bNoVelocity = Utils::float_equals(glm::length2(velocityDir_n), 0.f);
+
 		#define COMPILE_AVOIDANCE_VECTORS 1
 		#if COMPILE_AVOIDANCE_VECTORS
-		if (/*bEnableAvoidanceFields*/true && collisionData)
+		if (bEnableAvoidanceFields && collisionData && !bNoVelocity)
 		{
 			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
 			if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
@@ -803,52 +781,63 @@ namespace SA
 						}
 					}
 
+					adjustVel_n = velocityDir_n;
+
 					for (AvoidanceSphere* avoid : uniqueNodes)
 					{
-						vec3 toMe_v = myXform.position - avoid->getWorldPosition();
+						//#TODO this whole logic can probably be inverted to be clear(being based on vectors towards center), but avoiding changing atm as this is known to work
+						const vec3 toMe_v = myXform.position - avoid->getWorldPosition();
 						float toMeLen = glm::length(toMe_v);
 						float radiusFrac = toMeLen / avoid->getRadius(); //This needs clamping [0,1] after processing. should never be zero, avoidance sphere asserts if set to zero radius. 
 
-						//TODO delete if not used
-						//float avoidStrength = 1.f - radiusFrac;
-
-						//TODO delete remapping if not used
-						//map the radius fraction so that it maximum avoidance is reached at some specified depth into the sphere.
-						//mapping means it will still be a smooth transition for avoidance
 						radiusFrac = glm::clamp(radiusFrac, 0.f, 1.f);
 						float maxAvoidAtRadiusFrac = avoid->getRadiusFractForMaxAvoidance(); //range [0,1]
 						float remappedRadiusFrac = glm::clamp(radiusFrac - maxAvoidAtRadiusFrac, 0.f, 1.f); //makes a new range [0,1]
 						remappedRadiusFrac /= (1.0f - maxAvoidAtRadiusFrac); //bring this back to a [0,1] range
 						float avoidStrength = 1.f - remappedRadiusFrac;
 
-						//TODO delete if not used
-						//avoidStrength *= 1000; //scale up to bias the normal avoidance vectors (ie denormalize) so eventually previous velocity is ignored
-
 						if (avoidStrength > 0.01f)
 						{
-							accumulatedStrength += avoidStrength; //only accumulate positive strengths 
-							avoidVec_n = normalize(toMe_v) * avoidStrength + avoidVec_n.value_or(glm::vec3(0.f));
-							if constexpr (constexpr bool bDebugToMeVec = true) { SpaceArcade::get().getDebugRenderSystem().renderLine(myXform.position, avoid->getWorldPosition(), color::metalicgold()); }
+							////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+							// Project the velocity onto the vector to radius, this gives us a component of velocity that is going towards
+							// the sphere center. We dampen this part of the velocity only. Effectively we trim out this part of the velocity
+							////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+							const vec3 toSphereCenter_n = glm::normalize(-toMe_v);
+							float velocityProjection = glm::dot(toSphereCenter_n, * adjustVel_n);
+							velocityProjection = glm::clamp(velocityProjection, 0.f, 1.f);	//clamp out velocity pointing AWAY from radius
+							vec3 dampenVector_v = -(toSphereCenter_n * velocityProjection); //this logic oculd be simplified by moving -s around and just using toMe_v; but expresssed this way it may be more clear what is happening geometrically?
+
+							dampenVector_v *= avoidStrength; //have a smooth dampening effect based on distance to radius
+							vec3 dampenedVel_v = *adjustVel_n + dampenVector_v; //must normalize for next projection
+							//don't make velocity a zero vector
+							if (!Utils::float_equals(glm::length2(*adjustVel_n), 0.0f))
+							{
+								adjustVel_n = normalize(dampenedVel_v);
+
+								//if this line below is flashing, it is likey we're generating zero vectors (not yet seen, but conciously putting this in branch so that can be indicated)
+								if constexpr (constexpr bool bDebugToMeVec = false) { SpaceArcade::get().getDebugRenderSystem().renderLine(myXform.position, avoid->getWorldPosition(), 0.5f*color::metalicgold()); }
+							}
+
+							accumulatedStrength += avoidStrength;
 						}
 					}
-
 				}
 			}
 		}
-		if (avoidVec_n)
+
+		if (accumulatedStrength < 0.001f)
 		{
-			avoidVec_n = glm::normalize(*avoidVec_n);
+			adjustVel_n = std::nullopt;
 		}
 
-		constexpr bool bDebugAvoidance = true;
 		if constexpr (bDebugAvoidance) 
 		{ 
-			if (avoidVec_n) { debugRender_avoidance(accumulatedStrength); } 
+			if (adjustVel_n && bDrawAvoidance_debug) { debugRender_avoidance(accumulatedStrength); }
 		}
 
 		#endif //COMPILE_AVOIDANCE_VECTORS
 
-		return avoidVec_n.has_value();
+		return adjustVel_n.has_value();
 	}
 
 	void Ship::debugRender_avoidance(float accumulatedAvoidanceStrength) const

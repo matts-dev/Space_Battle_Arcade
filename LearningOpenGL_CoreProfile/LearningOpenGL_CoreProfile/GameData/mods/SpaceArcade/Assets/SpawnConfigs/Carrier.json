@@ -27,7 +27,7 @@
                     0.0,
                     0.0
                 ],
-                "radius": 75.0
+                "radius": 100.0
             }
         ],
         "bRequestsCollisionTests": true,

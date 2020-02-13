@@ -412,6 +412,14 @@ namespace SA
 				{
 					ImGui::Checkbox("Render Avoidance Spatial Hash Cells", &AvoidanceSphere::bDebugSpatialHashVisualization);
 				}
+				if constexpr (bDebugAvoidance)
+				{
+					ImGui::Checkbox("Render ship avoidance widgets", &SA::bDrawAvoidance_debug);
+				}
+				if (ImGui::Checkbox("force player to experience AI avoidance (requires controling new target)", &SA::bForcePlayerAvoidance_debug))
+				{
+					//GameBase::get().getPlayerSystem().getPlayer(0)->setControlTarget() //perhaps make method to get control target and have it refresh
+				}
 
 				static bool bRenderAvoidanceSphereProxy = false;
 				if(ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSphereProxy)){Ship::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);}
