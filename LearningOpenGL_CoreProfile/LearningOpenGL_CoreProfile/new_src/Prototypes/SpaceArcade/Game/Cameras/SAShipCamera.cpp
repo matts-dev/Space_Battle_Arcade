@@ -240,10 +240,10 @@ namespace SA
 			}
 			auto scaleCubeToRectangleAlongCameraBoom = [&](const vec3& testPoint) {
 				//create a rectangle that encompasses the length of the camera to the ship.
-				float behindShipBias = 0.0f; //[0,0.5]prevent rectangle from being overtop of ship which will collide when ship collides
+				float behindShipBias = 0.05f; //[0,0.5]prevent rectangle from being overtop of ship which will collide when ship collides
 				float cubeLength = glm::length(shipPos - testPoint) - behindShipBias;
 				cameraXform.position = testPoint + (cubeLength * 0.50f)*toShip_n;
-				cameraXform.scale = vec3{ cubeLength, 1, 1 };
+				cameraXform.scale = vec3{ cubeLength, 0.1f, 0.1f };
 			};
 			scaleCubeToRectangleAlongCameraBoom(camStartPos);
 			collisionData->updateToNewWorldTransform(cameraXform.getModelMatrix());
