@@ -198,7 +198,7 @@ namespace SA
 	void ProjectileSystem::initSystem()
 	{
 		//align projectiles with camera
-		GameBase::get().PostGameloopTick.addStrongObj(sp_this(), &ProjectileSystem::postGameLoopTick);
+		GameBase::get().onPostGameloopTick.addStrongObj(sp_this(), &ProjectileSystem::postGameLoopTick);
 	}
 
 	void ProjectileSystem::spawnProjectile(const ProjectileSystem::SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle)

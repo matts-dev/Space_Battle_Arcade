@@ -432,7 +432,7 @@ namespace SA
 		}
 
 		GameBase& game = GameBase::get();
-		game.PostGameloopTick.addStrongObj(sp_this(), &ParticleSystem::handlePostGameloopTick); 
+		game.onPostGameloopTick.addStrongObj(sp_this(), &ParticleSystem::handlePostGameloopTick); 
 		game.onRenderDispatch.addStrongObj(sp_this(), &ParticleSystem::handleRenderDispatch);
 		//game.subscribePostRender(sp_this());
 	}
@@ -440,7 +440,7 @@ namespace SA
 	void ParticleSystem::shutdown()
 	{
 		GameBase& game = GameBase::get();
-		game.PostGameloopTick.removeStrong(sp_this(), &ParticleSystem::handlePostGameloopTick);
+		game.onPostGameloopTick.removeStrong(sp_this(), &ParticleSystem::handlePostGameloopTick);
 		game.onRenderDispatch.removeStrong(sp_this(), &ParticleSystem::handleRenderDispatch);
 	}
 

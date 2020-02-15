@@ -7,6 +7,7 @@ namespace SA
 {
 	class Ship;
 	class ShipCameraTweakerWidget;
+	class CollisionData;
 	struct Transform;
 
 #define ENABLE_SHIP_CAMERA_DEBUG_TWEAKER 1
@@ -18,6 +19,9 @@ namespace SA
 	{
 	public:
 		void followShip(const sp<Ship>& ship);
+		virtual glm::mat4 getView() const override;
+	protected:
+		virtual void postConstruct() override;
 	private:
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset) override;
 		virtual void onMouseMoved_v(double xpos, double ypos) override;
@@ -28,6 +32,7 @@ namespace SA
 		void handleShipTransformChanged(const Transform& xform);
 		void handleCollision();
 		void handleShootPressed(int state, int modifier_keys);
+		void handlePostGameLoop(float dt_sec);
 		void updateRelativePositioning();
 		glm::vec3 getCameraOffset();
 		void updateShipFacingDirection();
@@ -47,6 +52,7 @@ namespace SA
 		float verticalOffsetFactor = 0.5f;
 		float crosshairRollSlowdownThresholdPerc = 0.25f;
 	private:
+		glm::vec3 collisionAdjustedPosition{ 0.f }; //this should update at the end of every gameloop tick
 		float worldTimeTicked = 0.f;
 		float lastFireTimestamp = 0.f;
 		float disableCameraForCollisionTimeRemainingSec = 0.f;
@@ -54,6 +60,7 @@ namespace SA
 		bool bSlowCrosshairRollWithSpeed = true;
 		bool bFireHeld = false;
 	private:
+		sp<CollisionData> collisionData;
 		lp<Ship> myShip;
 		float followDistance = 10.f;
 	};

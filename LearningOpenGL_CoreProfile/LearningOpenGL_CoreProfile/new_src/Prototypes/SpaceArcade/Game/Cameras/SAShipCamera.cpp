@@ -16,6 +16,9 @@
 #include "../../GameFramework/Input/SAInput.h"
 #include "../../GameFramework/SAPlayerSystem.h"
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "../../GameFramework/Components/CollisionComponent.h"
+#include "../../GameFramework/SACollisionUtils.h"
+#include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
 namespace SA
 {
@@ -37,6 +40,21 @@ namespace SA
 			myShip->onCollided.addWeakObj(sp_this(), &ShipCamera::handleCollision);
 			handleShipTransformChanged(ship->getTransform());
 		}
+	}
+
+	glm::mat4 ShipCamera::getView() const
+	{
+		//uses a collision corrected position;
+
+		return glm::lookAt(collisionAdjustedPosition, collisionAdjustedPosition + getFront(), getUp());
+	}
+
+	void ShipCamera::postConstruct()
+	{
+		QuaternionCamera::postConstruct();
+		collisionData = createUnitCubeCollisionData();
+
+		GameBase::get().onPostGameloopTick.addWeakObj(sp_this(), &ShipCamera::handlePostGameLoop);
 	}
 
 	void ShipCamera::tickKeyboardInput(float dt_sec)
@@ -141,11 +159,11 @@ namespace SA
 
 		if (disableCameraForCollisionTimeRemainingSec > 0.f)
 		{
-			disableCameraForCollisionTimeRemainingSec -= dt_sec; //currently using engine time
+		disableCameraForCollisionTimeRemainingSec -= dt_sec; //currently using engine time
 		}
 		else
 		{
-			updateShipFacingDirection();
+		updateShipFacingDirection();
 		}
 
 		if (myShip)
@@ -187,6 +205,128 @@ namespace SA
 			{
 				bFireHeld = false;
 			}
+		}
+	}
+
+	void ShipCamera::handlePostGameLoop(float dt_sec)
+	{
+		using glm::vec3;
+
+		//wait until all in-game effects have settled down before figuring out any camera collision adjustments
+		static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+		const sp<LevelBase>& lvl = levelSystem.getCurrentLevel();
+		if (lvl && myShip)
+		{
+			const vec3 camStartPos = getPosition();
+			const vec3 shipPos = myShip->getWorldPosition();
+			const vec3 toShip = shipPos - camStartPos;
+			const float toShipLength = glm::length(toShip);
+			const vec3 toShip_n = toShip / toShipLength;
+			vec3 movingCamPos = camStartPos;
+
+
+			//update collision data for query. cube should be large enough to encompass 
+			Transform cameraXform;
+			cameraXform.position = getPosition();
+			//cameraXform.scale = glm::vec3(3.f); //scale up the collision by some amount so can detect it before clipping with the model. #future Probably should be based on near plane.
+			if (!Utils::vectorsAreSame(toShip_n, vec3({ 1,0,0 })))
+			{
+				//below will align a rectangle along the path to camera, this is useful to catch collision between camera pos and ship pos that is not  actually colliding with either.
+				const vec3 xAxis{ 1,0,0 };
+				vec3 rotAxis = glm::normalize(glm::cross(xAxis, toShip_n));
+				float theta_rad = Utils::getRadianAngleBetween(xAxis, toShip_n);
+				cameraXform.rotQuat = glm::angleAxis(theta_rad, rotAxis);
+
+			}
+			auto scaleCubeToRectangleAlongCameraBoom = [&](const vec3& testPoint) {
+				//create a rectangle that encompasses the length of the camera to the ship.
+				float behindShipBias = 0.0f; //[0,0.5]prevent rectangle from being overtop of ship which will collide when ship collides
+				float cubeLength = glm::length(shipPos - testPoint) - behindShipBias;
+				cameraXform.position = testPoint + (cubeLength * 0.50f)*toShip_n;
+				cameraXform.scale = vec3{ cubeLength, 1, 1 };
+			};
+			scaleCubeToRectangleAlongCameraBoom(camStartPos);
+			collisionData->updateToNewWorldTransform(cameraXform.getModelMatrix());
+
+			SH::SpatialHashGrid<WorldEntity>& worldGrid = lvl->getWorldGrid();
+
+			static std::vector<sp<const SH::HashCell<WorldEntity>>> nearbyCells;
+			static const int oneTimeInit = [](decltype(nearbyCells)& initVector) { initVector.reserve(10); return 0; } (nearbyCells);
+
+			static std::vector<WorldEntity*> uniqueNodes;
+			static int oneTimieInit = [](decltype(uniqueNodes)& container) {container.reserve(10); return 0; }(uniqueNodes);
+
+			worldGrid.lookupCellsForLine(camStartPos, shipPos, nearbyCells);
+
+			for (const sp<const SH::HashCell<WorldEntity>>& cell : nearbyCells)
+			{
+				for (const sp<SH::GridNode<WorldEntity>>& node : cell->nodeBucket)
+				{
+					WorldEntity& object = node->element;
+					if (std::find(uniqueNodes.begin(), uniqueNodes.end(), &object) == uniqueNodes.end())
+					{
+						uniqueNodes.push_back(&object);
+					}
+				}
+			}
+			using ShapeData = CollisionData::ShapeData;
+
+			const std::vector<ShapeData>& shapeData = collisionData->getShapeData();
+			assert(shapeData.size() == 1);
+			assert(bool(shapeData[0].shape));
+			SAT::Shape& myShape = *shapeData[0].shape;
+
+			//perhaps should do 2-3 passes if collision is detected
+			for (WorldEntity* collidable : uniqueNodes)
+			{
+				if (CollisionComponent* colliComp = collidable->getGameComponent<CollisionComponent>())
+				{
+					if (colliComp->requestsCollisionChecks()) //ignore the small ships from jitering camera.
+					{
+						if (CollisionData* otherColliData = colliComp->getCollisionData())
+						{
+							for (const ShapeData& otherShapeData : otherColliData->getShapeData())
+							{
+								const sp<SAT::Shape>& otherShape = otherShapeData.shape;
+								if (otherShape && SAT::Shape::CollisionTest(myShape, *otherShape))
+								{
+									//binary search to find camera position as MTV doesn't always push camera towards ship
+									float toCurProj = glm::dot((movingCamPos - camStartPos), toShip_n);
+									float lowerAlpha = glm::clamp(toCurProj / toShipLength, 0.f, 1.f);
+									float upperAlpha = 1.0f;
+									constexpr size_t numSteps = 8;
+									for (size_t step = 0; step < numSteps; ++step)
+									{
+										float middleAlpha = (upperAlpha - lowerAlpha) / 2.0f + lowerAlpha;
+										vec3 testPos = (middleAlpha * toShip) + camStartPos;
+
+										scaleCubeToRectangleAlongCameraBoom(testPos);
+										collisionData->updateToNewWorldTransform(cameraXform.getModelMatrix()); 
+
+										if (SAT::Shape::CollisionTest(myShape, *otherShape))
+										{
+											lowerAlpha = middleAlpha;
+										}
+										else
+										{
+											upperAlpha = middleAlpha;
+											movingCamPos = testPos;
+										}
+
+										if constexpr (constexpr bool bDebugRectangel = true) { GameBase::get().getDebugRenderSystem().renderCube(cameraXform.getModelMatrix(), glm::vec3(0.5f, 0.f, 0.f)); }
+									}
+
+									//we've completed binary searching, set up camera position for next round of collision tests
+									cameraXform.position = movingCamPos;
+									collisionData->updateToNewWorldTransform(cameraXform.getModelMatrix()); 
+								}
+							}
+						}
+					}
+				}
+			}
+
+			collisionAdjustedPosition = movingCamPos;
 		}
 	}
 

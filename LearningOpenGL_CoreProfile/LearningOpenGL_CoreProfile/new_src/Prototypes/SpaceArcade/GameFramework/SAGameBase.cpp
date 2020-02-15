@@ -154,9 +154,9 @@ namespace SA
 			for (const sp<SystemBase>& system : systems) { system->tick(deltaTimeSecs);	}
 
 			//NOTE: there probably needs to be a priority based pre/post loop; but not needed yet so it is not implemented (priorities should probably be defined in a single file via template specliazations)
-			PreGameloopTick.broadcast(deltaTimeSecs);
+			onPreGameloopTick.broadcast(deltaTimeSecs);
 			tickGameLoop(deltaTimeSecs);
-			PostGameloopTick.broadcast(deltaTimeSecs);
+			onPostGameloopTick.broadcast(deltaTimeSecs);
 
 			cacheRenderDataForCurrentFrame(*renderSystem->getFrameRenderData_Write(frameNumber, identityKey));
 			renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below

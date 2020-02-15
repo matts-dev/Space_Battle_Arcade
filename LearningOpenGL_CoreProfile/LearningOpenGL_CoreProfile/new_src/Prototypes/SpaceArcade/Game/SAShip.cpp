@@ -775,6 +775,7 @@ namespace SA
 							{
 								if (std::find(uniqueNodes.begin(), uniqueNodes.end(), &avoid) == uniqueNodes.end()) //must filter as same sphere can be in two cells
 								{
+									//#TODO this should probably exist for the spatial hash itself.
 									uniqueNodes.push_back(&avoid); 
 								}
 							}
