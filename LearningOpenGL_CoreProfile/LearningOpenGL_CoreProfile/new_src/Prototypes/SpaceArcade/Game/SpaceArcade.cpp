@@ -103,10 +103,9 @@ namespace SA
 		hud = new_sp<HUD>();
 
 		//make sure resources are loaded before the level starts
-		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
-		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
+		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);
-
 
 		return window;
 	}

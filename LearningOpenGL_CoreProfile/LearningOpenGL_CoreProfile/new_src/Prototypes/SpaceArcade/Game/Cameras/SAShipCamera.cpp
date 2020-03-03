@@ -243,7 +243,7 @@ namespace SA
 				float behindShipBias = 0.05f; //[0,0.5]prevent rectangle from being overtop of ship which will collide when ship collides
 				float cubeLength = glm::length(shipPos - testPoint) - behindShipBias;
 				cameraXform.position = testPoint + (cubeLength * 0.50f)*toShip_n;
-				cameraXform.scale = vec3{ cubeLength, 0.1f, 0.1f };
+				cameraXform.scale = vec3{ cubeLength, 1.0f, 1.0f };
 			};
 			scaleCubeToRectangleAlongCameraBoom(camStartPos);
 			collisionData->updateToNewWorldTransform(cameraXform.getModelMatrix());

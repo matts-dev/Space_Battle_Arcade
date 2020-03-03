@@ -39,6 +39,7 @@ namespace SA
 	protected: //level base api
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
+		virtual void tick_v(float dt_sec) override;
 
 	private: //event handlers
 		void handleUIFrameStarted();
@@ -54,6 +55,7 @@ namespace SA
 		void renderUI_Projectiles();
 		void renderUI_ViewportUI();
 		void renderUI_Team();
+		void renderUI_Objectives();
 
 	private: 
 		/** INVARIANT: filepath has been checked to be a valid model file path */
@@ -76,6 +78,9 @@ namespace SA
 		bool bUseCollisionCamera = false;
 		int selectedShapeIdx = -1;
 		int selectedAvoidanceSphereIdx = -1;
+		int selectedCommPlacementIdx = -1;
+		int selectedDefensePlacementIdx = -1;
+		int selectedTurretPlacementIdx = -1;
 		TeamData activeTeamData;
 
 		float cameraSpeedModifier = 1.f;
@@ -98,6 +103,11 @@ namespace SA
 		sp<SAT::PolygonCapsuleShape> polyShape;
 		sp<SAT::CapsuleRenderer> capsuleRenderer;
 		sp<AvoidanceSphere> sharedAvoidanceRenderer;
+
+		//dummy ship placement entities for visuals
+		std::vector<sp<ShipPlacementEntity>> placement_communications;
+		std::vector<sp<ShipPlacementEntity>> placement_defenses;
+		std::vector<sp<ShipPlacementEntity>> placement_turrets;
 
 		bool bAutoSave = true;
 	public:

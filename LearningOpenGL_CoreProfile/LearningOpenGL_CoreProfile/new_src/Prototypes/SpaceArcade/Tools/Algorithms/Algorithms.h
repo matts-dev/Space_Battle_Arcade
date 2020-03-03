@@ -135,16 +135,14 @@ namespace SA
 			// tan(FOVx) = x / z
 			//  z * tan(FOVx) = x
 			float hFOVy = glm::radians(FOVy / 2.0f);
-			float hFOVx = hFOVy;// *aspectRatio;
-			//float hFOVx = hFOVy * aspectRatio;
+			float tan_hFOVy = glm::tan(hFOVy);
 
 			//assuming dist to plane (z) is 1
-			float upScalar = glm::tan(hFOVy) * ndcClick.y;
+			float upScalar = tan_hFOVy* ndcClick.y;
 			glm::vec3 up = cameraUp_n * upScalar;
 
 			//again, assuming z is 1;
-			float rightScalar = aspectRatio * glm::tan(hFOVx) * ndcClick.x;
-			//float rightScalar = glm::tan(hFOVx) * ndcClick.x;
+			float rightScalar = aspectRatio * tan_hFOVy * ndcClick.x;
 			glm::vec3 right = cameraRight_n * rightScalar;
 
 			//this is relative to the origin, but we can just add cameraPos to get this point in world space

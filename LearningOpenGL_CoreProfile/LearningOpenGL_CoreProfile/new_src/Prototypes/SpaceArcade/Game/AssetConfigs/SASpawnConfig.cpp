@@ -47,7 +47,7 @@ namespace SA
 		//SHAPES
 		////////////////////////////////////////////////////////
 		CollisionShapeFactory& shapeFactory = SpaceArcade::get().getCollisionShapeFactoryRef();
-		for (const CollisionShapeConfig& shapeConfig : shapes)
+		for (const CollisionShapeSubConfig& shapeConfig : shapes)
 		{
 			Transform xform;
 			xform.position = shapeConfig.position;
@@ -115,7 +115,7 @@ namespace SA
 			{ "bRequestsCollisionTests", bRequestsCollisionTests}
 		};
 
-		for (CollisionShapeConfig& shapeCFG : shapes)
+		for (CollisionShapeSubConfig& shapeCFG : shapes)
 		{
 			json s =
 			{
@@ -129,7 +129,7 @@ namespace SA
 			spawnData["shapes"].push_back(s);
 		}
 
-		for(AvoidanceSphereConfig& avoidSphere : avoidanceSpheres)
+		for(AvoidanceSphereSubConfig& avoidSphere : avoidanceSpheres)
 		{
 			json avoidSphereJson = 
 			{
@@ -206,7 +206,7 @@ namespace SA
 					{
 						if (!shape.is_null())
 						{
-							CollisionShapeConfig shapeConfig;
+							CollisionShapeSubConfig shapeConfig;
 							const json& scale = shape["scale"];
 							if (!scale.is_null() && scale.is_array()) { shapeConfig.scale = { scale[0], scale[1], scale[2] }; }
 
@@ -236,7 +236,7 @@ namespace SA
 					json avSpheres = spawnData["avoidanceSpheres"];
 					for (json av : avSpheres)
 					{
-						AvoidanceSphereConfig loadedSphere;
+						AvoidanceSphereSubConfig loadedSphere;
 						if (av.contains("radius") && av["radius"].is_number_float())
 						{
 							loadedSphere.radius = av["radius"];

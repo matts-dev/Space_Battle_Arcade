@@ -84,6 +84,8 @@ namespace SA
 			{
 				entity->tick(dilated_dt_sec);
 			}
+
+			tick_v(dilated_dt_sec);
 		}
 	}
 

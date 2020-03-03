@@ -27,7 +27,7 @@ namespace SA
 	private:
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
-		virtual void tick(float dt_sec) override;
+		virtual void tick_v(float dt_sec) override;
 
 		virtual void postConstruct() override;
 

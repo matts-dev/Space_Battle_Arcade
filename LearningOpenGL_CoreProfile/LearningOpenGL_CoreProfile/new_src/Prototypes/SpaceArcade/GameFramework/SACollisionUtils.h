@@ -65,7 +65,7 @@ namespace SA
 		struct ConstShapeData
 		{
 			const glm::mat4 localXform;
-			const sp<const SAT::Shape> shape;  //this is why we need a separate stuct, const sp<TYPE> allows nonconst access to TYPE
+			const sp<const SAT::Shape> shape;  //this is why we need a separate struct, const sp<TYPE> allows nonconst access to TYPE
 			const ECollisionShape shapeType;
 
 			ConstShapeData(ShapeData& src) 
@@ -96,7 +96,6 @@ namespace SA
 			obbShape = inShape;
 			obbShape_constView = inShape; 
 		}
-		
 
 		/** const version returns an immutable SAT::Shape object
 			non-const version is mostly immutable, but the shape object can be manipulated (but not changed to a new shape)

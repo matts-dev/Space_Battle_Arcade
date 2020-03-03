@@ -20,7 +20,7 @@ namespace SA
 
 	protected:
 		const sp<Model3D>& getMyModel() const { return model; }
-
+		void replaceModel(const sp<Model3D>& newModel);
 	private:
 		sp<Model3D> model;
 		sp<const Model3D> constView;

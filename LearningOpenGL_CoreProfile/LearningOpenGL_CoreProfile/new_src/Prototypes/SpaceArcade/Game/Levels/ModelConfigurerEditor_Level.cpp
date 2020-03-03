@@ -34,6 +34,7 @@
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
+#include "../../Tools/SAUtilities.h"
 
 
 namespace
@@ -54,6 +55,7 @@ using TriangleProcessor = SAT::DynamicTriangleMeshShape::TriangleProcessor;
 
 namespace SA
 {
+	static bool bEnableCollisionTick = true;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// A debug camera used to test collision within the model editor level
@@ -129,8 +131,14 @@ namespace SA
 
 	void CollisionDebugCamera::updateTrackedLevelCollision(const SpawnConfig& debugSpawnConfig)
 	{
-		debugWorldCollisionInfo = debugSpawnConfig.toCollisionInfo();
-		debugWorldCollisionInfo->updateToNewWorldTransform(glm::mat4(1.f)); //perhaps should just be done in "toCollisionInfo()?"
+		//#TODO something is cause causing a memory leak and we will crash here. Something is growing memory in this level. this should delete though -- perhaps dangling strong delegate?
+		debugWorldCollisionInfo = nullptr;
+
+		if (bEnableCollisionTick)
+		{
+			debugWorldCollisionInfo = debugSpawnConfig.toCollisionInfo(); 
+			debugWorldCollisionInfo->updateToNewWorldTransform(glm::mat4(1.f)); //perhaps should just be done in "toCollisionInfo()?"
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -187,8 +195,39 @@ namespace SA
 		updateCameras(); //restore the player camera
 	}
 
+	void ModelConfigurerEditor_Level::tick_v(float dt_sec)
+	{
+		LevelBase::tick_v(dt_sec);
+
+		if (activeConfig)
+		{
+			////////////////////////////////////////////////////////
+			// manually upate placement transforms
+			////////////////////////////////////////////////////////
+			glm::mat4 rootModelMat = activeConfig->getModelXform().getModelMatrix();
+			static const auto applyTransformToPlacements = [](
+				const std::vector<sp<ShipPlacementEntity>>& placementContainer,
+				const glm::mat4& rootModelXform) 
+			{
+				for (const sp<ShipPlacementEntity>& placement : placementContainer)
+				{
+					if (placement)
+					{
+						placement->setParentXform(rootModelXform);
+					}
+				}
+			};
+			applyTransformToPlacements(placement_turrets, rootModelMat);
+			applyTransformToPlacements(placement_communications, rootModelMat);
+			applyTransformToPlacements(placement_defenses, rootModelMat);
+
+
+		}
+	}
+
 	void ModelConfigurerEditor_Level::handleUIFrameStarted()
 	{
+
 		ImGui::SetNextWindowPos(ImVec2{ 25, 25 });
 		//ImGui::SetNextWindowSize(ImVec2{ 400, 600 });
 		ImGuiWindowFlags flags = 0;
@@ -237,6 +276,10 @@ namespace SA
 			{
 				renderUI_Team();
 			}
+			if (ImGui::CollapsingHeader("OBJECTIVES"))
+			{
+				renderUI_Objectives();
+			}
 			if (ImGui::CollapsingHeader("VIEWPORT UI", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				renderUI_ViewportUI();
@@ -244,11 +287,13 @@ namespace SA
 		}
 		ImGui::End();
 
+		//-- #TODO I've identified by early outing that below(update tracked level collision) is causing a memory leak --
+
 		//pretty terrible, but doing this every tick after UI has had change to update. This isn't so bad because this is just a model editor.
 		//but it will have performance issues when the model grows more complex and has many collision shapes. But that would be bad for 
 		//game performance, so this can be used as a proxy to know if the user is creating a model that will be bad for performance.
 		//-- the alternative to doing this every tick is to have each ui element above that potentially changes collision cause a rebuild.
-		//that's a lot of work for little gain at this point (it also muddys up the UI code as all widgets need to be in branches). So I'm doing 
+		//that's a lot of work for little gain at this point (it also muddies up the UI code as all widgets need to be in branches). So I'm doing 
 		//this every tick at the moment. Perhaps a different, more clever system, could be created but then again, for what gain? This is a model editor.
 		//and this project has went on for over a year now. In an effort to finish this up, just tick!
 		if (levelCamera && activeConfig)
@@ -570,7 +615,7 @@ namespace SA
 			ImGuiWindowFlags file_load_wndflags = ImGuiWindowFlags_HorizontalScrollbar;
 
 			ImGui::Separator();
-			for (CollisionShapeConfig& shapeConfig : activeConfig->shapes)
+			for (CollisionShapeSubConfig& shapeConfig : activeConfig->shapes)
 			{
 				if (shapeConfig.shape == int(ECollisionShape::MODEL))
 				{
@@ -715,7 +760,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		}
 		
 		ImGui::Separator();
-		ImGui::Checkbox("Render Avoidancec Spheres", &bRenderAvoidanceSpheres);
+		ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSpheres);
 		if (ImGui::Button("Add avoidance sphere"))
 		{
 			activeConfig->avoidanceSpheres.push_back({});
@@ -731,7 +776,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			}
 		}
 		int avoidanceIndex = 0;
-		for (AvoidanceSphereConfig& avoidSphereConfig : activeConfig->avoidanceSpheres)
+		for (AvoidanceSphereSubConfig& avoidSphereConfig : activeConfig->avoidanceSpheres)
 		{
 			snprintf(tempTextBuffer, sizeof(tempTextBuffer), "sphere %d : %f radius", avoidanceIndex, avoidSphereConfig.radius);
 			if (ImGui::Selectable(tempTextBuffer, avoidanceIndex == selectedAvoidanceSphereIdx))
@@ -833,6 +878,9 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		{
 			updateCameras();
 		}
+		//DEBUG memory leak
+		ImGui::SameLine();
+		ImGui::Checkbox("collision tick", &bEnableCollisionTick);
 		ImGui::Separator();
 	}
 
@@ -905,6 +953,98 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		ImGui::Separator();
 	}
 
+	void ModelConfigurerEditor_Level::renderUI_Objectives()
+	{
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+		if (activeConfig && activeMod)
+		{
+			auto renderList = [this](
+				const char* objectNameWithIndex,
+				std::vector<PlacementSubConfig>& placementSubConfigArray,
+				int& selectedPlacementIndex,
+				const char* newPlacementButtonStr,
+				const char* deletePlaceementStr,
+				std::vector<sp<ShipPlacementEntity>>& outModelPlacement,
+				const sp<Mod>& activeMod
+				)
+			{
+				int placementIterIndex = 0;
+				for (PlacementSubConfig& commConfig : placementSubConfigArray)
+				{
+					snprintf(tempTextBuffer, sizeof(tempTextBuffer), objectNameWithIndex, placementIterIndex);
+					if (ImGui::Selectable(tempTextBuffer, placementIterIndex == selectedPlacementIndex))
+					{
+						//enter here if clicked the selectable
+						if (selectedPlacementIndex != placementIterIndex)
+						{
+							selectedPlacementIndex = placementIterIndex;
+						}
+						else
+						{
+							selectedPlacementIndex = -1;
+						}
+					}
+					placementIterIndex++;
+				}
+				static const char* const defaultpath = "Assets/Models3D/satellite/GroundSatellite.obj";
+				if (selectedPlacementIndex != -1)
+				{
+
+					bool bRefreshModelMat = false;
+					if (ImGui::InputFloat3("localPosition", &placementSubConfigArray[selectedPlacementIndex].position.x)) { bRefreshModelMat = true; };
+					if (ImGui::InputFloat3("localRotation", &placementSubConfigArray[selectedPlacementIndex].rotation_deg.x)) { bRefreshModelMat = true; };
+					if (ImGui::InputFloat3("localScale", &placementSubConfigArray[selectedPlacementIndex].scale.x)) { bRefreshModelMat = true; };
+
+					if (bRefreshModelMat)
+					{
+						//force update of preview entity
+						Transform newXform;
+						newXform.position = placementSubConfigArray[selectedPlacementIndex].position;
+						newXform.rotQuat = Utils::degreesVecToQuat(placementSubConfigArray[selectedPlacementIndex].rotation_deg);
+						newXform.scale = placementSubConfigArray[selectedPlacementIndex].scale;
+						outModelPlacement[selectedPlacementIndex]->setTransform(newXform);
+					}
+
+					constexpr size_t bufferPathLength = 2048;
+					static char filepathBuffer[bufferPathLength + 1];
+					const std::string& loadedPath = placementSubConfigArray[selectedPlacementIndex].filePath;
+					if (loadedPath.length() == 0) { std::memcpy(filepathBuffer, defaultpath, std::strlen(defaultpath)); }
+					else {std::memcpy(filepathBuffer, loadedPath.c_str(), glm::min<size_t>(loadedPath.size(), bufferPathLength)); }
+
+					ImGui::InputText("3D model Filepath", filepathBuffer, bufferPathLength, 0);
+					if (ImGui::Button("Refresh Placement Model"))
+					{
+						placementSubConfigArray[selectedPlacementIndex].filePath = filepathBuffer;
+						std::string fullPath = activeMod->getModDirectoryPath() + placementSubConfigArray[selectedPlacementIndex].filePath;
+						sp<Model3D> model = GameBase::get().getAssetSystem().loadModel(fullPath.c_str());
+						outModelPlacement[selectedPlacementIndex]->replaceModel(model);
+					}
+				}
+				if (ImGui::Button(newPlacementButtonStr))
+				{
+					placementSubConfigArray.push_back(PlacementSubConfig{});
+					outModelPlacement.push_back(new_sp<ShipPlacementEntity>());
+
+					std::string thisDefaultModelPath = activeMod->getModDirectoryPath() + defaultpath;
+					if (sp<Model3D> model = GameBase::get().getAssetSystem().loadModel(thisDefaultModelPath.c_str())) //this may fail on custom mods
+					{
+						outModelPlacement.back()->replaceModel(model);	
+					};
+				}
+				if (selectedPlacementIndex != -1 && ImGui::Button(deletePlaceementStr))
+				{
+					selectedPlacementIndex = -1;
+					placementSubConfigArray.erase(placementSubConfigArray.begin() + selectedPlacementIndex);
+					outModelPlacement.erase(outModelPlacement.begin() + selectedPlacementIndex);
+				}
+				ImGui::Dummy(ImVec2(0, 20)); 
+			};
+			renderList("Communication Object %d", activeConfig->communicationPlacements, selectedCommPlacementIdx, "New Communication Placement", "delete Comm", placement_communications, activeMod);
+			renderList("Turret Object %d", activeConfig->turretPlacements, selectedTurretPlacementIdx, "New Turret Placement", "delete turret", placement_turrets, activeMod);
+			renderList("DefenseObject %d", activeConfig->communicationPlacements, selectedDefensePlacementIdx, "New Defense Placement", "delete defense", placement_defenses, activeMod);
+		}
+	}
+
 	void ModelConfigurerEditor_Level::createNewSpawnConfig(const std::string& configName, const std::string& fullModelPath)
 	{
 		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
@@ -925,7 +1065,6 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 	void ModelConfigurerEditor_Level::onActiveConfigSet(const SpawnConfig& newConfig)
 	{
-
 		std::string modelPath = activeConfig->getModelFilePath();
 
 		//may fail to load model if user provided bad path, either way we need to set to null or valid model
@@ -933,6 +1072,31 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 		primaryProjectileConfig = activeConfig->getPrimaryProjectileConfig();
 
+		//LOAD SHIP TAKEDOWN OBJECTIVES
+		auto loadPlacements = [this](
+				const std::vector<PlacementSubConfig>& inPlacementConfigs,
+				std::vector<sp<ShipPlacementEntity>>& outEntities
+			)
+		{
+			outEntities.clear();
+			for (const PlacementSubConfig& placement : inPlacementConfigs)
+			{
+				sp<ShipPlacementEntity> newPlacement = new_sp<ShipPlacementEntity>();
+				Transform xform;
+				xform.position = placement.position;
+				xform.rotQuat = Utils::degreesVecToQuat(placement.rotation_deg);
+				xform.scale = placement.scale;
+				newPlacement->setTransform(xform);
+				if (placement.filePath.length() > 0)
+				{
+					newPlacement->replaceModel(GameBase::get().getAssetSystem().loadModel(placement.filePath.c_str()));
+				}
+				outEntities.push_back(newPlacement);
+			}
+		};
+		loadPlacements(activeConfig->defensePlacements, placement_defenses);
+		loadPlacements(activeConfig->turretPlacements, placement_turrets);
+		loadPlacements(activeConfig->communicationPlacements, placement_communications);
 	}
 
 	void ModelConfigurerEditor_Level::tryLoadCollisionModel(const char* filePath)
@@ -1015,9 +1179,6 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		if (renderModel && shapeRenderer && activeConfig)
 		{
 			Transform rootXform = activeConfig->getModelXform();
-			//rootXform.position = activeConfig->modelPosition;
-			//rootXform.scale = activeConfig->modelScale;
-			//rootXform.rotQuat = getRotQuatFromDegrees(activeConfig->modelRotationDegrees);
 			mat4 rootModelMat = rootXform.getModelMatrix();
 
 			const sp<PlayerBase>& zeroPlayer = GameBase::get().getPlayerSystem().getPlayer(0);
@@ -1029,11 +1190,6 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				
 				{ //render model
 					model3DShader->use();
-					//model3DShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-					//model3DShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
-					//model3DShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
-					//model3DShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0));
-					//model3DShader->setUniform1i("material.shininess", 32);
 					model3DShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 					model3DShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 					model3DShader->setUniform3f("cameraPosition", camera->getPosition());
@@ -1061,12 +1217,38 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 				if (bRenderAvoidanceSpheres)
 				{
-					for (AvoidanceSphereConfig& avSphereCfg : activeConfig->avoidanceSpheres)
+					for (AvoidanceSphereSubConfig& avSphereCfg : activeConfig->avoidanceSpheres)
 					{
 						sharedAvoidanceRenderer->setRadius(avSphereCfg.radius);
 						sharedAvoidanceRenderer->setPosition(avSphereCfg.localPosition);
 						sharedAvoidanceRenderer->render();
 					}
+				}
+
+				if (bool bRenderObjectives = true)
+				{
+					static const auto renderPlacement = [](
+						const std::vector<sp<ShipPlacementEntity>>& placementContainer,
+						const sp<Shader>& model3DShader,
+						bool bModelXray)
+					{
+						if (model3DShader)
+						{
+							for (const sp<ShipPlacementEntity>& placement : placementContainer)
+							{
+								if (bModelXray) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
+
+								model3DShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(placement->getParentXLocalModelMatrix()));
+								placement->draw(*model3DShader);
+
+								if (bModelXray) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+							}
+						}
+					};
+					//this code is relying on the fact that the shader was configured previously for rendering the main model.
+					renderPlacement(placement_communications, model3DShader, bModelXray);
+					renderPlacement(placement_defenses, model3DShader, bModelXray);
+					renderPlacement(placement_turrets, model3DShader, bModelXray);
 				}
 
 				if (bRenderCollisionShapes)
@@ -1075,7 +1257,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					ec(glPolygonMode(GL_FRONT_AND_BACK, renderMode)); 
 
 					int shapeIdx = 0;
-					for (CollisionShapeConfig shape : activeConfig->shapes)
+					for (CollisionShapeSubConfig shape : activeConfig->shapes)
 					{
 						Transform xform;
 						xform.position = shape.position;

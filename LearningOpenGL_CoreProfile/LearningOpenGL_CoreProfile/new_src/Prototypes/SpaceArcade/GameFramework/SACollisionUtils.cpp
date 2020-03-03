@@ -56,13 +56,15 @@ namespace SA
 {
 	sp<SAT::Shape> tryLoadModelShape(const char* fullFilePath)
 	{
+		sp<Model3D> newModel = nullptr;
+		sp<SAT::Shape> modelCollision = nullptr;
 		try
 		{
-			sp<Model3D> newModel = new_sp<Model3D>(fullFilePath);
+			newModel = new_sp<Model3D>(fullFilePath);
 			if (newModel)
 			{
 				TriangleProcessor processedModel = modelToCollisionTriangles(*newModel); //#TODO_minor this function perhaps should exist in this file
-				sp<SAT::Shape> modelCollision = new_sp<SAT::DynamicTriangleMeshShape>(processedModel);
+				modelCollision = new_sp<SAT::DynamicTriangleMeshShape>(processedModel);
 				return modelCollision; //early out so failure log isn't printed at end of this function.
 			}
 		}
@@ -70,7 +72,7 @@ namespace SA
 		{
 			log(__FUNCTION__, LogLevel::LOG, "Failed to load collision model");
 		}
-		return sp<SAT::Shape>{nullptr};
+		return modelCollision;
 	}
 
 	sp<SAT::Shape> tryLoadModelShapeModRelative(const char* modRelativeFilePath)

@@ -11,6 +11,7 @@
 #include "SAConfigBase.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/SATransform.h"
+#include "../SAShipPlacements.h"
 
 namespace SA
 {
@@ -19,7 +20,7 @@ namespace SA
 	class CollisionData;
 	class ProjectileConfig;
 
-	struct CollisionShapeConfig
+	struct CollisionShapeSubConfig
 	{
 		int shape;		//avoiding strict alias violation, this is int type rather than enum;
 		glm::vec3 scale{ 1,1,1 };
@@ -28,7 +29,7 @@ namespace SA
 		std::string modelFilePath;
 	};
 
-	struct AvoidanceSphereConfig
+	struct AvoidanceSphereSubConfig
 	{
 		float radius = 1.0f;
 		glm::vec3 localPosition{ 0.f };
@@ -64,7 +65,7 @@ namespace SA
 		Transform getModelXform() const;
 		bool requestCollisionTests() const {return bRequestsCollisionTests;};
 		bool getCollisionReflectForward() const { return bCollisionReflectForward; }
-		const std::vector<AvoidanceSphereConfig>& getAvoidanceSpheres() const { return avoidanceSpheres; }
+		const std::vector<AvoidanceSphereSubConfig>& getAvoidanceSpheres() const { return avoidanceSpheres; }
 		
 	protected:
 		virtual void onSerialize(json& outData) override;
@@ -81,11 +82,15 @@ namespace SA
 		glm::vec3 shieldOffset = glm::vec3(0.f);
 		std::string primaryProjectileConfigName;
 
-		std::vector<CollisionShapeConfig> shapes;
 		bool bRequestsCollisionTests = true;
 		bool bCollisionReflectForward = true;
+		std::vector<CollisionShapeSubConfig> shapes;
 
-		std::vector<AvoidanceSphereConfig> avoidanceSpheres;
+		std::vector<AvoidanceSphereSubConfig> avoidanceSpheres;
+
+		std::vector<PlacementSubConfig> communicationPlacements;
+		std::vector<PlacementSubConfig> defensePlacements;
+		std::vector<PlacementSubConfig> turretPlacements;
 		
 		//color/material
 		//team

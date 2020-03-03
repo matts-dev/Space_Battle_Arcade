@@ -70,8 +70,10 @@ namespace SA
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned);
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned);
 		virtual bool isLevelActive() { return bLevelActive; }
+	protected:
+		virtual void tick_v(float dt_sec) {}
 	private: //virtuals; private indicates subclasses inherit when function called, but not how function is completed.
-		virtual void tick(float dt_sec);
+		void tick(float dt_sec);
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {};
 	protected: 

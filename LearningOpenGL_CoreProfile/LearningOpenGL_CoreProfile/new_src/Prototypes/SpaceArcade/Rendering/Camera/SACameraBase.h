@@ -49,7 +49,7 @@ namespace SA
 		const glm::vec3 getWorldUp_n() const { return worldUp_n; }
 
 		void setFOV(float inFOV);
-		float getFOV() const { return FOV; }
+		float getFOV() const { return FOV; } //#TODO refactor so that this clearly states FOVy_deg
 		float getNear() const { return nearZ; }
 		float getFar() const { return farZ; }
 		virtual glm::mat4 getView() const;

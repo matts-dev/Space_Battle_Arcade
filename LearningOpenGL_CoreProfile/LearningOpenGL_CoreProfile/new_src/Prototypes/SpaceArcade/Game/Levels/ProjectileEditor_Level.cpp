@@ -57,9 +57,9 @@ namespace SA
 		projectileSys->unspawnAllProjectiles();
 	}
 
-	void ProjectileEditor_Level::tick(float dt_sec)
+	void ProjectileEditor_Level::tick_v(float dt_sec)
 	{
-		
+		LevelBase::tick_v(dt_sec);
 	}
 
 	void ProjectileEditor_Level::postConstruct()

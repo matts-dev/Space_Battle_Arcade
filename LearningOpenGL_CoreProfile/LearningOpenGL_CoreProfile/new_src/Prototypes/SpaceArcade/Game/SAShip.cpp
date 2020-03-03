@@ -80,7 +80,7 @@ namespace SA
 	{
 		rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
 
-		for (const AvoidanceSphereConfig& sphereConfig : shipData->getAvoidanceSpheres())
+		for (const AvoidanceSphereSubConfig& sphereConfig : shipData->getAvoidanceSpheres())
 		{
 			//must wait for postConstruct because we need to pass sp_this() for owner field.
 			sp<AvoidanceSphere> avoidanceSphere = new_sp<AvoidanceSphere>(sphereConfig.radius, sphereConfig.localPosition, sp_this());
