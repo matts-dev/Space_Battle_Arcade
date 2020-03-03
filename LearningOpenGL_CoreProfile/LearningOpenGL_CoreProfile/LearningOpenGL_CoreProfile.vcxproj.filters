@@ -735,6 +735,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\SphereAvoidance\AvoidanceSphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1845,6 +1848,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\SphereAvoidance\AvoidanceSphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

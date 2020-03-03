@@ -192,6 +192,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAProjectileSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SACollisionUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASpawnConfig.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SASpaceArcadeGlobalConstants.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAHUD.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.h" />
@@ -475,6 +476,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Planet.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAHUD.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
