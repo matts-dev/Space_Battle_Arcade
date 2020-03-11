@@ -8,25 +8,29 @@
 
 namespace SA
 {
+	class ConfigBase;
+
+
 	enum class PlacementType
 	{
-		COMMUNICATIONS, DEFENSE, TURRET
+		COMMUNICATIONS, DEFENSE, TURRET, INVALID
 	};
 	std::string lexToString(PlacementType enumValue);
+	PlacementType stringToLex(const std::string& strValue);
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Represents the data side of the placeable object
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	class PlacementSubConfig
+	struct PlacementSubConfig
 	{
-		friend class ModelConfigurerEditor_Level;
-		friend class ShipPlacementEntity;
-	private:
 		glm::vec3 position{ 0.f };
 		glm::vec3 rotation_deg{ 0.f }; //yaw, pitch, roll
 		glm::vec3 scale{ 1.f };
-		std::string filePath;
-		PlacementType placeementType;
+		std::string relativeFilePath;
+		PlacementType placementType;
+			
+		std::string getFullPath(ConfigBase& owningConfig) const;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +55,7 @@ namespace SA
 		void updateModelMatrixCache();
 	private: //model editor special access
 		friend class ModelConfigurerEditor_Level;
-		void replacePlacementConfig(const PlacementSubConfig& newConfig);
+		void replacePlacementConfig(const PlacementSubConfig& newConfig, ConfigBase& owningConfig);
 	private:
 		sp<CollisionData> collision;
 		PlacementSubConfig config;

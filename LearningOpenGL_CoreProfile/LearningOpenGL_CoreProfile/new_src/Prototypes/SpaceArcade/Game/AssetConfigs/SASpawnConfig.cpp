@@ -150,6 +150,26 @@ namespace SA
 			spawnData["teamData"].push_back(t);
 		}
 
+		auto serializePlacements = [](const std::vector<PlacementSubConfig>& container, json& outJson)
+		{
+			for (const PlacementSubConfig& placement : container)
+			{
+				std::string typeString = lexToString(placement.placementType);
+				json obj = {
+					{"placementType", typeString},
+					{"pos", {placement.position.x, placement.position.y, placement.position.z}},
+					{"rotDeg", {placement.rotation_deg.x, placement.rotation_deg.y, placement.rotation_deg.z}},
+					{"scale", {placement.scale.x, placement.scale.y, placement.scale.z}},
+					{"relativeFilePath", placement.relativeFilePath}
+				};
+				outJson["placements"].push_back(obj);
+			}
+		};
+
+		serializePlacements(communicationPlacements,spawnData);
+		serializePlacements(turretPlacements,spawnData);
+		serializePlacements(defensePlacements,spawnData);
+
 		outData.push_back({ "SpawnConfig", spawnData });
 	}
 
@@ -198,6 +218,9 @@ namespace SA
 					bRequestsCollisionTests = spawnData["bRequestsCollisionTests"];
 				}
 
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// load shapes
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				//#TODO use lambda to load vec3s
 				json loadedShapes = spawnData["shapes"];
 				if (!loadedShapes.is_null())
@@ -229,7 +252,10 @@ namespace SA
 						}
 					}
  				}
-
+				
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// load avoidance spheres
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				if (spawnData.contains("avoidanceSpheres"))
 				{
 					avoidanceSpheres.clear();
@@ -266,6 +292,9 @@ namespace SA
 					}
 				};
 
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// load team data
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				if (spawnData.contains("teamData"))
 				{
 					json loadedTeamDataArray = spawnData["teamData"];
@@ -289,6 +318,45 @@ namespace SA
 				{ 
 					log(__FUNCTION__, SA::LogLevel::LOG_WARNING, "load spawn config to find team data"); 
 					teamData.push_back(TeamData{});
+				}
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// load placements
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				if (spawnData.contains("placements"))
+				{
+					const json& placements = spawnData["placements"];
+					if (placements.is_array() && !placements.is_null())
+					{
+						for (const json& pjson : placements)
+						{
+							if (!pjson.is_null() && pjson.contains("placementType") && pjson.contains("pos") && pjson.contains("rotDeg") && pjson.contains("scale") && pjson.contains("relativeFilePath"))
+							{
+								PlacementSubConfig loadedConfig;
+								loadedConfig.placementType = stringToLex(pjson["placementType"]);
+								loadVec3(loadedConfig.position, pjson, "pos");
+								loadVec3(loadedConfig.rotation_deg, pjson, "rotDeg");
+								loadVec3(loadedConfig.scale, pjson, "scale");
+								loadedConfig.relativeFilePath = pjson["relativeFilePath"];
+								if (loadedConfig.placementType == PlacementType::TURRET)
+								{
+									turretPlacements.push_back(loadedConfig);
+								}
+								else if (loadedConfig.placementType == PlacementType::DEFENSE)
+								{
+									defensePlacements.push_back(loadedConfig);
+								}
+								else if (loadedConfig.placementType == PlacementType::COMMUNICATIONS)
+								{
+									communicationPlacements.push_back(loadedConfig);
+								}
+								else
+								{
+									log(__FUNCTION__, SA::LogLevel::LOG_WARNING, "Got an invalid placement type when deserializing");
+								}
+							}
+						}
+					}
 				}
 			}
 			else

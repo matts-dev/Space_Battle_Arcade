@@ -54,6 +54,654 @@
                 0.0
             ]
         },
+        "placements": [
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    0.0,
+                    1.850000023841858,
+                    0.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    2.0,
+                    2.825000047683716,
+                    11.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    45.0,
+                    0.0
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    -2.0,
+                    2.825000047683716,
+                    11.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    -45.0,
+                    0.0
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    0.0,
+                    -3.799999952316284,
+                    0.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    180.0,
+                    180.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    1.7999999523162842,
+                    2.200000047683716,
+                    -8.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    135.0,
+                    0.0
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    -1.7999999523162842,
+                    2.200000047683716,
+                    -8.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    -135.0,
+                    0.0
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    0.0,
+                    -2.5,
+                    -5.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    180.0,
+                    180.0
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    4.300000190734863,
+                    -2.5999999046325684,
+                    7.199999809265137
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    45.0,
+                    180.0
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    -4.300000190734863,
+                    -2.5999999046325684,
+                    7.199999809265137
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    0.0,
+                    -45.0,
+                    180.0
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    4.800000190734863,
+                    -0.5,
+                    -4.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    180.0,
+                    0.0,
+                    -90.0
+                ],
+                "scale": [
+                    0.6000000238418579,
+                    0.6000000238418579,
+                    0.6000000238418579
+                ]
+            },
+            {
+                "placementType": "COMMUNICATIONS",
+                "pos": [
+                    -4.800000190734863,
+                    -0.5,
+                    -4.0
+                ],
+                "relativeFilePath": "Assets/Models3D/satellite/GroundSatellite.obj",
+                "rotDeg": [
+                    180.0,
+                    0.0,
+                    90.0
+                ],
+                "scale": [
+                    0.6000000238418579,
+                    0.6000000238418579,
+                    0.6000000238418579
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    3.0,
+                    2.8499999046325684,
+                    8.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    -3.0,
+                    2.8499999046325684,
+                    8.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    -90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    4.800000190734863,
+                    1.8899999856948853,
+                    -6.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    -4.800000190734863,
+                    1.8899999856948853,
+                    -6.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    -90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    -4.800000190734863,
+                    1.25,
+                    5.5
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    -90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    4.800000190734863,
+                    1.25,
+                    5.5
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    4.800000190734863,
+                    -2.6500000953674316,
+                    5.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    -4.800000190734863,
+                    -2.6500000953674316,
+                    5.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    -90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    -4.849999904632568,
+                    -2.5999999046325684,
+                    -5.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    -90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    4.849999904632568,
+                    -2.5999999046325684,
+                    -5.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    0.0,
+                    90.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    0.0,
+                    0.0,
+                    11.550000190734863
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    20.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "TURRET",
+                "pos": [
+                    0.0,
+                    -4.0,
+                    3.0
+                ],
+                "relativeFilePath": "Assets/Models3D/turret/sa_turret.obj",
+                "rotDeg": [
+                    90.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    0.0,
+                    3.200000047683716,
+                    6.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    3.0,
+                    2.200000047683716,
+                    -7.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    -3.0,
+                    2.200000047683716,
+                    -7.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    3.0,
+                    -2.950000047683716,
+                    -6.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    180.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    -3.0,
+                    -2.950000047683716,
+                    -6.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    180.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    -2.200000047683716,
+                    -2.950000047683716,
+                    3.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    180.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    2.200000047683716,
+                    -2.950000047683716,
+                    3.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    180.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    3.299999952316284,
+                    -0.0,
+                    9.25
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    117.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    -3.299999952316284,
+                    -0.0,
+                    9.25
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    117.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    -2.5,
+                    -0.5,
+                    2.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    -66.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            },
+            {
+                "placementType": "DEFENSE",
+                "pos": [
+                    2.5,
+                    -0.5,
+                    2.0
+                ],
+                "relativeFilePath": "/Assets/Models3D/generator/sa_generator.obj",
+                "rotDeg": [
+                    -66.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    0.25,
+                    0.25,
+                    0.25
+                ]
+            }
+        ],
         "primaryProjectileConfigName": "",
         "shapes": [
             {

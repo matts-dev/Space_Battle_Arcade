@@ -42,6 +42,11 @@ namespace SA
 		return nullptr;
 	}
 
+	sp<SA::Model3D> AssetSystem::loadModel(const std::string& relative_filepath)
+	{
+		return loadModel(relative_filepath.c_str());
+	}
+
 	SA::sp<SA::Model3D> AssetSystem::getModel(const std::string& key) const
 	{
 		const auto& iter = loadedModel3Ds.find(key);

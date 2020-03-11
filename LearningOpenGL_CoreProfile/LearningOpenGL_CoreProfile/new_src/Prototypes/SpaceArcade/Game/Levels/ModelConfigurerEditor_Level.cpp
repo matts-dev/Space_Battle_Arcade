@@ -35,6 +35,8 @@
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 #include "../../Tools/SAUtilities.h"
+#include "../../GameFramework/SADebugRenderSystem.h"
+#include "../../Tools/color_utils.h"
 
 
 namespace
@@ -965,19 +967,35 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				const char* newPlacementButtonStr,
 				const char* deletePlaceementStr,
 				std::vector<sp<ShipPlacementEntity>>& outModelPlacement,
-				const sp<Mod>& activeMod
+				const sp<Mod>& activeMod,
+				PlacementType placementType
 				)
 			{
+				constexpr size_t bufferPathLength = 2048;
+				static char filepathBuffer[bufferPathLength + 1];
+
 				int placementIterIndex = 0;
+
+				bool bRefreshFileDir = false;
 				for (PlacementSubConfig& commConfig : placementSubConfigArray)
 				{
 					snprintf(tempTextBuffer, sizeof(tempTextBuffer), objectNameWithIndex, placementIterIndex);
 					if (ImGui::Selectable(tempTextBuffer, placementIterIndex == selectedPlacementIndex))
 					{
+						bRefreshFileDir = true;
+
 						//enter here if clicked the selectable
 						if (selectedPlacementIndex != placementIterIndex)
 						{
+							//clear all other selections since they share a filepath buffer
+							selectedTurretPlacementIdx = -1;
+							selectedPlacementIndex = -1;
+							selectedCommPlacementIdx = -1;
+
 							selectedPlacementIndex = placementIterIndex;
+
+							//clear the buffer so tail end chars are not still in buffer when previously selecting long paths
+							memset(filepathBuffer, 0, sizeof(filepathBuffer));
 						}
 						else
 						{
@@ -986,10 +1004,9 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					}
 					placementIterIndex++;
 				}
-				static const char* const defaultpath = "Assets/Models3D/satellite/GroundSatellite.obj";
-				if (selectedPlacementIndex != -1)
+				static std::string defaultpath = "Assets/Models3D/satellite/GroundSatellite.obj";
+				if (selectedPlacementIndex != -1 &&  selectedPlacementIndex < int(placementSubConfigArray.size()))
 				{
-
 					bool bRefreshModelMat = false;
 					if (ImGui::InputFloat3("localPosition", &placementSubConfigArray[selectedPlacementIndex].position.x)) { bRefreshModelMat = true; };
 					if (ImGui::InputFloat3("localRotation", &placementSubConfigArray[selectedPlacementIndex].rotation_deg.x)) { bRefreshModelMat = true; };
@@ -1005,27 +1022,55 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						outModelPlacement[selectedPlacementIndex]->setTransform(newXform);
 					}
 
-					constexpr size_t bufferPathLength = 2048;
-					static char filepathBuffer[bufferPathLength + 1];
-					const std::string& loadedPath = placementSubConfigArray[selectedPlacementIndex].filePath;
-					if (loadedPath.length() == 0) { std::memcpy(filepathBuffer, defaultpath, std::strlen(defaultpath)); }
-					else {std::memcpy(filepathBuffer, loadedPath.c_str(), glm::min<size_t>(loadedPath.size(), bufferPathLength)); }
+
+					std::string& loadedPath = placementSubConfigArray[selectedPlacementIndex].relativeFilePath;
+
+
+					std::string modPath = activeMod->getModDirectoryPath();
+					size_t startModPathIdx = loadedPath.find(modPath);
+					if (startModPathIdx != std::string::npos)
+					{
+						loadedPath.erase(startModPathIdx, modPath.length());
+					}
+
+					if (loadedPath.length() == 0) 
+					{ 
+						std::memcpy(filepathBuffer, defaultpath.c_str(), defaultpath.length());
+					}
+					else if (bRefreshFileDir)
+					{
+						std::memcpy(filepathBuffer, loadedPath.c_str(), glm::min<size_t>(loadedPath.size(), bufferPathLength)); 
+					}
 
 					ImGui::InputText("3D model Filepath", filepathBuffer, bufferPathLength, 0);
 					if (ImGui::Button("Refresh Placement Model"))
 					{
-						placementSubConfigArray[selectedPlacementIndex].filePath = filepathBuffer;
-						std::string fullPath = activeMod->getModDirectoryPath() + placementSubConfigArray[selectedPlacementIndex].filePath;
+						placementSubConfigArray[selectedPlacementIndex].relativeFilePath = filepathBuffer;
+						std::string fullPath = placementSubConfigArray[selectedPlacementIndex].getFullPath(*activeConfig);
 						sp<Model3D> model = GameBase::get().getAssetSystem().loadModel(fullPath.c_str());
 						outModelPlacement[selectedPlacementIndex]->replaceModel(model);
+						if (model) { defaultpath = filepathBuffer;}
 					}
 				}
 				if (ImGui::Button(newPlacementButtonStr))
 				{
+					std::string thisDefaultModelPath = activeMod->getModDirectoryPath() + defaultpath;
+
 					placementSubConfigArray.push_back(PlacementSubConfig{});
+					PlacementSubConfig& newPlacement = placementSubConfigArray.back();
+					newPlacement.relativeFilePath = thisDefaultModelPath;
+					newPlacement.placementType = placementType;
+					if (selectedPlacementIndex != -1)
+					{
+						//copy previous for easy tweaking
+						PlacementSubConfig& previousPlacement = placementSubConfigArray[selectedPlacementIndex];
+						newPlacement.position = previousPlacement.position;
+						newPlacement.scale = previousPlacement.scale;
+						newPlacement.rotation_deg = previousPlacement.rotation_deg;
+					}
+
 					outModelPlacement.push_back(new_sp<ShipPlacementEntity>());
 
-					std::string thisDefaultModelPath = activeMod->getModDirectoryPath() + defaultpath;
 					if (sp<Model3D> model = GameBase::get().getAssetSystem().loadModel(thisDefaultModelPath.c_str())) //this may fail on custom mods
 					{
 						outModelPlacement.back()->replaceModel(model);	
@@ -1033,15 +1078,17 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				}
 				if (selectedPlacementIndex != -1 && ImGui::Button(deletePlaceementStr))
 				{
-					selectedPlacementIndex = -1;
 					placementSubConfigArray.erase(placementSubConfigArray.begin() + selectedPlacementIndex);
 					outModelPlacement.erase(outModelPlacement.begin() + selectedPlacementIndex);
+					selectedPlacementIndex = -1; //clear index after removal
 				}
-				ImGui::Dummy(ImVec2(0, 20)); 
 			};
-			renderList("Communication Object %d", activeConfig->communicationPlacements, selectedCommPlacementIdx, "New Communication Placement", "delete Comm", placement_communications, activeMod);
-			renderList("Turret Object %d", activeConfig->turretPlacements, selectedTurretPlacementIdx, "New Turret Placement", "delete turret", placement_turrets, activeMod);
-			renderList("DefenseObject %d", activeConfig->communicationPlacements, selectedDefensePlacementIdx, "New Defense Placement", "delete defense", placement_defenses, activeMod);
+			renderList("Communication Object %d", activeConfig->communicationPlacements, selectedCommPlacementIdx, "New Communication Placement", "delete Comm", placement_communications, activeMod, PlacementType::COMMUNICATIONS);
+			ImGui::Separator();
+			renderList("Turret Object %d", activeConfig->turretPlacements, selectedTurretPlacementIdx, "New Turret Placement", "delete turret", placement_turrets, activeMod, PlacementType::TURRET);
+			ImGui::Separator();
+			renderList("DefenseObject %d", activeConfig->defensePlacements, selectedDefensePlacementIdx, "New Defense Placement", "delete defense", placement_defenses, activeMod, PlacementType::DEFENSE);
+			ImGui::Dummy(ImVec2(0, 20));
 		}
 	}
 
@@ -1075,7 +1122,8 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		//LOAD SHIP TAKEDOWN OBJECTIVES
 		auto loadPlacements = [this](
 				const std::vector<PlacementSubConfig>& inPlacementConfigs,
-				std::vector<sp<ShipPlacementEntity>>& outEntities
+				std::vector<sp<ShipPlacementEntity>>& outEntities,
+				ConfigBase& activeCFG
 			)
 		{
 			outEntities.clear();
@@ -1087,16 +1135,19 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				xform.rotQuat = Utils::degreesVecToQuat(placement.rotation_deg);
 				xform.scale = placement.scale;
 				newPlacement->setTransform(xform);
-				if (placement.filePath.length() > 0)
+				if (placement.relativeFilePath.length() > 0)
 				{
-					newPlacement->replaceModel(GameBase::get().getAssetSystem().loadModel(placement.filePath.c_str()));
+					newPlacement->replaceModel(GameBase::get().getAssetSystem().loadModel(placement.getFullPath(activeCFG)));
 				}
 				outEntities.push_back(newPlacement);
 			}
 		};
-		loadPlacements(activeConfig->defensePlacements, placement_defenses);
-		loadPlacements(activeConfig->turretPlacements, placement_turrets);
-		loadPlacements(activeConfig->communicationPlacements, placement_communications);
+		if (activeConfig)
+		{
+			loadPlacements(activeConfig->defensePlacements, placement_defenses, *activeConfig);
+			loadPlacements(activeConfig->turretPlacements, placement_turrets, *activeConfig);
+			loadPlacements(activeConfig->communicationPlacements, placement_communications, *activeConfig);
+		}
 	}
 
 	void ModelConfigurerEditor_Level::tryLoadCollisionModel(const char* filePath)
@@ -1249,6 +1300,26 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					renderPlacement(placement_communications, model3DShader, bModelXray);
 					renderPlacement(placement_defenses, model3DShader, bModelXray);
 					renderPlacement(placement_turrets, model3DShader, bModelXray);
+				}
+
+				if (bool bRenderActivePlacementBox = true)
+				{
+					auto renderBoxAtPlacement = [](
+							int idx, const std::vector<sp<ShipPlacementEntity>>& placement_container
+						) 
+					{
+						if (idx >= 0 && (idx < placement_container.size()) )
+						{
+							if (const sp<ShipPlacementEntity>& placement = placement_container[idx])
+							{
+								DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
+								debugRenderSystem.renderCube(placement->getParentXLocalModelMatrix(), SA::color::metalicgold());
+							}
+						}
+					};
+					renderBoxAtPlacement(selectedCommPlacementIdx, placement_communications);
+					renderBoxAtPlacement(selectedDefensePlacementIdx, placement_defenses);
+					renderBoxAtPlacement(selectedTurretPlacementIdx, placement_turrets);
 				}
 
 				if (bRenderCollisionShapes)

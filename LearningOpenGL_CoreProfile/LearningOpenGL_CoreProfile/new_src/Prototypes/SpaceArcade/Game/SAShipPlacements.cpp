@@ -2,18 +2,42 @@
 #include "../GameFramework/SAGameBase.h"
 #include "../GameFramework/SAAssetSystem.h"
 #include "../Tools/ModelLoading/SAModel.h"
+#include "AssetConfigs/SAConfigBase.h"
 
 namespace SA
 {
+	static const std::string comStr = "COMMUNICATIONS";
+	static const std::string turretStr = "TURRET";
+	static const std::string defStr = "DEFENSE";
+	static const std::string invalidStr = "INVALID";
+
 	std::string lexToString(PlacementType enumValue)
 	{
 		switch (enumValue)
 		{
-			case PlacementType::COMMUNICATIONS: return "COMMUNICATIONS";
-			case PlacementType::DEFENSE: return "DEFENSE";
-			case PlacementType::TURRET: return "TURRET";
-			default: return "NA";
+			case PlacementType::COMMUNICATIONS: return comStr;
+			case PlacementType::DEFENSE: return defStr;
+			case PlacementType::TURRET: return turretStr;
+			default: return invalidStr;
 		}
+	}
+
+	SA::PlacementType stringToLex(const std::string& strValue)
+	{
+		if (strValue == comStr)
+		{
+			return PlacementType::COMMUNICATIONS;
+		}
+		else if (strValue == turretStr)
+		{
+			return PlacementType::TURRET;
+		}
+		else if (strValue == defStr)
+		{
+			return PlacementType::DEFENSE;
+		}
+
+		return PlacementType::INVALID;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,14 +83,14 @@ namespace SA
 		cachedModelMat_PxL = parentXform * getModelMatrix();
 	}
 
-	void ShipPlacementEntity::replacePlacementConfig(const PlacementSubConfig& newConfig)
+	void ShipPlacementEntity::replacePlacementConfig(const PlacementSubConfig& newConfig, ConfigBase& owningConfig)
 	{
-		bool bModelsAreDifferent = newConfig.filePath != newConfig.filePath;
+		bool bModelsAreDifferent = newConfig.relativeFilePath != newConfig.relativeFilePath;
 		config = newConfig;
 
 		if (bModelsAreDifferent)
 		{
-			sp<Model3D> model = GameBase::get().getAssetSystem().loadModel(config.filePath.c_str());
+			sp<Model3D> model = GameBase::get().getAssetSystem().loadModel(config.getFullPath(owningConfig));
 			replaceModel(model);
 		}
 
@@ -78,4 +102,9 @@ namespace SA
 
 		updateModelMatrixCache();
 	}
+}
+
+std::string SA::PlacementSubConfig::getFullPath(ConfigBase& owningConfig) const
+{
+	return owningConfig.getOwningModDir() + relativeFilePath;
 }

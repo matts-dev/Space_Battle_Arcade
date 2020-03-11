@@ -238,9 +238,9 @@ namespace SA
 			float cosTheta = glm::clamp(glm::dot(from_n, to_n), -1.f, 1.f);
 
 			bool bVectorsAre180 = Utils::float_equals(cosTheta, -1.0f);
-			bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f) && !bVectorsAre180; //#TODO, don't want to change this mid-refactor; but second check seems unecessary and impossible
+			bool bVectorsAreSame = Utils::float_equals(cosTheta, 1.0f);
 
-			if (!bVectorsAreSame)
+			if (!bVectorsAreSame && !bVectorsAre180)
 			{
 				glm::vec3 rotAxis = glm::normalize(glm::cross(from_n, to_n)); //theoretically, I don't think I need to normalize if both normal; but generally I normalize the result of xproduct
 				float rotDegreesRadians = glm::acos(cosTheta);
@@ -260,9 +260,9 @@ namespace SA
 
 		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees)
 		{
-			glm::quat x = glm::angleAxis(rotationInDegrees.x, glm::vec3(1, 0, 0));
-			glm::quat y = glm::angleAxis(rotationInDegrees.y, glm::vec3(0, 1, 0));
-			glm::quat z = glm::angleAxis(rotationInDegrees.z, glm::vec3(0, 0, 1));
+			glm::quat x = glm::angleAxis(glm::radians(rotationInDegrees.x), glm::vec3(1, 0, 0));
+			glm::quat y = glm::angleAxis(glm::radians(rotationInDegrees.y), glm::vec3(0, 1, 0));
+			glm::quat z = glm::angleAxis(glm::radians(rotationInDegrees.z), glm::vec3(0, 0, 1));
 			return x * y * z;
 		}
 

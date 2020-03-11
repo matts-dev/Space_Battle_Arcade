@@ -14,6 +14,7 @@ namespace SA
 	{
 	public:
 		sp<Model3D> loadModel(const char* relative_filepath);
+		sp<Model3D> loadModel(const std::string& relative_filepath);
 		sp<Model3D> getModel(const std::string& key) const;
 
 		bool loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit = -1, bool useGammaCorrection = false);
