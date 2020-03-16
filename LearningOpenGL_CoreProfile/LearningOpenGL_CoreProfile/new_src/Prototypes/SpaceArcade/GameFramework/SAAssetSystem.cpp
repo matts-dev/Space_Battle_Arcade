@@ -15,6 +15,12 @@ namespace SA
 			ec(glDeleteTextures(1, &textureId));
 		}
 		loadedTextureIds.clear();
+
+		//Early clean up of resources before OpenGL context is destroyed; we cannot just destroy models here as someone may be holding shared ptr.
+		for (const auto& modelMapIter : loadedModel3Ds)
+		{
+			modelMapIter.second->releaseGPUData();
+		}
 	}
 
 	sp<Model3D> AssetSystem::loadModel(const char* relative_filepath)

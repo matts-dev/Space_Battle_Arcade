@@ -87,7 +87,6 @@ namespace SAT
 				transformedPoints[faceIdx.edge2.indexB]
 			);
 		}
-
 	}
 
 	void Shape::updateTransform(const glm::mat4& inTransform)

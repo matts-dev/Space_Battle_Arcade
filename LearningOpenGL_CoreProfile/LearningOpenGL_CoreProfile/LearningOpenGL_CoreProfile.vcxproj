@@ -472,6 +472,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\MemoryLeakTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Planet.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.cpp" />

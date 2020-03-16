@@ -12,6 +12,7 @@
 #include "../Game/SpaceArcade.h"
 #include "../Game/SAModSystem.h"
 #include "../Tools/SACollisionHelpers.h"
+#include "SAAssetSystem.h"
 
 
 
@@ -60,7 +61,8 @@ namespace SA
 		sp<SAT::Shape> modelCollision = nullptr;
 		try
 		{
-			newModel = new_sp<Model3D>(fullFilePath);
+			AssetSystem& assetSystem = GameBase::get().getAssetSystem();
+			newModel = assetSystem.loadModel(fullFilePath);
 			if (newModel)
 			{
 				TriangleProcessor processedModel = modelToCollisionTriangles(*newModel); //#TODO_minor this function perhaps should exist in this file

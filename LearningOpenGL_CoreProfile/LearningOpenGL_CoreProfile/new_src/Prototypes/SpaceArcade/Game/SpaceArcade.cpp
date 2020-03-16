@@ -294,13 +294,28 @@ namespace
 {
 	int trueMain()
 	{
-		SA::SpaceArcade& game = SA::SpaceArcade::get();
-		game.start();
+		//#SUGGESTED remove memory leak detecting code, it isn't very helpful (it cannot produce detailed output described at MSDN) with the way I've used c++.
+
+		//HEAP snapshots are much more informative.
+#if FIND_MEMORY_LEAKS
+		std::cout << "memory leak detection ON - remove this before release. This should not ship with release." << std::endl;
+#endif //FIND_MEMORY_LEAKS
+		{ //scoping object so that memory is freed before memory report
+			SA::SpaceArcade& game = SA::SpaceArcade::get();
+			game.start();
+		}
+	
+#if FIND_MEMORY_LEAKS
+		_CrtDumpMemoryLeaks(); //if multiple exit points are generated, use a the bitflag approach for printing this report 
+#endif //FIND_MEMORY_LEAKS
+
 		return 0;
 	}
 }
 
+
 int main()
 {
-	return trueMain();
+	int result = trueMain();
+	return result;
 }

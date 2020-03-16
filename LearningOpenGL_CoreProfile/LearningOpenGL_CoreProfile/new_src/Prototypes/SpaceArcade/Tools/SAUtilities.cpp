@@ -76,7 +76,7 @@ namespace SA
 				exit(-1);
 			}
 
-			GLuint textureID;
+			GLuint textureID=0;
 			ec(glGenTextures(1, &textureID));
 
 			if (texture_unit >= 0)
@@ -172,7 +172,7 @@ namespace SA
 			debugShader.setUniform3f("color", color);
 
 			//basically immediate mode, should be very bad performance
-			GLuint tmpVAO, tmpVBO;
+			GLuint tmpVAO=0, tmpVBO=0;
 			ec(glBindVertexArray(0));
 			ec(glGenVertexArrays(1, &tmpVAO));
 			ec(glBindVertexArray(tmpVAO));
@@ -233,7 +233,7 @@ namespace SA
 
 		glm::quat getRotationBetween(const glm::vec3& from_n, const glm::vec3& to_n)
 		{
-			glm::quat rot; //unit quaternion;
+			glm::quat rot = glm::quat{ 1, 0, 0, 0 };//unit quaternion;
 
 			float cosTheta = glm::clamp(glm::dot(from_n, to_n), -1.f, 1.f);
 

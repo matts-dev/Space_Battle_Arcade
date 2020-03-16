@@ -428,12 +428,12 @@ namespace
 
 //------------------------------------------------------------------------------------------------------------------
 
-		GLuint vao;
+		GLuint vao=0;
 		ec(glBindVertexArray(0));
 		ec(glGenVertexArrays(1, &vao));
 		ec(glBindVertexArray(vao));
 
-		GLuint vbo;
+		GLuint vbo=0;
 		ec(glGenBuffers(1, &vbo));
 		ec(glBindBuffer(GL_ARRAY_BUFFER, vbo));
 		ec(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
@@ -448,7 +448,7 @@ namespace
 
 		ec(glBindVertexArray(0)); //before unbinding any buffers, make sure VAO isn't recording state.
 
-		GLuint lampVAO;
+		GLuint lampVAO=0;
 		ec(glGenVertexArrays(1, &lampVAO));
 		ec(glBindVertexArray(lampVAO));
 

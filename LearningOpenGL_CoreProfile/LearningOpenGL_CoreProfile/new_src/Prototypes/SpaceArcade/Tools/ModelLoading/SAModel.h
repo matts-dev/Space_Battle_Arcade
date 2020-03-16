@@ -26,6 +26,7 @@ namespace SA
 
 	class Model3D
 	{
+		friend class AssetSystem;
 	public:
 
 		Model3D(const char* path);
@@ -62,6 +63,7 @@ namespace SA
 		std::vector<MaterialTexture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 
 	private: 
+		void releaseGPUData();
 		void updateCachedAABB(const glm::vec3& vertexPosition);
 
 	private: //bone methods
@@ -77,10 +79,12 @@ namespace SA
 		aiMatrix4x4 interpolateScaleKeys(aiNodeAnim* animNode, float animationTimeInTicks);
 
 	private: //members
-		std::vector<Mesh3D> meshes;
 		std::string directory;
+		bool bGPUReleased = false;
+		std::vector<Mesh3D> meshes;
 		std::vector<MaterialTexture> texturesLoaded;
 		std::map<std::string, Bone> allBonesByName;
+
 
 		/** This dtor will clean up graphs loaded; thus, this is a member variable to make lifetime of assimp graphs the same as the instance of this object.*/
 		Assimp::Importer importer;

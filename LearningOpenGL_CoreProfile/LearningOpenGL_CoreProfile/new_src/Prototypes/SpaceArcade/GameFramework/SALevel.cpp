@@ -52,6 +52,14 @@ namespace SA
 		bLevelActive = false;
 
 		//clear out the spawned entities so they are cleaned up before the spatial hash is cleaned up
+		for (const sp<WorldEntity>& worldEntity : worldEntities)
+		{
+			worldEntity->destroy();
+		}
+		for (const sp<RenderModelEntity>& renderEntity : renderEntities)
+		{
+			renderEntity->destroy();
+		}
 		worldEntities.clear();
 		renderEntities.clear();
 

@@ -76,6 +76,9 @@ namespace SA
 
 		const std::vector<Vertex>& getVertices() const { return vertices; }
 		const std::vector<unsigned int>& getIndices() const { return indices; }
+
+		/** this is destructive and will invalidate any copies of this mesh as they share gpu resources; this is why encapsulation of mesh will be very important*/
+		void releaseGPUData();
 	private:
 		//vertex data
 		std::vector<Vertex> vertices;
@@ -85,8 +88,9 @@ namespace SA
 		std::vector<int> boneIdData;
 		std::vector<float> boneWeightData;
 
-		GLuint VAO, VBO, VBO_TANGENTS, VBO_BONE_IDS, VBO_BONE_WEIGHTS, EAO;
+		GLuint VAO=0, VBO=0, VBO_TANGENTS=0, VBO_BONE_IDS=0, VBO_BONE_WEIGHTS=0, EAO=0;
 		GLuint modelVBO = 0;
+		bool bGPUReleased = false;
 		std::tuple<glm::vec3, glm::vec3> aabb;
 
 		void setupMesh();

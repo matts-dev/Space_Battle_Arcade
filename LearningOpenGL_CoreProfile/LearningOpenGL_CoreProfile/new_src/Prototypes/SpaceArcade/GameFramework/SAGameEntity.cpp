@@ -32,17 +32,20 @@ namespace SA
 
 	void GameEntity::destroy()
 	{
-		onDestroyed();
-		bPendingDestroy = true;
+		if (!bPendingDestroy)
+		{
+			onDestroyed();
+			bPendingDestroy = true;
 
-		//broadcast of destroyed needs to be delayed to next tick so that sp doesn't call dtor within during member function call
-		// eg:
-		//	 1. member detects projectile hit, 
-		//	 2. member calls destroy, 
-		//	 3. level is listening to destroy and cleans up only reference,
-		//	 4. call stack frame returns to member function, object attempts to do final clean up on deleted memory
-		// deferring destroy means call stack should not have any game entity functions on call stack during destroy
-		staticImplementation.pendingDestroy.push_back(sp_this());
+			//broadcast of destroyed needs to be delayed to next tick so that sp doesn't call dtor within during member function call
+			// eg:
+			//	 1. member detects projectile hit, 
+			//	 2. member calls destroy, 
+			//	 3. level is listening to destroy and cleans up only reference,
+			//	 4. call stack frame returns to member function, object attempts to do final clean up on deleted memory
+			// deferring destroy means call stack should not have any game entity functions on call stack during destroy
+			staticImplementation.pendingDestroy.push_back(sp_this());
+		}
 	}
 
 	void GameEntity::onDestroyed()

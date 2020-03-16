@@ -7,7 +7,7 @@
 #include <map>
 #include "..\GameFramework\RenderModelEntity.h"
 #include "SAUniformResourceLocators.h"
-
+#include "OptionalCompilationMacros.h"
 
 namespace SA
 {

@@ -1308,7 +1308,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 							int idx, const std::vector<sp<ShipPlacementEntity>>& placement_container
 						) 
 					{
-						if (idx >= 0 && (idx < placement_container.size()) )
+						if (idx >= 0 && (idx < int(placement_container.size())) )
 						{
 							if (const sp<ShipPlacementEntity>& placement = placement_container[idx])
 							{

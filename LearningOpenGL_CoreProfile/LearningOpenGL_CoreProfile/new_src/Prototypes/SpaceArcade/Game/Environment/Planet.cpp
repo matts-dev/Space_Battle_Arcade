@@ -12,6 +12,7 @@
 #include "../../Rendering/RenderData.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../GameFramework/SARenderSystem.h"
+#include "../../GameFramework/SAAssetSystem.h"
 
 namespace SA
 {
@@ -131,9 +132,12 @@ namespace SA
 
 	void Planet::postConstruct()
 	{
-		planetModel = new_sp<Model3D>("GameData/mods/SpaceArcade/Assets/Models3D/Planet/textured_planet.obj");
-		planetShader = new_sp<Shader>(planetShader_vs, planetShader_fs, false);
+		AssetSystem& assetSystem = GameBase::get().getAssetSystem();
 
+		planetModel = planetModel ? planetModel : assetSystem.loadModel("GameData/mods/SpaceArcade/Assets/Models3D/Planet/textured_planet.obj");
+		planetShader = planetShader ? planetShader : new_sp<Shader>(planetShader_vs, planetShader_fs, false);
+
+		//#TODO have these load textures from asset system once shared configured textures(mips, etc) are a thing 
 		assert(data.albedo1_filepath.has_value());
 		albedo0Tex = data.albedo1_filepath.has_value() ? new_sp<Texture_2D>(data.albedo1_filepath.value()) : nullptr;
 		albedo1Tex = data.albedo2_filepath.has_value() ? new_sp<Texture_2D>(data.albedo2_filepath.value()) : nullptr;

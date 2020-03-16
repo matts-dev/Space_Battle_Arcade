@@ -70,14 +70,14 @@ namespace SA
 		template<typename T> wp<T> requestTypedReference_Safe() { return std::dynamic_pointer_cast<T>(sp_this()); }
 		template<typename T> wp<T> requestTypedReference_Nonsafe() { return std::static_pointer_cast<T>(sp_this()); }
 
+		/* Marks an entity for pending destroy */
+		void destroy();
 
 	protected:
 		/* new_sp will call this function after the object has been created, allowing GameEntities 
 		   to subscribe to delegates immediately after construction*/
 		virtual void postConstruct() {};
 
-		/* Marks an entity for pending destroy */
-		void destroy();
 		virtual void onDestroyed();
 
 		/** Not intended to be called directly; please use macro "sp_this()" to avoid specifying template types*/

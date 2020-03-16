@@ -2,7 +2,8 @@
 #include <map>
 #include <chrono>
 #include <cstdint>
-#include "..\SAUtilities.h"
+#include "../SAUtilities.h"
+#include "../../Rendering/OpenGLHelpers.h"
 
 
 namespace SA
@@ -24,7 +25,23 @@ namespace SA
 
 	Model3D::~Model3D()
 	{
+		releaseGPUData();
+	}
 
+	void Model3D::releaseGPUData()
+	{
+		if (!bGPUReleased)
+		{
+			bGPUReleased = true;
+			for (Mesh3D& mesh : meshes)
+			{
+				mesh.releaseGPUData();
+			}
+			for (MaterialTexture& mat : texturesLoaded)
+			{
+				ec(glDeleteTextures(1, &mat.id));
+			}
+		}
 	}
 
 	void Model3D::draw(Shader& shader, bool bBindMaterials /*= true*/) const
@@ -627,4 +644,7 @@ namespace SA
 		}
 		return nullptr;
 	}
+
+
+
 }

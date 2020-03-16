@@ -98,10 +98,7 @@ namespace SA
 	Mesh3D::~Mesh3D()
 	{
 		//be careful, copy ctor kills buffers silently if these are uncommented (currently happening in instancing tutorial)
-		//ec(glDeleteBuffers(1, &VBO));
-		//ec(glDeleteBuffers(1, &EAO));
-		//ec(glDeleteBuffers(1, &modelVBO));
-		//ec(glDeleteVertexArrays(1, &VAO));
+		//releaseGPUData();
 	}
 
 	void Mesh3D::draw(Shader& shader, bool bBindMaterials /*= true*/) const
@@ -238,6 +235,28 @@ namespace SA
 		}
 
 		ec(glBindVertexArray(0));
+	}
+
+	void Mesh3D::releaseGPUData()
+	{
+		//if you get stuck in this function on shutdown, you probably didn't manage your model through the asset system.
+		if (!bGPUReleased)
+		{
+			bGPUReleased = true;
+
+			//#TODO gpu resource - perhaps make this self managed like other GPU resources that come/go depending on if we're losing an opengl context.
+			ec(glDeleteVertexArrays(1, &VAO));
+			ec(glDeleteBuffers(1, &VBO));
+			ec(glDeleteBuffers(1, &VBO_TANGENTS));
+			ec(glDeleteBuffers(1, &VBO_BONE_IDS));
+			ec(glDeleteBuffers(1, &VBO_BONE_WEIGHTS));
+			ec(glDeleteBuffers(1, &EAO));
+
+			for (MaterialTexture& mat : textures)
+			{
+				ec(glDeleteTextures(1, &mat.id));
+			}
+		}
 	}
 
 }
