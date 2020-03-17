@@ -48,6 +48,7 @@ namespace SA
 	{
 		if (getModel())
 		{
+			shader.setUniformMatrix4fv(modelMatrixUniform.c_str(), 1, GL_FALSE, glm::value_ptr(cachedModelMat_PxL));
 			RenderModelEntity::draw(shader);
 		}
 	}
@@ -83,9 +84,9 @@ namespace SA
 		cachedModelMat_PxL = parentXform * getModelMatrix();
 	}
 
-	void ShipPlacementEntity::replacePlacementConfig(const PlacementSubConfig& newConfig, ConfigBase& owningConfig)
+	void ShipPlacementEntity::replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig)
 	{
-		bool bModelsAreDifferent = newConfig.relativeFilePath != newConfig.relativeFilePath;
+		bool bModelsAreDifferent = config.relativeFilePath != newConfig.relativeFilePath;
 		config = newConfig;
 
 		if (bModelsAreDifferent)
@@ -104,7 +105,7 @@ namespace SA
 	}
 }
 
-std::string SA::PlacementSubConfig::getFullPath(ConfigBase& owningConfig) const
+std::string SA::PlacementSubConfig::getFullPath(const ConfigBase& owningConfig) const
 {
 	return owningConfig.getOwningModDir() + relativeFilePath;
 }

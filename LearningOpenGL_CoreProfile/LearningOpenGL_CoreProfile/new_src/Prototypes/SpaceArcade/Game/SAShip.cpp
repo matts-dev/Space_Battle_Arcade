@@ -59,6 +59,8 @@ namespace SA
 		shipData = spawnData.spawnConfig;
 		bCollisionReflectForward = shipData->getCollisionReflectForward();
 
+		ctor_configureObjectivePlacements();
+
 		////////////////////////////////////////////////////////
 		// Make components
 		////////////////////////////////////////////////////////
@@ -107,7 +109,7 @@ namespace SA
 
 	Ship::~Ship()
 	{
-		//#TODO create LP bindings for delegates. Have ships ticked via LP ticker. Draw debug box for LP ticker to quickly spot meory leaks when they happen. #memory_leaks
+		//#TODO create LP bindings for delegates. Have ships ticked via LP ticker. Draw debug box for LP ticker to quickly spot memory leaks when they happen. #memory_leaks
 		//adding for debug 
 #define LOG_SHIP_DTOR 0
 #if LOG_SHIP_DTOR 
@@ -241,6 +243,21 @@ namespace SA
 				avoidSphere->render();
 			}
 		}
+
+		//assuming same shader for ship will be used for placements
+		static const auto& renderPlacements = [](const std::vector<sp<ShipPlacementEntity>>& placements, Shader& shader)
+		{
+			for (const sp<ShipPlacementEntity>& placement : placements)
+			{
+				if (placement)
+				{
+					placement->draw(shader);
+				}
+			}
+		};
+		renderPlacements(defenseEntities, shader);
+		renderPlacements(communicationEntities, shader);
+		renderPlacements(turretEntities, shader);
 	}
 
 	void Ship::onDestroyed()
@@ -497,14 +514,40 @@ namespace SA
 			activeShield_sp->xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f))); //#optimize rotating dir is expensive; perhaps cache with dirty flag?
 		}
 
+		glm::mat4 modelMatrix = xform.getModelMatrix();
 		if (avoidanceSpheres.size() > 0)
 		{
-			glm::mat4 modelMatrix = xform.getModelMatrix();
 			for (sp<AvoidanceSphere>& myAvoidSphere : avoidanceSpheres)
 			{
 				myAvoidSphere->setParentXform(modelMatrix);
 			}
 		}
+
+		//////////////////////////////////////////////////////////
+		// placements - must be handled after updates to position
+		//////////////////////////////////////////////////////////
+		//#todo #scenenodes no need to pass parent xforms if scene node hierarchy is used
+		if (defenseEntities.size() || communicationEntities.size() || turretEntities.size())
+		{
+			glm::mat4 configXform = collisionData->getRootXform();
+			glm::mat4 fullParentXform = modelMatrix * configXform;
+
+			static const auto& tickPlacements = [](float dt_sec, const std::vector<sp<ShipPlacementEntity>>& placements, const glm::mat4& placementParentXform)
+			{
+				for (const sp<ShipPlacementEntity>& placement : placements) 
+				{
+					if (placement) 
+					{
+						placement->setParentXform(placementParentXform);
+						placement->tick(dt_sec);
+					} 
+				}
+			};
+			tickPlacements(dt_sec, defenseEntities, fullParentXform);
+			tickPlacements(dt_sec, communicationEntities, fullParentXform);
+			tickPlacements(dt_sec, turretEntities, fullParentXform);
+		}
+
 	} 
 
 	void Ship::tickKinematic(float dt_sec)
@@ -851,6 +894,29 @@ namespace SA
 		renderPercentageDebugWidget(1.f, percFrac);
 	}
 
+
+	void Ship::ctor_configureObjectivePlacements()
+	{
+		//called from ctor -- do not call virtuals from this function.
+		assert(shipData);
+		if (shipData && defenseEntities.size() == 0 && communicationEntities.size() == 0 && turretEntities.size() == 0)
+		{
+			auto processPlacements = [&](const std::vector<PlacementSubConfig>& typedConfigs, std::vector<sp<ShipPlacementEntity>>& outputContainer)
+			{
+				for (const PlacementSubConfig& placementConfig : typedConfigs)
+				{
+					sp<ShipPlacementEntity> newPlacement = new_sp<ShipPlacementEntity>();
+					newPlacement->replacePlacementConfig(placementConfig, *shipData);
+					outputContainer.push_back(newPlacement);
+				}
+			};
+
+			processPlacements(shipData->getDefensePlacements(), defenseEntities);
+			processPlacements(shipData->getCommuncationPlacements(), defenseEntities);
+			processPlacements(shipData->getTurretPlacements(), defenseEntities);
+
+		}
+	}
 
 	void Ship::renderPercentageDebugWidget(float rightOffset, float percFrac) const
 	{

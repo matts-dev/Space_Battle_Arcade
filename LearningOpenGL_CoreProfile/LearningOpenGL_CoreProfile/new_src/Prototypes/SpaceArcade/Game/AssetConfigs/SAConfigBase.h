@@ -21,7 +21,7 @@ namespace SA
 
 		const std::string& getName() const { return name; }
 		bool isDeletable() const { return bIsDeletable; }
-		const std::string& getOwningModDir() { return owningModDir; }
+		const std::string& getOwningModDir() const { return owningModDir; }
 	protected:
 		void save(); //access restricted, only allow certain classes to save this.
 

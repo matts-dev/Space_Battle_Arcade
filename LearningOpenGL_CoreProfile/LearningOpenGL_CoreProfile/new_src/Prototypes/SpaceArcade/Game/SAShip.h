@@ -34,6 +34,7 @@ namespace SA
 	class ShipEnergyComponent;
 	class RNG;
 	class ShipCamera;
+	class ShipPlacementEntity;
 
 	struct HitPoints
 	{
@@ -133,6 +134,10 @@ namespace SA
 		void debugRender_avoidance(float accumulatedAvoidanceStrength) const;
 		bool hasAvoidanceSpheres() { return avoidanceSpheres.size() > 0; }
 		////////////////////////////////////////////////////////
+		// objectives
+		////////////////////////////////////////////////////////
+		void ctor_configureObjectivePlacements();
+		////////////////////////////////////////////////////////
 		// Debug
 		////////////////////////////////////////////////////////
 		void renderPercentageDebugWidget(float rightOffset, float percFrac) const;
@@ -171,6 +176,10 @@ namespace SA
 		TeamData cachedTeamData;
 		sp<const SpawnConfig> shipData;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
+
+		std::vector<sp<ShipPlacementEntity>> defenseEntities;
+		std::vector<sp<ShipPlacementEntity>> turretEntities;
+		std::vector<sp<ShipPlacementEntity>> communicationEntities;
 
 		ShipEnergyComponent* energyComp = nullptr;
 

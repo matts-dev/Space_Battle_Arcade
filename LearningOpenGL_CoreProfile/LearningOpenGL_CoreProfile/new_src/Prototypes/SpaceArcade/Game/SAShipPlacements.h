@@ -30,7 +30,7 @@ namespace SA
 		std::string relativeFilePath;
 		PlacementType placementType;
 			
-		std::string getFullPath(ConfigBase& owningConfig) const;
+		std::string getFullPath(const ConfigBase& owningConfig) const;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,8 @@ namespace SA
 		virtual void setTransform(const Transform& inTransform) override;
 		/** returns the model matrix considering the parent's transform*/
 		const glm::mat4& getParentXLocalModelMatrix(){ return cachedModelMat_PxL; }
+
+		void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig);
 	protected:
 		virtual void postConstruct() override;
 	private:
@@ -55,7 +57,8 @@ namespace SA
 		void updateModelMatrixCache();
 	private: //model editor special access
 		friend class ModelConfigurerEditor_Level;
-		void replacePlacementConfig(const PlacementSubConfig& newConfig, ConfigBase& owningConfig);
+	public:
+		std::string modelMatrixUniform = "model";
 	private:
 		sp<CollisionData> collision;
 		PlacementSubConfig config;
