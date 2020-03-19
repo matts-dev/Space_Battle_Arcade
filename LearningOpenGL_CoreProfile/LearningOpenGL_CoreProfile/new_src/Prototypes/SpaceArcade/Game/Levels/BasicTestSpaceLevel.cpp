@@ -57,7 +57,6 @@ namespace SA
 			modSystem->onActiveModChanging.addWeakObj(sp_this(), &BasicTestSpaceLevel::handleActiveModChanging);
 		}
 
-		collisionDebugRenderer = new_sp<CollisionDebugRenderer>();
 		projectileWidget = new_sp<ProjectileTweakerWidget>();
 		hitboxPickerWidget = new_sp<HitboxPicker>();
 
@@ -402,8 +401,8 @@ namespace SA
 				ImGui::TextWrapped("Debug Variables; if option is not visible it may not be compiled if specific debug macro is not defined. Check defined macros. ");
 				ImGui::Separator();
 #if SA_RENDER_DEBUG_INFO
-				ImGui::Checkbox("Render entity OBB pretests", &bRenderCollisionOBB_ui);
-				ImGui::Checkbox("Render entity collision shapes", &bRenderCollisionShapes_ui);
+				ImGui::Checkbox("Render entity OBB pretests", &CollisionDebugRenderer::bRenderCollisionOBB_ui);
+				ImGui::Checkbox("Render entity collision shapes", &CollisionDebugRenderer::bRenderCollisionShapes_ui);
 #endif //SA_RENDER_DEBUG_INFO
 #if SA_CAPTURE_SPATIAL_HASH_CELLS
 				ImGui::Checkbox("Render Spatial Hash Cells", &game.bRenderDebugCells);
@@ -793,7 +792,7 @@ namespace SA
 		/////////////////////////////////////////////
 		//old method of rendering debug information//
 		/////////////////////////////////////////////
-		bool bShouldLoopOverShips = bRenderCollisionOBB_ui || bRenderCollisionShapes_ui;
+		bool bShouldLoopOverShips = CollisionDebugRenderer::bRenderCollisionOBB_ui || CollisionDebugRenderer::bRenderCollisionShapes_ui;
 		if (bShouldLoopOverShips)
 		{
 			for (const sp<Ship> ship : spawnedShips)
@@ -804,26 +803,7 @@ namespace SA
 				{
 					glm::mat4 shipModelMat = ship->getTransform().getModelMatrix();
 
-					if (bRenderCollisionOBB_ui)
-					{
-						const glm::mat4& aabbLocalXform = collisionData->getAABBLocalXform();
-						collisionDebugRenderer->renderOBB(shipModelMat, aabbLocalXform, view, projection,
-							glm::vec3(0, 0, 1), GL_LINE, GL_FILL);
-					}
-
-					if (bRenderCollisionShapes_ui)
-					{
-						using ConstShapeData = CollisionData::ConstShapeData;
-						for (const ConstShapeData shapeData : collisionData->getConstShapeData())
-						{
-							collisionDebugRenderer->renderShape(
-								shapeData.shapeType,
-								shipModelMat * shapeData.localXform,
-								view, projection, glm::vec3(1, 0, 0), GL_LINE, GL_FILL
-							);
-						}
-					}
-
+					collisionData->debugRender(shipModelMat, view, projection);
 				}
 			}
 		}

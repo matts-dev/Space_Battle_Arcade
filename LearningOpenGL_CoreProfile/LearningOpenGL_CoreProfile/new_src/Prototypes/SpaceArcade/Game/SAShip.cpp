@@ -92,8 +92,9 @@ namespace SA
 		//WARNING: caching world sp will create cyclic reference
 		if (LevelBase* world = getWorld())
 		{
-			Transform xform = getTransform();
-			glm::mat4 xform_m = xform.getModelMatrix();
+			//bug? not using below. need to update collisionData transform?
+			//Transform xform = getTransform();
+			//glm::mat4 xform_m = xform.getModelMatrix();
 			collisionHandle = world->getWorldGrid().insert(*this, collisionData->getWorldOBB());
 		}
 		else

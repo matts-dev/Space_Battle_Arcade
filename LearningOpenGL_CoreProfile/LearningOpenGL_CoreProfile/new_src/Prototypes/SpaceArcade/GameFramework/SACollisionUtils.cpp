@@ -13,6 +13,7 @@
 #include "../Game/SAModSystem.h"
 #include "../Tools/SACollisionHelpers.h"
 #include "SAAssetSystem.h"
+#include "../Game/SACollisionDebugRenderer.h"
 
 
 
@@ -179,6 +180,62 @@ namespace SA
 	CollisionData::CollisionData()
 	{
 		setOBBShape(new_sp<SAT::CubeShape>()); //would be nice if we didn't need to heap allocate every time, but each shape has a unique transform
+	}
+
+#if SA_RENDER_DEBUG_INFO
+	void CollisionData::debugRender(const glm::mat4& modelMat, const glm::mat4& view, const glm::mat4& projection) const
+	{
+		static sp<CollisionDebugRenderer> collisionDebugRenderer = new_sp<CollisionDebugRenderer>();
+		
+		if (CollisionDebugRenderer::bRenderCollisionOBB_ui)
+		{
+			const glm::mat4& aabbLocalXform = getAABBLocalXform();
+			collisionDebugRenderer->renderOBB(modelMat, aabbLocalXform, view, projection,
+				glm::vec3(0, 0, 1), GL_LINE, GL_FILL);
+		}
+
+		if (CollisionDebugRenderer::bRenderCollisionShapes_ui)
+		{
+			using ConstShapeData = CollisionData::ConstShapeData;
+			for (const ConstShapeData shapeData : getConstShapeData())
+			{
+				collisionDebugRenderer->renderShape(
+					shapeData.shapeType,
+					modelMat * shapeData.localXform,
+					view, projection, glm::vec3(1, 0, 0), GL_LINE, GL_FILL
+				);
+			}
+		}
+	}
+#endif //SA_RENDER_DEBUG_INFO
+
+	void CollisionData::setAABBtoModelBounds(const Model3D& model, const std::optional<glm::mat4>& staticRootModelOffsetMatrix)
+	{
+		using namespace glm;
+
+		CollisionShapeFactory& shapeFactory = SpaceArcade::get().getCollisionShapeFactoryRef();
+
+		std::tuple<vec3, vec3> aabbRange = model.getAABB();
+		vec3 aabbSize = std::get<1>(aabbRange) - std::get<0>(aabbRange); //max - min
+
+		//correct for model center mis-alignments; this should be cached in game so it isn't calculated each frame
+		vec3 aabbCenterPnt = std::get</*min*/0>(aabbRange) + (0.5f * aabbSize);
+
+		//we can now use aabbCenter as a translation vector for the aabb!
+		mat4 aabbModel = glm::translate(staticRootModelOffsetMatrix.value_or(glm::mat4(1.f)), aabbCenterPnt);
+		aabbModel = glm::scale(aabbModel, aabbSize);
+		std::array<glm::vec4, 8>& collisionLocalAABB = getLocalAABB();
+		collisionLocalAABB[0] = aabbModel * SH::AABB[0];
+		collisionLocalAABB[1] = aabbModel * SH::AABB[1];
+		collisionLocalAABB[2] = aabbModel * SH::AABB[2];
+		collisionLocalAABB[3] = aabbModel * SH::AABB[3];
+		collisionLocalAABB[4] = aabbModel * SH::AABB[4];
+		collisionLocalAABB[5] = aabbModel * SH::AABB[5];
+		collisionLocalAABB[6] = aabbModel * SH::AABB[6];
+		collisionLocalAABB[7] = aabbModel * SH::AABB[7];
+
+		setAABBLocalXform(aabbModel);
+		setOBBShape(shapeFactory.generateShape(ECollisionShape::CUBE));
 	}
 
 	void CollisionData::updateToNewWorldTransform(glm::mat4 worldXform)

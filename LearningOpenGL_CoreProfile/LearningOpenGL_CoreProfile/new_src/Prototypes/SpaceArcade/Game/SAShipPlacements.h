@@ -5,6 +5,7 @@
 #include "../GameFramework/RenderModelEntity.h"
 #include "SAProjectileSystem.h"
 #include <optional>
+#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 
 namespace SA
 {
@@ -28,9 +29,11 @@ namespace SA
 		glm::vec3 rotation_deg{ 0.f }; //yaw, pitch, roll
 		glm::vec3 scale{ 1.f };
 		std::string relativeFilePath;
+		std::string relativeCollisionModelFilePath;
 		PlacementType placementType;
 			
 		std::string getFullPath(const ConfigBase& owningConfig) const;
+		std::string getCollisionModelFullPath(const ConfigBase& owningConfig) const;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +63,8 @@ namespace SA
 	public:
 		std::string modelMatrixUniform = "model";
 	private:
-		sp<CollisionData> collision;
+		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
+		sp<CollisionData> collisionData = nullptr;
 		PlacementSubConfig config;
 		glm::mat4 cachedModelMat_PxL{ 1.f };
 		glm::mat4 parentXform{ 1.f };

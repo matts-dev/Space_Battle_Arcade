@@ -11,7 +11,6 @@ namespace SA
 	class Mod;
 	class SpawnConfig;
 	class ProjectileConfig;
-	class CollisionDebugRenderer;
 	class ProjectileTweakerWidget;
 	class HitboxPicker;
 	class ParticleConfig;
@@ -54,10 +53,6 @@ namespace SA
 		virtual void onCreateLocalPlanets() override;
 
 	private: //debug variables
-#if SA_RENDER_DEBUG_INFO
-		bool bRenderCollisionOBB_ui = false;
-		bool bRenderCollisionShapes_ui = false;
-#endif //SA_RENDER_DEBUG_INFO
 		bool bForceShipsToFire_ui = false;
 		bool bEnableStarField = true;
 
@@ -89,7 +84,6 @@ namespace SA
 		//std::multimap<RenderModelEntity*, wp<RenderModelEntity>> cachedSpawnEntities;
 		sp<SpawnConfig> fighterSpawnConfig;
 		sp<SpawnConfig> carrierSpawnConfig;
-		sp<CollisionDebugRenderer> collisionDebugRenderer;
 		sp<ProjectileTweakerWidget> projectileWidget;
 		sp<HitboxPicker> hitboxPickerWidget;
 

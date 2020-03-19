@@ -67,27 +67,7 @@ namespace SA
 		////////////////////////////////////////////////////////
 		if (sp<Model3D> model = getModel())
 		{
-			std::tuple<vec3, vec3> aabbRange = model->getAABB();
-			vec3 aabbSize = std::get<1>(aabbRange) - std::get<0>(aabbRange); //max - min
-
-			//correct for model center mis-alignments; this should be cached in game so it isn't calculated each frame
-			vec3 aabbCenterPnt = std::get</*min*/0>(aabbRange) + (0.5f * aabbSize);
-
-			//we can now use aabbCenter as a translation vector for the aabb!
-			mat4 aabbModel = glm::translate(rootModelMat, aabbCenterPnt);
-			aabbModel = glm::scale(aabbModel, aabbSize);
-			std::array<glm::vec4, 8>& collisionLocalAABB = collisionInfo->getLocalAABB();
-			collisionLocalAABB[0] = aabbModel * SH::AABB[0];
-			collisionLocalAABB[1] = aabbModel * SH::AABB[1];
-			collisionLocalAABB[2] = aabbModel * SH::AABB[2];
-			collisionLocalAABB[3] = aabbModel * SH::AABB[3];
-			collisionLocalAABB[4] = aabbModel * SH::AABB[4];
-			collisionLocalAABB[5] = aabbModel * SH::AABB[5];
-			collisionLocalAABB[6] = aabbModel * SH::AABB[6];
-			collisionLocalAABB[7] = aabbModel * SH::AABB[7];
-
-			collisionInfo->setAABBLocalXform(aabbModel);
-			collisionInfo->setOBBShape(shapeFactory.generateShape(ECollisionShape::CUBE));
+			collisionInfo->setAABBtoModelBounds(*model, rootModelMat);
 		}
 		else
 		{

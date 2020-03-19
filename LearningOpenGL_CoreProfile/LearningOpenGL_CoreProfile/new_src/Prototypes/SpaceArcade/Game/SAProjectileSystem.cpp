@@ -137,6 +137,7 @@ namespace SA
 				float hitDistance = glm::sqrt(smallestDistanceCollision_2);
 				glm::vec3 hit = start + offsetDir * hitDistance;
 
+				//#TODO #componentize this interface to be a component to avoid dynamic cast. This will require comp delegate notify owner though, which may be slower than dyn cast; profiling and optimizatin likely needed.
 				if (IProjectileHitNotifiable* toNotify = dynamic_cast<IProjectileHitNotifiable*>(collidingEntity))
 				{
 					toNotify->notifyProjectileCollision(*this, hit);

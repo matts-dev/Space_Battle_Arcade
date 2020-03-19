@@ -2,6 +2,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <optional>
 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
@@ -29,6 +30,7 @@ namespace SA
 	enum class ECollisionShape : int;
 	class WorldEntity;
 	class SpawnConfig;
+	class Model3D;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// The available collision shapes
@@ -77,6 +79,10 @@ namespace SA
 
 		CollisionData();
 
+#if SA_RENDER_DEBUG_INFO
+		void debugRender(const glm::mat4& modelMat, const glm::mat4& view, const glm::mat4& projection) const;
+#endif //SA_RENDER_DEBUG_INFO
+
 		const glm::mat4& getRootXform() const { return rootXform; }
 		void setRootXform(const glm::mat4& newXform) { rootXform = newXform; }
 
@@ -96,6 +102,8 @@ namespace SA
 			obbShape = inShape;
 			obbShape_constView = inShape; 
 		}
+
+		void setAABBtoModelBounds(const Model3D& model, const std::optional<glm::mat4>& staticRootModelOffsetMatrix = std::nullopt);
 
 		/** const version returns an immutable SAT::Shape object
 			non-const version is mostly immutable, but the shape object can be manipulated (but not changed to a new shape)

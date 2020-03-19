@@ -67,19 +67,6 @@ namespace SA
 
 		collisionShapeFactory = new_sp<CollisionShapeFactory>();
 
-		////set up unit cube
-		//ec(glGenVertexArrays(1, &cubeVAO));
-		//ec(glBindVertexArray(cubeVAO));
-		//ec(glGenBuffers(1, &cubeVBO));
-		//ec(glBindBuffer(GL_ARRAY_BUFFER, cubeVBO));
-		//ec(glBufferData(GL_ARRAY_BUFFER, sizeof(Utils::unitCubeVertices_Position_Normal), Utils::unitCubeVertices_Position_Normal, GL_STATIC_DRAW));
-		//ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0)));
-		//ec(glEnableVertexAttribArray(0));
-		//ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))));
-		//ec(glEnableVertexAttribArray(1));
-		//ec(glBindVertexArray(0));
-
-
 		//camera
 		fpsCamera = new_sp<SA::CameraFPS>(45.f, 0.f, 0.f);
 		fpsCamera->registerToWindowCallbacks_v(window);
@@ -103,8 +90,8 @@ namespace SA
 		hud = new_sp<HUD>();
 
 		//make sure resources are loaded before the level starts
-		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
-		sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
+		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);
 
 		return window;
@@ -113,9 +100,6 @@ namespace SA
 	void SpaceArcade::shutDown() 
 	{
 		fpsCamera->deregisterToWindowCallbacks_v();
-
-		//ec(glDeleteVertexArrays(1, &cubeVAO));
-		//ec(glDeleteBuffers(1, &cubeVBO));
 	}
 
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)

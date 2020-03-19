@@ -10,6 +10,10 @@
 
 namespace SA
 {
+
+	/*static*/ bool CollisionDebugRenderer::bRenderCollisionShapes_ui = false;
+	/*static*/ bool CollisionDebugRenderer::bRenderCollisionOBB_ui = false;
+
 	void CollisionDebugRenderer::postConstruct()
 	{
 		SpaceArcade& game = SpaceArcade::get();

@@ -25,6 +25,9 @@ namespace SA
 
 	class CollisionDebugRenderer : public GameEntity
 	{
+	public:
+		static bool bRenderCollisionShapes_ui;
+		static bool bRenderCollisionOBB_ui;
 	private:
 		virtual void postConstruct() override;
 
