@@ -6,11 +6,12 @@
 #include "SAProjectileSystem.h"
 #include <optional>
 #include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "../Tools/DataStructures/AdvancedPtrs.h"
 
 namespace SA
 {
 	class ConfigBase;
-
+	class ActiveParticleGroup;
 
 	enum class PlacementType
 	{
@@ -41,9 +42,15 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class ShipPlacementEntity : public RenderModelEntity, public IProjectileHitNotifiable
 	{
+		using Parent = RenderModelEntity;
 	public:
 		ShipPlacementEntity() : RenderModelEntity(nullptr, Transform{})
 		{}
+		glm::vec3 ShieldColor() const { return shieldColor; }
+		void ShieldColor(glm::vec3 val) { shieldColor = val; }
+	protected:
+		virtual void postConstruct() override;
+		virtual void onDestroyed() override;
 	public:
 		virtual void draw(Shader& shader) override;
 		void setParentXform(glm::mat4 parentXform); //#TODO #scenenodes
@@ -51,12 +58,12 @@ namespace SA
 		virtual void setTransform(const Transform& inTransform) override;
 		/** returns the model matrix considering the parent's transform*/
 		const glm::mat4& getParentXLocalModelMatrix(){ return cachedModelMat_PxL; }
-
 		void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig);
-	protected:
-		virtual void postConstruct() override;
+		void adjustHP(int amount);
 	private:
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
+		void doShieldFX();
+		void doDestroyFX();
 		void updateModelMatrixCache();
 	private: //model editor special access
 		friend class ModelConfigurerEditor_Level;
@@ -65,8 +72,10 @@ namespace SA
 	private:
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
 		sp<CollisionData> collisionData = nullptr;
+		fwp<ActiveParticleGroup> activeShieldEffect;
 		PlacementSubConfig config;
 		glm::mat4 cachedModelMat_PxL{ 1.f };
 		glm::mat4 parentXform{ 1.f };
+		glm::vec3 shieldColor = glm::vec3(1.f);
 	};
 }

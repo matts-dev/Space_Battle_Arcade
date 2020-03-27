@@ -39,6 +39,8 @@
 #include "../Rendering/Lights/SADirectionLight.h"
 #include "../Rendering/RenderData.h"
 #include "../GameFramework/SARenderSystem.h"
+#include "Cheats/SpaceArcadeCheatManager.h"
+#include "../GameFramework/developer_console/DeveloperConsole.h"
 
 namespace SA
 {
@@ -88,6 +90,7 @@ namespace SA
 
 		ui_root = new_sp<UIRootWindow>();
 		hud = new_sp<HUD>();
+		console = new_sp<DeveloperConsole>();
 
 		//make sure resources are loaded before the level starts
 		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
@@ -141,7 +144,7 @@ namespace SA
 		//this probably will need to become event based and have handler stack
 		updateInput(deltaTimeSecs);
 
-		//fpsCamera->tickKeyboardInput(deltaTimeSecs);
+		console->tick(deltaTimeSecs);
 
 		ui_root->tick(deltaTimeSecs);
 
@@ -229,6 +232,12 @@ namespace SA
 		RegisterCustomSystem(modSystem);
 	}
 
+	sp<SA::CheatSystemBase> SpaceArcade::createCheatSystemSubclass()
+	{
+		//custom implementation of cheat manager for this game.
+		return new_sp<SpaceArcadeCheatSystem>();
+	}
+
 	void SpaceArcade::updateInput(float detltaTimeSec)
 	{
 		if (const sp<Window> windowObj = getWindowSystem().getPrimaryWindow())
@@ -255,6 +264,14 @@ namespace SA
 							camera->setCursorMode(ui_root->getUIVisible());
 						}
 					}
+				}
+			}
+
+			if (bEnableDevConsoleFeature && console)
+			{
+				if (input.isKeyJustPressed(window, GLFW_KEY_GRAVE_ACCENT))
+				{
+					console->toggle();
 				}
 			}
 			 

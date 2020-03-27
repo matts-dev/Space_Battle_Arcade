@@ -21,6 +21,8 @@ namespace SA
 	class RenderSystem;
 
 	class Window;
+	
+	class CheatSystemBase;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	struct EngineConstants
@@ -36,7 +38,6 @@ namespace SA
 		GamebaseIdentityKey() {}
 	};
 	//////////////////////////////////////////////////////////////////////////////////////
-
 
 	/** 
 		The Game Base class; this is the root to the game systems and has a static getter. 
@@ -79,6 +80,7 @@ namespace SA
 		bool bStarted = false;
 		bool bExitGame = false;
 
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  GAME LOOP
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -115,16 +117,19 @@ namespace SA
 		inline RNGSystem& getRNGSystem() noexcept { return *systemRNG; }
 		inline DebugRenderSystem& getDebugRenderSystem() noexcept { return *debugRenderSystem; }
 		inline RenderSystem& getRenderSystem() noexcept { return *renderSystem; }
-		
 		inline AutomatedTestSystem& getAutomatedTestSystem() noexcept { return *automatedTestSystem;  };
-
-		/** this isn't as encapsulated as I'd like, but will not likely be an issue */
-		void subscribePostRender(const sp<SystemBase>& system);
+		inline CheatSystemBase& getCheatSystem() { return *cheatSystem; }
 	private:
-		bool bCustomSystemRegistrationAllowedTimeWindow = false;
+		void createEngineSystems();
+		/**polymorphic systems require virtual override to define class. If nullptr detected these systems should create a default instance.*/
+		virtual sp<CheatSystemBase> createCheatSystemSubclass(){ return nullptr;}
 	protected:
 		virtual void onRegisterCustomSystem() {};
 		void RegisterCustomSystem(const sp<SystemBase>& system);
+	public:
+		void subscribePostRender(const sp<SystemBase>& system); // this isn't as encapsulated as I'd like, but will not likely be an issue 
+	private:
+		bool bCustomSystemRegistrationAllowedTimeWindow = false;
 
 	private: //systems
 		sp<WindowSystem> windowSystem;
@@ -136,6 +141,7 @@ namespace SA
 		sp<AutomatedTestSystem> automatedTestSystem;
 		sp<DebugRenderSystem> debugRenderSystem;
 		sp<RenderSystem> renderSystem;
+		sp<CheatSystemBase> cheatSystem;
 
 		std::set< sp<SystemBase> > systems;
 		std::set< sp<SystemBase> > postRenderNotifys;

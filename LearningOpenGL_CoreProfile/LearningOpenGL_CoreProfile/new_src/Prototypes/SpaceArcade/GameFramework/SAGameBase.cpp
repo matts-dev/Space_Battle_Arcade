@@ -15,6 +15,7 @@
 #include "SARandomNumberGenerationSystem.h"
 #include "SADebugRenderSystem.h"
 #include "SARenderSystem.h"
+#include "CheatSystemBase.h"
 
 namespace SA
 {
@@ -38,34 +39,6 @@ namespace SA
 		//initialize time management systems
 		systemTimeManager = timeSystem.createManager();
 		timeSystem.markManagerCritical(TimeSystem::PrivateKey{}, systemTimeManager);
-		
-		//create and register systems
-		windowSystem = new_sp<WindowSystem>();
-		systems.insert(windowSystem);
-
-		assetSystem = new_sp<AssetSystem>();
-		systems.insert(assetSystem);
-
-		levelSystem = new_sp<LevelSystem>();
-		systems.insert(levelSystem);
-
-		playerSystem = new_sp<PlayerSystem>();
-		systems.insert(playerSystem);
-
-		particleSystem = new_sp<ParticleSystem>();
-		systems.insert(particleSystem);
-
-		systemRNG = new_sp<RNGSystem>();
-		systems.insert(systemRNG);
-
-		debugRenderSystem = new_sp<DebugRenderSystem>();
-		systems.insert(debugRenderSystem);
-
-		renderSystem = new_sp<RenderSystem>();
-		systems.insert(renderSystem);
-
-		automatedTestSystem = new_sp<AutomatedTestSystem>();
-		systems.insert(automatedTestSystem);
 
 	}
 
@@ -91,18 +64,11 @@ namespace SA
 		if (!bStarted)
 		{
 			onInitEngineConstants(configuredConstants);	//this should happen before the subclass game has started. this means systems can read it.
+			createEngineSystems();
+			//systems are initialized after all systems have been created; this way cross-system interaction can be achieved during initailization (ie subscribing to events, etc.)
+			for (const sp<SystemBase>& system : systems) { system->initSystem(); }
 
 			bStarted = true;
-
-			//initialize systems; this is not done in gamebase ctor because it systemse may call gamebase virtuals
-			bCustomSystemRegistrationAllowedTimeWindow = true;
-			onRegisterCustomSystem();
-			bCustomSystemRegistrationAllowedTimeWindow = false;
-			for (const sp<SystemBase>& system : systems)
-			{
-				system->initSystem();
-			}
-
 			{ //prevent permanent window reference via scoped destruction
 				sp<Window> window = startUp();
 				windowSystem->makeWindowPrimary(window);
@@ -110,7 +76,7 @@ namespace SA
 
 			//game loop processes
 			onGameloopBeginning.broadcast();
-			while (!bExitGame)
+			while (!bExitGame) 
 			{
 				tickGameloop_GameBase();
 			}
@@ -119,10 +85,7 @@ namespace SA
 			shutDown();
 
 			//shutdown systems after game client has been shutdown
-			for (const sp<SystemBase>& system : systems)
-			{
-				system->shutdown();
-			}
+			for (const sp<SystemBase>& system : systems){system->shutdown();}
 
 			//tick a few more times for any frame deferred processes
 			for (size_t shutdownTick = 0; shutdownTick < 3; ++shutdownTick){ tickGameloop_GameBase(); }
@@ -171,6 +134,50 @@ namespace SA
 		onFrameOver.broadcast(frameNumber++);
 	}
 
+	void GameBase::createEngineSystems()
+	{
+		// !!! REFACTOR WARNING !!  do not place this within the ctor; polymorphic systems are designed to be instantiated via virtual functions; virutal functions shouldn't be called within a ctor!
+		//this is provided outside of ctor so that virtual functions may be called to define systems that are polymorphic based on the game
+
+		//create and register systems
+		windowSystem = new_sp<WindowSystem>();
+		systems.insert(windowSystem);
+
+		assetSystem = new_sp<AssetSystem>();
+		systems.insert(assetSystem);
+
+		levelSystem = new_sp<LevelSystem>();
+		systems.insert(levelSystem);
+
+		playerSystem = new_sp<PlayerSystem>();
+		systems.insert(playerSystem);
+
+		particleSystem = new_sp<ParticleSystem>();
+		systems.insert(particleSystem);
+
+		systemRNG = new_sp<RNGSystem>();
+		systems.insert(systemRNG);
+
+		debugRenderSystem = new_sp<DebugRenderSystem>();
+		systems.insert(debugRenderSystem);
+
+		renderSystem = new_sp<RenderSystem>();
+		systems.insert(renderSystem);
+
+		automatedTestSystem = new_sp<AutomatedTestSystem>();
+		systems.insert(automatedTestSystem);
+
+		cheatSystem = createCheatSystemSubclass();
+		cheatSystem = cheatSystem ? cheatSystem : new_sp<CheatSystemBase>();
+		systems.insert(cheatSystem);
+
+		//initialize custom subclass systems; 
+		//ctor warning: this is not done in gamebase ctor because it systems may call gamebase virtuals
+		bCustomSystemRegistrationAllowedTimeWindow = true;
+		onRegisterCustomSystem();
+		bCustomSystemRegistrationAllowedTimeWindow = false;
+	}
+
 	void GameBase::subscribePostRender(const sp<SystemBase>& system)
 	{
 		postRenderNotifys.insert(system);
@@ -187,6 +194,7 @@ namespace SA
 			std::cerr << "FATAL: attempting to register a custom system outside of start up window; use appropraite virtual function to register these systems" << std::endl;
 		}
 	}
+
 
 
 }

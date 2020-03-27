@@ -52,6 +52,8 @@ namespace SA
 		MultiDelegate<int /*key*/, int /*state*/, int /*modifier_keys*/, int /*scancode*/> onKey;
 		MultiDelegate<int /*button*/, int /*state*/, int /*modifier_keys*/> onButton;
 
+		void suspendInput(bool bValue) { bSuspendInput = bValue; }
+		bool isInputSuspended() { return bSuspendInput; }
 	private:
 		virtual void postConstruct() override;
 
@@ -68,7 +70,7 @@ namespace SA
 		*/
 		std::array< MultiDelegate<int /*state*/, int /*modifier_keys*/, int /*scancode*/> , GLFW_KEY_LAST - SA_FIRST_KEY_CODE> keyEvents;
 		std::array< MultiDelegate<int /*state*/, int /*modifier_keys*/>, GLFW_MOUSE_BUTTON_LAST - SA_FIRST_MOUSE_BUTTON > mouseButtonEvents;
-
+		bool bSuspendInput = false;
 	};
 	
 }

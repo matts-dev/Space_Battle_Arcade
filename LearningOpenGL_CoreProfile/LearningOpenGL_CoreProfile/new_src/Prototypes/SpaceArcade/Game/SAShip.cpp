@@ -26,14 +26,8 @@
 #include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "../GameFramework/SAPlayerSystem.h"
 #include "../GameFramework/SAPlayerBase.h"
-
-namespace
-{
-	using namespace SA;
-
-	sp<ShieldEffect::ParticleCache> shieldEffects = new_sp<ShieldEffect::ParticleCache>();
-}
-
+#include "FX/SharedGFX.h"
+#include "Cheats/SpaceArcadeCheatManager.h"
 
 namespace SA
 {
@@ -46,7 +40,6 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// methods
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	Ship::Ship(const SpawnData& spawnData)
 		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
@@ -105,7 +98,19 @@ namespace SA
 		if (TeamComponent* team = getGameComponent<TeamComponent>())
 		{
 			team->onTeamChanged.addWeakObj(sp_this(), &Ship::handleTeamChanged);
+			updateTeamDataCache();
 		}
+
+		for (const sp<ShipPlacementEntity>& placement : communicationEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
+		for (const sp<ShipPlacementEntity>& placement : defenseEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
+		for (const sp<ShipPlacementEntity>& placement : turretEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
+		
+
+#if COMPILE_CHEATS
+		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());
+		cheatSystem.oneShotShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_OneShotPlacements);
+		cheatSystem.destroyAllShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_DestroyAllShipPlacements);
+#endif //COMPILE_CHEATS
 	}
 
 	Ship::~Ship()
@@ -211,11 +216,27 @@ namespace SA
 			{
 				assert(teams.size() > cachedTeamIdx);
 				cachedTeamData = teams[cachedTeamIdx];
+
+				static auto applyTeamToObjectives = [](const std::vector<sp<ShipPlacementEntity>>& objectives, size_t teamIdx) 
+				{
+					for (const sp<ShipPlacementEntity>& entity : objectives)
+					{
+						if (TeamComponent* teamComp = entity ? entity->getGameComponent<TeamComponent>() : nullptr)
+						{
+							teamComp->setTeam(teamIdx);
+						}
+					}
+				};
+				applyTeamToObjectives(defenseEntities, cachedTeamIdx);
+				applyTeamToObjectives(communicationEntities, cachedTeamIdx);
+				applyTeamToObjectives(turretEntities, cachedTeamIdx);
 			}
 			else
 			{
 				log(__FUNCTION__, LogLevel::LOG_ERROR, "NO TEAM DATA ASSIGNED TO SHIP");
 			}
+
+
 		}
 	}
 
@@ -695,58 +716,36 @@ namespace SA
 	{
 		if (cachedTeamIdx != hitProjectile.team)
 		{
-			//#BUG something is keeping ships alive after they are destroyed (eg holding on to a shared ptr)
-			//changing references to #releasing_ptr is the best fix, but for now only spawning particle if not destroyed
-			hp.current -= hitProjectile.damage;
-			if (hp.current <= 0)
+			//only damage shield if all objective placements have been destroyed
+			if (activePlacements == 0)
 			{
-				if(!isPendingDestroy())
+				hp.current -= hitProjectile.damage;
+				if (hp.current <= 0)
 				{
-					ParticleSystem::SpawnParams particleSpawnParams;
-					particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
-					particleSpawnParams.xform.position = this->getTransform().position;
-					particleSpawnParams.velocity = getVelocity();
-
-					GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-
-					if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
+					if(!isPendingDestroy())
 					{
-						brainComp->setNewBrain(sp<AIBrain>(nullptr));
+						ParticleSystem::SpawnParams particleSpawnParams;
+						particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+						particleSpawnParams.xform.position = this->getTransform().position;
+						particleSpawnParams.velocity = getVelocity();
+
+						GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+
+						if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
+						{
+							brainComp->setNewBrain(sp<AIBrain>(nullptr));
+						}
 					}
+					destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
 				}
-				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
+				else
+				{
+					doShieldFX();
+				}
 			}
 			else
 			{
-				doShieldFX();
-				//if (!activeShieldEffect.expired())
-				//{
-				//	sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
-				//	shieldEffect_sp->resetTimeAlive();
-				//}
-				//else
-				//{
-				//	if (!activeShieldEffect.expired())
-				//	{
-				//		sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
-				//		//#TODO kill the shield effect
-				//	}
-
-				//	ParticleSystem::SpawnParams particleSpawnParams;
-				//	particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), cachedTeamData.shieldColor);
-				//	const Transform& shipXform = this->getTransform(); 
-				//	particleSpawnParams.xform.position = shipXform.position;
-				//	particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
-				//	particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
-				//	particleSpawnParams.xform.scale = shipXform.scale * 1.1f;  //scale up to see effect around ship
-
-				//	//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
-				//	//making the large ships show correct effect. Perhaps not even necessary.
-				//	Transform modelXform = shipData->getModelXform();
-				//	particleSpawnParams.xform.scale *= modelXform.scale;
-
-				//	activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-				//}
+				//do some FX that shows ship is taking no damage? maybe reflect projectile?
 			}
 		}
 	}
@@ -760,14 +759,8 @@ namespace SA
 		}
 		else
 		{
-			if (!activeShieldEffect.expired())
-			{
-				sp<ActiveParticleGroup> shieldEffect_sp = activeShieldEffect.lock();
-				//#TODO kill the shield effect
-			}
-
 			ParticleSystem::SpawnParams particleSpawnParams;
-			particleSpawnParams.particle = shieldEffects->getEffect(getMyModel(), cachedTeamData.shieldColor);
+			particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(getMyModel(), cachedTeamData.shieldColor);
 			const Transform& shipXform = this->getTransform();
 			particleSpawnParams.xform.position = shipXform.position;
 			particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
@@ -885,6 +878,52 @@ namespace SA
 		return adjustVel_n.has_value();
 	}
 
+	void Ship::handlePlacementDestroyed(const sp<GameEntity>& placement)
+	{
+		//unbind from this event so decrementing can never happen twice
+		placement->onDestroyedEvent->removeAll(sp_this());
+
+		activePlacements -= 1;
+	}
+
+#if COMPILE_CHEATS
+	void Ship::cheat_OneShotPlacements()
+	{
+		auto cheatLambda = [this](std::vector<sp<ShipPlacementEntity>> placements)
+		{
+			for (sp<ShipPlacementEntity>& placement : placements)
+			{
+				if (HitPointComponent* hpComp = placement->getGameComponent<HitPointComponent>())
+				{
+					//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
+					placement->adjustHP(-hpComp->hp.current + 1);
+				}
+			}
+		};
+		cheatLambda(defenseEntities);
+		cheatLambda(communicationEntities);
+		cheatLambda(turretEntities);
+	}
+
+	void Ship::cheat_DestroyAllShipPlacements()
+	{
+		auto cheatLambda = [this](std::vector<sp<ShipPlacementEntity>> placements)
+		{
+			for (sp<ShipPlacementEntity>& placement : placements)
+			{
+				if (HitPointComponent* hpComp = placement->getGameComponent<HitPointComponent>())
+				{
+					//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
+					placement->adjustHP(-hpComp->hp.current);
+				}
+			}
+		};
+		cheatLambda(defenseEntities);
+		cheatLambda(communicationEntities);
+		cheatLambda(turretEntities);
+	}
+#endif //COMPILE_CHEATS
+
 	void Ship::debugRender_avoidance(float accumulatedAvoidanceStrength) const
 	{
 		using namespace glm;
@@ -913,9 +952,10 @@ namespace SA
 			};
 
 			processPlacements(shipData->getDefensePlacements(), defenseEntities);
-			processPlacements(shipData->getCommuncationPlacements(), defenseEntities);
-			processPlacements(shipData->getTurretPlacements(), defenseEntities);
+			processPlacements(shipData->getCommuncationPlacements(), communicationEntities);
+			processPlacements(shipData->getTurretPlacements(), turretEntities);
 
+			activePlacements = defenseEntities.size() + communicationEntities.size() + turretEntities.size();
 		}
 	}
 

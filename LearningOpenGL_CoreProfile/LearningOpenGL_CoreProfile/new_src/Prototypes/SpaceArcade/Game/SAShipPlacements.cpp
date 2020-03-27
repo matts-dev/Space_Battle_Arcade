@@ -11,6 +11,9 @@
 #include "OptionalCompilationMacros.h"
 #include "../Rendering/RenderData.h"
 #include "../GameFramework/SARenderSystem.h"
+#include "../GameFramework/Components/GameplayComponents.h"
+#include "../GameFramework/SAParticleSystem.h"
+#include "FX/SharedGFX.h"
 
 namespace SA
 {
@@ -52,25 +55,55 @@ namespace SA
 	// Ship placement entity
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	void ShipPlacementEntity::postConstruct()
+	{
+		Parent::postConstruct();
+
+		TeamComponent* teamComp = createGameComponent<TeamComponent>();
+		HitPointComponent* hpComp = createGameComponent<HitPointComponent>();
+
+		if (hpComp)
+		{
+			hpComp->hp.current = 100;
+			hpComp->hp.max = 100;
+		}
+	}
+
+	void ShipPlacementEntity::onDestroyed()
+	{
+		Parent::onDestroyed();
+
+		//remove from spatial hash since we're allowing this to persist even while destroyed
+		collisionHandle = nullptr;
+	}
+
+	//void ShipPlacementEntity::tick(float dt_sec)
+	//{
+	//	Parent::tick(dt_sec);
+	//}
+
 	void ShipPlacementEntity::draw(Shader& shader)
 	{
-		if (getModel())
+		if (!isPendingDestroy())
 		{
-			shader.setUniformMatrix4fv(modelMatrixUniform.c_str(), 1, GL_FALSE, glm::value_ptr(cachedModelMat_PxL));
-			RenderModelEntity::draw(shader);
-		}
-#if SA_RENDER_DEBUG_INFO
-		if (collisionData)
-		{
-			GameBase& engine = GameBase::get();
-			static RenderSystem& renderSystem = engine.getRenderSystem();
-
-			if (const RenderData* frd = renderSystem.getFrameRenderData_Read(engine.getFrameNumber()))
+			if (getModel())
 			{
-				collisionData->debugRender(cachedModelMat_PxL, frd->view, frd->projection);
+				shader.setUniformMatrix4fv(modelMatrixUniform.c_str(), 1, GL_FALSE, glm::value_ptr(cachedModelMat_PxL));
+				RenderModelEntity::draw(shader);
 			}
-		}
+#if SA_RENDER_DEBUG_INFO
+			if (collisionData)
+			{
+				GameBase& engine = GameBase::get();
+				static RenderSystem& renderSystem = engine.getRenderSystem();
+
+				if (const RenderData* frd = renderSystem.getFrameRenderData_Read(engine.getFrameNumber()))
+				{
+					collisionData->debugRender(cachedModelMat_PxL, frd->view, frd->projection);
+				}
+			}
 #endif //SA_RENDER_DEBUG_INFO
+		}
 	}
 
 	void ShipPlacementEntity::setParentXform(glm::mat4 parentXform)
@@ -89,14 +122,50 @@ namespace SA
 		updateModelMatrixCache();
 	}
 
-	void ShipPlacementEntity::postConstruct()
-	{
-
-	}
-
 	void ShipPlacementEntity::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
+		if (const TeamComponent* teamComp = getGameComponent<TeamComponent>())
+		{
+			if (teamComp->getTeam() != hitProjectile.team)
+			{
+				//we were hit by a non-team member, apply game logic!
+				adjustHP(-hitProjectile.damage);
+			}
+			else
+			{
+				//play friendly fire fx?
+			}
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "ship component hit without being assigned a team component");
+		}
+	}
 
+	void ShipPlacementEntity::doShieldFX()
+	{
+		if (activeShieldEffect)
+		{
+			activeShieldEffect->resetTimeAlive();
+		}
+		else
+		{
+			if (const sp<Model3D>& myModel = getMyModel())
+			{
+				ParticleSystem::SpawnParams particleSpawnParams;
+				particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(myModel, ShieldColor());
+
+				particleSpawnParams.parentXform = cachedModelMat_PxL;
+				particleSpawnParams.xform.scale = glm::vec3(1.1f); //scale up particle so fx can be seen
+
+				activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+			}
+		}
+	}
+
+	void ShipPlacementEntity::doDestroyFX()
+	{
+		//#todo multiple explosion effect over time? :)
 	}
 
 	void ShipPlacementEntity::updateModelMatrixCache()
@@ -114,6 +183,36 @@ namespace SA
 				worldGrid.updateEntry(collisionHandle, collisionData->getWorldOBB());
 			}
 		}
+
+		if (activeShieldEffect)
+		{
+			activeShieldEffect->parentXform_m = cachedModelMat_PxL; //use the complete transform as parent transform, add a little scale to the particle itself
+		}
+	}
+
+	void ShipPlacementEntity::adjustHP(int amount)
+	{
+		if (HitPointComponent* hpComp = getGameComponent<HitPointComponent>())
+		{
+			HitPoints& hp = hpComp->hp;
+
+			hp.current += amount;
+			if (hp.current <= 0.f)
+			{
+				//destroyed
+				if (!isPendingDestroy())
+				{
+					doDestroyFX();
+					destroy();
+				}
+			}
+			else
+			{
+				//damaged
+				doShieldFX();
+			}
+		}
+
 	}
 
 	void ShipPlacementEntity::replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig)

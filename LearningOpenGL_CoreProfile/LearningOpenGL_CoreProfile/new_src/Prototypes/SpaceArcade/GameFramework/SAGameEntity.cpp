@@ -34,7 +34,6 @@ namespace SA
 	{
 		if (!bPendingDestroy)
 		{
-			onDestroyed();
 			bPendingDestroy = true;
 
 			//broadcast of destroyed needs to be delayed to next tick so that sp doesn't call dtor within during member function call
@@ -58,6 +57,8 @@ namespace SA
 		//#TODO with static ticker, there's not need for cleanup key -- so it can be removed
 		for (sp<GameEntity>& entity : staticImplementation.pendingDestroy)
 		{
+			entity->onDestroyed();
+
 			//lifetime over event happens separately so that no race condition will exist on the onDestroyedEvent. 
 			//By separating events, all life time pointers will be cleared before the destroyed events happen.
 			entity->onLifetimeOverEvent->broadcast();

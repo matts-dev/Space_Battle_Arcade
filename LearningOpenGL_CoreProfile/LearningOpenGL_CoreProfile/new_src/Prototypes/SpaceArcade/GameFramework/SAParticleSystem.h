@@ -205,7 +205,6 @@ namespace SA
 		const static size_t ROT_VEC3_IDX = 1;
 		const static size_t SCALE_VEC3_IDX = 2;
 
-		//#TODO make sure this gets initialized
 		std::vector<float> floatsArray;
 		std::vector<glm::vec3> vec3Array;
 		std::vector<glm::vec4> vec4Array;
@@ -230,9 +229,9 @@ namespace SA
 		float timeAlive = 0.f;
 		float durationDilation = 1.0f;
 		int bLoopCount = 0;
-
 	public:  //spawner of particle is free to modify the transform
 		Transform xform{};
+		std::optional<glm::mat4> parentXform_m;
 	};
 
 	///////////////////////////////////////////////////////////////////////
@@ -259,6 +258,7 @@ namespace SA
 		{
 			sp<ParticleConfig> particle{nullptr};
 			std::optional<glm::vec3> velocity{};
+			std::optional<glm::mat4> parentXform{};
 			float durationDilation = 1.0f;
 			Transform xform{};
 		};

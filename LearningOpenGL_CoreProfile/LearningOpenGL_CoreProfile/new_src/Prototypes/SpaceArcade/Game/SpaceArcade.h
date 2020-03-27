@@ -22,10 +22,9 @@ namespace SA
 	class ModSystem;
 	
 	class CollisionShapeFactory;
-
 	class UIRootWindow;
-
 	class HUD;
+	class DeveloperConsole;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// The game implementation for the space arcade game.
@@ -41,6 +40,7 @@ namespace SA
 		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) override;
 		virtual void renderLoop(float deltaTimeSecs) override;
 		virtual void onRegisterCustomSystem() override;
+		virtual sp<CheatSystemBase> createCheatSystemSubclass() override;
 
 		void updateInput(float detltaTimeSec);
 
@@ -83,6 +83,7 @@ namespace SA
 		bool bRenderDebugCells = false;
 		bool bRenderDebugAvoidanceSphereCells = false;
 		bool bRenderProjectileOBBs = false;
+		bool bEnableDevConsoleFeature = true;
 
 	private:
 		sp<SA::CameraFPS> fpsCamera;
@@ -99,6 +100,7 @@ namespace SA
 		//ui
 		sp<UIRootWindow> ui_root;
 		sp<HUD> hud;
+		sp<DeveloperConsole> console;
 	};
 
 }

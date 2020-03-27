@@ -60,8 +60,13 @@ namespace SA
 	void ShipCamera::tickKeyboardInput(float dt_sec)
 	{
 		static WindowSystem& windowSystem = GameBase::get().getWindowSystem();
+		static PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
+
 		const sp<Window>& primaryWindow = windowSystem.getPrimaryWindow();
-		if (primaryWindow && myShip)
+		bool bInputSuspended = false;
+		if (const sp<PlayerBase>& player = playerSystem.getPlayer(owningPlayerIndex)) { bInputSuspended = player->getInput().isInputSuspended(); }
+		
+		if (primaryWindow && myShip && !bInputSuspended)
 		{
 			GLFWwindow* window = primaryWindow->get();
 			bool bCtrl = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;

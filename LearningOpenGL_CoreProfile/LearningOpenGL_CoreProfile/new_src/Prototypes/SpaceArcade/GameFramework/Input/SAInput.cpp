@@ -175,7 +175,7 @@ namespace SA
 
 	void InputProcessor::handleKeyInput(int key, int scancode, int action, int mods)
 	{
-		if (key >= 0 && key <= GLFW_KEY_LAST)
+		if (!bSuspendInput && key >= 0 && key <= GLFW_KEY_LAST)
 		{
 
 			//putting scancode last intentionally, as this is probably the least significant parameter
@@ -184,20 +184,18 @@ namespace SA
 		}
 		else
 		{
-			//unknown key
 		}
 	}
 
 	void InputProcessor::handleMouseButtonInput(int button, int action, int mods)
 	{
-		if (button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST)
+		if (!bSuspendInput && button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST)
 		{
 			mouseButtonEvents[button - SA_FIRST_MOUSE_BUTTON].broadcast(action, mods);
 			onButton.broadcast(button, action, mods);
 		}
 		else
 		{
-			//unknown button
 		}
 	}
 

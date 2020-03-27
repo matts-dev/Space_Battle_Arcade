@@ -37,7 +37,7 @@ namespace SA
 		public:
 			//interally caches effects model and color combinations; managed by weak pointers. 
 			sp<ParticleConfig> getEffect(const sp<Model3D>& model, const glm::vec3& color);
-
+			void resetCache();
 		private:
 			//cache colored configs
 			std::unordered_multimap<size_t, sp<ShieldParticleConfig>> modelToParticleHashMap;

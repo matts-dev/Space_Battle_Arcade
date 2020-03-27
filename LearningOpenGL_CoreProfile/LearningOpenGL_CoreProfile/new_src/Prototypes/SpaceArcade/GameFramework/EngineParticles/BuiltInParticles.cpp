@@ -203,6 +203,12 @@ namespace SA
 
 			return particle;
 		}
+
+		void ParticleCache::resetCache()
+		{
+			modelToParticleHashMap.clear();
+		}
+
 	}
 }
 

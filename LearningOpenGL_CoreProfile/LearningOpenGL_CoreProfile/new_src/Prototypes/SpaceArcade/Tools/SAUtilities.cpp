@@ -242,7 +242,7 @@ namespace SA
 
 			if (!bVectorsAreSame && !bVectorsAre180)
 			{
-				glm::vec3 rotAxis = glm::normalize(glm::cross(from_n, to_n)); //theoretically, I don't think I need to normalize if both normal; but generally I normalize the result of xproduct
+				glm::vec3 rotAxis = glm::normalize(glm::cross(from_n, to_n));
 				float rotDegreesRadians = glm::acos(cosTheta);
 				rot = glm::angleAxis(rotDegreesRadians, rotAxis);
 			}
@@ -250,6 +250,10 @@ namespace SA
 			{
 				//if tail end and front of projectile are not the same, we need a 180 rotation around ?any? axis
 				glm::vec3 temp = Utils::getDifferentVector(from_n);
+
+				bool bTemp180 = Utils::float_equals(glm::clamp(glm::dot(from_n, temp), -1.f, 1.f), -1.0f);
+				if (bTemp180) { temp += glm::vec3(1.f); }
+
 				glm::vec3 rotAxisFor180 = glm::normalize(cross(from_n, temp));
 
 				rot = glm::angleAxis(glm::pi<float>(), rotAxisFor180);

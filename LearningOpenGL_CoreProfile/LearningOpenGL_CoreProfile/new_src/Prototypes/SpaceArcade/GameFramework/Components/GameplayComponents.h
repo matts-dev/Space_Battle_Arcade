@@ -59,4 +59,19 @@ namespace SA
 		BehaviorTree::Tree* cachedBehaviorTree = nullptr;
 	};
 
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Hit point Component
+	/////////////////////////////////////////////////////////////////////////////////////
+	struct HitPoints
+	{
+		int current;
+		int max;
+	};
+
+	class HitPointComponent : public GameComponentBase
+	{
+	public:
+		HitPoints hp;
+	};
 }

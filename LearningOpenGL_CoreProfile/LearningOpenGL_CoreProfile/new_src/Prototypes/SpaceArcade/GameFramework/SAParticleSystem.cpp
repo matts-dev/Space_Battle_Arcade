@@ -147,6 +147,7 @@ namespace SA
 			newParticle.velocity = params.velocity;
 			newParticle.xform = params.xform;
 			newParticle.durationDilation = params.durationDilation;
+			newParticle.parentXform_m = params.parentXform;
 			params.particle->generateMutableEffectData(newParticle.mutableEffectData);
 			assert(newParticle.mutableEffectData.size() == params.particle->effects.size());
 
@@ -177,6 +178,11 @@ namespace SA
 		}
 
 		glm::mat4 particleGroupModelMat = activeParticle.xform.getModelMatrix();
+
+		if (activeParticle.parentXform_m.has_value())
+		{
+			particleGroupModelMat = activeParticle.parentXform_m.value() * particleGroupModelMat;
+		}
 
 		bool bAllEffectsDone = true;
 

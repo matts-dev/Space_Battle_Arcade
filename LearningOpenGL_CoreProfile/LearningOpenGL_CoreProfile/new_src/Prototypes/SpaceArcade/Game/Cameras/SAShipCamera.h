@@ -60,6 +60,7 @@ namespace SA
 		bool bSlowCrosshairRollWithSpeed = true;
 		bool bFireHeld = false;
 	private:
+		uint32_t owningPlayerIndex = 0;
 		sp<CollisionData> collisionData;
 		lp<Ship> myShip;
 		float followDistance = 10.f;

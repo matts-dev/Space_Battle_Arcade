@@ -232,8 +232,8 @@ namespace SA
 
 		spawned->timeAlive = 0.f;
 #if _WIN32 && _DEBUG
-		if (Utils::anyValueNAN(spawnRotation)) { __debugbreak(); }
-		if (Utils::anyValueNAN(spawnData.start)) { __debugbreak(); }
+		if (Utils::anyValueNAN(spawnRotation)) { __debugbreak(); return; }
+		if (Utils::anyValueNAN(spawnData.start)) { __debugbreak(); return; }
 #endif
 
 		activeProjectiles.insert( spawned );

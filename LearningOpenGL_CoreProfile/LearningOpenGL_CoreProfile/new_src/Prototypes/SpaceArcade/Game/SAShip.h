@@ -36,12 +36,6 @@ namespace SA
 	class ShipCamera;
 	class ShipPlacementEntity;
 
-	struct HitPoints
-	{
-		int current;
-		int max;
-	};
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Ship Class
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,10 +145,19 @@ namespace SA
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
 		bool getAvoidanceDampenedVelocity(std::optional<glm::vec3>& avoidVec) const;
+	private:
+		void handlePlacementDestroyed(const sp<GameEntity>& placement);
+#if COMPILE_CHEATS
+	private:
+		void cheat_OneShotPlacements();
+		void cheat_DestroyAllShipPlacements();
+#endif //COMPILE_CHEATS
 	public:
 		MultiDelegate<> onCollided;
 	private: //statics
 		static bool bRenderAvoidanceSpheres;
+	private: //cheat flags
+		bool bOneShotPlacements = false;
 	private:
 		//helper data structures
 		std::vector<sp<SH::GridNode<WorldEntity>>> overlappingNodes_SH;
@@ -180,6 +183,7 @@ namespace SA
 		std::vector<sp<ShipPlacementEntity>> defenseEntities;
 		std::vector<sp<ShipPlacementEntity>> turretEntities;
 		std::vector<sp<ShipPlacementEntity>> communicationEntities;
+		size_t activePlacements = 0;
 
 		ShipEnergyComponent* energyComp = nullptr;
 
