@@ -5,6 +5,7 @@
 #include "../../SAGameBase.h"
 #include "LifetimePointerSyntaxTest.h"
 #include "../../SALog.h"
+#include "../../SAGameEntity.h"
 
 namespace
 {
