@@ -60,7 +60,6 @@ namespace SA
 		sp<SA::CollisionData> toCollisionInfo() const;
 		sp<Model3D> getModel() const;
 		sp<ProjectileConfig>& getPrimaryProjectileConfig();
-		inline glm::vec3 getShieldOffset() { return shieldOffset; }
 		const std::vector<TeamData>& getTeams() const { return teamData; };
 		Transform getModelXform() const;
 		bool requestCollisionTests() const {return bRequestsCollisionTests;};
@@ -82,7 +81,6 @@ namespace SA
 		glm::vec3 modelScale = glm::vec3(1,1,1);
 		glm::vec3 modelRotationDegrees = glm::vec3(0,0,0);
 		glm::vec3 modelPosition = glm::vec3(0, 0, 0);
-		glm::vec3 shieldOffset = glm::vec3(0.f);
 		std::string primaryProjectileConfigName;
 
 		bool bRequestsCollisionTests = true;

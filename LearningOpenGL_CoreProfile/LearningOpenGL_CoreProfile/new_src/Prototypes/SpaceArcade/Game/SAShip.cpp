@@ -48,7 +48,6 @@ namespace SA
 	{
 		overlappingNodes_SH.reserve(10);
 		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
-		shieldOffset = spawnData.spawnConfig->getShieldOffset();
 		shipData = spawnData.spawnConfig;
 		bCollisionReflectForward = shipData->getCollisionReflectForward();
 
@@ -532,8 +531,6 @@ namespace SA
 			sp<ActiveParticleGroup> activeShield_sp = activeShieldEffect.lock();
 			activeShield_sp->xform.rotQuat = xform.rotQuat;
 			activeShield_sp->xform.position = xform.position;
-			//offset for non-centered scaling issues
-			activeShield_sp->xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f))); //#optimize rotating dir is expensive; perhaps cache with dirty flag?
 		}
 
 		glm::mat4 modelMatrix = xform.getModelMatrix();
@@ -763,9 +760,8 @@ namespace SA
 			particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(getMyModel(), cachedTeamData.shieldColor);
 			const Transform& shipXform = this->getTransform();
 			particleSpawnParams.xform.position = shipXform.position;
-			particleSpawnParams.xform.position += glm::vec3(rotateLocalVec(glm::vec4(shieldOffset, 0.f)));
 			particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
-			particleSpawnParams.xform.scale = shipXform.scale * 1.1f;  //scale up to see effect around ship
+			particleSpawnParams.xform.scale = shipXform.scale;
 
 			//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
 			//making the large ships show correct effect. Perhaps not even necessary.

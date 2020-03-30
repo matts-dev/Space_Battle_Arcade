@@ -32,6 +32,7 @@ namespace SA
 				
 			uniform mat4 projection_view;
 			uniform vec3 camPos;
+			uniform float normalOffsetDist = 0.01f;
 
 			//out vec3 fragNormal;
 			out vec3 fragPosition;
@@ -40,8 +41,11 @@ namespace SA
 			out float fractionComplete;
 
 			void main(){
-				gl_Position = projection_view * model * vec4(position, 1);
-				fragPosition = vec3(model * vec4(position, 1));
+				//offset the local space vert position by the normal, this is so the effect will surround the actual model.
+				vec4 offsetPosition_ls = vec4(position + (normalOffsetDist * normalize(normal)), 1);
+
+				gl_Position = projection_view * model * offsetPosition_ls;
+				fragPosition = vec3(model * offsetPosition_ls);
 
 				timeAlive = effectData1.x;
 				float effectEndTime = effectData1.y;

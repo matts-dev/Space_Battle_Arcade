@@ -156,7 +156,7 @@ namespace SA
 				particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(myModel, ShieldColor());
 
 				particleSpawnParams.parentXform = cachedModelMat_PxL;
-				particleSpawnParams.xform.scale = glm::vec3(1.1f); //scale up particle so fx can be seen
+				particleSpawnParams.xform.scale;
 
 				activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 			}

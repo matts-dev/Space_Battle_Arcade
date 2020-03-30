@@ -166,7 +166,6 @@ namespace SA
 		const sp<CollisionData> collisionData; //#TODO perhaps just reference what's in the component so we don't have two pointers
 		sp<ShipAIBrain> brain; 
 		glm::vec3 velocityDir_n;
-		glm::vec3 shieldOffset = glm::vec3(0.f);
 		float maxSpeed = 10.0f; //#TODO make part of spawn config
 		float currentSpeedFactor = 1.0f;
 		float speedGamifier = 1.0f;
