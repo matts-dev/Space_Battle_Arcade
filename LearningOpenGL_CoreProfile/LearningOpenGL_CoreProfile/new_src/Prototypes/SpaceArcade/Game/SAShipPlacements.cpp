@@ -14,6 +14,8 @@
 #include "../GameFramework/Components/GameplayComponents.h"
 #include "../GameFramework/SAParticleSystem.h"
 #include "FX/SharedGFX.h"
+#include "../GameFramework/SATimeManagementSystem.h"
+#include "../GameFramework/SARandomNumberGenerationSystem.h"
 
 namespace SA
 {
@@ -67,6 +69,9 @@ namespace SA
 			hpComp->hp.current = 100;
 			hpComp->hp.max = 100;
 		}
+
+		myRNG = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+		destroyAtSec += myRNG->getFloat(0.f, 1.f);//create varaible time for destruction 
 	}
 
 	void ShipPlacementEntity::onDestroyed()
@@ -163,9 +168,66 @@ namespace SA
 		}
 	}
 
-	void ShipPlacementEntity::doDestroyFX()
+	void ShipPlacementEntity::tickDestroyingFX()
 	{
-		//#todo multiple explosion effect over time? :)
+		static ParticleSystem& particleSys = GameBase::get().getParticleSystem();
+
+		auto makeDefaultExplosion = [this]() {
+			ParticleSystem::SpawnParams particleSpawnParams;
+			particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+			particleSpawnParams.xform.position = cachedModelMat_PxL * glm::vec4(0, 0, 0, 1.f);
+			particleSpawnParams.xform.scale = getTransform().scale;
+			return particleSpawnParams;
+		};
+		auto sharedExplosionLogic = [this, makeDefaultExplosion](ParticleSystem& particleSys) 
+		{
+			ParticleSystem::SpawnParams particleSpawnParams = makeDefaultExplosion();
+			glm::vec4 perturbedUp = glm::vec4(0, 1, 0, 0);
+			float perturbDist = 1.f;
+			perturbedUp.x += myRNG->getFloat(-perturbDist, perturbDist);
+			perturbedUp.z += myRNG->getFloat(-perturbDist, perturbDist);
+			perturbedUp = glm::normalize(cachedModelMat_PxL * perturbedUp);
+			if (bool bUseVelocity = myRNG->getFloat(0.f, 1.f) > 0.5f)
+			{
+				particleSpawnParams.velocity = perturbedUp * myRNG->getFloat(1.f, 10.f);
+			}
+			else //static particle
+			{
+				particleSpawnParams.xform.position += glm::vec3(perturbedUp * myRNG->getFloat(1.f, 5.f)); //scale the perturbed up for some explosion position
+			}
+			particleSpawnParams.xform.scale *= glm::vec3((myRNG->getFloat<float>(4.f, 10.f)));
+			particleSys.spawnParticle(particleSpawnParams);
+		};
+
+		currentDestrutionPhaseSec += destructionTickFrequencySec;
+
+		float completePerc = currentDestrutionPhaseSec / destroyAtSec;
+
+		//before 50% have fewer explosions
+		if (completePerc < 0.5f)
+		{
+			if (bool bShouldExplode = (myRNG->getFloat(0.f, 1.0f) < 0.5f))
+			{
+				sharedExplosionLogic(particleSys);
+			}
+		}
+		else if (completePerc < 0.9f)
+		{
+			if (myRNG->getFloat(0.f, 1.0f) < 0.2f)
+			{
+				sharedExplosionLogic(particleSys);
+			}
+		}
+		else if (completePerc >= 1.0f)
+		{
+			getWorld()->getWorldTimeManager()->removeTimer(destructionTickDelegate);		//stop the timer, it is time to destroy
+
+			ParticleSystem::SpawnParams particleSpawnParams = makeDefaultExplosion();
+			particleSpawnParams.xform.scale = getTransform().scale * glm::vec3(20.f);
+
+			particleSys.spawnParticle(particleSpawnParams);
+			destroy();
+		}
 	}
 
 	void ShipPlacementEntity::updateModelMatrixCache()
@@ -200,10 +262,19 @@ namespace SA
 			if (hp.current <= 0.f)
 			{
 				//destroyed
-				if (!isPendingDestroy())
+				bool bStartedDestruction = destructionTickDelegate != nullptr;
+				if (!isPendingDestroy() && !bStartedDestruction)
 				{
-					doDestroyFX();
-					destroy();
+					if (LevelBase* world = getWorld())
+					{
+						destructionTickDelegate = new_sp<MultiDelegate<>>();
+						destructionTickDelegate->addWeakObj(sp_this(), &ShipPlacementEntity::tickDestroyingFX);
+						world->getWorldTimeManager()->createTimer(destructionTickDelegate, destructionTickFrequencySec, true);
+					}
+					else
+					{
+						destroy();	//can't get level? just skip and destroy
+					}
 				}
 			}
 			else

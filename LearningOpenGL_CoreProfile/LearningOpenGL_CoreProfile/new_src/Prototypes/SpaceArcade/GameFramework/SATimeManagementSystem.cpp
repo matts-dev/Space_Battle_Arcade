@@ -219,11 +219,11 @@ namespace SA
 		{
 			if (!bTickingTimers)
 			{
-				findResult->second->reset();
+				timers.remove(findResult->second);
 				timerPool.releaseInstance(findResult->second);
 
-				timers.remove(findResult->second);
 				findResult->second->reset();
+
 				delegateToTimerMap.erase(findResult);
 				return ETimerOperationResult::SUCCESS;
 			}

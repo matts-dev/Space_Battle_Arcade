@@ -12,6 +12,7 @@ namespace SA
 {
 	class ConfigBase;
 	class ActiveParticleGroup;
+	class RNG;
 
 	enum class PlacementType
 	{
@@ -63,7 +64,7 @@ namespace SA
 	private:
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
-		void doDestroyFX();
+		void tickDestroyingFX();
 		void updateModelMatrixCache();
 	private: //model editor special access
 		friend class ModelConfigurerEditor_Level;
@@ -77,5 +78,11 @@ namespace SA
 		glm::mat4 cachedModelMat_PxL{ 1.f };
 		glm::mat4 parentXform{ 1.f };
 		glm::vec3 shieldColor = glm::vec3(1.f);
+	private: //destrution fx
+		sp<MultiDelegate<>> destructionTickDelegate = nullptr;
+		const float destructionTickFrequencySec = 0.1f;
+		float destroyAtSec = 3.0f;
+		float currentDestrutionPhaseSec = 0.f;
+		sp<RNG> myRNG = nullptr;
 	};
 }
