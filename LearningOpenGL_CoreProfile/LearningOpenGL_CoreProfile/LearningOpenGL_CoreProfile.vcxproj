@@ -176,7 +176,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipBehaviorTreeNodes.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAConfigBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatManager.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Components\ShipEnergyComponent.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Planet.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.h" />
@@ -480,7 +480,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\MemoryLeakTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatManager.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Planet.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.cpp" />

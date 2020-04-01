@@ -151,6 +151,7 @@ namespace SA
 	private:
 		void cheat_OneShotPlacements();
 		void cheat_DestroyAllShipPlacements();
+		void cheat_destroyAllGenerators();
 		void cheat_TurretsTargetPlayer();
 #endif //COMPILE_CHEATS
 	public:
@@ -180,10 +181,11 @@ namespace SA
 		sp<const SpawnConfig> shipData;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
 
-		std::vector<sp<ShipPlacementEntity>> defenseEntities;
+		std::vector<sp<ShipPlacementEntity>> generatorEntities;
 		std::vector<sp<ShipPlacementEntity>> turretEntities;
 		std::vector<sp<ShipPlacementEntity>> communicationEntities;
 		size_t activePlacements = 0;
+		size_t activeGenerators = 0;
 
 		ShipEnergyComponent* energyComp = nullptr;
 

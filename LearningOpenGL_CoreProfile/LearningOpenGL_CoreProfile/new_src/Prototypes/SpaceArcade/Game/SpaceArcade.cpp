@@ -39,7 +39,7 @@
 #include "../Rendering/Lights/SADirectionLight.h"
 #include "../Rendering/RenderData.h"
 #include "../GameFramework/SARenderSystem.h"
-#include "Cheats/SpaceArcadeCheatManager.h"
+#include "Cheats/SpaceArcadeCheatSystem.h"
 #include "../GameFramework/developer_console/DeveloperConsole.h"
 
 namespace SA

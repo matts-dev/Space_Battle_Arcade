@@ -78,13 +78,16 @@ namespace SA
 		void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig);
 		void adjustHP(int amount);
 		const TeamData& getTeamData() { return teamData; }
+		void setHasGeneratorPower(bool bValue) { bHasGeneratorPower = bValue; }
+		bool hasGeneratorPower() const { return bHasGeneratorPower; }
+		PlacementType getPlacementType() const { return config.placementType; }
 	protected:
 		void setForwardLocalSpace(glm::vec3 newForward_ls);
 		virtual void updateModelMatrixCache();
 		const glm::mat4& getSpawnXform() { return spawnXform; }
 	private:
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
-		void doShieldFX();
+		void doDamagedFX();
 		void tickDestroyingFX();
 	protected:
 		RNG& getRNG() { return *myRNG; }
@@ -94,6 +97,7 @@ namespace SA
 	public:
 		std::string modelMatrixUniform = "model";
 	protected:
+		std::optional<glm::vec3> hitLocation;
 	private:
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
 		sp<CollisionData> collisionData = nullptr;
@@ -114,7 +118,7 @@ namespace SA
 		const float destructionTickFrequencySec = 0.1f;
 		float destroyAtSec = 3.0f;
 		float currentDestrutionPhaseSec = 0.f;
-		bool bShootingEnabled = false;
+		bool bHasGeneratorPower = true;
 		sp<RNG> myRNG = nullptr;
 	};
 

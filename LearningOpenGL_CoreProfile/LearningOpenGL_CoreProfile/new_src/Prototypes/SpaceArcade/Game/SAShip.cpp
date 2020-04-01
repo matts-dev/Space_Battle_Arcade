@@ -27,7 +27,7 @@
 #include "../GameFramework/SAPlayerSystem.h"
 #include "../GameFramework/SAPlayerBase.h"
 #include "FX/SharedGFX.h"
-#include "Cheats/SpaceArcadeCheatManager.h"
+#include "Cheats/SpaceArcadeCheatSystem.h"
 #include "SAShipPlacements.h"
 #include "SAModSystem.h"
 
@@ -103,15 +103,16 @@ namespace SA
 		}
 
 		for (const sp<ShipPlacementEntity>& placement : communicationEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
-		for (const sp<ShipPlacementEntity>& placement : defenseEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
+		for (const sp<ShipPlacementEntity>& placement : generatorEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
 		for (const sp<ShipPlacementEntity>& placement : turretEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
-		
 
+		activeGenerators = generatorEntities.size();
 #if COMPILE_CHEATS
 		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());
 		cheatSystem.oneShotShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_OneShotPlacements);
 		cheatSystem.destroyAllShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_DestroyAllShipPlacements);
 		if(turretEntities.size() > 0) cheatSystem.turretsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_TurretsTargetPlayer);
+		if (generatorEntities.size() > 0) cheatSystem.destroyAllGeneratorsCheat.addWeakObj(sp_this(), &Ship::cheat_destroyAllGenerators);
 #endif //COMPILE_CHEATS
 	}
 
@@ -229,7 +230,7 @@ namespace SA
 						}
 					}
 				};
-				applyTeamToObjectives(defenseEntities, cachedTeamIdx);
+				applyTeamToObjectives(generatorEntities, cachedTeamIdx);
 				applyTeamToObjectives(communicationEntities, cachedTeamIdx);
 				applyTeamToObjectives(turretEntities, cachedTeamIdx);
 			}
@@ -279,7 +280,7 @@ namespace SA
 				}
 			}
 		};
-		renderPlacements(defenseEntities, shader);
+		renderPlacements(generatorEntities, shader);
 		renderPlacements(communicationEntities, shader);
 		renderPlacements(turretEntities, shader);
 	}
@@ -549,7 +550,7 @@ namespace SA
 		// placements - must be handled after updates to position
 		//////////////////////////////////////////////////////////
 		//#todo #scenenodes no need to pass parent xforms if scene node hierarchy is used
-		if (defenseEntities.size() || communicationEntities.size() || turretEntities.size())
+		if (generatorEntities.size() || communicationEntities.size() || turretEntities.size())
 		{
 			glm::mat4 configXform = collisionData->getRootXform();
 			glm::mat4 fullParentXform = modelMatrix * configXform;
@@ -565,7 +566,7 @@ namespace SA
 					} 
 				}
 			};
-			tickPlacements(dt_sec, defenseEntities, fullParentXform);
+			tickPlacements(dt_sec, generatorEntities, fullParentXform);
 			tickPlacements(dt_sec, communicationEntities, fullParentXform);
 			tickPlacements(dt_sec, turretEntities, fullParentXform);
 		}
@@ -877,10 +878,22 @@ namespace SA
 		return adjustVel_n.has_value();
 	}
 
-	void Ship::handlePlacementDestroyed(const sp<GameEntity>& placement)
+	void Ship::handlePlacementDestroyed(const sp<GameEntity>& entity)
 	{
 		//unbind from this event so decrementing can never happen twice
-		placement->onDestroyedEvent->removeAll(sp_this());
+		entity->onDestroyedEvent->removeAll(sp_this());
+
+		if (ShipPlacementEntity* placement = dynamic_cast<ShipPlacementEntity*>(entity.get())) //this cast should be safe -- but doing dynamic for code quality reasons and future proofing; this will not happen a lot
+		{
+			if (placement->getPlacementType() == PlacementType::DEFENSE)
+			{
+				if (--activeGenerators == 0.f)
+				{
+					for (const sp<ShipPlacementEntity>& commPlacement : communicationEntities) { if (commPlacement) commPlacement->setHasGeneratorPower(false); }
+					for (const sp<ShipPlacementEntity>& turretPlacement: turretEntities) { if (turretPlacement) turretPlacement->setHasGeneratorPower(false); }
+				}
+			}
+		}
 
 		activePlacements -= 1;
 	}
@@ -899,7 +912,7 @@ namespace SA
 				}
 			}
 		};
-		cheatLambda(defenseEntities);
+		cheatLambda(generatorEntities);
 		cheatLambda(communicationEntities);
 		cheatLambda(turretEntities);
 	}
@@ -917,9 +930,21 @@ namespace SA
 				}
 			}
 		};
-		cheatLambda(defenseEntities);
+		cheatLambda(generatorEntities);
 		cheatLambda(communicationEntities);
 		cheatLambda(turretEntities);
+	}
+
+	void Ship::cheat_destroyAllGenerators()
+	{
+		for (sp<ShipPlacementEntity>& generator : generatorEntities)
+		{
+			if (HitPointComponent* hpComp = generator->getGameComponent<HitPointComponent>())
+			{
+				//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
+				generator->adjustHP(-hpComp->hp.current);
+			}
+		}
 	}
 
 	void Ship::cheat_TurretsTargetPlayer()
@@ -961,7 +986,7 @@ namespace SA
 
 		//called from ctor -- do not call virtuals from this function.
 		assert(shipData);
-		if (shipData && defenseEntities.size() == 0 && communicationEntities.size() == 0 && turretEntities.size() == 0)
+		if (shipData && generatorEntities.size() == 0 && communicationEntities.size() == 0 && turretEntities.size() == 0)
 		{
 			ShipPlacementEntity::TeamData teamData;
 			teamData.team = cachedTeamIdx;
@@ -1024,11 +1049,11 @@ namespace SA
 				}
 			};
 
-			processPlacements(shipData->getDefensePlacements(), defenseEntities);
+			processPlacements(shipData->getDefensePlacements(), generatorEntities);
 			processPlacements(shipData->getCommuncationPlacements(), communicationEntities);
 			processPlacements(shipData->getTurretPlacements(), turretEntities);
 
-			activePlacements = defenseEntities.size() + communicationEntities.size() + turretEntities.size();
+			activePlacements = generatorEntities.size() + communicationEntities.size() + turretEntities.size();
 		}
 	}
 

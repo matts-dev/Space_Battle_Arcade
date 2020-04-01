@@ -172,6 +172,7 @@ namespace SA
 
 	void ShipPlacementEntity::notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc)
 	{
+		hitLocation = hitLoc;
 		if (const TeamComponent* teamComp = getGameComponent<TeamComponent>())
 		{
 			if (teamComp->getTeam() != hitProjectile.team)
@@ -188,26 +189,55 @@ namespace SA
 		{
 			log(__FUNCTION__, LogLevel::LOG_ERROR, "ship component hit without being assigned a team component");
 		}
+		hitLocation = std::nullopt;
 	}
 
-	void ShipPlacementEntity::doShieldFX()
+	void ShipPlacementEntity::doDamagedFX()
 	{
-		if (activeShieldEffect)
+		using namespace glm;
+		if (bHasGeneratorPower)
 		{
-			activeShieldEffect->resetTimeAlive();
-		}
-		else
-		{
-			if (const sp<Model3D>& myModel = getMyModel())
+			if (activeShieldEffect)
 			{
-				ParticleSystem::SpawnParams particleSpawnParams;
-				particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(myModel, ShieldColor());
-
-				particleSpawnParams.parentXform = cachedModelMat_PxL;
-				particleSpawnParams.xform.scale;
-
-				activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+				activeShieldEffect->resetTimeAlive();
 			}
+			else
+			{
+				if (const sp<Model3D>& myModel = getMyModel())
+				{
+					ParticleSystem::SpawnParams particleSpawnParams;
+					particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(myModel, ShieldColor());
+
+					particleSpawnParams.parentXform = cachedModelMat_PxL;
+					particleSpawnParams.xform.scale;
+
+					activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+				}
+			}
+		}
+		else //no power generator, do not show shield effect rather show small explosion effect
+		{
+			glm::vec3 location{ 0.f };
+			if (hitLocation.has_value())
+			{
+				location = *hitLocation;
+			}
+			else
+			{
+				//pick a random location
+				glm::vec4 perturbedUp = glm::vec4(0, 1, 0, 0);
+				float perturbDist = 1.f;
+				perturbedUp.x += myRNG->getFloat(-perturbDist, perturbDist);
+				perturbedUp.z += myRNG->getFloat(-perturbDist, perturbDist);
+				perturbedUp = glm::normalize(cachedModelMat_PxL * perturbedUp);
+				location = getWorldPosition() + vec3(perturbedUp);
+			}
+			ParticleSystem::SpawnParams particleSpawnParams;
+			particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+			particleSpawnParams.xform.scale = getTransform().scale;
+			particleSpawnParams.xform.position = location;
+			particleSpawnParams.xform.scale *= vec3(1.0f); //scale down as to not confuse this with destroying the placement
+			GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 		}
 	}
 
@@ -327,7 +357,7 @@ namespace SA
 			else
 			{
 				//damaged
-				doShieldFX();
+				doDamagedFX();
 			}
 		}
 

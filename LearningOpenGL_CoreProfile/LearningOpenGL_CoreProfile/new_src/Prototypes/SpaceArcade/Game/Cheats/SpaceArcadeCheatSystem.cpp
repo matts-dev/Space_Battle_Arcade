@@ -1,4 +1,4 @@
-#include "SpaceArcadeCheatManager.h"
+#include "SpaceArcadeCheatSystem.h"
 
 namespace SA
 {
@@ -14,6 +14,7 @@ namespace SA
 }
 		REGISTER_CHEAT("one_shot_objectives", SpaceArcadeCheatSystem::cheat_oneShotObjectives);
 		REGISTER_CHEAT("destroy_all_objectives", SpaceArcadeCheatSystem::cheat_destroyAllObjectives);
+		REGISTER_CHEAT("destroy_all_generators", SpaceArcadeCheatSystem::cheat_destroyAllGenerators);
 		REGISTER_CHEAT("turrets_target_player", SpaceArcadeCheatSystem::cheat_turretsTargetPlayer);
 	}
 
@@ -30,6 +31,11 @@ namespace SA
 	void SpaceArcadeCheatSystem::cheat_turretsTargetPlayer(const std::vector<std::string>& cheatArgs)
 	{
 		turretsTargetPlayerCheat.broadcast();
+	}
+
+	void SpaceArcadeCheatSystem::cheat_destroyAllGenerators(const std::vector<std::string>& cheatArgs)
+	{
+		destroyAllGeneratorsCheat.broadcast();
 	}
 
 }
