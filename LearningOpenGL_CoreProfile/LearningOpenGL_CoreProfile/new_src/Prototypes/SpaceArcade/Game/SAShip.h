@@ -151,6 +151,7 @@ namespace SA
 	private:
 		void cheat_OneShotPlacements();
 		void cheat_DestroyAllShipPlacements();
+		void cheat_TurretsTargetPlayer();
 #endif //COMPILE_CHEATS
 	public:
 		MultiDelegate<> onCollided;

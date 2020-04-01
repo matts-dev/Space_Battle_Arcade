@@ -28,6 +28,8 @@
 #include "../GameFramework/SAPlayerBase.h"
 #include "FX/SharedGFX.h"
 #include "Cheats/SpaceArcadeCheatManager.h"
+#include "SAShipPlacements.h"
+#include "SAModSystem.h"
 
 namespace SA
 {
@@ -109,6 +111,7 @@ namespace SA
 		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());
 		cheatSystem.oneShotShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_OneShotPlacements);
 		cheatSystem.destroyAllShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_DestroyAllShipPlacements);
+		if(turretEntities.size() > 0) cheatSystem.turretsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_TurretsTargetPlayer);
 #endif //COMPILE_CHEATS
 	}
 
@@ -918,6 +921,27 @@ namespace SA
 		cheatLambda(communicationEntities);
 		cheatLambda(turretEntities);
 	}
+
+	void Ship::cheat_TurretsTargetPlayer()
+	{
+		using TargetType = TurretPlacement::TargetType;
+
+		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+		{
+			if (TargetType* playerShip = dynamic_cast<TargetType*>(player->getControlTarget()))
+			{
+				wp<TargetType> wpPlayerShip = playerShip->requestTypedReference_Nonsafe<TargetType>();
+				for (const sp<ShipPlacementEntity>& turretBase : turretEntities)
+				{
+					if (TurretPlacement* turret = dynamic_cast<TurretPlacement*>(turretBase.get()))
+					{
+						turret->setTarget(wpPlayerShip);
+					}
+				}
+			}
+		}
+	}
+
 #endif //COMPILE_CHEATS
 
 	void Ship::debugRender_avoidance(float accumulatedAvoidanceStrength) const
@@ -933,17 +957,70 @@ namespace SA
 
 	void Ship::ctor_configureObjectivePlacements()
 	{
+		using namespace glm;
+
 		//called from ctor -- do not call virtuals from this function.
 		assert(shipData);
 		if (shipData && defenseEntities.size() == 0 && communicationEntities.size() == 0 && turretEntities.size() == 0)
 		{
+			ShipPlacementEntity::TeamData teamData;
+			teamData.team = cachedTeamIdx;
+
+			const std::vector<TeamData>& teams = shipData->getTeams();
+			if (cachedTeamIdx < teams.size() && cachedTeamIdx >= 0)
+			{
+				TeamData loadedData = teams[cachedTeamIdx];
+				teamData.shieldColor = loadedData.shieldColor;
+				teamData.color = loadedData.teamTint;
+				teamData.projectileColor = glm::clamp(loadedData.projectileColor + vec3(0.25f), vec3(0), vec3(1.f));
+				teamData.primaryProjectile = primaryProjectile;
+
+				if (!teamData.primaryProjectile)
+				{
+					//#TODO replace this with some default config available statically - 
+					//find the first available projectile config and use that
+					if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+					{
+						for (auto projectileConfigIter : activeMod->getProjectileConfigs())
+						{
+							if (projectileConfigIter.second)
+							{
+								teamData.primaryProjectile = projectileConfigIter.second;
+								break;
+							}
+						}
+					}
+				}
+			}
+			
 			auto processPlacements = [&](const std::vector<PlacementSubConfig>& typedConfigs, std::vector<sp<ShipPlacementEntity>>& outputContainer)
 			{
 				for (const PlacementSubConfig& placementConfig : typedConfigs)
 				{
-					sp<ShipPlacementEntity> newPlacement = new_sp<ShipPlacementEntity>();
-					newPlacement->replacePlacementConfig(placementConfig, *shipData);
-					outputContainer.push_back(newPlacement);
+					sp<ShipPlacementEntity> newPlacement = nullptr;
+					if (placementConfig.placementType == PlacementType::COMMUNICATIONS)
+					{
+						newPlacement = new_sp<CommunicationPlacement>();
+					} 
+					else if (placementConfig.placementType == PlacementType::DEFENSE)
+					{
+						newPlacement = new_sp<DefensePlacement>();
+					}
+					else if (placementConfig.placementType == PlacementType::TURRET)
+					{
+						newPlacement = new_sp<TurretPlacement>();
+					}
+					else
+					{
+						log(__FUNCTION__, LogLevel::LOG_ERROR, "failed to find subtype of serialized placement");
+					}
+
+					if (newPlacement)
+					{
+						newPlacement->replacePlacementConfig(placementConfig, *shipData);
+						newPlacement->setTeamData(teamData);
+						outputContainer.push_back(newPlacement);
+					}
 				}
 			};
 

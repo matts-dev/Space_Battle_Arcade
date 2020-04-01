@@ -16,6 +16,12 @@
 #include "FX/SharedGFX.h"
 #include "../GameFramework/SATimeManagementSystem.h"
 #include "../GameFramework/SARandomNumberGenerationSystem.h"
+#include "../Tools/SAUtilities.h"
+#include "../GameFramework/SADebugRenderSystem.h"
+#include "SAProjectileSystem.h"
+
+
+static constexpr bool bCOMPILE_DEBUG_TURRET = true;
 
 namespace SA
 {
@@ -109,6 +115,43 @@ namespace SA
 			}
 #endif //SA_RENDER_DEBUG_INFO
 		}
+	}
+
+	glm::vec3 ShipPlacementEntity::getWorldPosition() const
+	{
+		//#TODO #scenenodes this may need updating
+		if (!cachedWorldPosition.has_value())
+		{
+			//lazy calculate for efficiency 
+			cachedWorldPosition = glm::vec3(cachedModelMat_PxL * glm::vec4(0, 0, 0, 1.f));
+		}
+		return *cachedWorldPosition;
+	}
+
+	glm::vec3 ShipPlacementEntity::getWorldForward_n() const
+	{
+		using namespace glm;
+
+		if (!cachedWorldForward_n.has_value())
+		{
+			cachedWorldForward_n = normalize(vec3(cachedModelMat_PxL * vec4(forward_n,0.f)));
+		}
+		return *cachedWorldForward_n;
+	}
+
+	glm::vec3 ShipPlacementEntity::getWorldUp_n() const
+	{
+		using namespace glm;
+		if (!cachedWorldUp_n.has_value())
+		{
+			cachedWorldUp_n = normalize(vec3(cachedModelMat_PxL * vec4(up_n, 0.f)));
+		}
+		return *cachedWorldUp_n;
+	}
+
+	void ShipPlacementEntity::setTeamData(const TeamData& teamData)
+	{
+		this->teamData = teamData;
 	}
 
 	void ShipPlacementEntity::setParentXform(glm::mat4 parentXform)
@@ -232,6 +275,11 @@ namespace SA
 
 	void ShipPlacementEntity::updateModelMatrixCache()
 	{
+		//perhaps clear cache function that different functions can call to whipe out all cache
+		cachedWorldPosition = std::nullopt;
+		cachedWorldForward_n = std::nullopt;
+		cachedWorldUp_n = std::nullopt;
+
 		cachedModelMat_PxL = parentXform * getModelMatrix();
 
 		if (collisionData)
@@ -286,6 +334,12 @@ namespace SA
 
 	}
 
+	void ShipPlacementEntity::setForwardLocalSpace(glm::vec3 newForward_ls)
+	{
+		forward_n = glm::normalize(newForward_ls);
+		cachedWorldForward_n = std::nullopt;
+	}
+
 	void ShipPlacementEntity::replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig)
 	{
 		bool bModelsAreDifferent = config.relativeFilePath != newConfig.relativeFilePath;
@@ -301,6 +355,7 @@ namespace SA
 		localTransform.rotQuat = getRotQuatFromDegrees(config.rotation_deg);
 		localTransform.scale = config.scale;
 		setTransform(localTransform);
+		spawnXform = localTransform.getModelMatrix();
 
 		updateModelMatrixCache();
 
@@ -383,6 +438,157 @@ namespace SA
 			}
 		}
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// turret entity
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	void TurretPlacement::tick(float dt_sec)
+	{
+		using namespace glm;
+		static DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
+
+		timeSinseFire_sec += dt_sec;
+
+		if (myTarget)
+		{
+			const vec3 targetPos = myTarget->getWorldPosition();
+			const vec3 myWorldPos = getWorldPosition();
+			const vec3 toTarget = targetPos - myWorldPos;
+			const vec3 toTarget_n = glm::normalize(toTarget);
+			const vec3 myForward_wn = getWorldForward_n();
+			const vec3 stationaryForward_n = getWorldStationaryForward_n();
+
+			const Transform& xform = getTransform();
+			Transform newXform = xform;
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//BOUNDS CHECK -- if target it out of bounds, generate a vector as close as possible to target, but still in bounds.
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			vec3 toTargetInBounds_n = toTarget_n;
+			float rotToTargetRaw_Rad = Utils::getRadianAngleBetween(stationaryForward_n, toTargetInBounds_n);
+			bool bTargetOutOfBounds = false;
+			if (rotToTargetRaw_Rad > rotationLimit_rad)
+			{
+				vec3 rotAxis_n = glm::normalize(cross(stationaryForward_n, toTargetInBounds_n));
+				glm::quat rot = angleAxis(rotationLimit_rad, rotAxis_n);
+				toTargetInBounds_n = glm::normalize(rot * stationaryForward_n);
+				bTargetOutOfBounds = true;
+			}
+
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// ROLL TOP OF TURRET -- roll the up direction of ship so that the barrels align with the outer cone
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			static const float ignoreRollRelation = glm::cos(glm::radians<float>(20.f));
+			if (bool bVecsDifferent = glm::dot(toTargetInBounds_n, stationaryForward_n) < ignoreRollRelation)
+			{
+				vec3 myUp_wn = getWorldUp_n();	//wn = world space normal
+				if (bool bNotLookingAtFixedOutward = glm::dot(myForward_wn, stationaryForward_n) < 0.99)
+				{
+					const glm::vec3& stationaryUp_wn = stationaryForward_n; //easier to think about this if we think about the starting forward direction as an up diretion and a circle around that.
+					const glm::vec3 targetFrameRight_wn = normalize(cross(stationaryUp_wn, myForward_wn));
+					glm::vec3 targetFrameUp_wn = cross(myForward_wn, targetFrameRight_wn); //ortho-normal, do not need to normalize
+
+					vec3 projUpOnTargetFrame_wn = normalize(dot(myUp_wn, targetFrameRight_wn)*targetFrameRight_wn + dot(myUp_wn, targetFrameUp_wn)*targetFrameUp_wn);
+					if (bool bVectorUnderUpHorizon = glm::dot(targetFrameUp_wn, projUpOnTargetFrame_wn) < 0.f)
+					{
+						targetFrameUp_wn *= -1;
+					}
+					float rotAngle_rad = Utils::getRadianAngleBetween(projUpOnTargetFrame_wn, targetFrameUp_wn);
+
+					constexpr float MAX_ROLL_radsec = glm::radians<float>(30.f);
+					constexpr float MIN_ROLL = glm::radians<float>(3.f);
+					if (rotAngle_rad > MIN_ROLL)
+					{
+						float rollThisTick = glm::min(MAX_ROLL_radsec * dt_sec, rotAngle_rad);
+						vec3 rotDirCheck = cross(myUp_wn, targetFrameUp_wn); //these vecs should not be same if we're above min roll
+
+						quat rot = glm::angleAxis(dot(rotDirCheck, myForward_wn) > 0.f ? rollThisTick : -rollThisTick, myForward_wn); //roll around our current facing direction
+						newXform.rotQuat = rot * newXform.rotQuat;  
+					}
+					if constexpr (bCOMPILE_DEBUG_TURRET) { debugRenderSystem.renderLine(myWorldPos /*nudge*/ + vec3(0.05f), myWorldPos + projUpOnTargetFrame_wn * 10.f /*nudge*/ + vec3(0.05f), glm::vec3(0.1f, 0.5f, 0.5f)); }
+				}
+			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// UPDATE ROTATION TOWARDS TARGET -- (or as close to target as possible; see above)
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			float angleToTarget_rad = Utils::getRadianAngleBetween(myForward_wn, toTargetInBounds_n);
+			constexpr float minRot = glm::radians<float>(2.f);
+			if (angleToTarget_rad > minRot)
+			{
+				float rotThisTick_rad = glm::min(rotationSpeed_radSec * dt_sec, angleToTarget_rad);
+
+				vec3 toTargetAxis = normalize(cross(myForward_wn, toTargetInBounds_n));
+				quat rotThisTick_q = angleAxis(rotThisTick_rad, toTargetAxis);
+				newXform.rotQuat = rotThisTick_q * newXform.rotQuat;
+			}
+
+			setTransform(newXform);
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// fire turret if in focus
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			const ShipPlacementEntity::TeamData& teamData = getTeamData();
+			if (glm::dot(myForward_wn, toTarget_n) >= 0.98f 
+				&& bShootingEnabled && teamData.primaryProjectile && length2(toTarget_n) > 0.001 && !bTargetOutOfBounds &&
+				timeSinseFire_sec >= fireCooldown_sec)
+			{
+				ProjectileSystem::SpawnData spawnData;
+				spawnData.direction_n = glm::normalize(toTarget_n);
+				spawnData.start = myWorldPos + spawnData.direction_n * 5.0f;
+				spawnData.color = teamData.color;
+				spawnData.team = teamData.team;
+				spawnData.owner = this;
+
+				const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
+				projectileSys->spawnProjectile(spawnData, *teamData.primaryProjectile);
+				timeSinseFire_sec = 0.f;
+			}
+
+			if constexpr (bCOMPILE_DEBUG_TURRET) 
+			{
+				debugRenderSystem.renderLine(myWorldPos, myWorldPos + stationaryForward_n * 10.f, glm::vec3(0, 1, 0));
+				debugRenderSystem.renderLine(myWorldPos, myWorldPos + toTargetInBounds_n * 10.f, glm::vec3(0, 0, 1));
+				debugRenderSystem.renderCone(myWorldPos, stationaryForward_n, rotationLimit_rad, 10.f, glm::vec3(0, 0.5f, 0));
+			}
+		}
+	}
+
+	glm::vec3 TurretPlacement::getWorldStationaryForward_n()
+{
+		using namespace glm;
+		if (!cache_worldStationaryForward_n.has_value())
+		{
+			cache_worldStationaryForward_n = glm::normalize(vec3(getParentXform() * getSpawnXform() * vec4(getLocalForward_n(), 0.f)));
+		}
+		return *cache_worldStationaryForward_n;
+	}
+
+	void TurretPlacement::setTarget(const wp<TargetType>& newTarget)
+	{
+		myTarget = newTarget;
+	}
+
+	void TurretPlacement::updateModelMatrixCache()
+	{
+		cache_worldStationaryForward_n = std::nullopt;
+		Parent::updateModelMatrixCache();
+	}
+
+	//void TurretPlacement::replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig)
+	//{
+	//	Parent::replacePlacementConfig(newConfig, owningConfig);
+	//}
+
+	void TurretPlacement::postConstruct()
+	{
+		Parent::postConstruct();
+
+		using namespace glm;
+		setForwardLocalSpace(glm::vec3(0, 0, 1));
+	}
+
 }
 
 std::string SA::PlacementSubConfig::getFullPath(const ConfigBase& owningConfig) const

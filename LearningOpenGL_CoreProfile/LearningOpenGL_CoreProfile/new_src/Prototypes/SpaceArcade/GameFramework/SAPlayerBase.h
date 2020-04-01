@@ -34,6 +34,7 @@ namespace SA
 		MultiDelegate<const sp<CameraBase>& /*old_camera*/, const sp<CameraBase>& /*new_camera*/> onCameraChanging;
 		void setControlTarget(const sp<IControllable>& newControlTarget);
 		bool hasControlTarget() const;
+		IControllable* getControlTarget();
 
 	protected:
 		virtual sp<CameraBase> generateDefaultCamera() const = 0;

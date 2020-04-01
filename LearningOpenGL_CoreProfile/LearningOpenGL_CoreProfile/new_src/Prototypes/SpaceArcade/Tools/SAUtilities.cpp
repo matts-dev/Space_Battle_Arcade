@@ -219,11 +219,17 @@ namespace SA
 
 		float getRadianAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n)
 		{
-			//clamp required because dot can produce values outside range of [-1,1] whih will cause acos to return nan.
+			//clamp required because dot can produce values outside range of [-1,1] which will cause acos to return nan.
 			float cosTheta = glm::clamp(glm::dot(from_n, to_n), -1.f, 1.f);
-			float rotDegreesRadians = glm::acos(cosTheta);
+			float rotRadians = glm::acos(cosTheta);
 
-			return rotDegreesRadians;
+			return rotRadians;
+		}
+
+		float getCosBetween(const glm::vec3& from_n, const glm::vec3& to_n)
+		{
+			float cosTheta = glm::clamp(glm::dot(from_n, to_n), -1.f, 1.f);
+			return cosTheta;
 		}
 
 		float getDegreeAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n)

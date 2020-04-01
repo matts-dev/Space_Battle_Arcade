@@ -137,7 +137,8 @@ namespace SA
 						GameBase::get().getCheatSystem().parseCheat(command);
 						std::memset(textBuffer, 0, sizeof(textBuffer)); //clear the current cheat
 						updateHistory(command);
-						focusTextInput();
+						//focusTextInput();
+						toggle();
 					}
 				}
 				ImGui::End();
@@ -227,6 +228,7 @@ namespace SA
 
 			if (inputTracker.isKeyJustPressed(rawWindow, GLFW_KEY_UP))
 			{
+				suggestedSelectionIdx = suggestedSelectionIdx == -1 ? cachedCommands.size() : suggestedSelectionIdx; //have up arrow start at bottom of list 
 				suggestedSelectionIdx = glm::max<int32_t>(suggestedSelectionIdx - 1, 0);
 			}
 			if (inputTracker.isKeyJustPressed(rawWindow, GLFW_KEY_DOWN))

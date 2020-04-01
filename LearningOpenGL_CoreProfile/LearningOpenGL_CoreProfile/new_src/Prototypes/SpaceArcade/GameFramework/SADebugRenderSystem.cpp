@@ -9,6 +9,7 @@
 #include "SALevelSystem.h"
 #include <detail/func_common.hpp>
 #include "../Tools/Geometry/SimpleShapes.h" //#TODO remove this once the sphereutils is mvoed to another file and include that.
+#include "../Tools/SAUtilities.h"
 
 namespace SA
 {
@@ -188,6 +189,32 @@ namespace SA
 		sp<TimedRenderDatum> sphereData = new_sp<SphereTimedRenderDatum>(model, color, secs);
 		sphereData->registerTimer();
 		timedRenderData.insert(sphereData);
+	}
+
+	void DebugRenderSystem::renderCone(const glm::vec3& pos, const glm::vec3& dir_n, float halfAngle_rad, float length, const glm::vec3& color, uint32_t facets)
+	{
+		using namespace glm;
+
+		vec3 otherVec = Utils::getDifferentVector(dir_n);
+		vec3 startRotAxis = glm::normalize(glm::cross(dir_n, otherVec));
+		quat rot = glm::angleAxis(halfAngle_rad, startRotAxis);
+
+		vec3 startLine_n = rot * dir_n; //should be normalized
+
+			//dot(a, n) = length
+			//||a||*||n||cos(theta) = length
+			//||a|| * 1 * cos(theta) = length
+			//||a|| =  10 /cos(theta) 
+		float scaledLength = halfAngle_rad == 0.f ? 1.f : length / glm::cos(glm::clamp(halfAngle_rad, -1.f, 1.f));
+
+		float facetRot_rad = (glm::pi<float>() * 2) / facets;
+		for (uint32_t facet = 0; facet < facets; ++facet)
+		{
+			//pile up rotations into a single quaternion and use that to transform the original direction
+			rot = angleAxis(facetRot_rad, dir_n) * rot;
+			vec3 lineVec = scaledLength * (rot * dir_n);
+			renderLine(pos, pos + lineVec, color);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -59,6 +59,7 @@ namespace SA
 		bool bUseCrosshairRoll = true;
 		bool bSlowCrosshairRollWithSpeed = true;
 		bool bFireHeld = false;
+		bool bAltPressed = false;
 	private:
 		uint32_t owningPlayerIndex = 0;
 		sp<CollisionData> collisionData;

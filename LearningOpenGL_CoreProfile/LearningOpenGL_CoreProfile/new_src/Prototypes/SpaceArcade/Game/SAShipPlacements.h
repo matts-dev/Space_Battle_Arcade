@@ -1,12 +1,13 @@
 #pragma once
+#include <optional>
+
 #include "AssetConfigs/SAConfigBase.h"
+#include "SAProjectileSystem.h"
 #include "../Tools/DataStructures/SATransform.h"
 #include "../GameFramework/SAWorldEntity.h"
 #include "../GameFramework/RenderModelEntity.h"
-#include "SAProjectileSystem.h"
-#include <optional>
-#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "../Tools/DataStructures/AdvancedPtrs.h"
+#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 
 namespace SA
 {
@@ -43,6 +44,15 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class ShipPlacementEntity : public RenderModelEntity, public IProjectileHitNotifiable
 	{
+	public:
+		struct TeamData
+		{
+			glm::vec3 color{ 1.f };
+			glm::vec3 shieldColor{ 1.f };
+			glm::vec3 projectileColor{ 1.f };
+			sp<ProjectileConfig> primaryProjectile;
+			size_t team = 0;
+		};
 		using Parent = RenderModelEntity;
 	public:
 		ShipPlacementEntity() : RenderModelEntity(nullptr, Transform{})
@@ -54,6 +64,12 @@ namespace SA
 		virtual void onDestroyed() override;
 	public:
 		virtual void draw(Shader& shader) override;
+		virtual glm::vec3 getWorldPosition() const;
+		glm::vec3 getWorldForward_n() const;
+		glm::vec3 getLocalForward_n() const { return forward_n; }
+		glm::vec3 getWorldUp_n() const;
+		glm::vec3 getLocalUp_n() const { return up_n	; }
+		void setTeamData(const TeamData& teamData);
 		void setParentXform(glm::mat4 parentXform); //#TODO #scenenodes
 		const glm::mat4& getParentXform() const { return parentXform; }
 		virtual void setTransform(const Transform& inTransform) override;
@@ -61,15 +77,20 @@ namespace SA
 		const glm::mat4& getParentXLocalModelMatrix(){ return cachedModelMat_PxL; }
 		void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig);
 		void adjustHP(int amount);
+		const TeamData& getTeamData() { return teamData; }
+	protected:
+		void setForwardLocalSpace(glm::vec3 newForward_ls);
+		virtual void updateModelMatrixCache();
+		const glm::mat4& getSpawnXform() { return spawnXform; }
 	private:
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
 		void tickDestroyingFX();
-		void updateModelMatrixCache();
 	private: //model editor special access
 		friend class ModelConfigurerEditor_Level;
 	public:
 		std::string modelMatrixUniform = "model";
+	protected:
 	private:
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;
 		sp<CollisionData> collisionData = nullptr;
@@ -77,12 +98,63 @@ namespace SA
 		PlacementSubConfig config;
 		glm::mat4 cachedModelMat_PxL{ 1.f };
 		glm::mat4 parentXform{ 1.f };
+		glm::mat4 spawnXform{ 1.f };
+		mutable std::optional<glm::vec3> cachedWorldPosition = std::nullopt; //mutable so we can lazy calculate in const virtual function
+		mutable std::optional<glm::vec3> cachedWorldForward_n = std::nullopt;
+		mutable std::optional<glm::vec3> cachedWorldUp_n = std::nullopt;
 		glm::vec3 shieldColor = glm::vec3(1.f);
-	private: //destrution fx
+		glm::vec3 forward_n = glm::vec3(1,0,0);
+		glm::vec3 up_n = glm::vec3(0, 1, 0);
+		TeamData teamData;
+	private: //destruction fx
 		sp<MultiDelegate<>> destructionTickDelegate = nullptr;
 		const float destructionTickFrequencySec = 0.1f;
 		float destroyAtSec = 3.0f;
 		float currentDestrutionPhaseSec = 0.f;
+		bool bShootingEnabled = false;
 		sp<RNG> myRNG = nullptr;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Turret Placement
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	class TurretPlacement : public ShipPlacementEntity
+	{
+	public:
+		using TargetType = WorldEntity;
+		using Parent = ShipPlacementEntity;
+	public:
+		void tick(float dt_sec) override;
+		glm::vec3 getWorldStationaryForward_n();
+		void setTarget(const wp<TargetType>& newTarget);
+	protected:
+		virtual void postConstruct() override;
+		virtual void updateModelMatrixCache() override;
+		//virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig) override;
+	private://cached
+		std::optional<glm::vec3> cache_worldStationaryForward_n;
+	private:
+		fwp<TargetType> myTarget = nullptr;
+		float rotationLimit_rad = glm::radians<float>(45.f);
+		float rotationSpeed_radSec = glm::radians(30.f);
+		float fireCooldown_sec = 1.0f;
+		float timeSinseFire_sec = 1.0f;
+		bool bShootingEnabled = true;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Communications Placement
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	class CommunicationPlacement : public ShipPlacementEntity
+	{
+		
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Defense Placement
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	class DefensePlacement : public ShipPlacementEntity
+	{
+
 	};
 }

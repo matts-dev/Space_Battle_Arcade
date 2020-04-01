@@ -70,6 +70,12 @@ namespace SA
 		{
 			GLFWwindow* window = primaryWindow->get();
 			bool bCtrl = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+			bAltPressed = glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
+
+			if (bAltPressed)
+			{
+				lastFireTimestamp = worldTimeTicked;
+			}
 
 			if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 			{
@@ -164,14 +170,14 @@ namespace SA
 
 		if (disableCameraForCollisionTimeRemainingSec > 0.f)
 		{
-		disableCameraForCollisionTimeRemainingSec -= dt_sec; //currently using engine time
+			disableCameraForCollisionTimeRemainingSec -= dt_sec; //currently using engine time
 		}
 		else
 		{
-		updateShipFacingDirection();
+			updateShipFacingDirection();
 		}
 
-		if (myShip)
+		if (myShip && !bAltPressed)
 		{
 			static LevelSystem& levelSys = GameBase::get().getLevelSystem();
 			if (const sp<LevelBase>& currentLevel = levelSys.getCurrentLevel())
@@ -346,7 +352,7 @@ namespace SA
 
 	void ShipCamera::updateShipFacingDirection()
 	{
-		if (myShip)
+		if (myShip && !bAltPressed)
 		{
 			static GameBase& game = GameBase::get();
 			static LevelSystem& levelSystem = game.getLevelSystem();

@@ -33,7 +33,7 @@ namespace SA
 		virtual void setTransform(const Transform& inTransform);
 
 		//#scenenodes this will need updating to get final parent-child transformed position
-		glm::vec3 getWorldPosition() const { return transform.position; } //#scenenodes todo update
+		virtual glm::vec3 getWorldPosition() const { return transform.position; } //#scenenodes todo update
 		glm::mat4 getModelMatrix() const { return transform.getModelMatrix(); } //#scenenodes todo update
 
 	protected:

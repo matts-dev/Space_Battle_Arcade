@@ -10,10 +10,12 @@ namespace SA
 	public:
 		MultiDelegate<> oneShotShipObjectivesCheat;
 		MultiDelegate<> destroyAllShipObjectivesCheat;
+		MultiDelegate<> turretsTargetPlayerCheat;
 	protected:
 		virtual void postConstruct() override;
 	private:
 		void cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs);
 		void cheat_destroyAllObjectives(const std::vector<std::string>& cheatArgs);
+		void cheat_turretsTargetPlayer(const std::vector<std::string>& cheatArgs);
 	};
 }

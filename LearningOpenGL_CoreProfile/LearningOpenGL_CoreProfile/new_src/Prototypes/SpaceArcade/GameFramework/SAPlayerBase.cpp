@@ -62,4 +62,13 @@ namespace SA
 	}
 
 
+	SA::IControllable* PlayerBase::getControlTarget()
+	{
+		if (controlTarget)
+		{
+			return controlTarget.fastGet();
+		}
+		return nullptr;
+	}
+
 }
