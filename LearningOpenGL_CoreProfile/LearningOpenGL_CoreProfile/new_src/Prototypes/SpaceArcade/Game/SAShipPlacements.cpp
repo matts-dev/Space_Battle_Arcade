@@ -336,7 +336,7 @@ namespace SA
 		{
 			HitPoints& hp = hpComp->hp;
 
-			hp.current += amount;
+			hp.current += bHasGeneratorPower ? glm::min(amount / 2, 1) : amount; //half the damage if generators are running
 			if (hp.current <= 0.f)
 			{
 				//destroyed

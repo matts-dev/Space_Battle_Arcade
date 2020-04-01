@@ -908,7 +908,10 @@ namespace SA
 				if (HitPointComponent* hpComp = placement->getGameComponent<HitPointComponent>())
 				{
 					//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
+					bool cachedPower = placement->hasGeneratorPower();
+					placement->setHasGeneratorPower(false); //don't let generator shield stop this
 					placement->adjustHP(-hpComp->hp.current + 1);
+					placement->setHasGeneratorPower(cachedPower); //restore power if they had it.
 				}
 			}
 		};
@@ -926,6 +929,7 @@ namespace SA
 				if (HitPointComponent* hpComp = placement->getGameComponent<HitPointComponent>())
 				{
 					//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
+					placement->setHasGeneratorPower(false);//this will prevent it from destroying as generator power adds sheild that reduces damage
 					placement->adjustHP(-hpComp->hp.current);
 				}
 			}
@@ -942,6 +946,7 @@ namespace SA
 			if (HitPointComponent* hpComp = generator->getGameComponent<HitPointComponent>())
 			{
 				//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
+				generator->setHasGeneratorPower(false);
 				generator->adjustHP(-hpComp->hp.current);
 			}
 		}
