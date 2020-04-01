@@ -86,6 +86,9 @@ namespace SA
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
 		void tickDestroyingFX();
+	protected:
+		RNG& getRNG() { return *myRNG; }
+		bool hasStartedDestructionPhase() const {return destructionTickDelegate != nullptr;}
 	private: //model editor special access
 		friend class ModelConfigurerEditor_Level;
 	public:
@@ -133,8 +136,11 @@ namespace SA
 		//virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig) override;
 	private://cached
 		std::optional<glm::vec3> cache_worldStationaryForward_n;
+		bool bUseDefaultBarrelLocations = true; //specific to the turret model
+		size_t barrelIndex = 0;
 	private:
 		fwp<TargetType> myTarget = nullptr;
+		std::vector<glm::vec3> barrelLocations_lp; //local points
 		float rotationLimit_rad = glm::radians<float>(45.f);
 		float rotationSpeed_radSec = glm::radians(30.f);
 		float fireCooldown_sec = 1.0f;

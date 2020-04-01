@@ -310,8 +310,7 @@ namespace SA
 			if (hp.current <= 0.f)
 			{
 				//destroyed
-				bool bStartedDestruction = destructionTickDelegate != nullptr;
-				if (!isPendingDestroy() && !bStartedDestruction)
+				if (!isPendingDestroy() && !hasStartedDestructionPhase())
 				{
 					if (LevelBase* world = getWorld())
 					{
@@ -447,13 +446,18 @@ namespace SA
 		using namespace glm;
 		static DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
 
+		if (hasStartedDestructionPhase() || isPendingDestroy())
+		{
+			return;
+		}
+
 		timeSinseFire_sec += dt_sec;
 
 		if (myTarget)
 		{
-			const vec3 targetPos = myTarget->getWorldPosition();
+			const vec3 targetPos_wp = myTarget->getWorldPosition();
 			const vec3 myWorldPos = getWorldPosition();
-			const vec3 toTarget = targetPos - myWorldPos;
+			const vec3 toTarget = targetPos_wp - myWorldPos;
 			const vec3 toTarget_n = glm::normalize(toTarget);
 			const vec3 myForward_wn = getWorldForward_n();
 			const vec3 stationaryForward_n = getWorldStationaryForward_n();
@@ -534,9 +538,16 @@ namespace SA
 				&& bShootingEnabled && teamData.primaryProjectile && length2(toTarget_n) > 0.001 && !bTargetOutOfBounds &&
 				timeSinseFire_sec >= fireCooldown_sec)
 			{
+				RNG& rng = getRNG(); float fuzz = 0.5f;//would also be nice if we could get the forward vector of the ship, but that isn't available on target type
+				vec3 targetBlurOffset_wv = vec3(rng.getFloat(-fuzz, fuzz), rng.getFloat(-fuzz, fuzz), rng.getFloat(-fuzz, fuzz));//create some fuzzyness around where the turret will shoot.
+
+				barrelIndex = (barrelIndex + 1) % barrelLocations_lp.size();
+				vec3 barrelLocation_wp = barrelLocations_lp.size() > 0 ? barrelLocations_lp[barrelIndex] : vec3(0.f);
+				barrelLocation_wp = vec3(getParentXLocalModelMatrix() * vec4(barrelLocation_wp, 1.f));
+
 				ProjectileSystem::SpawnData spawnData;
-				spawnData.direction_n = glm::normalize(toTarget_n);
-				spawnData.start = myWorldPos + spawnData.direction_n * 5.0f;
+				spawnData.direction_n = glm::normalize((targetPos_wp+targetBlurOffset_wv)- barrelLocation_wp);
+				spawnData.start = barrelLocation_wp;// +spawnData.direction_n * 5.0f;
 				spawnData.color = teamData.color;
 				spawnData.team = teamData.team;
 				spawnData.owner = this;
@@ -552,6 +563,15 @@ namespace SA
 				debugRenderSystem.renderLine(myWorldPos, myWorldPos + toTargetInBounds_n * 10.f, glm::vec3(0, 0, 1));
 				debugRenderSystem.renderCone(myWorldPos, stationaryForward_n, rotationLimit_rad, 10.f, glm::vec3(0, 0.5f, 0));
 			}
+		}
+		if constexpr (constexpr bool bDebugBarrelLoc = true)
+		{
+			mat4 loc1_m = glm::translate(mat4(1.f), barrelLocations_lp[0]);
+			mat4 loc2_m = glm::translate(mat4(1.f), barrelLocations_lp[1]);
+
+			mat4 cubeXform = getParentXLocalModelMatrix();// *glm::scale(mat4(1.f), vec3(0.1f));
+			debugRenderSystem.renderCube(cubeXform * glm::scale(loc1_m, vec3(0.1f)), vec3(1, 0, 0));
+			debugRenderSystem.renderCube(cubeXform * glm::scale(loc2_m, vec3(0.1f)), vec3(1, 0, 0));
 		}
 	}
 
@@ -576,17 +596,18 @@ namespace SA
 		Parent::updateModelMatrixCache();
 	}
 
-	//void TurretPlacement::replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig)
-	//{
-	//	Parent::replacePlacementConfig(newConfig, owningConfig);
-	//}
-
 	void TurretPlacement::postConstruct()
 	{
 		Parent::postConstruct();
 
 		using namespace glm;
 		setForwardLocalSpace(glm::vec3(0, 0, 1));
+
+		if (bUseDefaultBarrelLocations)
+		{
+			barrelLocations_lp.push_back(glm::vec3(0.6f, 0.f, 2.3f));
+			barrelLocations_lp.push_back(glm::vec3(-0.6f, 0.f, 2.3));
+		}
 	}
 
 }
