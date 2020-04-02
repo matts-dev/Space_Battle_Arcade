@@ -109,10 +109,11 @@ namespace SA
 		activeGenerators = generatorEntities.size();
 #if COMPILE_CHEATS
 		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());
-		cheatSystem.oneShotShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_OneShotPlacements);
-		cheatSystem.destroyAllShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_DestroyAllShipPlacements);
-		if(turretEntities.size() > 0) cheatSystem.turretsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_TurretsTargetPlayer);
+		cheatSystem.oneShotShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_oneShotPlacements);
+		cheatSystem.destroyAllShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_destroyAllShipPlacements);
+		if(turretEntities.size() > 0) cheatSystem.turretsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_turretsTargetPlayer);
 		if (generatorEntities.size() > 0) cheatSystem.destroyAllGeneratorsCheat.addWeakObj(sp_this(), &Ship::cheat_destroyAllGenerators);
+		if (communicationEntities.size() > 0) cheatSystem.commsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_commsTargetPlayer);
 #endif //COMPILE_CHEATS
 	}
 
@@ -899,7 +900,7 @@ namespace SA
 	}
 
 #if COMPILE_CHEATS
-	void Ship::cheat_OneShotPlacements()
+	void Ship::cheat_oneShotPlacements()
 	{
 		auto cheatLambda = [this](std::vector<sp<ShipPlacementEntity>> placements)
 		{
@@ -920,7 +921,7 @@ namespace SA
 		cheatLambda(turretEntities);
 	}
 
-	void Ship::cheat_DestroyAllShipPlacements()
+	void Ship::cheat_destroyAllShipPlacements()
 	{
 		auto cheatLambda = [this](std::vector<sp<ShipPlacementEntity>> placements)
 		{
@@ -952,9 +953,9 @@ namespace SA
 		}
 	}
 
-	void Ship::cheat_TurretsTargetPlayer()
+	void Ship::cheat_turretsTargetPlayer()
 	{
-		using TargetType = TurretPlacement::TargetType;
+		using TargetType = ShipPlacementEntity::TargetType;
 
 		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
 		{
@@ -966,6 +967,25 @@ namespace SA
 					if (TurretPlacement* turret = dynamic_cast<TurretPlacement*>(turretBase.get()))
 					{
 						turret->setTarget(wpPlayerShip);
+					}
+				}
+			}
+		}
+	}
+
+	void Ship::cheat_commsTargetPlayer()
+	{
+		using TargetType = ShipPlacementEntity::TargetType;
+		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+		{
+			if (TargetType* playerShip = dynamic_cast<TargetType*>(player->getControlTarget()))
+			{
+				wp<TargetType> wpPlayerShip = playerShip->requestTypedReference_Nonsafe<TargetType>();
+				for (const sp<ShipPlacementEntity>& commBase : communicationEntities)
+				{
+					if (CommunicationPlacement* satellite = dynamic_cast<CommunicationPlacement*>(commBase.get()))
+					{
+						satellite->setTarget(wpPlayerShip);
 					}
 				}
 			}

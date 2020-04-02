@@ -149,10 +149,11 @@ namespace SA
 		void handlePlacementDestroyed(const sp<GameEntity>& placement);
 #if COMPILE_CHEATS
 	private:
-		void cheat_OneShotPlacements();
-		void cheat_DestroyAllShipPlacements();
+		void cheat_oneShotPlacements();
+		void cheat_destroyAllShipPlacements();
 		void cheat_destroyAllGenerators();
-		void cheat_TurretsTargetPlayer();
+		void cheat_turretsTargetPlayer();
+		void cheat_commsTargetPlayer();
 #endif //COMPILE_CHEATS
 	public:
 		MultiDelegate<> onCollided;

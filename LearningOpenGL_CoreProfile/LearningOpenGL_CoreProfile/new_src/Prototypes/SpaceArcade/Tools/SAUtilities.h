@@ -72,6 +72,10 @@ namespace SA
 				&& float_equals(first.y, second.y, epsilon)
 				&& float_equals(first.z, second.z, epsilon);
 		}
+		inline glm::vec3 project(glm::vec3 toProject_v, glm::vec3 axisUnitVec_n)
+		{
+			return glm::dot(toProject_v, axisUnitVec_n) * axisUnitVec_n;
+		}
 
 		glm::vec3 getDifferentVector(glm::vec3 vec);
 		float getDegreeAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n);

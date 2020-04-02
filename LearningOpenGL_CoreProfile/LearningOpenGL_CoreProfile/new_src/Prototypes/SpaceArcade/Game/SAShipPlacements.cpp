@@ -19,9 +19,11 @@
 #include "../Tools/SAUtilities.h"
 #include "../GameFramework/SADebugRenderSystem.h"
 #include "SAProjectileSystem.h"
+#include "../Tools/color_utils.h"
 
 
 static constexpr bool bCOMPILE_DEBUG_TURRET = true;
+static constexpr bool bCOMPILE_DEBUG_SATELLITE = true;
 
 namespace SA
 {
@@ -134,7 +136,7 @@ namespace SA
 
 		if (!cachedWorldForward_n.has_value())
 		{
-			cachedWorldForward_n = normalize(vec3(cachedModelMat_PxL * vec4(forward_n,0.f)));
+			cachedWorldForward_n = normalize(vec3(cachedModelMat_PxL * vec4(forward_ln,0.f)));
 		}
 		return *cachedWorldForward_n;
 	}
@@ -144,7 +146,7 @@ namespace SA
 		using namespace glm;
 		if (!cachedWorldUp_n.has_value())
 		{
-			cachedWorldUp_n = normalize(vec3(cachedModelMat_PxL * vec4(up_n, 0.f)));
+			cachedWorldUp_n = normalize(vec3(cachedModelMat_PxL * vec4(up_ln, 0.f)));
 		}
 		return *cachedWorldUp_n;
 	}
@@ -303,12 +305,45 @@ namespace SA
 		}
 	}
 
+	glm::vec3 ShipPlacementEntity::getSpawnUp_wn()
+	{
+		using namespace glm;
+		if (!cache_spawnUp_wn.has_value())
+		{
+			cache_spawnUp_wn = normalize(vec3(getParentXform() * getSpawnXform() *  vec4(up_ln, 0)));
+		}
+		return *cache_spawnUp_wn;
+	}
+
+	glm::vec3 ShipPlacementEntity::getSpawnRight_wn()
+	{
+		using namespace glm;
+		if (!cache_spawnRight_wn.has_value())
+		{
+			cache_spawnRight_wn = normalize(vec3(getParentXform() * getSpawnXform() * vec4(right_ln, 0)));
+		}
+		return *cache_spawnRight_wn;
+	}
+
+	glm::vec3 ShipPlacementEntity::getSpawnForward_wn()
+	{
+		using namespace glm;
+		if (!cache_spawnForward_wn.has_value())
+		{
+			cache_spawnForward_wn = normalize(vec3(getParentXform() * getSpawnXform() * vec4(forward_ln, 0)));
+		}
+		return *cache_spawnForward_wn;
+	}
+
 	void ShipPlacementEntity::updateModelMatrixCache()
 	{
-		//perhaps clear cache function that different functions can call to whipe out all cache
+		//perhaps clear cache function that different functions can call to whip out all cache
 		cachedWorldPosition = std::nullopt;
 		cachedWorldForward_n = std::nullopt;
 		cachedWorldUp_n = std::nullopt;
+		cache_spawnUp_wn = std::nullopt;
+		cache_spawnRight_wn = std::nullopt;
+		cache_spawnForward_wn = std::nullopt;
 
 		cachedModelMat_PxL = parentXform * getModelMatrix();
 
@@ -363,9 +398,14 @@ namespace SA
 
 	}
 
+	void ShipPlacementEntity::setTarget(const wp<TargetType>& newTarget)
+	{
+		myTarget = newTarget;
+	}
+
 	void ShipPlacementEntity::setForwardLocalSpace(glm::vec3 newForward_ls)
 	{
-		forward_n = glm::normalize(newForward_ls);
+		forward_ln = glm::normalize(newForward_ls);
 		cachedWorldForward_n = std::nullopt;
 	}
 
@@ -523,6 +563,7 @@ namespace SA
 					const glm::vec3 targetFrameRight_wn = normalize(cross(stationaryUp_wn, myForward_wn));
 					glm::vec3 targetFrameUp_wn = cross(myForward_wn, targetFrameRight_wn); //ortho-normal, do not need to normalize
 
+					//frame basis vectors make orthonormal basis, so we can project to that plane as if it were an x/y coordinate system
 					vec3 projUpOnTargetFrame_wn = normalize(dot(myUp_wn, targetFrameRight_wn)*targetFrameRight_wn + dot(myUp_wn, targetFrameUp_wn)*targetFrameUp_wn);
 					if (bool bVectorUnderUpHorizon = glm::dot(targetFrameUp_wn, projUpOnTargetFrame_wn) < 0.f)
 					{
@@ -615,11 +656,6 @@ namespace SA
 		return *cache_worldStationaryForward_n;
 	}
 
-	void TurretPlacement::setTarget(const wp<TargetType>& newTarget)
-	{
-		myTarget = newTarget;
-	}
-
 	void TurretPlacement::updateModelMatrixCache()
 	{
 		cache_worldStationaryForward_n = std::nullopt;
@@ -640,6 +676,93 @@ namespace SA
 		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Communications placement
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	void CommunicationPlacement::tick(float dt_sec)
+	{
+		static DebugRenderSystem& debugRenderer = GameBase::get().getDebugRenderSystem();
+		using namespace glm;
+
+		Parent::tick(dt_sec);
+		if (myTarget)
+		{
+			if (TargetType* target = myTarget.fastGet())
+			{
+				const vec3 targetPos_wp = target->getWorldPosition();
+				const vec3 myWorldPos_wp = getWorldPosition();
+				const vec3 toTarget_wv = targetPos_wp - myWorldPos_wp;
+				const vec3 toTarget_wn = glm::normalize(toTarget_wv);
+				const vec3 forward_wn = getWorldForward_n();
+
+				const vec3 spawnRight_wn = getSpawnRight_wn();
+				const vec3 spawnForward_wn = getSpawnForward_wn();
+				const vec3 spawnUp_wn = getSpawnUp_wn();
+
+				//note: projecting to plane must be done on an orthonormal plane for it to work like expected; that is the case for this.
+				const vec3 targetProj_wn = normalize(Utils::project(toTarget_wn, spawnRight_wn) + Utils::project(toTarget_wn, spawnForward_wn));
+				const vec3 myForwardProj_wn = normalize(Utils::project(forward_wn, spawnRight_wn) + Utils::project(forward_wn, spawnForward_wn));
+
+				if (!Utils::vectorsAreSame(targetProj_wn, myForwardProj_wn))
+				{
+					bool bRotationMatchesUp = dot(glm::cross(myForwardProj_wn, targetProj_wn), spawnUp_wn) > 0.f;
+					float angleBetweenTargetAndMyForward_rad = Utils::getRadianAngleBetween(targetProj_wn, myForwardProj_wn);
+
+					constexpr float minRotation = glm::radians(1.0f);
+					if (angleBetweenTargetAndMyForward_rad > minRotation)
+					{
+						const Transform& xform = getTransform();
+						Transform newXform = xform;
+#define FIX_SATELLITE_UP_VECTOR 0
+#if FIX_SATELLITE_UP_VECTOR 
+						//due to numerical imprecision, the satellite may drift over time due to piling up rotations, so we probably want to correct its up vector.
+						//using last frame data to avoid doing extra transformations; drift over frames should be small so this should be okay
+						vec3 myPreviousUp_wn = normalize(vec3(getParentXLocalModelMatrix() * vec4(up_ln, 0)));
+						if (dot(myPreviousUp_wn, spawnUp_wn) < 0.999f)
+						{
+							float angleToCorrectUp_rad = Utils::getRadianAngleBetween(myPreviousUp_wn, spawnUp_wn);
+							vec3 rotAxis = normalize(glm::cross(myPreviousUp_wn, spawnUp_wn));
+							quat upCorrectRot = glm::angleAxis(angleToCorrectUp_rad, rotAxis);
+							newXform.rotQuat = upCorrectRot * newXform.rotQuat;
+						}
+#endif //FIX_SATELLITE_UP_VECTOR 
+
+						float rotThisTick_rad = glm::min(angleBetweenTargetAndMyForward_rad, rotationSpeed_radsec * dt_sec); //if small angle, just use that as rotation
+						
+						//quat turnRot = glm::angleAxis(bRotationMatchesUp ? rotThisTick_rad : -rotThisTick_rad, spawnUp_wn);
+						quat turnRot = glm::angleAxis(bRotationMatchesUp ? rotThisTick_rad : -rotThisTick_rad, normalize(vec3(getSpawnXform() * vec4(getLocalUp_n(),0)))); 
+						
+						newXform.rotQuat = turnRot * newXform.rotQuat;
+						setTransform(newXform);
+					}
+				}
+
+				if constexpr (bCOMPILE_DEBUG_SATELLITE)
+				{
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnRight_wn,		vec3(1, 0, 0));
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnUp_wn,		vec3(0, 1, 0));
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnForward_wn,	vec3(0, 0, 1));
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*myForwardProj_wn,	color::metalicgold());
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*targetProj_wn,		color::lightPurple());
+				}
+			}
+		}
+	}
+
+	void CommunicationPlacement::replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig)
+	{
+		Parent::replacePlacementConfig(newConfig, owningConfig);
+
+		const glm::mat4& spawnXform = getSpawnXform();
+		//spawnRight_ln =		glm::normalize(glm::vec3(spawnXform * glm::vec4(1, 0, 0, 0)));
+		//spawnUp_ln =		glm::normalize(glm::vec3(spawnXform * glm::vec4(0, 1, 0, 0)));
+		//spawnForward_ln =	glm::normalize(glm::vec3(spawnXform * glm::vec4(0, 0, 1, 0)));
+	}
+
+	//void CommunicationPlacement::updateModelMatrixCache()
+	//{
+	//	Parent::updateModelMatrixCache();
+	//}
 }
 
 std::string SA::PlacementSubConfig::getFullPath(const ConfigBase& owningConfig) const
