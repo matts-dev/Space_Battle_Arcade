@@ -20,6 +20,7 @@
 #include "../GameFramework/SADebugRenderSystem.h"
 #include "SAProjectileSystem.h"
 #include "../Tools/color_utils.h"
+#include "../Rendering/OpenGLHelpers.h"
 
 
 static constexpr bool bCOMPILE_DEBUG_TURRET = true;
@@ -32,8 +33,9 @@ namespace SA
 	static const std::string defStr = "DEFENSE";
 	static const std::string invalidStr = "INVALID";
 
-	/*static*/sp<Model3D> CommunicationPlacement::seekerModel;
-	/*static*/sp<Shader> CommunicationPlacement::seekerShader;
+	/*static*/ sp<Model3D> CommunicationPlacement::seekerModel = nullptr;
+	/*static*/ sp<Shader> CommunicationPlacement::seekerShader = nullptr;
+	/*static*/ uint32_t CommunicationPlacement::tessellatedTextureID = 0;
 
 	std::string lexToString(PlacementType enumValue)
 	{
@@ -703,17 +705,19 @@ namespace SA
 		#version 330 core
 		layout (location = 0) in vec3 position;				
 		layout (location = 1) in vec3 normal;
-		layout (location = 2) in vec2 uv;  
+		layout (location = 2) in vec2 modelUV;  
 
 		uniform mat4 projection_view;
 		uniform mat4 model;
 		uniform vec3 uniformColor;
 
+		out vec2 uv;
 		out vec3 color;
 
 		void main(){
 			gl_Position = projection_view * model * vec4(position, 1.0f);
 			color = uniformColor;
+			uv = modelUV;
 		}
 	)";
 	static char const* const activeSeekerShader_fs = R"(
@@ -721,14 +725,62 @@ namespace SA
 		out vec4 fragColor;
 
 		in vec3 color;
+		in vec2 uv;
 
-		void main(){
+		uniform vec3 uniformColor;
+		uniform sampler2D tessellateTex;
+
+		void main()
+		{
+			////////////////////////////////////////////
+			//This is all taken from shield effect, consult that shader for questions
+			////////////////////////////////////////////
+			float fractionComplete = 0.5f; //hard code time dependent values
+
+			////////////////////////////////////////////
+			//get a grayscale tessellated pattern
+
+			vec2 preventAlignmentOffset = vec2(0.1, 0.2);
+			float medMove = 0.5f *fractionComplete;
+			float smallMove = 0.5f *fractionComplete;
+
+			vec2 baseEffectUV = uv * vec2(5,5);
+			vec2 mediumTessUV_UR = uv * vec2(10,10) + vec2(medMove, medMove) + preventAlignmentOffset;
+			vec2 mediumTessUV_UL = uv * vec2(10,10) + vec2(medMove, -medMove);
+
+			vec2 smallTessUV_UR = uv * vec2(20,20) + vec2(smallMove, smallMove) + preventAlignmentOffset;
+			vec2 smallTessUV_UL = uv * vec2(20,20) + vec2(smallMove, -smallMove);
+
+			//invert textures so black is now white and white is black (1-color); 
+			vec4 small_ur = vec4(vec3(1.f),0.f) - texture(tessellateTex, smallTessUV_UR);
+			vec4 small_ul = vec4(vec3(1.f),0.f) - texture(tessellateTex, smallTessUV_UR);
+			vec4 med_ur = vec4(vec3(1.f),0.f) - texture(tessellateTex, mediumTessUV_UR);
+			vec4 med_ul = vec4(vec3(1.f),0.f) - texture(tessellateTex, mediumTessUV_UL);
+
+			vec4 grayScale = 0.25f*small_ur + 0.25f*small_ul + 0.25f*med_ur + 0.25f*med_ur;
+
+			////////////////////////////////////////////
+			// filter out some color
+			////////////////////////////////////////////
+			float cutoff = max(fractionComplete, 0.5f); //starts to disappear once fractionComplete takes over
+			if(grayScale.r < cutoff)
+			{
+				discard;
+			}
+				
+			////////////////////////////////////////////
+			// colorize grayscale
+			////////////////////////////////////////////
+			vec3 texColor = grayScale.rgb * uniformColor;
+
+			//vec3 texColor = texture(tessellateTex, uv).xyz;
+
 		#define TONE_MAP_HDR 0
 		#if TONE_MAP_HDR
-			vec3 reinHardToneMapped = (color) / (1 + color);
+			vec3 reinHardToneMapped = (texColor) / (1 + texColor);
 			fragColor = vec4(reinHardToneMapped, 1.0f);
 		#else
-			fragColor = vec4(color, 1.0f);
+			fragColor = vec4(texColor, 1.0f);
 		#endif
 		}
 	)";
@@ -852,8 +904,20 @@ namespace SA
 		Parent::postConstruct();
 
 		//just using the planet model as it is a sphere and the particle system (shield effect) accepts models
-		seekerModel = seekerModel ? seekerModel : GameBase::get().getAssetSystem().loadModel("GameData/mods/SpaceArcade/Assets/Models3D/Planet/textured_planet.obj");
-		seekerShader = seekerShader ? seekerShader : new_sp<Shader>(activeSeekerShader_vs, activeSeekerShader_fs, false);
+		if (!seekerModel)
+		{
+			seekerModel = GameBase::get().getAssetSystem().loadModel("GameData/mods/SpaceArcade/Assets/Models3D/Planet/textured_planet.obj");
+			seekerShader = new_sp<Shader>(activeSeekerShader_vs, activeSeekerShader_fs, false);
+
+			if (GameBase::get().getAssetSystem().loadTexture("GameData/engine_assets/TessellatedShapeRadials.png", tessellatedTextureID))
+			{
+				//seekerShader->setUniform1i("tessellateTex", 0); dont in tick for code readability and locality; probably should do here for efficiency assuming texture slot doesn't change
+			}
+			else
+			{
+				log(__FUNCTION__, LogLevel::LOG_ERROR, "Failed to get tessellated texture!");
+			}
+		}
 	}
 
 	void CommunicationPlacement::draw(Shader& shader)
@@ -873,6 +937,11 @@ namespace SA
 				seekerShader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
 				seekerShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 				seekerShader->setUniform3f("uniformColor", color::green());
+				
+				const uint32_t textureSlot = GL_TEXTURE0;
+				ec(glActiveTexture(textureSlot));
+				ec(glBindTexture(GL_TEXTURE_2D, tessellatedTextureID));
+				seekerShader->setUniform1i("tessellateTex", textureSlot - GL_TEXTURE0);
 
 				seekerModel->draw(*seekerShader);
 			}

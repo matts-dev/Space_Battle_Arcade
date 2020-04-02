@@ -188,6 +188,7 @@ namespace SA
 	private:
 		static sp<Model3D> seekerModel;
 		static sp<Shader> seekerShader;
+		static uint32_t tessellatedTextureID;
 	private:
 		glm::vec3 barrelLocation_lp{ 0.f, 1.1f, 0.65f };
 		std::optional<HealSeeker> activeSeeker = std::nullopt;
