@@ -1,4 +1,5 @@
 #include "GameplayComponents.h"
+#include "../../Tools/DataStructures/SATransform.h"
 
 namespace SA
 {
@@ -39,6 +40,45 @@ namespace SA
 		if(BehaviorTreeBrain* btBrain = dynamic_cast<BehaviorTreeBrain*>(newBrain.get()))
 		{
 			cachedBehaviorTree = &btBrain->getBehaviorTree();
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// hit point component
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	void HitPointComponent::adjust(float delta)
+	{
+		if (delta < 0)
+		{
+			delta = damageReductionFactor * delta;
+		}
+
+		HitPoints old = hp;
+		hp.current += delta;
+		hp.current = glm::clamp(hp.current, 0.f, hp.max);
+
+		if(old != hp) 
+		{ 
+			onHpChangedEvent.broadcast(old, hp);
+		}
+	}
+
+	void HitPointComponent::overwriteHP(const HitPoints& newHP)
+	{
+		HitPoints old = hp;
+		hp = newHP;
+
+		if (old != hp)
+		{
+			onHpChangedEvent.broadcast(old, hp);
+		}
+	}
+
+	void HitPointComponent::setDamageReductionFactor(float reductionFactor)
+	{
+		if (reductionFactor != 0.f)
+		{
+			damageReductionFactor = reductionFactor;
 		}
 	}
 

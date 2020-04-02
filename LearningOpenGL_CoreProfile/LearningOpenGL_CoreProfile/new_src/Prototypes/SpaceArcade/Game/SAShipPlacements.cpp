@@ -32,6 +32,9 @@ namespace SA
 	static const std::string defStr = "DEFENSE";
 	static const std::string invalidStr = "INVALID";
 
+	/*static*/sp<Model3D> CommunicationPlacement::seekerModel;
+	/*static*/sp<Shader> CommunicationPlacement::seekerShader;
+
 	std::string lexToString(PlacementType enumValue)
 	{
 		switch (enumValue)
@@ -74,8 +77,10 @@ namespace SA
 
 		if (hpComp)
 		{
-			hpComp->hp.current = 100;
-			hpComp->hp.max = 100;
+			HitPoints hp;
+			hp.current = 100.f;
+			hp.max = 100.f;
+			hpComp->overwriteHP(hp);
 		}
 
 		myRNG = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
@@ -180,7 +185,7 @@ namespace SA
 			if (teamComp->getTeam() != hitProjectile.team)
 			{
 				//we were hit by a non-team member, apply game logic!
-				adjustHP(-hitProjectile.damage);
+				adjustHP(-float(hitProjectile.damage));
 			}
 			else
 			{
@@ -365,13 +370,16 @@ namespace SA
 		}
 	}
 
-	void ShipPlacementEntity::adjustHP(int amount)
+	void ShipPlacementEntity::adjustHP(float amount)
 	{
 		if (HitPointComponent* hpComp = getGameComponent<HitPointComponent>())
 		{
-			HitPoints& hp = hpComp->hp;
+			const HitPoints& hp = hpComp->getHP();
 
-			hp.current += bHasGeneratorPower ? glm::min(amount / 2, 1) : amount; //half the damage if generators are running
+			//#TODO: note: this modifier needs to be done in the hp component as it will not be applied if accessed through different means
+			//hpComp->adjust(bHasGeneratorPower ? glm::min(amount / 2, 1) : amount);//half the damage if generators are running
+			hpComp->adjust(amount);
+
 			if (hp.current <= 0.f)
 			{
 				//destroyed
@@ -398,9 +406,20 @@ namespace SA
 
 	}
 
+	void ShipPlacementEntity::setHasGeneratorPower(bool bValue)
+	{
+		bHasGeneratorPower = bValue;
+
+		if (HitPointComponent* hpComp = getGameComponent<HitPointComponent>())
+		{
+			hpComp->setDamageReductionFactor(bHasGeneratorPower ? 0.5f : 1.f);
+		}
+	}
+
 	void ShipPlacementEntity::setTarget(const wp<TargetType>& newTarget)
 	{
 		myTarget = newTarget;
+		onTargetSet(myTarget ? myTarget.get() : nullptr);
 	}
 
 	void ShipPlacementEntity::setForwardLocalSpace(glm::vec3 newForward_ls)
@@ -679,10 +698,52 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Communications placement
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	static char const* const activeSeekerShader_vs = R"(
+		#version 330 core
+		layout (location = 0) in vec3 position;				
+		layout (location = 1) in vec3 normal;
+		layout (location = 2) in vec2 uv;  
+
+		uniform mat4 projection_view;
+		uniform mat4 model;
+		uniform vec3 uniformColor;
+
+		out vec3 color;
+
+		void main(){
+			gl_Position = projection_view * model * vec4(position, 1.0f);
+			color = uniformColor;
+		}
+	)";
+	static char const* const activeSeekerShader_fs = R"(
+		#version 330 core
+		out vec4 fragColor;
+
+		in vec3 color;
+
+		void main(){
+		#define TONE_MAP_HDR 0
+		#if TONE_MAP_HDR
+			vec3 reinHardToneMapped = (color) / (1 + color);
+			fragColor = vec4(reinHardToneMapped, 1.0f);
+		#else
+			fragColor = vec4(color, 1.0f);
+		#endif
+		}
+	)";
+
 	void CommunicationPlacement::tick(float dt_sec)
 	{
 		static DebugRenderSystem& debugRenderer = GameBase::get().getDebugRenderSystem();
 		using namespace glm;
+
+		if (hasStartedDestructionPhase() || isPendingDestroy())
+		{
+			return;
+		}
+
+		timeSinseFire_sec += dt_sec;
 
 		Parent::tick(dt_sec);
 		if (myTarget)
@@ -729,6 +790,7 @@ namespace SA
 
 						float rotThisTick_rad = glm::min(angleBetweenTargetAndMyForward_rad, rotationSpeed_radsec * dt_sec); //if small angle, just use that as rotation
 						
+						//rotation needs to be done in local space, however the angle is the same in both spaces.
 						//quat turnRot = glm::angleAxis(bRotationMatchesUp ? rotThisTick_rad : -rotThisTick_rad, spawnUp_wn);
 						quat turnRot = glm::angleAxis(bRotationMatchesUp ? rotThisTick_rad : -rotThisTick_rad, normalize(vec3(getSpawnXform() * vec4(getLocalUp_n(),0)))); 
 						
@@ -737,14 +799,94 @@ namespace SA
 					}
 				}
 
+				if (timeSinseFire_sec > fireCooldown_sec && !activeSeeker.has_value())
+				{
+					activeSeeker = HealSeeker{};
+					activeSeeker->xform.position = getParentXLocalModelMatrix() * vec4(barrelLocation_lp, 1.f);
+					activeSeeker->xform.scale = vec3(0.5f);
+					timeSinseFire_sec = 0.f;
+				}
+
+				if(activeSeeker)
+				{
+					vec3 toTarget_wv = targetPos_wp - (activeSeeker->xform.position);
+					vec3 toTarget_wn = glm::normalize(toTarget_wv);
+					vec3 deltaPos = toTarget_wn * activeSeeker->speed * dt_sec;
+					deltaPos = glm::length2(deltaPos) < glm::length2(toTarget_wv) ? deltaPos : toTarget_wn; //if close to target, move right to it.
+					activeSeeker->xform.position += deltaPos;
+					if (glm::length2(toTarget_wv) < glm::length2(activeSeeker->completeRadius))
+					{
+						if (HitPointComponent* hpComp = target->getGameComponent<HitPointComponent>())
+						{
+							hpComp->adjust(25.f); //heal!
+						}
+						else
+						{
+							log(__FUNCTION__, LogLevel::LOG_WARNING, "attempted to heal target without any hp component");
+						}
+						activeSeeker = std::nullopt;
+					}
+				}
+
 				if constexpr (bCOMPILE_DEBUG_SATELLITE)
 				{
-					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnRight_wn,		vec3(1, 0, 0));
-					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnUp_wn,		vec3(0, 1, 0));
-					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnForward_wn,	vec3(0, 0, 1));
-					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*myForwardProj_wn,	color::metalicgold());
-					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*targetProj_wn,		color::lightPurple());
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnRight_wn, vec3(1, 0, 0));
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnUp_wn, vec3(0, 1, 0));
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*spawnForward_wn, vec3(0, 0, 1));
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*myForwardProj_wn, color::metalicgold());
+					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*targetProj_wn, color::lightPurple());
 				}
+			}
+		}
+		if constexpr (bCOMPILE_DEBUG_SATELLITE)
+		{
+			mat4 localBox_m(1.f);
+			localBox_m = glm::translate(mat4(1.f), barrelLocation_lp);
+			localBox_m = glm::scale(localBox_m, vec3(0.1f));
+			debugRenderer.renderCube(getParentXLocalModelMatrix() * localBox_m, glm::vec3(1, 0, 0));
+		}
+	}
+
+	void CommunicationPlacement::postConstruct()
+	{
+		Parent::postConstruct();
+
+		//just using the planet model as it is a sphere and the particle system (shield effect) accepts models
+		seekerModel = seekerModel ? seekerModel : GameBase::get().getAssetSystem().loadModel("GameData/mods/SpaceArcade/Assets/Models3D/Planet/textured_planet.obj");
+		seekerShader = seekerShader ? seekerShader : new_sp<Shader>(activeSeekerShader_vs, activeSeekerShader_fs, false);
+	}
+
+	void CommunicationPlacement::draw(Shader& shader)
+	{
+		Parent::draw(shader);
+
+		using namespace glm;
+		if (activeSeeker)
+		{
+			static RenderSystem& renderSystem = GameBase::get().getRenderSystem();
+			if (const RenderData* frd = renderSystem.getFrameRenderData_Read(GameBase::get().getFrameNumber()))
+			{
+				seekerShader->use();
+				mat4 model = activeSeeker->xform.getModelMatrix();
+				mat4 projection_view = frd->projection * frd->view;
+
+				seekerShader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
+				seekerShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+				seekerShader->setUniform3f("uniformColor", color::green());
+
+				seekerModel->draw(*seekerShader);
+			}
+		}
+	}
+
+	void CommunicationPlacement::onTargetSet(TargetType* rawTarget)
+	{
+		Parent::onTargetSet(rawTarget);
+		if (!rawTarget)
+		{
+			if (activeSeeker)
+			{
+				activeSeeker = std::nullopt;
 			}
 		}
 	}
@@ -754,20 +896,24 @@ namespace SA
 		Parent::replacePlacementConfig(newConfig, owningConfig);
 
 		const glm::mat4& spawnXform = getSpawnXform();
-		//spawnRight_ln =		glm::normalize(glm::vec3(spawnXform * glm::vec4(1, 0, 0, 0)));
-		//spawnUp_ln =		glm::normalize(glm::vec3(spawnXform * glm::vec4(0, 1, 0, 0)));
-		//spawnForward_ln =	glm::normalize(glm::vec3(spawnXform * glm::vec4(0, 0, 1, 0)));
 	}
 
-	//void CommunicationPlacement::updateModelMatrixCache()
-	//{
-	//	Parent::updateModelMatrixCache();
-	//}
+	void CommunicationPlacement::onDestroyed()
+	{
+		Parent::onDestroyed();
+
+		if (activeSeeker)  //may not be needed
+		{ 
+			activeSeeker = std::nullopt; 
+		}
+	}
+
 }
 
 std::string SA::PlacementSubConfig::getFullPath(const ConfigBase& owningConfig) const
 {
 	return owningConfig.getOwningModDir() + relativeFilePath;
+
 }
 
 std::string SA::PlacementSubConfig::getCollisionModelFullPath(const ConfigBase& owningConfig) const

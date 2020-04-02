@@ -65,13 +65,30 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////
 	struct HitPoints
 	{
-		int current;
-		int max;
+		float current;
+		float max;
+
+		friend bool operator==(const HitPoints& a, const HitPoints& b)
+		{
+			//this exists primarily to determine whether to not to broadcast event; hence float comparisons are acceptable to be exact match
+			return a.current == b.current && a.max == b.max;
+		}
+		friend bool operator!=(const HitPoints& a, const HitPoints& b) { return !(a == b); }
 	};
 
 	class HitPointComponent : public GameComponentBase
 	{
-	public:
+	private:
 		HitPoints hp;
+	public:
+		void adjust(float delta);
+		const HitPoints& getHP() { return hp; }
+		void overwriteHP(const HitPoints& newHP);
+		void setDamageReductionFactor(float reductionFactor);
+	public:
+#define HP_CHANGED_ARGS const HitPoints& current, const HitPoints& current
+		MultiDelegate<const HitPoints& /*current*/, const HitPoints& /*current*/> onHpChangedEvent;
+	private:
+		float damageReductionFactor = 1;
 	};
 }

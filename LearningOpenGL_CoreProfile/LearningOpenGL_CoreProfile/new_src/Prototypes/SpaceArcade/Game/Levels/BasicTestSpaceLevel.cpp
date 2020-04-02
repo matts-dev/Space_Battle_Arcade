@@ -129,7 +129,8 @@ namespace SA
 		constexpr bool bSpawnCarriers = true;
 		Transform carrierXform_TeamA;
 		carrierXform_TeamA.position = carrierPosition_teamA;
-		carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), glm::vec3(0, 1, 0));
+		//carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), normalize(glm::vec3(0, 1, 0)));
+		carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-47.0f), normalize(glm::vec3(1, 1, 0)));
 
 		Ship::SpawnData carrierSpawnData_A;
 		carrierSpawnData_A.team = 0;

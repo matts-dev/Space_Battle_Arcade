@@ -174,9 +174,7 @@ namespace SA
 		float speedGamifier = 1.0f;
 		float engineSpeedChangeFactor = 1.0f; //somewhat like acceleration, but linear and gamified.
 		float fireCooldownSec = 0.15f;
-		HitPoints hp = { /*current*/100, /*max*/100 };
 		sp<RNG> rng;
-
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;
 		sp<const SpawnConfig> shipData;
@@ -188,6 +186,7 @@ namespace SA
 		size_t activePlacements = 0;
 		size_t activeGenerators = 0;
 
+		HitPointComponent* hpComp = nullptr;
 		ShipEnergyComponent* energyComp = nullptr;
 
 		sp<ShipCamera> shipCamera = nullptr;

@@ -59,17 +59,19 @@ namespace SA
 		// Make components
 		////////////////////////////////////////////////////////
 		createGameComponent<BrainComponent>();
-		createGameComponent<TeamComponent>();
+		TeamComponent* teamComp = createGameComponent<TeamComponent>();
+		hpComp = createGameComponent<HitPointComponent>();
 		CollisionComponent* collisionComp = createGameComponent<CollisionComponent>();
 		energyComp = createGameComponent<ShipEnergyComponent>();
-		getGameComponent<TeamComponent>()->setTeam(spawnData.team);
 
 		////////////////////////////////////////////////////////
 		// any extra component configuration
 		////////////////////////////////////////////////////////
+		teamComp->setTeam(spawnData.team);
 		updateTeamDataCache();
 		collisionComp->setCollisionData(collisionData);
 		collisionComp->setKinematicCollision(spawnData.spawnConfig->requestCollisionTests());
+		hpComp->overwriteHP(HitPoints{ /*current*/100.f, /*max*/100.f });
 	}
 
 	void Ship::postConstruct()
@@ -721,8 +723,8 @@ namespace SA
 			//only damage shield if all objective placements have been destroyed
 			if (activePlacements == 0)
 			{
-				hp.current -= hitProjectile.damage;
-				if (hp.current <= 0)
+				hpComp->adjust(-float(hitProjectile.damage));
+				if (hpComp->getHP().current <= 0.f)
 				{
 					if(!isPendingDestroy())
 					{
@@ -911,7 +913,7 @@ namespace SA
 					//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
 					bool cachedPower = placement->hasGeneratorPower();
 					placement->setHasGeneratorPower(false); //don't let generator shield stop this
-					placement->adjustHP(-hpComp->hp.current + 1);
+					placement->adjustHP(-hpComp->getHP().current + 1.f);
 					placement->setHasGeneratorPower(cachedPower); //restore power if they had it.
 				}
 			}
@@ -931,7 +933,7 @@ namespace SA
 				{
 					//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
 					placement->setHasGeneratorPower(false);//this will prevent it from destroying as generator power adds sheild that reduces damage
-					placement->adjustHP(-hpComp->hp.current);
+					placement->adjustHP(-hpComp->getHP().current);
 				}
 			}
 		};
@@ -948,7 +950,7 @@ namespace SA
 			{
 				//#suggested perhaps cleaner to adjust it on the component and the entity will react the adjustments?
 				generator->setHasGeneratorPower(false);
-				generator->adjustHP(-hpComp->hp.current);
+				generator->adjustHP(-hpComp->getHP().current);
 			}
 		}
 	}
@@ -1069,6 +1071,7 @@ namespace SA
 					{
 						newPlacement->replacePlacementConfig(placementConfig, *shipData);
 						newPlacement->setTeamData(teamData);
+						newPlacement->setHasGeneratorPower(true);
 						outputContainer.push_back(newPlacement);
 					}
 				}

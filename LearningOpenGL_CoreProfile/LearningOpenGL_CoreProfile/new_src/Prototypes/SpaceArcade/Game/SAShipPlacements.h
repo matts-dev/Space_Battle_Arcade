@@ -77,14 +77,15 @@ namespace SA
 		/** returns the model matrix considering the parent's transform*/
 		const glm::mat4& getParentXLocalModelMatrix(){ return cachedModelMat_PxL; }
 		virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig);
-		void adjustHP(int amount);
+		void adjustHP(float amount);
 		const TeamData& getTeamData() { return teamData; }
-		void setHasGeneratorPower(bool bValue) { bHasGeneratorPower = bValue; }
+		void setHasGeneratorPower(bool bValue);
 		bool hasGeneratorPower() const { return bHasGeneratorPower; }
 		PlacementType getPlacementType() const { return config.placementType; }
 		void setTarget(const wp<TargetType>& newTarget);
 	protected:
 		void setForwardLocalSpace(glm::vec3 newForward_ls);
+		virtual void onTargetSet(TargetType* rawTarget) {}
 		virtual void updateModelMatrixCache();
 		const glm::mat4& getSpawnXform() { return spawnXform; }
 		glm::vec3 getSpawnUp_wn();
@@ -131,7 +132,7 @@ namespace SA
 		const float destructionTickFrequencySec = 0.1f;
 		float destroyAtSec = 3.0f;
 		float currentDestrutionPhaseSec = 0.f;
-		bool bHasGeneratorPower = true;
+		bool bHasGeneratorPower = false;
 		sp<RNG> myRNG = nullptr;
 	};
 
@@ -169,13 +170,29 @@ namespace SA
 	{
 	public:
 		using Parent = ShipPlacementEntity;
+	private:
+		struct HealSeeker
+		{
+		public:
+			Transform xform;
+			float speed = 100.f;
+			float completeRadius = 3.f;
+		};
 	protected:
 		void tick(float dt_sec) override;
+		virtual void postConstruct() override;
 		virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig) override;
-		//virtual void updateModelMatrixCache() override;
+		virtual void onDestroyed();
+		virtual void draw(Shader& shader) override;
+		virtual void onTargetSet(TargetType* rawTarget) override;
 	private:
+		static sp<Model3D> seekerModel;
+		static sp<Shader> seekerShader;
+	private:
+		glm::vec3 barrelLocation_lp{ 0.f, 1.1f, 0.65f };
+		std::optional<HealSeeker> activeSeeker = std::nullopt;
 		float rotationSpeed_radsec = glm::radians(30.f);
-		float fireCooldown_sec = 10.0f;
+		float fireCooldown_sec = 5.0f;
 		float timeSinseFire_sec = 1.0f;
 	};
 
