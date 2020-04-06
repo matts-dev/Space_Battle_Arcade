@@ -23,8 +23,8 @@
 #include "../Rendering/OpenGLHelpers.h"
 
 
-static constexpr bool bCOMPILE_DEBUG_TURRET = true;
-static constexpr bool bCOMPILE_DEBUG_SATELLITE = true;
+static constexpr bool bCOMPILE_DEBUG_TURRET = false;
+static constexpr bool bCOMPILE_DEBUG_SATELLITE = false;
 
 namespace SA
 {
@@ -656,7 +656,7 @@ namespace SA
 				debugRenderSystem.renderCone(myWorldPos, stationaryForward_n, rotationLimit_rad, 10.f, glm::vec3(0, 0.5f, 0));
 			}
 		}
-		if constexpr (constexpr bool bDebugBarrelLoc = true)
+		if constexpr (bCOMPILE_DEBUG_TURRET)
 		{
 			mat4 loc1_m = glm::translate(mat4(1.f), barrelLocations_lp[0]);
 			mat4 loc2_m = glm::translate(mat4(1.f), barrelLocations_lp[1]);
