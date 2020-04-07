@@ -91,6 +91,7 @@ namespace SA
 			{"primaryProjectileConfigName", primaryFireProjectile ? primaryFireProjectile->getName() : primaryProjectileConfigName}, 
 			{ "shapes", {} },
 			{ "teamData", {} },
+			{ "spawnPoints", {} },
 			{ "bRequestsCollisionTests", bRequestsCollisionTests}
 		};
 
@@ -128,6 +129,21 @@ namespace SA
 			};
 			spawnData["teamData"].push_back(t);
 		}
+
+		for (const FighterSpawnPoint& spawnPoint : spawnPoints)
+		{
+			glm::vec3 dir_n = glm::normalize(spawnPoint.direction_ln);	//editor may have made this non-normalized so renormalize.
+			glm::vec3 loc_lp = spawnPoint.location_lp;
+
+			json fighterSpawnJson = 
+			{
+				{"direction_ln", {dir_n.x, dir_n.y, dir_n.z}},
+				{"location_lp", {loc_lp.x, loc_lp.y, loc_lp.z}}
+			};
+
+			spawnData["spawnPoints"].push_back(fighterSpawnJson);	//created this field in json above	
+		}
+
 
 		auto serializePlacements = [](const std::vector<PlacementSubConfig>& container, json& outJson)
 		{
@@ -292,6 +308,32 @@ namespace SA
 				{ 
 					log(__FUNCTION__, SA::LogLevel::LOG_WARNING, "load spawn config to find team data"); 
 					teamData.push_back(TeamData{});
+				}
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// load spawn points
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				if (spawnData.contains("spawnPoints"))
+				{
+					spawnPoints.clear();
+					const json& spawnPointsJsonArray = spawnData["spawnPoints"];
+					if (spawnPointsJsonArray.is_array() && !spawnPointsJsonArray.is_null())
+					{
+						for (const json& spJson : spawnPointsJsonArray)
+						{
+							if (!spJson.is_null()
+								&& spJson.contains("direction_ln")
+								&& spJson.contains("location_lp")
+								)
+							{
+								spawnPoints.push_back(FighterSpawnPoint{});
+								FighterSpawnPoint& loadingPoint = spawnPoints.back();
+
+								loadVec3(loadingPoint.direction_ln, spJson, "direction_ln");
+								loadVec3(loadingPoint.location_lp, spJson, "location_lp");
+							}
+						}
+					}
 				}
 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////

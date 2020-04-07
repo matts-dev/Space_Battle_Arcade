@@ -78,6 +78,8 @@ namespace SA
 		}
 
 		glm::vec3 getDifferentVector(glm::vec3 vec);
+		glm::vec3 getDifferentNonparallelVector(const glm::vec3& vec);
+		glm::vec3 getDifferentNonparallelVector_slowwarning(const glm::vec3& vec);
 		float getDegreeAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		float getRadianAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		float getCosBetween(const glm::vec3& from_n, const glm::vec3& to_n);

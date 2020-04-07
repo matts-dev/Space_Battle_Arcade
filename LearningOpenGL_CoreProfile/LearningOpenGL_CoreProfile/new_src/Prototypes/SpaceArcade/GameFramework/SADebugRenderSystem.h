@@ -268,6 +268,7 @@ namespace SA
 
 		void renderCone(const glm::vec3& pos, const glm::vec3& dir_n, float halfAngle_rad, float length, const glm::vec3& color, uint32_t facets = 12);
 
+		void renderRay(const glm::vec3& dir, const glm::vec3& start, const glm::vec3 color);
 	private:
 		virtual void initSystem() override;
 		virtual void handleRenderDispatch(float dt_sec_system);

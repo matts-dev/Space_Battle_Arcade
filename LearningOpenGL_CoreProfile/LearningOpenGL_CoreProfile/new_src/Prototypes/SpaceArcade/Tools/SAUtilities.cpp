@@ -217,6 +217,48 @@ namespace SA
 			return vec;
 		}
 
+		glm::vec3 getDifferentNonparallelVector(const glm::vec3& vec)
+		{
+			using namespace glm;
+
+			vec3 diffVec = getDifferentVector(vec);
+
+			//this above algorithm will produce parallel vectors if given unit vectors; check for that case.
+			//if we detect any special cases, tweak one of the zero components to be something non-zero
+			if (bool zIsOne = (diffVec.x == 0.f && diffVec.y == 0.f))
+			{
+				diffVec.x = 0.5f;
+			}
+			else if (bool xIsOne = diffVec.y == 0.f && diffVec.z == 0.f)
+			{
+				diffVec.y = 0.5f;
+			}
+			else if (bool yIsOne = diffVec.z == 0.f && diffVec.x == 0.f)
+			{
+				diffVec.z = 0.5f;
+			}
+
+			return diffVec;
+		}
+
+		glm::vec3 getDifferentNonparallelVector_slowwarning(const glm::vec3& vec)
+		{
+			using namespace glm;
+			//the getDifferentVec implementation from graphics book seems to cause issues when passing normal axis aligned vecs
+			//trying this out by doing 2 rotations. Since a vector may be aligned with rotation axis, it wouldn't rotate. Thus a 
+			//second rotation is used to using a different rotation axis; this means a vector must have been rotated.
+
+			//using non-90 degree rotations so that this doesn't create orthonormal vectors, which may give unexpected
+			//results when doing dot products. However, it may be useful to provide "getDifferentOrthonormalVec" that 
+			//does do that behavior. It can work similar to this but with 90 degree rotations; but edge cases may need to be addressed (ie vec matches 1 axis of rtoation)
+
+			//using static const version of quat so that calculation is only done once, the only overhead is applying the quaternion to the vector
+			static const glm::quat fixedRotation = glm::angleAxis(glm::radians(33.f), vec3(1, 0, 0)) * glm::angleAxis(glm::radians(33.f), vec3(0, 1, 0));
+			
+			//turns out this is very expensive (involves 2 cross products, etc) and may be slower than brancher; profiling is needed here
+			return fixedRotation * vec;
+		}
+
 		float getRadianAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n)
 		{
 			//clamp required because dot can produce values outside range of [-1,1] which will cause acos to return nan.

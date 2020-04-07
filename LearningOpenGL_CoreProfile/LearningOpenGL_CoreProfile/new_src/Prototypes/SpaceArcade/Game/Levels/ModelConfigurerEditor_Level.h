@@ -56,6 +56,7 @@ namespace SA
 		void renderUI_ViewportUI();
 		void renderUI_Team();
 		void renderUI_Objectives();
+		void renderUI_Spawning();
 
 	private: 
 		/** INVARIANT: filepath has been checked to be a valid model file path */
@@ -81,6 +82,7 @@ namespace SA
 		int selectedCommPlacementIdx = -1;
 		int selectedDefensePlacementIdx = -1;
 		int selectedTurretPlacementIdx = -1;
+		int selectedSpawnPointIdx = -1;
 		TeamData activeTeamData;
 
 		float cameraSpeedModifier = 1.f;

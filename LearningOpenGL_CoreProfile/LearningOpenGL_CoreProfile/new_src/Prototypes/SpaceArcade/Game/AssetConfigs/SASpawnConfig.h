@@ -42,6 +42,12 @@ namespace SA
 		glm::vec3 projectileColor = glm::vec3(0.8f, 0.8f, 0);
 	};
 
+	struct FighterSpawnPoint final
+	{
+		glm::vec3 location_lp = glm::vec3(0.f);
+		glm::vec3 direction_ln = glm::vec3(1.f, 0, 0); //normalized when serialized
+	};
+
 	class SpawnConfig final : public ConfigBase
 	{
 		friend class ModelConfigurerEditor_Level;
@@ -92,7 +98,10 @@ namespace SA
 		std::vector<PlacementSubConfig> communicationPlacements;
 		std::vector<PlacementSubConfig> defensePlacements;
 		std::vector<PlacementSubConfig> turretPlacements;
-		
+
+		std::vector<FighterSpawnPoint> spawnPoints;
+		std::vector<std::string> fighterSpawnConfigs;
+
 		//color/material
 		//team
 		std::vector<TeamData> teamData;

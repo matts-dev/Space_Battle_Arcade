@@ -282,6 +282,10 @@ namespace SA
 			{
 				renderUI_Objectives();
 			}
+			if (ImGui::CollapsingHeader("SPAWNING"))
+			{
+				renderUI_Spawning();
+			}
 			if (ImGui::CollapsingHeader("VIEWPORT UI", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				renderUI_ViewportUI();
@@ -957,6 +961,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 	void ModelConfigurerEditor_Level::renderUI_Objectives()
 	{
+		ImGui::Separator();
 		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
 		if (activeConfig && activeMod)
 		{
@@ -1092,6 +1097,43 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		}
 	}
 
+	void ModelConfigurerEditor_Level::renderUI_Spawning()
+	{
+		ImGui::Separator();
+		if (activeConfig)
+		{
+			for (int spawnPointIdx = 0; spawnPointIdx < int(activeConfig->spawnPoints.size()); ++spawnPointIdx)
+			{
+				snprintf(tempTextBuffer, sizeof(tempTextBuffer), "spawn point %d", spawnPointIdx);
+				if (ImGui::Selectable(tempTextBuffer, spawnPointIdx == selectedSpawnPointIdx))
+				{
+					selectedSpawnPointIdx = spawnPointIdx;
+				}
+			}
+			if (selectedSpawnPointIdx >= 0 && selectedSpawnPointIdx < int(activeConfig->spawnPoints.size()))
+			{
+				FighterSpawnPoint& spawn = activeConfig->spawnPoints[selectedSpawnPointIdx];
+				ImGui::DragFloat3("local pos", &spawn.location_lp.x, 0.05f);
+				ImGui::DragFloat3("direction", &spawn.direction_ln.x, 0.05f);
+				ImGui::Text("Note: the direction will be normalized when saving");
+			}
+			if (ImGui::Button("New spawn point"))
+			{
+				activeConfig->spawnPoints.push_back(FighterSpawnPoint{});
+			}
+			if (selectedSpawnPointIdx != -1 && selectedSpawnPointIdx < int(activeConfig->spawnPoints.size()) && ImGui::Button("Delete Spawn Point"))
+			{
+				activeConfig->spawnPoints.erase(activeConfig->spawnPoints.begin() + selectedSpawnPointIdx);
+				selectedSpawnPointIdx = -1; //clear index after removal
+			}
+		}
+		else
+		{
+			ImGui::Text("Select a ship config");
+		}
+		ImGui::Dummy(ImVec2(0, 20));
+	}
+
 	void ModelConfigurerEditor_Level::createNewSpawnConfig(const std::string& configName, const std::string& fullModelPath)
 	{
 		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
@@ -1223,7 +1265,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 	void ModelConfigurerEditor_Level::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
-		using glm::vec3; using glm::vec4; using glm::mat4;
+		using namespace glm;
 
 		//#TODO refactor this to use the CollisionDebugRenderer class
 
@@ -1426,6 +1468,25 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						++shapeIdx;
 					}
 					ec(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+
+				}
+				if (bool bRenderSpawnPonts = true)
+				{
+					for (int spawnPointIdx = 0; spawnPointIdx < int(activeConfig->spawnPoints.size()); ++spawnPointIdx)
+					{
+						FighterSpawnPoint& spawn = activeConfig->spawnPoints[spawnPointIdx];
+
+						vec4 spawnPnt_wp = rootModelMat * vec4(spawn.location_lp, 1.f);
+						mat4 pnt_m{ 1.f }; //make separate matrix so scaling doesn't affect visuals
+						pnt_m = glm::translate(pnt_m, vec3(spawnPnt_wp));
+						pnt_m = glm::scale(pnt_m, vec3(0.1f));
+
+						vec4 spawnDir_wn = normalize(rootModelMat * vec4(spawn.direction_ln, 0.f));
+
+						DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
+						debugRenderSystem.renderCube(pnt_m,			spawnPointIdx == selectedSpawnPointIdx ? color::metalicgold() : color::lightOrange());
+						debugRenderSystem.renderRay(spawnDir_wn, spawnPnt_wp, spawnPointIdx == selectedSpawnPointIdx ? color::metalicgold() : color::lightOrange());
+					}
 				}
 			}
 		}

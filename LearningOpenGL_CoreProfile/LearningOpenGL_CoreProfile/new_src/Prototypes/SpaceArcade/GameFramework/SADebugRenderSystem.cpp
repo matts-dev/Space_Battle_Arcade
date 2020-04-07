@@ -195,7 +195,8 @@ namespace SA
 	{
 		using namespace glm;
 
-		vec3 otherVec = Utils::getDifferentVector(dir_n);
+		//vec3 otherVec = Utils::getDifferentVector(dir_n);
+		vec3 otherVec = Utils::getDifferentNonparallelVector(dir_n);
 		vec3 startRotAxis = glm::normalize(glm::cross(dir_n, otherVec));
 		quat rot = glm::angleAxis(halfAngle_rad, startRotAxis);
 
@@ -215,6 +216,19 @@ namespace SA
 			vec3 lineVec = scaledLength * (rot * dir_n);
 			renderLine(pos, pos + lineVec, color);
 		}
+	}
+
+
+
+	void DebugRenderSystem::renderRay(const glm::vec3& dir, const glm::vec3& start, const glm::vec3 color)
+	{
+		glm::vec3 end = start + dir;
+		renderLine(start, end, color);
+
+		//#todo #optimize setting a static number of facets for the cone and buffering that in GPU will be much faster than generating
+		//a cone ring every time this is called.
+		glm::vec3 coneDir = -dir;
+		renderCone(end, coneDir, glm::radians<float>(20), 0.25f, color, 36); 
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
