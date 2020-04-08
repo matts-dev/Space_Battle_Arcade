@@ -186,6 +186,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\SASpaceLevelBase.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\StressTestLevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\OptionalCompilationMacros.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SALevelSystem.h" />
@@ -485,6 +486,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\StressTestLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAHUD.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />

@@ -41,6 +41,7 @@
 #include "../GameFramework/SARenderSystem.h"
 #include "Cheats/SpaceArcadeCheatSystem.h"
 #include "../GameFramework/developer_console/DeveloperConsole.h"
+#include "Levels/StressTestLevel.h"
 
 namespace SA
 {
@@ -94,6 +95,7 @@ namespace SA
 
 		//make sure resources are loaded before the level starts
 		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
 		sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);
 
