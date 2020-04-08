@@ -883,6 +883,9 @@
                 ]
             }
         ],
+        "spawnableConfigsByName": [
+            "Fighter"
+        ],
         "teamData": [
             {
                 "projectileColor": [

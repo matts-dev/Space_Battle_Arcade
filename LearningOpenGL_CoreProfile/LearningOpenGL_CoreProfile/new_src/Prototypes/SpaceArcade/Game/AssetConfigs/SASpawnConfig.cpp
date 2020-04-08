@@ -92,6 +92,7 @@ namespace SA
 			{ "shapes", {} },
 			{ "teamData", {} },
 			{ "spawnPoints", {} },
+			{ "spawnableConfigsByName", {} },
 			{ "bRequestsCollisionTests", bRequestsCollisionTests}
 		};
 
@@ -143,7 +144,10 @@ namespace SA
 
 			spawnData["spawnPoints"].push_back(fighterSpawnJson);	//created this field in json above	
 		}
-
+		for (const std::string& spawnableConfigName : spawnableConfigsByName)
+		{
+			spawnData["spawnableConfigsByName"].push_back(spawnableConfigName);
+		}
 
 		auto serializePlacements = [](const std::vector<PlacementSubConfig>& container, json& outJson)
 		{
@@ -332,6 +336,19 @@ namespace SA
 								loadVec3(loadingPoint.direction_ln, spJson, "direction_ln");
 								loadVec3(loadingPoint.location_lp, spJson, "location_lp");
 							}
+						}
+					}
+				}
+
+				if (spawnData.contains("spawnableConfigsByName"))
+				{
+					const json& nameJsonArray = spawnData["spawnableConfigsByName"];
+					if (!nameJsonArray.is_null() && nameJsonArray.is_array())
+					{
+						spawnableConfigsByName.clear();
+						for (const std::string& name : nameJsonArray)
+						{
+							spawnableConfigsByName.push_back(name);
 						}
 					}
 				}

@@ -100,7 +100,7 @@ namespace SA
 		std::vector<PlacementSubConfig> turretPlacements;
 
 		std::vector<FighterSpawnPoint> spawnPoints;
-		std::vector<std::string> fighterSpawnConfigs;
+		std::vector<std::string> spawnableConfigsByName;
 
 		//color/material
 		//team

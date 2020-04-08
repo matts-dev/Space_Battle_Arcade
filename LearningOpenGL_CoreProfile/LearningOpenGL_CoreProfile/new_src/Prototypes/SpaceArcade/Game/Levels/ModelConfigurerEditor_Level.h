@@ -83,6 +83,7 @@ namespace SA
 		int selectedDefensePlacementIdx = -1;
 		int selectedTurretPlacementIdx = -1;
 		int selectedSpawnPointIdx = -1;
+		int selectedSpawnableConfigNameIdx = -1;
 		TeamData activeTeamData;
 
 		float cameraSpeedModifier = 1.f;

@@ -1102,6 +1102,41 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		ImGui::Separator();
 		if (activeConfig)
 		{
+			ImGui::Text("Fighter configs to spawn (displayed trailing indices are ignored)");
+			for (int spawnableConfigIdx = 0; spawnableConfigIdx < int(activeConfig->spawnableConfigsByName.size()); ++spawnableConfigIdx)
+			{
+				snprintf(tempTextBuffer, sizeof(tempTextBuffer), "%s %d", activeConfig->spawnableConfigsByName[spawnableConfigIdx].c_str(), spawnableConfigIdx);
+				if (ImGui::Selectable(tempTextBuffer, spawnableConfigIdx == selectedSpawnableConfigNameIdx))
+				{
+					//select new name to edit
+					selectedSpawnableConfigNameIdx = spawnableConfigIdx;
+				} 
+			}
+
+			if (selectedSpawnableConfigNameIdx >= 0 && selectedSpawnableConfigNameIdx < int(activeConfig->spawnableConfigsByName.size()))
+			{
+				static char configName[4096];
+				ImGui::InputText("spawn config name", configName, sizeof(configName));
+				if (ImGui::Button("commit name"))
+				{
+					activeConfig->spawnableConfigsByName[selectedSpawnableConfigNameIdx] = configName;
+				}
+			}
+			if (ImGui::Button("new spawnable config"))
+			{
+				activeConfig->spawnableConfigsByName.push_back("");
+			}
+			if (selectedSpawnableConfigNameIdx >= 0 && selectedSpawnableConfigNameIdx < int(activeConfig->spawnableConfigsByName.size()))
+			{
+				ImGui::SameLine();
+				if (ImGui::Button("Delete Spawn Point"))
+				{
+					activeConfig->spawnableConfigsByName.erase(activeConfig->spawnableConfigsByName.begin() + selectedSpawnableConfigNameIdx);
+					selectedSpawnableConfigNameIdx = -1; //clear index after removal
+				}
+			}
+
+			ImGui::Separator();
 			for (int spawnPointIdx = 0; spawnPointIdx < int(activeConfig->spawnPoints.size()); ++spawnPointIdx)
 			{
 				snprintf(tempTextBuffer, sizeof(tempTextBuffer), "spawn point %d", spawnPointIdx);
@@ -1121,10 +1156,14 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			{
 				activeConfig->spawnPoints.push_back(FighterSpawnPoint{});
 			}
-			if (selectedSpawnPointIdx != -1 && selectedSpawnPointIdx < int(activeConfig->spawnPoints.size()) && ImGui::Button("Delete Spawn Point"))
+			if (selectedSpawnPointIdx != -1 && selectedSpawnPointIdx < int(activeConfig->spawnPoints.size()))
 			{
-				activeConfig->spawnPoints.erase(activeConfig->spawnPoints.begin() + selectedSpawnPointIdx);
-				selectedSpawnPointIdx = -1; //clear index after removal
+				ImGui::SameLine();
+				if (ImGui::Button("Delete Spawn Point"))
+				{
+					activeConfig->spawnPoints.erase(activeConfig->spawnPoints.begin() + selectedSpawnPointIdx);
+					selectedSpawnPointIdx = -1; //clear index after removal
+				}
 			}
 		}
 		else
