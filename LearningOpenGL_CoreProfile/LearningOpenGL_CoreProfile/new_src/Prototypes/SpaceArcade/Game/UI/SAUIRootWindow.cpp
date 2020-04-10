@@ -9,6 +9,7 @@
 #include "../SAModSystem.h"
 #include<cstdio>
 #include "../../GameFramework/SACrossPlatformUtils.h"
+#include "../Levels/StressTestLevel.h"
 
 namespace SA
 {
@@ -105,6 +106,11 @@ namespace SA
 			if (ImGui::Button("Load Basic Test Level"))
 			{
 				sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+				SpaceArcade::get().getLevelSystem().loadLevel(startupLevel);
+			}
+			if (ImGui::Button("Load Stress Test Level"))
+			{
+				sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
 				SpaceArcade::get().getLevelSystem().loadLevel(startupLevel);
 			}
 			if (ImGui::Button("Model Editor"))

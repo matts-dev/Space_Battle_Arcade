@@ -32,6 +32,7 @@ namespace SA
 	class ProjectileConfig;
 	class ActiveParticleGroup;
 	class ShipEnergyComponent;
+	class FighterSpawnComponent;
 	class RNG;
 	class ShipCamera;
 	class ShipPlacementEntity;
@@ -77,6 +78,9 @@ namespace SA
 				brainComp->spawnNewBrain<BrainType>(sp_this());
 			}
 		}
+
+		void enterSpawnStasis();
+
 		////////////////////////////////////////////////////////
 		//Control functions
 		////////////////////////////////////////////////////////
@@ -147,6 +151,7 @@ namespace SA
 		bool getAvoidanceDampenedVelocity(std::optional<glm::vec3>& avoidVec) const;
 	private:
 		void handlePlacementDestroyed(const sp<GameEntity>& placement);
+		void handleSpawnStasisOver();
 #if COMPILE_CHEATS
 	private:
 		void cheat_oneShotPlacements();
@@ -177,8 +182,9 @@ namespace SA
 		sp<RNG> rng;
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;
-		sp<const SpawnConfig> shipData;
+		sp<const SpawnConfig> shipConfigData;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
+		sp<MultiDelegate<>> spawnStasisTimerDelegate = nullptr;
 
 		std::vector<sp<ShipPlacementEntity>> generatorEntities;
 		std::vector<sp<ShipPlacementEntity>> turretEntities;
@@ -188,6 +194,7 @@ namespace SA
 
 		HitPointComponent* hpComp = nullptr;
 		ShipEnergyComponent* energyComp = nullptr;
+		FighterSpawnComponent* fighterSpawnComp = nullptr;
 
 		sp<ShipCamera> shipCamera = nullptr;
 

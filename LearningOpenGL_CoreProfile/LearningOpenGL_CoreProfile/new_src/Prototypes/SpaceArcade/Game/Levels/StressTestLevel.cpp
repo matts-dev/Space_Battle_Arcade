@@ -41,6 +41,7 @@
 #include "../../GameFramework/Components/CollisionComponent.h"
 #include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 #include "../Cameras/SAShipCamera.h"
+#include "../Components/FighterSpawnComponent.h"
 
 namespace SA
 {
@@ -132,11 +133,26 @@ namespace SA
 		carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), normalize(glm::vec3(0, 1, 0)));
 		//carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-47.0f), normalize(glm::vec3(1, 1, 0)));
 
+		auto disableAutoSpawn = [](const sp<Ship>& carrier)
+		{
+			if (carrier)
+			{
+				if (FighterSpawnComponent* spawnComp = carrier->getGameComponent<FighterSpawnComponent>())
+				{
+					FighterSpawnComponent::AutoRespawnConfiguration autoSpawnConfig{};
+					autoSpawnConfig.bEnabled = false;
+					spawnComp->setAutoRespawnConfig(autoSpawnConfig);
+				}
+			}
+		};
+
 		Ship::SpawnData carrierSpawnData_A;
 		carrierSpawnData_A.team = 0;
 		carrierSpawnData_A.spawnConfig = carrierSpawnConfig;
 		carrierSpawnData_A.spawnTransform = carrierXform_TeamA;
 		sp<Ship> carrierShip_TeamA = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_A) : nullptr;
+		disableAutoSpawn(carrierShip_TeamA);
+
 
 		//#TODO #BUG passing same carrier spawn data shouldn't influence the other ships that were spawned. copying spawn data.
 		Ship::SpawnData carrierSpawnData_B = carrierSpawnData_A;
@@ -147,6 +163,7 @@ namespace SA
 		carrierSpawnData_B.team = 1;
 		//sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
 		sp<Ship> carrierShip_TeamB = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_B) : nullptr;
+		disableAutoSpawn(carrierShip_TeamB);
 
 		////////////////////////////////////////////////////////
 		// fighters
@@ -188,7 +205,8 @@ namespace SA
 				glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
 				startPos += teamSpawnOrigin;
 
-				fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
+				//fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, {0.1,0.1,0.1} };
+				fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, glm::vec3(1.f) };
 
 				sp<Ship> fighter = spawnEntity<Ship>(fighterShipSpawnData);
 				teamTargets[teamIdx].push_back(fighter);

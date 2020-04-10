@@ -30,6 +30,7 @@
 #include "Cheats/SpaceArcadeCheatSystem.h"
 #include "SAShipPlacements.h"
 #include "SAModSystem.h"
+#include "Components/FighterSpawnComponent.h"
 
 namespace SA
 {
@@ -50,8 +51,8 @@ namespace SA
 	{
 		overlappingNodes_SH.reserve(10);
 		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
-		shipData = spawnData.spawnConfig;
-		bCollisionReflectForward = shipData->getCollisionReflectForward();
+		shipConfigData = spawnData.spawnConfig;
+		bCollisionReflectForward = shipConfigData->getCollisionReflectForward();
 
 		ctor_configureObjectivePlacements();
 
@@ -63,7 +64,14 @@ namespace SA
 		hpComp = createGameComponent<HitPointComponent>();
 		CollisionComponent* collisionComp = createGameComponent<CollisionComponent>();
 		energyComp = createGameComponent<ShipEnergyComponent>();
-
+		if (spawnData.spawnConfig
+			&& spawnData.spawnConfig->getSpawnPoints().size() > 0
+			&& spawnData.spawnConfig->getSpawnableConfigsByName().size() > 0)
+		{
+			//only creating this if it will be used makes debugging easier
+			fighterSpawnComp = createGameComponent<FighterSpawnComponent>(); //perhaps shouldn't cache this? right now it is owned by shared ptr which will have some overhead for access; should be unique ptr once flow for postConstruct is defined there too (if possible)
+		}
+		
 		////////////////////////////////////////////////////////
 		// any extra component configuration
 		////////////////////////////////////////////////////////
@@ -72,13 +80,29 @@ namespace SA
 		collisionComp->setCollisionData(collisionData);
 		collisionComp->setKinematicCollision(spawnData.spawnConfig->requestCollisionTests());
 		hpComp->overwriteHP(HitPoints{ /*current*/100.f, /*max*/100.f });
+		if (fighterSpawnComp)
+		{
+			if (spawnData.spawnConfig) { fighterSpawnComp->loadSpawnPointData(*spawnData.spawnConfig); }
+			fighterSpawnComp->setTeamIdx(cachedTeamIdx);
+			fighterSpawnComp->setPostSpawnCustomization(
+				[](const sp<Ship>& spawned)
+				{
+					//spawned->spawnNewBrain<FlyInDirectionBrain>(); 
+					//spawned->spawnNewBrain<DogfightTestBrain_VerboseTree>();
+					spawned->spawnNewBrain<WanderBrain>();
+					//spawned->spawnNewBrain<EvadeTestBrain>();
+					//spawned->spawnNewBrain<DogfightTestBrain>();
+					//spawned->spawnNewBrain<FighterBrain>();
+				}
+			);
+		}
 	}
 
 	void Ship::postConstruct()
 	{
 		rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
 
-		for (const AvoidanceSphereSubConfig& sphereConfig : shipData->getAvoidanceSpheres())
+		for (const AvoidanceSphereSubConfig& sphereConfig : shipConfigData->getAvoidanceSpheres())
 		{
 			//must wait for postConstruct because we need to pass sp_this() for owner field.
 			sp<AvoidanceSphere> avoidanceSphere = new_sp<AvoidanceSphere>(sphereConfig.radius, sphereConfig.localPosition, sp_this());
@@ -109,6 +133,8 @@ namespace SA
 		for (const sp<ShipPlacementEntity>& placement : turretEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
 
 		activeGenerators = generatorEntities.size();
+
+
 #if COMPILE_CHEATS
 		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());
 		cheatSystem.oneShotShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_oneShotPlacements);
@@ -214,7 +240,7 @@ namespace SA
 		if (TeamComponent* teamComp = getGameComponent<TeamComponent>())
 		{
 			cachedTeamIdx = teamComp->getTeam();
-			const std::vector<TeamData>& teams = shipData->getTeams();
+			const std::vector<TeamData>& teams = shipConfigData->getTeams();
 
 			if (cachedTeamIdx >= teams.size()) { cachedTeamIdx = 0;}
 		
@@ -371,6 +397,25 @@ namespace SA
 			spawnData.owner = this;
 
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile);
+		}
+	}
+
+	void Ship::enterSpawnStasis()
+	{
+		if (LevelBase* world = getWorld())
+		{
+			if (const sp<TimeManager>& worldTimeManager = world->getWorldTimeManager())
+			{
+				spawnStasisTimerDelegate = new_sp<MultiDelegate<>>();
+				spawnStasisTimerDelegate->addWeakObj(sp_this(), &Ship::handleSpawnStasisOver);
+				worldTimeManager->createTimer(spawnStasisTimerDelegate, 5.f);
+
+				BrainComponent* brainComp = getGameComponent<BrainComponent>();
+				if (brainComp && brainComp->brain)
+				{
+					brainComp->brain->sleep();
+				}
+			}
 		}
 	}
 
@@ -540,7 +585,8 @@ namespace SA
 			activeShield_sp->xform.position = xform.position;
 		}
 
-		glm::mat4 modelMatrix = xform.getModelMatrix();
+		//does not include the spawn config transform (ie the size up for carrier ships)
+		glm::mat4 modelMatrix = xform.getModelMatrix(); //this needs to be done after tick kinematic is complete so it reflects the new position
 		if (avoidanceSpheres.size() > 0)
 		{
 			for (sp<AvoidanceSphere>& myAvoidSphere : avoidanceSpheres)
@@ -549,6 +595,7 @@ namespace SA
 			}
 		}
 
+		std::optional<glm::mat4> fullParentXform;
 		//////////////////////////////////////////////////////////
 		// placements - must be handled after updates to position
 		//////////////////////////////////////////////////////////
@@ -556,7 +603,7 @@ namespace SA
 		if (generatorEntities.size() || communicationEntities.size() || turretEntities.size())
 		{
 			glm::mat4 configXform = collisionData->getRootXform();
-			glm::mat4 fullParentXform = modelMatrix * configXform;
+			fullParentXform = fullParentXform.has_value() ? fullParentXform : modelMatrix * configXform; //needs to be done after tick kinematic
 
 			static const auto& tickPlacements = [](float dt_sec, const std::vector<sp<ShipPlacementEntity>>& placements, const glm::mat4& placementParentXform)
 			{
@@ -569,9 +616,19 @@ namespace SA
 					} 
 				}
 			};
-			tickPlacements(dt_sec, generatorEntities, fullParentXform);
-			tickPlacements(dt_sec, communicationEntities, fullParentXform);
-			tickPlacements(dt_sec, turretEntities, fullParentXform);
+			tickPlacements(dt_sec, generatorEntities, *fullParentXform);
+			tickPlacements(dt_sec, communicationEntities, *fullParentXform);
+			tickPlacements(dt_sec, turretEntities, *fullParentXform);
+		}
+
+		////////////////////////////////////////////////////////
+		// spawning
+		////////////////////////////////////////////////////////
+		if (fighterSpawnComp)
+		{
+			fullParentXform = fullParentXform.has_value() ? fullParentXform : modelMatrix * collisionData->getRootXform(); //needs to be done after tick kinematic
+			fighterSpawnComp->updateParentTransform(*fullParentXform);
+			fighterSpawnComp->tick(dt_sec);
 		}
 
 	} 
@@ -772,7 +829,7 @@ namespace SA
 
 			//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
 			//making the large ships show correct effect. Perhaps not even necessary.
-			Transform modelXform = shipData->getModelXform();
+			Transform modelXform = shipConfigData->getModelXform();
 			particleSpawnParams.xform.scale *= modelXform.scale;
 
 			activeShieldEffect = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
@@ -901,6 +958,15 @@ namespace SA
 		activePlacements -= 1;
 	}
 
+	void Ship::handleSpawnStasisOver()
+	{
+		BrainComponent* brainComp = getGameComponent<BrainComponent>();
+		if (brainComp && brainComp->brain)
+		{
+			brainComp->brain->awaken();
+		}
+	}
+
 #if COMPILE_CHEATS
 	void Ship::cheat_oneShotPlacements()
 	{
@@ -1012,13 +1078,13 @@ namespace SA
 		using namespace glm;
 
 		//called from ctor -- do not call virtuals from this function.
-		assert(shipData);
-		if (shipData && generatorEntities.size() == 0 && communicationEntities.size() == 0 && turretEntities.size() == 0)
+		assert(shipConfigData);
+		if (shipConfigData && generatorEntities.size() == 0 && communicationEntities.size() == 0 && turretEntities.size() == 0)
 		{
 			ShipPlacementEntity::TeamData teamData;
 			teamData.team = cachedTeamIdx;
 
-			const std::vector<TeamData>& teams = shipData->getTeams();
+			const std::vector<TeamData>& teams = shipConfigData->getTeams();
 			if (cachedTeamIdx < teams.size() && cachedTeamIdx >= 0)
 			{
 				TeamData loadedData = teams[cachedTeamIdx];
@@ -1069,7 +1135,7 @@ namespace SA
 
 					if (newPlacement)
 					{
-						newPlacement->replacePlacementConfig(placementConfig, *shipData);
+						newPlacement->replacePlacementConfig(placementConfig, *shipConfigData);
 						newPlacement->setTeamData(teamData);
 						newPlacement->setHasGeneratorPower(true);
 						outputContainer.push_back(newPlacement);
@@ -1077,9 +1143,9 @@ namespace SA
 				}
 			};
 
-			processPlacements(shipData->getDefensePlacements(), generatorEntities);
-			processPlacements(shipData->getCommuncationPlacements(), communicationEntities);
-			processPlacements(shipData->getTurretPlacements(), turretEntities);
+			processPlacements(shipConfigData->getDefensePlacements(), generatorEntities);
+			processPlacements(shipConfigData->getCommuncationPlacements(), communicationEntities);
+			processPlacements(shipConfigData->getTurretPlacements(), turretEntities);
 
 			activePlacements = generatorEntities.size() + communicationEntities.size() + turretEntities.size();
 		}

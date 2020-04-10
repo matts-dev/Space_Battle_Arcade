@@ -74,6 +74,8 @@ namespace SA
 		const std::vector<PlacementSubConfig>& getCommuncationPlacements() const { return communicationPlacements; }
 		const std::vector<PlacementSubConfig>& getDefensePlacements() const { return defensePlacements; }
 		const std::vector<PlacementSubConfig>& getTurretPlacements() const { return turretPlacements; }
+		const std::vector<std::string>& getSpawnableConfigsByName() const { return spawnableConfigsByName; };
+		const std::vector<FighterSpawnPoint>& getSpawnPoints() const { return spawnPoints; };
 		
 	protected:
 		virtual void onSerialize(json& outData) override;

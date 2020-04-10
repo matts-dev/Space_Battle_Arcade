@@ -18,14 +18,9 @@
                 0.0
             ],
             "modelScale": [
-                1.0,
-                1.0,
-                1.0
-            ],
-            "shieldOffset": [
-                0.0,
-                0.009999999776482582,
-                0.0
+                0.10000000149011612,
+                0.10000000149011612,
+                0.10000000149011612
             ]
         },
         "primaryProjectileConfigName": "FighterLaser",
@@ -69,6 +64,8 @@
                 "shape": 0
             }
         ],
+        "spawnPoints": null,
+        "spawnableConfigsByName": null,
         "teamData": [
             {
                 "projectileColor": [

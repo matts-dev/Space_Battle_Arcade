@@ -94,9 +94,9 @@ namespace SA
 		console = new_sp<DeveloperConsole>();
 
 		//make sure resources are loaded before the level starts
-		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
-		sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
+		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);
 
 		return window;
