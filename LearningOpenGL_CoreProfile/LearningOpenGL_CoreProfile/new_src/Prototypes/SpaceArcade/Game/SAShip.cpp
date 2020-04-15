@@ -31,6 +31,7 @@
 #include "SAShipPlacements.h"
 #include "SAModSystem.h"
 #include "Components/FighterSpawnComponent.h"
+#include <type_traits>
 
 namespace SA
 {
@@ -89,10 +90,10 @@ namespace SA
 				{
 					//spawned->spawnNewBrain<FlyInDirectionBrain>(); 
 					//spawned->spawnNewBrain<DogfightTestBrain_VerboseTree>();
-					spawned->spawnNewBrain<WanderBrain>();
+					//spawned->spawnNewBrain<WanderBrain>();
 					//spawned->spawnNewBrain<EvadeTestBrain>();
 					//spawned->spawnNewBrain<DogfightTestBrain>();
-					//spawned->spawnNewBrain<FighterBrain>();
+					spawned->spawnNewBrain<FighterBrain>();
 				}
 			);
 		}
@@ -133,7 +134,15 @@ namespace SA
 		for (const sp<ShipPlacementEntity>& placement : turretEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
 
 		activeGenerators = generatorEntities.size();
-
+		
+		if (fighterSpawnComp)
+		{
+			fighterSpawnComp->onSpawnedEntity.addWeakObj(sp_this(), &Ship::handleSpawnedEntity);
+		}
+		if (hpComp)
+		{
+			hpComp->onHpChangedEvent.addWeakObj(sp_this(), &Ship::handleHpAdjusted);
+		}
 
 #if COMPILE_CHEATS
 		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());
@@ -226,6 +235,11 @@ namespace SA
 	glm::vec3 Ship::getVelocity()
 	{
 		return getVelocity(velocityDir_n);
+	}
+
+	void Ship::setOwningSpawnComponent(fwp<FighterSpawnComponent>& newOwningSpawnComp)
+	{
+		this->owningSpawnComponent = newOwningSpawnComp;
 	}
 
 	void Ship::setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig)
@@ -330,6 +344,7 @@ namespace SA
 			}
 		}
 		bEnableAvoidanceFields = false || bForcePlayerAvoidance_debug;;
+		bAwakeBrainAfterStasis = false;
 	}
 
 	void Ship::onPlayerControlReleased()
@@ -361,6 +376,11 @@ namespace SA
 			shipCamera->followShip(sp_this());
 		}
 		return shipCamera;
+	}
+
+	GameEntity* Ship::asEntity()
+	{
+		return this;
 	}
 
 	void Ship::fireProjectile(BrainKey privateKey)
@@ -413,6 +433,7 @@ namespace SA
 				BrainComponent* brainComp = getGameComponent<BrainComponent>();
 				if (brainComp && brainComp->brain)
 				{
+					bAwakeBrainAfterStasis = brainComp->brain->isActive();
 					brainComp->brain->sleep();
 				}
 			}
@@ -781,28 +802,8 @@ namespace SA
 			if (activePlacements == 0)
 			{
 				hpComp->adjust(-float(hitProjectile.damage));
-				if (hpComp->getHP().current <= 0.f)
-				{
-					if(!isPendingDestroy())
-					{
-						ParticleSystem::SpawnParams particleSpawnParams;
-						particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
-						particleSpawnParams.xform.position = this->getTransform().position;
-						particleSpawnParams.velocity = getVelocity();
 
-						GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-
-						if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
-						{
-							brainComp->setNewBrain(sp<AIBrain>(nullptr));
-						}
-					}
-					destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
-				}
-				else
-				{
-					doShieldFX();
-				}
+				//ship::handleAdjustHp will play hp related effects!
 			}
 			else
 			{
@@ -961,9 +962,41 @@ namespace SA
 	void Ship::handleSpawnStasisOver()
 	{
 		BrainComponent* brainComp = getGameComponent<BrainComponent>();
-		if (brainComp && brainComp->brain)
+		if (brainComp && brainComp->brain && bAwakeBrainAfterStasis)
 		{
 			brainComp->brain->awaken();
+		}
+	}
+
+	void Ship::handleSpawnedEntity(const sp<Ship>& ship)
+	{
+		fwp<FighterSpawnComponent> weakSpawnComp = fighterSpawnComp->requestTypedReference_Safe<std::decay<decltype(*fighterSpawnComp)>::type>();
+		ship->setOwningSpawnComponent(weakSpawnComp);
+	}
+
+	void Ship::handleHpAdjusted(const HitPoints& old, const HitPoints& hp)
+	{
+		if (hp.current <= 0.f)
+		{
+			if (!isPendingDestroy())
+			{
+				ParticleSystem::SpawnParams particleSpawnParams;
+				particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+				particleSpawnParams.xform.position = this->getTransform().position;
+				particleSpawnParams.velocity = getVelocity();
+
+				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+
+				if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
+				{
+					brainComp->setNewBrain(sp<AIBrain>(nullptr));
+				}
+			}
+			destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
+		}
+		else
+		{
+			doShieldFX();
 		}
 	}
 

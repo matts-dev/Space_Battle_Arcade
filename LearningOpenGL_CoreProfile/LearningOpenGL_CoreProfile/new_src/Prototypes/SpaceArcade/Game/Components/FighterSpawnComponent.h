@@ -39,6 +39,8 @@ namespace SA
 		void postConstruct();
 	private:
 		void handleOwnedEntityDestroyed(const sp<GameEntity>& destroyed);
+	public:
+		MultiDelegate<const sp<SpawnType>&> onSpawnedEntity;
 	private:
 		static sp<RNG> rng;
 	private:

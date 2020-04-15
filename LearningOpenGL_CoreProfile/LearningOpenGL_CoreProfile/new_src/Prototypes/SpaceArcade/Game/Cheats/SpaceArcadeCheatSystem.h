@@ -21,5 +21,6 @@ namespace SA
 		void cheat_turretsTargetPlayer(const std::vector<std::string>& cheatArgs);
 		void cheat_commsTargetPlayer(const std::vector<std::string>& cheatArgs);
 		void cheat_destroyAllGenerators(const std::vector<std::string>& cheatArgs);
+		void cheat_killPlayer(const std::vector<std::string>& cheatArgs);
 	};
 }

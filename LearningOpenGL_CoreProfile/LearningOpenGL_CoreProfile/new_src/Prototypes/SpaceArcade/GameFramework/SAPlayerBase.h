@@ -18,10 +18,8 @@ namespace SA
 	{
 	public:
 		PlayerBase(int32_t index) : myIndex(index) {}
-		
-	private:
+	protected:
 		virtual void postConstruct() override;
-
 	public:
 		/** WARNING: weak bindings should be preferred as the input system will keep strong binding objects alive
 				todo: create a GameEntity level call that requests all bindings be cleared, so strong bindings can be cleared in that virtual
@@ -38,6 +36,7 @@ namespace SA
 
 	protected:
 		virtual sp<CameraBase> generateDefaultCamera() const = 0;
+		virtual void onNewControlTargetSet(IControllable* oldTarget, IControllable* newTarget) {}
 	public:
 		//MultiDelegate<const lp<IControllable>& /*previousTarget*/, const lp<IControllable>& /*newTarget*/> onControlTargetChanging; //#TODO #pair_with_event_AAEF will need virtual inheritance on IControllable for GameEntity or some other mechanism 
 	private:

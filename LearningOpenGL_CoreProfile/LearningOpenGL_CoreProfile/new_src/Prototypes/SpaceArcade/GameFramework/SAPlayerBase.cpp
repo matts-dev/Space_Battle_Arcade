@@ -37,9 +37,12 @@ namespace SA
 		{
 			//onControlTargetChanging.broadcast(controlTarget, newControlTarget);
 
+			sp<IControllable> oldControlTarget = nullptr;
+
 			if (controlTarget)
 			{
 				controlTarget->onPlayerControlReleased();
+				oldControlTarget = wp<IControllable>(controlTarget).lock();
 			}
 
 			controlTarget = newControlTarget;
@@ -53,6 +56,8 @@ namespace SA
 			{
 				setCamera(generateDefaultCamera());
 			}
+
+			onNewControlTargetSet(oldControlTarget.get(), newControlTarget.get());
 		}
 	}
 

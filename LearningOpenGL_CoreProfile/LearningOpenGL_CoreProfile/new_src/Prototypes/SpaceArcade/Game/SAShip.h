@@ -67,6 +67,7 @@ namespace SA
 		virtual void onPlayerControlTaken() override;
 		virtual void onPlayerControlReleased() override;
 		virtual sp<CameraBase> getCamera() override;
+		virtual GameEntity* asEntity() override;
 
 		template <typename BrainType>
 		void spawnNewBrain()
@@ -114,6 +115,11 @@ namespace SA
 		void setSpeedFactor(float inSpeedFactor) { currentSpeedFactor = glm::clamp(inSpeedFactor,0.f, 1.f); }
 		float getSpeed() const{ return getMaxSpeed() * currentSpeedFactor;}
 
+		/** this spawn component may not exist, you should also cache as weak pointer as the owner of the spawn component (eg carrier ship) may be destroyed
+			and the component should be destroyed with its owner. This is mainly provided as a respawn mechanism. */
+		fwp<FighterSpawnComponent> getOwningSpawner_cacheAsWeak() { return owningSpawnComponent; }
+		void setOwningSpawnComponent(fwp<FighterSpawnComponent>& newOwningSpawnComp);
+
 		inline float getFireCooldownSec() const { return fireCooldownSec; }
 		////////////////////////////////////////////////////////
 		// Projectiles 
@@ -152,6 +158,8 @@ namespace SA
 	private:
 		void handlePlacementDestroyed(const sp<GameEntity>& placement);
 		void handleSpawnStasisOver();
+		void handleSpawnedEntity(const sp<Ship>& ship);
+		void handleHpAdjusted(const HitPoints& old, const HitPoints& current);
 #if COMPILE_CHEATS
 	private:
 		void cheat_oneShotPlacements();
@@ -185,6 +193,7 @@ namespace SA
 		sp<const SpawnConfig> shipConfigData;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
 		sp<MultiDelegate<>> spawnStasisTimerDelegate = nullptr;
+		fwp<FighterSpawnComponent> owningSpawnComponent = nullptr; //spawn component used to spawn this ship instance 
 
 		std::vector<sp<ShipPlacementEntity>> generatorEntities;
 		std::vector<sp<ShipPlacementEntity>> turretEntities;
@@ -209,6 +218,7 @@ namespace SA
 		//flags
 		bool bCollisionReflectForward:1;
 		bool bEnableAvoidanceFields = true;
+		bool bAwakeBrainAfterStasis = false;
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;

@@ -4,12 +4,22 @@
 
 namespace SA
 {
-	class Player : public PlayerBase
+	class SAPlayer : public PlayerBase
 	{
 	public:
-		Player(int32_t playerIndex) : PlayerBase(playerIndex) {};
-		virtual ~Player() {}
+		SAPlayer(int32_t playerIndex) : PlayerBase(playerIndex) {};
+		virtual ~SAPlayer() {}
 		virtual sp<CameraBase> generateDefaultCamera() const;
+	protected:
+		void postConstruct() override;
+		virtual void onNewControlTargetSet(IControllable* oldTarget, IControllable* newTarget) override;
+	private:
+		void handleControlTargetDestroyed(const sp<GameEntity>& entity);
+		void handleRespawnTimerUp();
+	private:
+		sp<MultiDelegate<>> respawnTimerDelegate = nullptr;
+		fwp<class FighterSpawnComponent> spawnComp_safeCache;
+		size_t currentTeamIdx = 0;
 	};
 }
 

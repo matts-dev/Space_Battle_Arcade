@@ -48,7 +48,7 @@ namespace SA
 
 		vec3 currentLooking = -w_axis; //w_axis is a normalized vector
 		vec3 newLookAt = normalize(point - getPosition());
-		if (Utils::vectorsAreSame(currentLooking, newLookAt))
+		if (Utils::vectorsAreColinear(currentLooking, newLookAt))
 		{
 			return;//prevent nan within cross product for looking at same position
 		}

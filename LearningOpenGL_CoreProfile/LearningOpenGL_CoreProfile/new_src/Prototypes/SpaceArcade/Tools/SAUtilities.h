@@ -72,6 +72,11 @@ namespace SA
 				&& float_equals(first.y, second.y, epsilon)
 				&& float_equals(first.z, second.z, epsilon);
 		}
+		inline bool vectorsAreColinear(glm::vec3 first, glm::vec3 second, float epsilon = 0.001)
+		{
+			return	vectorsAreSame(first, second, epsilon) || 
+					vectorsAreSame(-first, second, epsilon);
+		}
 		inline glm::vec3 project(glm::vec3 toProject_v, glm::vec3 axisUnitVec_n)
 		{
 			return glm::dot(toProject_v, axisUnitVec_n) * axisUnitVec_n;

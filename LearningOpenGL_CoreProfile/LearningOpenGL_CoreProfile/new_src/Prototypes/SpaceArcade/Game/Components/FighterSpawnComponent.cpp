@@ -141,6 +141,9 @@ namespace SA
 
 				newEntity->enterSpawnStasis();
 
+				//customization funciton cannot pass state, if that is needed hook into this delegate and set the state on the newly spawned entity
+				onSpawnedEntity.broadcast(newEntity);
+
 				return newEntity;
 			}
 		}

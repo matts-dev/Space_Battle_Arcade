@@ -86,8 +86,7 @@ namespace SA
 		void overwriteHP(const HitPoints& newHP);
 		void setDamageReductionFactor(float reductionFactor);
 	public:
-#define HP_CHANGED_ARGS const HitPoints& current, const HitPoints& current
-		MultiDelegate<const HitPoints& /*current*/, const HitPoints& /*current*/> onHpChangedEvent;
+		MultiDelegate<const HitPoints& /*old*/, const HitPoints& /*current*/> onHpChangedEvent;
 	private:
 		float damageReductionFactor = 1;
 	};

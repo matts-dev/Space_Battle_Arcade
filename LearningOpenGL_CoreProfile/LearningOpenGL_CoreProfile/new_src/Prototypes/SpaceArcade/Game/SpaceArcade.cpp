@@ -66,7 +66,7 @@ namespace SA
 		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
 		debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false);
 
-		sp<Player> playerZero = getPlayerSystem().createPlayer<Player>();
+		sp<SAPlayer> playerZero = getPlayerSystem().createPlayer<SAPlayer>();
 
 		collisionShapeFactory = new_sp<CollisionShapeFactory>();
 

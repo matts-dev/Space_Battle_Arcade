@@ -14,8 +14,8 @@
 #include "../../GameFramework/SALevel.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
 #include "../../GameFramework/Input/SAInput.h"
-#include "../../GameFramework/SAPlayerSystem.h"
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "../../GameFramework/SAPlayerSystem.h"
 #include "../../GameFramework/Components/CollisionComponent.h"
 #include "../../GameFramework/SACollisionUtils.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
@@ -39,6 +39,12 @@ namespace SA
 			ship->onTransformUpdated.addWeakObj(sp_this(), &ShipCamera::handleShipTransformChanged);
 			myShip->onCollided.addWeakObj(sp_this(), &ShipCamera::handleCollision);
 			handleShipTransformChanged(ship->getTransform());
+
+			//make camera face the direction the ship is currently going; looks nice for respawning
+			glm::vec3 velDir = ship->getVelocityDir();	//getting forward vector here seems to not be updated yet ATOW
+			lookAt_v(getPosition() + velDir);
+			updateRelativePositioning();
+
 		}
 	}
 
