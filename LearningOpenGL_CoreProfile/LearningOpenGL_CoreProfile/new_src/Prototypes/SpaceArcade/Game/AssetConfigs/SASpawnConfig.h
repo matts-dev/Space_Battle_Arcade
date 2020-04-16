@@ -76,6 +76,8 @@ namespace SA
 		const std::vector<PlacementSubConfig>& getTurretPlacements() const { return turretPlacements; }
 		const std::vector<std::string>& getSpawnableConfigsByName() const { return spawnableConfigsByName; };
 		const std::vector<FighterSpawnPoint>& getSpawnPoints() const { return spawnPoints; };
+		const glm::vec3 getModelFacingDir_n() { return modelFacingDir; }
+		const glm::quat getModelDefaultRotation();
 		
 	protected:
 		virtual void onSerialize(json& outData) override;
@@ -83,6 +85,7 @@ namespace SA
 	
 	private: //non-serialized properties
 		sp<ProjectileConfig> primaryFireProjectile;
+		glm::vec3 modelFacingDir = glm::vec3(0, 0, 1);
 
 	private: //serialized properties
 		std::string fullModelFilePath;

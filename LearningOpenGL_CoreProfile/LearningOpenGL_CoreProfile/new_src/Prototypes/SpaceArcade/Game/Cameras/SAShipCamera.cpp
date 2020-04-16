@@ -43,8 +43,6 @@ namespace SA
 			//make camera face the direction the ship is currently going; looks nice for respawning
 			glm::vec3 velDir = ship->getVelocityDir();	//getting forward vector here seems to not be updated yet ATOW
 			lookAt_v(getPosition() + velDir);
-			updateRelativePositioning();
-
 		}
 	}
 

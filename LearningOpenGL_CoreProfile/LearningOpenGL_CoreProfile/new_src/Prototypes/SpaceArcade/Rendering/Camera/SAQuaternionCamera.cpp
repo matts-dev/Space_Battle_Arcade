@@ -53,8 +53,8 @@ namespace SA
 			return;//prevent nan within cross product for looking at same position
 		}
 
-		float cos_theta = dot(newLookAt, currentLooking);
-		float theta_radians = glm::clamp(acos(cos_theta), -1.f, 1.f); //imprecision can make values great than one for cos_theta; which acos(x>1) == nan
+		float cos_theta = glm::clamp(dot(newLookAt, currentLooking), -1.f, 1.f); //imprecision can make values great than one for cos_theta; which acos(x>1) == nan
+		float theta_radians = glm::acos(cos_theta);
 		if (isnan(theta_radians))
 		{
 			log(__FUNCTION__, LogLevel::LOG_ERROR, "NAN encountered in look at");
@@ -69,8 +69,8 @@ namespace SA
 		//		b.place your middle finger in direction of new looking
 		//		c.your thumb is the axis of rotation
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		vec3 rotationAxis = normalize(cross(currentLooking, newLookAt)); 
-		quat q = angleAxis(theta_radians, rotationAxis);	//glm expects normalized axis.
+		vec3 rotationAxis = glm::normalize(glm::cross(currentLooking, newLookAt)); 
+		quat q = glm::angleAxis(theta_radians, rotationAxis);	//glm expects normalized axis.
 		myQuat = q * myQuat;
 
 		NAN_BREAK(q);

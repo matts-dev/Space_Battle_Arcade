@@ -88,7 +88,7 @@ namespace SA
 		float getDegreeAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		float getRadianAngleBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		float getCosBetween(const glm::vec3& from_n, const glm::vec3& to_n);
-		glm::quat getRotationBetween(const glm::vec3& a_n, const glm::vec3& b_n);
+		glm::quat getRotationBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees);
 
 		inline bool anyValueNAN(float a) { return glm::isnan(a); }

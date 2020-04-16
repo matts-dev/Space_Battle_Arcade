@@ -291,8 +291,8 @@ namespace SA
 			if (!bVectorsAreSame && !bVectorsAre180)
 			{
 				glm::vec3 rotAxis = glm::normalize(glm::cross(from_n, to_n));
-				float rotDegreesRadians = glm::acos(cosTheta);
-				rot = glm::angleAxis(rotDegreesRadians, rotAxis);
+				float rotAngle_rad = glm::acos(cosTheta);
+				rot = glm::angleAxis(rotAngle_rad, rotAxis);
 			}
 			else if (bVectorsAre180)
 			{

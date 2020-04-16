@@ -82,7 +82,8 @@ namespace SA
 		{
 			if (const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager())
 			{
-				worldTimeManager->createTimer(respawnTimerDelegate, 5.f);
+				float RespawnTimeSec = 5.f; //this should be controlled by a gamemode like class, avoiding putting in player header right now
+				worldTimeManager->createTimer(respawnTimerDelegate, RespawnTimeSec);
 			}
 		}
 	}

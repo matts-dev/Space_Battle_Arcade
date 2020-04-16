@@ -7,6 +7,7 @@
 #include "../../GameFramework/SALevel.h"
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
+#include "../../Tools/SAUtilities.h"
 
 namespace SA
 {
@@ -120,6 +121,9 @@ namespace SA
 				spawnData.spawnConfig = validSpawnables[spawnableIdx];
 				spawnData.team = teamIdx;
 				spawnData.spawnTransform.position = spawnPnt_wp;
+				spawnData.spawnTransform.rotQuat = Utils::getRotationBetween(
+					normalize(spawnData.spawnConfig->getModelFacingDir_n() * spawnData.spawnConfig->getModelDefaultRotation()),	 //normalizing for safety, shouldn't be necessary analytically, may be necessarily numerically
+					spawnDir_n);//spawn ship facing space point dir
 
 				sp<Ship> newEntity = currentLevel->spawnEntity<Ship>(spawnData);
 				newEntity->setVelocityDir(spawnDir_n); //this currently normalizes, so normalizing twice but leaving to avoid code fragility

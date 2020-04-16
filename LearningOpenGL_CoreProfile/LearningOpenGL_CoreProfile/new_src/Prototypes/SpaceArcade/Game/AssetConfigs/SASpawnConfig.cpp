@@ -427,5 +427,10 @@ namespace SA
 		return xform;
 	}
 
+	const glm::quat SpawnConfig::getModelDefaultRotation()
+	{
+		return getRotQuatFromDegrees(modelRotationDegrees);
+	}
+
 }
 
