@@ -342,6 +342,7 @@ namespace SA
 			}
 
 			collisionAdjustedPosition = movingCamPos;
+			uniqueNodes.clear();
 		}
 	}
 

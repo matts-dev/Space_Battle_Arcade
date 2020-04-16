@@ -332,6 +332,17 @@ namespace SA
 	{
 		RenderModelEntity::onDestroyed();
 		collisionHandle = nullptr; //release spatial hashing information
+
+#if ENABLE_BANDAID_FIXES
+		//#BUG #TODO it appears spatial hash is not getting cleaned up properly in case of carrier ships; repro is enable camera debugging, destroy carrier, fly to center and see camera is colliding
+		//for now, just removing collision comp so it cannot be used to do collision
+		if (CollisionComponent* collisionComp = getGameComponent<CollisionComponent>())
+		{
+			collisionComp->setKinematicCollision(false);
+		}
+#endif //ENABLE_BANDAID_FIXES
+		//#TODO #BUG avoidance spheres still affecting AI after carrier ship destroyed
+		//#TODO #BUG cleanup placements after carrier is destroyed
 	}
 
 	void Ship::onPlayerControlTaken()
@@ -991,7 +1002,10 @@ namespace SA
 				{
 					brainComp->setNewBrain(sp<AIBrain>(nullptr));
 				}
+
+				
 			}
+
 			destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
 		}
 		else
