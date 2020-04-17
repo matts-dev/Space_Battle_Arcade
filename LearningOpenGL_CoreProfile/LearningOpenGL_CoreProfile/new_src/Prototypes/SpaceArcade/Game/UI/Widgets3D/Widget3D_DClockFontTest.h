@@ -1,0 +1,22 @@
+#pragma once
+#include "Widget3D_Base.h"
+
+namespace SA
+{
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// Class for testing the digital clock font
+	/////////////////////////////////////////////////////////////////////////////////////
+	class Widget3D_DClockFontTest final : public Widget3D_Base
+	{
+	public:
+		void render(GameUIRenderData& renderData) override;
+	protected:
+		virtual void postConstruct() override;
+	private:
+		sp<class DigitalClockGlyph> rawGlyph = nullptr;
+		sp<class Shader> glyphShader = nullptr;
+	};
+
+
+}

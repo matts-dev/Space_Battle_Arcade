@@ -756,6 +756,18 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Components\FighterSpawnComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\text\DigitalClockFont.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Respawn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DClockFontTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -1890,6 +1902,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Components\FighterSpawnComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\text\DigitalClockFont.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Respawn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DClockFontTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

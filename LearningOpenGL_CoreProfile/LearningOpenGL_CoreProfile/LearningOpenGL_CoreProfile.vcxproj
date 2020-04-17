@@ -201,6 +201,10 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SASpaceArcadeGlobalConstants.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\SAHUD.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\text\DigitalClockFont.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Base.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DClockFontTest.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Respawn.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.h" />
@@ -491,6 +495,10 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\StressTestLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\SAHUD.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\text\DigitalClockFont.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Base.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DClockFontTest.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Respawn.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.cpp" />

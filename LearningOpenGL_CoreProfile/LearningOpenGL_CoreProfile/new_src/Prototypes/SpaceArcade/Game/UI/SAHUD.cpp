@@ -6,6 +6,8 @@
 #include "../../Rendering/SAShader.h"
 #include "../../Tools/Geometry/SimpleShapes.h"
 #include "../../Rendering/Camera/Texture_2D.h"
+#include "Widgets3D/Widget3D_Respawn.h"
+#include "Widgets3D/Widget3D_DClockFontTest.h"
 
 using namespace glm;
 
@@ -22,47 +24,42 @@ namespace SA
 		quadShape = new_sp<TexturedQuad>();
 		spriteShader = new_sp<Shader>(spriteVS_src, spriteFS_src, "", false);
 
+		respawnWidget = new_sp<Widget3D_Respawn>();
+
+#if HUD_FONT_TEST 
+		fontTest = new_sp<class Widget3D_DClockFontTest>();
+#endif
 	}
 
 	void HUD::render(float dt_sec) const
 	{
 		if (bRenderHUD)
 		{
-			static WindowSystem& windowSystem = GameBase::get().getWindowSystem();
-			const sp<Window>& primaryWindow = windowSystem.getPrimaryWindow();
+			GameUIRenderData rd_ui;
 
-			const std::pair<int, int> framebufferSize = primaryWindow->getFramebufferSize();
-			const int width = framebufferSize.first;
-			const int height = framebufferSize.second;
-			const int minSize = glm::min<int>(width, height);
-
-			float nearPlane = -0.1f;
-			float farPlane = 100.0f;
-			//mat4 ortho_projection(1.0f);
-			mat4 ortho_projection = glm::ortho( 
-				-(float)width / 2.0f, (float)width / 2.0f,
-				-(float)height / 2.0f, (float)height / 2.0f
-			);
-
-			if (spriteShader && primaryWindow)
+			if (spriteShader)
 			{
 				//draw reticle
 				if (quadShape && reticleTexture && reticleTexture->hasAcquiredResources() && spriteShader)
 				{
-					float reticalSize = 0.015f * float(minSize); //X% of smallest screen dimension 
+					float reticalSize = 0.015f * float(rd_ui.frameBuffer_MinDimension()); //X% of smallest screen dimension 
 
 					mat4 model(1.f);
-					//model = glm::translate(model, vec3(width/2.f, height/2.f, 0.f));
 					model = glm::scale(model, vec3(reticalSize));
 
 					spriteShader->use();
 					spriteShader->setUniform1i("textureData", 0); 
 					spriteShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-					spriteShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(ortho_projection));
+					spriteShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(rd_ui.orthographicProjection_m()));
 					reticleTexture->bindTexture(GL_TEXTURE0);
 					quadShape->render();
 				}
 			}
+
+			respawnWidget->render(rd_ui);
+#if HUD_FONT_TEST 
+			fontTest->render(rd_ui);
+#endif
 		}
 	}
 

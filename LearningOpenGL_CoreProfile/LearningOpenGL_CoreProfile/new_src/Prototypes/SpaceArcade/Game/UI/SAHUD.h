@@ -8,6 +8,8 @@ namespace SA
 	class TexturedQuad;
 	class Shader;
 
+#define HUD_FONT_TEST 1
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// The object that renders the HUD to the screen
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,5 +24,9 @@ namespace SA
 		sp<Texture_2D> reticleTexture;
 		sp<Shader> spriteShader;
 		sp<TexturedQuad> quadShape;
+		sp<class Widget3D_Respawn> respawnWidget = nullptr;
+#if HUD_FONT_TEST 
+		sp<class Widget3D_DClockFontTest> fontTest = nullptr;
+#endif
 	};
 }
