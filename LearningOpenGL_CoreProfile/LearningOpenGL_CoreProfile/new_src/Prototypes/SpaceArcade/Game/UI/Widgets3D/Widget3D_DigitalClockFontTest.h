@@ -7,7 +7,7 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Class for testing the digital clock font
 	/////////////////////////////////////////////////////////////////////////////////////
-	class Widget3D_DClockFontTest final : public Widget3D_Base
+	class Widget3D_DigitalClockFontTest final : public Widget3D_Base
 	{
 	public:
 		void render(GameUIRenderData& renderData) override;

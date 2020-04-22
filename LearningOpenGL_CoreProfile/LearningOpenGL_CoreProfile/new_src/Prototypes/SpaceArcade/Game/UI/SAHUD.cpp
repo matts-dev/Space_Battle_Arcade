@@ -7,7 +7,7 @@
 #include "../../Tools/Geometry/SimpleShapes.h"
 #include "../../Rendering/Camera/Texture_2D.h"
 #include "Widgets3D/Widget3D_Respawn.h"
-#include "Widgets3D/Widget3D_DClockFontTest.h"
+#include "Widgets3D/Widget3D_DigitalClockFontTest.h"
 
 using namespace glm;
 
@@ -27,7 +27,7 @@ namespace SA
 		respawnWidget = new_sp<Widget3D_Respawn>();
 
 #if HUD_FONT_TEST 
-		fontTest = new_sp<class Widget3D_DClockFontTest>();
+		fontTest = new_sp<class Widget3D_DigitalClockFontTest>();
 #endif
 	}
 

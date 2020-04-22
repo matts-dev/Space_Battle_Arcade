@@ -765,7 +765,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DClockFontTest.h">
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DigitalClockFontTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1913,7 +1913,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_Base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DClockFontTest.cpp">
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\Widgets3D\Widget3D_DigitalClockFontTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

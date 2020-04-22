@@ -26,7 +26,7 @@ namespace SA
 		sp<TexturedQuad> quadShape;
 		sp<class Widget3D_Respawn> respawnWidget = nullptr;
 #if HUD_FONT_TEST 
-		sp<class Widget3D_DClockFontTest> fontTest = nullptr;
+		sp<class Widget3D_DigitalClockFontTest> fontTest = nullptr;
 #endif
 	};
 }
