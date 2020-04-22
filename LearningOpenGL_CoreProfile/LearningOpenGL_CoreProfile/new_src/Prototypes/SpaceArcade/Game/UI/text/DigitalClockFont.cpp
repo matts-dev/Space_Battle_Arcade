@@ -125,12 +125,12 @@ namespace SA
 		};
 
 
-		mat4 gsd_m = glm::scale(mat4(1.f), vec3(0.1f, 0.1f, 0.1f)); //global scale down
-		//mat4 gsd_m = glm::scale(mat4(1.f), vec3(1.f)); //global scale down
+		//mat4 gsd_m = glm::scale(mat4(1.f), vec3(0.1f, 0.1f, 0.1f)); //global scale down
+		mat4 gsd_m = glm::scale(mat4(1.f), vec3(1.f)); //global scale down
 		mat4 zero_m{ 0.f };
 
 		//useful positions to composite together
-		const float boxRadius = 8.f;
+		const float boxRadius = 1.0f; //keep this at specific value so a glyph width/height is 1; this will make spacing/scaling math much easier!
 		vec3 topRowPos = vec3(0, boxRadius, 0);
 		vec3 rightColPos = vec3(boxRadius, 0, 0);
 		vec3 bottomRowPos = -topRowPos;
@@ -149,8 +149,8 @@ namespace SA
 		};
 		translate_m = glm::translate(mat4(1.f), topRowPos);
 		float boxLength = boxRadius * 0.75f;
-		mat4 horScale_m = scale({ boxLength,	1 });
-		mat4 verScale_m = scale({ 1,			boxLength});
+		mat4 horScale_m = scale({ boxLength			   ,boxRadius - boxLength });
+		mat4 verScale_m = scale({ boxRadius - boxLength,			boxLength});
 
 		////////////////////////////////////////////////////////
 		// horizontal
@@ -228,14 +228,15 @@ namespace SA
 		////////////////////////////////////////////////////////
 		// special
 		////////////////////////////////////////////////////////
+		mat4 specialScaleDown = glm::scale(mat4(1.f), vec3(boxRadius - boxLength));
 		translate_m = trans(bottomRowPos + leftColPos);
-		transformAndAddVerts(gsd_m * translate_m, DCBars::LEFT_PERIOD);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::LEFT_PERIOD);
 
 		translate_m = trans(bottomRowPos);
-		transformAndAddVerts(gsd_m * translate_m, DCBars::MIDDLE_PERIOD);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::MIDDLE_PERIOD);
 
 		translate_m = trans(bottomRowPos + rightColPos);
-		transformAndAddVerts(gsd_m * translate_m, DCBars::RIGHT_PERIOD);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::RIGHT_PERIOD);
 
 	}
 
