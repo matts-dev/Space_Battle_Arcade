@@ -4,6 +4,37 @@
 
 namespace SA
 {
+	////////////////////////////////////////////////////////
+	// statics
+	////////////////////////////////////////////////////////
+	const std::array<int32_t, DCFont::NumPossibleValuesInChar>& DigitalClockGlyph::getCharToBitvectorMap()
+	{
+		static std::array<int32_t, DCFont::NumPossibleValuesInChar> map;
+		static int oneTimeInit = [&]()
+		{
+			std::memset(map.data(), 0xFFFFFFFF, map.size()); //have unset characters show everything for easy debugging
+
+			const int32_t left = DCBars::LEFT_TOP | DCBars::LEFT_BOTTOM;
+			const int32_t right = DCBars::RIGHT_TOP | DCBars::RIGHT_BOTTOM;
+			const int32_t top = DCBars::TOP_LEFT | DCBars::TOP_RIGHT;
+			const int32_t topBar = top | DCBars::TOP_MIDDLE_PERIOD;
+			const int32_t middle = DCBars::MIDDLE_LEFT | DCBars::MIDDLE_RIGHT;
+			const int32_t middleBar = middle| DCBars::MIDDLE_MIDDLE_PERIOD;
+			const int32_t middleBarFull = middleBar | DCBars::MIDDLE_RIGHT_PERIOD | DCBars::MIDDLE_LEFT_PERIOD;
+			const int32_t bottom = DCBars::BOTTOM_LEFT | DCBars::BOTTOM_RIGHT;
+			const int32_t bottomBar = bottom | DCBars::BOTTOM_MIDDLE_PERIOD;
+			const int32_t circle = left | right | top | bottom;
+			const int32_t circleBar = circle | DCBars::TOP_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::MIDDLE_LEFT_PERIOD | DCBars::MIDDLE_RIGHT_PERIOD;
+
+			map['a'] = map['A'] = left | right | topBar | middleBarFull | DCBars::BOTTOM_LEFT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
+			map['b'] = map['B'] = (circleBar | middleBar | DCBars::BOTTOM_LEFT_PERIOD | DCBars::TOP_LEFT_PERIOD) - DCBars::MIDDLE_RIGHT_PERIOD;
+			
+			return 0;
+		}();
+
+		return map;
+	}
+
 	//#TODO expose these shaders publicly
 	static const char*const  DigitalClockShader_uniformDrive_vs = R"(
 		#version 330 core
@@ -14,17 +45,16 @@ namespace SA
 		out vec2 uvs;
 
 		uniform mat4 model = mat4(1.f);
-		uniform mat4 view = mat4(1.f);
-		uniform mat4 projection = mat4(1.f);
+		uniform mat4 projection_view = mat4(1.f);
 
-		uniform int bitVec = 0xFFFFFF; //replace this with an instanced attribute
+		uniform int bitVec = 0xFFFFFFFF; //replace this with an instanced attribute
 
 		void main()
 		{
 			//either create identity matrix or zero matrix to filter out digital clock segments
 			mat4 filterMatrix =	mat4((bitVec & vertBitVec) > 0 ? 1.f : 0.f);		//mat4(1.f) == identity matrix
 
-			gl_Position = projection * view * model * filterMatrix * vertPos;
+			gl_Position = projection_view * model * filterMatrix * vertPos;
 			uvs = vertUVs;
 		}
 	)";
@@ -40,15 +70,14 @@ namespace SA
 		out vec2 uvs;
 
 		uniform mat4 model = mat4(1.f);
-		uniform mat4 view = mat4(1.f);
-		uniform mat4 projection = mat4(1.f);
+		uniform mat4 projection_view = mat4(1.f);
 
 		void main()
 		{
 			//either create identity matrix or zero matrix to filter out digital clock segments
 			mat4 filterMatrix =	mat4((instancedBitVec & vertBitVec) > 0 ? 1.f : 0.f);			//mat4(1.f) == identity matrix
 
-			gl_Position = projection * view * model * filterMatrix * vertPos;
+			gl_Position = projection_view * model * filterMatrix * vertPos;
 			uvs = vertUVs;
 		}
 	)";
@@ -69,6 +98,7 @@ namespace SA
 	{
 		return new_sp<Shader>(DigitalClockShader_instanced_vs, DigitalClockShader_instanced_fs, false);
 	}
+
 
 	void DigitalClockGlyph::render(struct GameUIRenderData& rd_ui, Shader& shader)
 	{
@@ -130,7 +160,7 @@ namespace SA
 		mat4 zero_m{ 0.f };
 
 		//useful positions to composite together
-		const float boxRadius = 1.0f; //keep this at specific value so a glyph width/height is 1; this will make spacing/scaling math much easier!
+		const float boxRadius = 0.5f; //keep this at specific value so a glyph width/height is 1; this will make spacing/scaling math much easier!
 		vec3 topRowPos = vec3(0, boxRadius, 0);
 		vec3 rightColPos = vec3(boxRadius, 0, 0);
 		vec3 bottomRowPos = -topRowPos;
@@ -230,13 +260,31 @@ namespace SA
 		////////////////////////////////////////////////////////
 		mat4 specialScaleDown = glm::scale(mat4(1.f), vec3(boxRadius - boxLength));
 		translate_m = trans(bottomRowPos + leftColPos);
-		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::LEFT_PERIOD);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::BOTTOM_LEFT_PERIOD);
 
 		translate_m = trans(bottomRowPos);
-		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::MIDDLE_PERIOD);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::BOTTOM_MIDDLE_PERIOD);
 
 		translate_m = trans(bottomRowPos + rightColPos);
-		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::RIGHT_PERIOD);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::BOTTOM_RIGHT_PERIOD);
+
+		translate_m = trans(leftColPos);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::MIDDLE_LEFT_PERIOD);
+
+		translate_m = trans(vec3(0,0,0));
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::MIDDLE_MIDDLE_PERIOD);
+
+		translate_m = trans(rightColPos);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::MIDDLE_RIGHT_PERIOD);
+
+		translate_m = trans(topRowPos+ leftColPos);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::TOP_LEFT_PERIOD);
+
+		translate_m = trans(topRowPos);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::TOP_MIDDLE_PERIOD);
+
+		translate_m = trans(topRowPos + rightColPos);
+		transformAndAddVerts(gsd_m * translate_m * specialScaleDown, DCBars::TOP_RIGHT_PERIOD);
 
 	}
 

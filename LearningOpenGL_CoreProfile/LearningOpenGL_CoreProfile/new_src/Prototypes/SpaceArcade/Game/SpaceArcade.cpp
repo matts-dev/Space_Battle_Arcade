@@ -180,6 +180,7 @@ namespace SA
 				{
 					FRD.view = camera->getView();
 					FRD.projection = camera->getPerspective();
+					FRD.projection_view = FRD.projection * FRD.view;
 				}
 			}
 		}

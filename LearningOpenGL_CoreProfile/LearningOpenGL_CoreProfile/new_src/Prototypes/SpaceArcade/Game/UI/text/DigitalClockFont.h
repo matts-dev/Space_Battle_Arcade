@@ -6,6 +6,8 @@
 #include <gtx/quaternion.hpp>
 
 #include<cstdint>
+#include<cmath>
+
 #include <glad/glad.h>
 #include <array>
 #include <GLFW/glfw3.h>
@@ -45,16 +47,33 @@ namespace SA
 			BACK_SLASH_BL		= 1 << 18,
 			BACK_SLASH_BR		= 1 << 19,
 
-			LEFT_PERIOD			= 1 << 20,
-			MIDDLE_PERIOD		= 1 << 21,
-			RIGHT_PERIOD		= 1 << 22
+			BOTTOM_LEFT_PERIOD		= 1 << 20,
+			BOTTOM_MIDDLE_PERIOD	= 1 << 21,
+			BOTTOM_RIGHT_PERIOD		= 1 << 22,
+			MIDDLE_LEFT_PERIOD		= 1 << 23,
+			MIDDLE_MIDDLE_PERIOD	= 1 << 24,
+			MIDDLE_RIGHT_PERIOD		= 1 << 25,
+			TOP_LEFT_PERIOD			= 1 << 26,
+			TOP_MIDDLE_PERIOD		= 1 << 27,
+			TOP_RIGHT_PERIOD		= 1 << 28,
+
 		};
 	}
 
 	sp<class Shader> getDefaultGlyphShader_uniformBased();
 
+	namespace DCFont
+	{
+		constexpr size_t NumPossibleValuesInChar = 256;
+	}
+
 	class DigitalClockGlyph : public GPUResource
 	{
+	public:
+		static const std::array<int32_t, DCFont::NumPossibleValuesInChar>& getCharToBitvectorMap();
+		static constexpr float GLYPH_WIDTH = 1.0f; 
+		static constexpr float GLYPH_HEIGHT = 1.0f; 
+		static constexpr float BETWEEN_GLYPH_SPACE = 0.2f; //the unscaled space between two glyphs so that they do not connect and provide visual spacing.
 	public:
 		void render(struct GameUIRenderData& renderData, Shader& shader);
 		virtual ~DigitalClockGlyph();
