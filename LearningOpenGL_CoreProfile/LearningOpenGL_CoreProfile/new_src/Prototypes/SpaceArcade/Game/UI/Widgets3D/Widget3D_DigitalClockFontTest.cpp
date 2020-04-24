@@ -108,12 +108,90 @@ A BCDEFGHIJKLMNOPQRSTUVWXYZ
 						textRenderer->render(*frd);
 					}
 				}
-				else if (constexpr bool bTestInstanced = true)
+				else if (constexpr bool bTestInstanced = false)
 				{
 					GameBase& game = GameBase::get();
 					if (const RenderData* frd = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber()))
 					{
 						instancedTextRenderer->renderGlyphsAsInstanced(*frd);
+					}
+				}
+				else if (constexpr bool bCompareInstanceAgainstIndividual = false)
+				{
+					Transform xform = textRenderer->getXform();
+					xform.scale = vec3(1.f);
+
+					xform.position = vec3(0.f, 0.f, 0.f);
+					textRenderer->setXform(xform);
+					textRenderer->render(*frd);
+
+					xform.position = vec3(0.f, 0.f, -5.f);
+					textRenderer->setXform(xform);
+					textRenderer->render(*frd);
+
+					xform.position = vec3(0.f, 0.f, 5.f);
+					textRenderer->setXform(xform);
+					textRenderer->render(*frd);
+				}
+				else if (constexpr bool bCompareInstanceAgainstBatch = false)
+				{
+					GameBase& game = GameBase::get();
+					if (const RenderData* frd = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber()))
+					{
+						Transform xform = instancedTextRenderer->getXform();
+
+						xform.position = vec3(0.f, 0.f, 0.f);
+						instancedTextRenderer->setXform(xform);
+						instancedTextRenderer->renderGlyphsAsInstanced(*frd);
+
+						xform.position = vec3(0.f, 0.f, -5.f);
+						instancedTextRenderer->setXform(xform);
+						instancedTextRenderer->renderGlyphsAsInstanced(*frd);
+
+
+						xform.position = vec3(0.f, 0.f, 5.f);
+						instancedTextRenderer->setXform(xform);
+						instancedTextRenderer->renderGlyphsAsInstanced(*frd);
+					}
+				}
+				else if (constexpr bool bTestBatced = true)
+				{
+					GameBase& game = GameBase::get();
+					if (const RenderData* frd = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber()))
+					{
+						//just recycling same text render but rendering it in multiple spots.
+						DCFont::BatchData batch;
+						Transform xform = instancedTextRenderer->getXform();
+
+						xform.position = vec3(0.f);
+						instancedTextRenderer->setXform(xform);
+						instancedTextRenderer->prepareBatchedInstance(*instancedTextRenderer, batch);
+
+						xform.position = vec3(0.f,0.f, -5.f);
+						instancedTextRenderer->setXform(xform);
+						if (!instancedTextRenderer->prepareBatchedInstance(*instancedTextRenderer, batch))
+						{
+							//can't buffer, render what we have then buffer
+							instancedTextRenderer->renderBatched(*frd, batch);
+							if (!instancedTextRenderer->prepareBatchedInstance(*instancedTextRenderer, batch))
+							{
+								log(__FUNCTION__, LogLevel::LOG_ERROR, "Cannot batch text with this batch configuration.");
+							}
+						}
+
+						xform.position = vec3(0.f, 0.f, 5.f);
+						instancedTextRenderer->setXform(xform);
+						if (!instancedTextRenderer->prepareBatchedInstance(*instancedTextRenderer, batch))
+						{
+							//can't buffer, render what we have then buffer
+							instancedTextRenderer->renderBatched(*frd, batch);
+							if (!instancedTextRenderer->prepareBatchedInstance(*instancedTextRenderer, batch))
+							{
+								log(__FUNCTION__, LogLevel::LOG_ERROR, "Cannot batch text with this batch configuration.");
+							}
+						}
+
+						instancedTextRenderer->renderBatched(*frd, batch);
 					}
 				}
 			}
