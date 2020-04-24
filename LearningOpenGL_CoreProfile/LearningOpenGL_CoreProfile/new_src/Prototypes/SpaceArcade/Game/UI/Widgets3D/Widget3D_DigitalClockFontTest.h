@@ -16,6 +16,7 @@ namespace SA
 	private:
 		sp<class DigitalClockGlyph> rawGlyph = nullptr;
 		sp<class Shader> glyphShader = nullptr;
+		sp<class DigitalClockFont> textRenderer = nullptr;
 	};
 
 

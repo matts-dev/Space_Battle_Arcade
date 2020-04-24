@@ -1,6 +1,7 @@
 #include "DigitalClockFont.h"
 #include "../../../Rendering/OpenGLHelpers.h"
 #include "../../../Rendering/SAShader.h"
+#include "../../../Rendering/RenderData.h"
 
 namespace SA
 {
@@ -12,26 +13,111 @@ namespace SA
 		static std::array<int32_t, DCFont::NumPossibleValuesInChar> map;
 		static int oneTimeInit = [&]()
 		{
-			std::memset(map.data(), 0xFFFFFFFF, map.size()); //have unset characters show everything for easy debugging
+			std::memset(map.data(), 0xFFFFFFFF, map.size() * sizeof(int)); //have unset characters show everything for easy debugging
 
 			const int32_t left = DCBars::LEFT_TOP | DCBars::LEFT_BOTTOM;
+			const int32_t leftBar = left | DCBars::MIDDLE_LEFT_PERIOD;
+			const int32_t leftBarFull = leftBar | DCBars::BOTTOM_LEFT_PERIOD | DCBars::TOP_LEFT_PERIOD;
 			const int32_t right = DCBars::RIGHT_TOP | DCBars::RIGHT_BOTTOM;
+			const int32_t rightBar = right | DCBars::MIDDLE_RIGHT_PERIOD;
+			const int32_t rightBarFull = rightBar | DCBars::BOTTOM_RIGHT_PERIOD | DCBars::TOP_RIGHT_PERIOD;
 			const int32_t top = DCBars::TOP_LEFT | DCBars::TOP_RIGHT;
 			const int32_t topBar = top | DCBars::TOP_MIDDLE_PERIOD;
+			const int32_t topBarFull = topBar | DCBars::TOP_LEFT_PERIOD | DCBars::TOP_RIGHT_PERIOD;
 			const int32_t middle = DCBars::MIDDLE_LEFT | DCBars::MIDDLE_RIGHT;
-			const int32_t middleBar = middle| DCBars::MIDDLE_MIDDLE_PERIOD;
+			const int32_t middleBar = middle | DCBars::MIDDLE_MIDDLE_PERIOD;
 			const int32_t middleBarFull = middleBar | DCBars::MIDDLE_RIGHT_PERIOD | DCBars::MIDDLE_LEFT_PERIOD;
 			const int32_t bottom = DCBars::BOTTOM_LEFT | DCBars::BOTTOM_RIGHT;
 			const int32_t bottomBar = bottom | DCBars::BOTTOM_MIDDLE_PERIOD;
+			const int32_t bottomBarFull = bottomBar | DCBars::BOTTOM_LEFT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
 			const int32_t circle = left | right | top | bottom;
 			const int32_t circleBar = circle | DCBars::TOP_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::MIDDLE_LEFT_PERIOD | DCBars::MIDDLE_RIGHT_PERIOD;
 
+			const int32_t vertMiddle = DCBars::MIDDLE_TOP| DCBars::MIDDLE_BOTTOM;
+			const int32_t vertMiddleBar = vertMiddle | DCBars::MIDDLE_MIDDLE_PERIOD;
+			const int32_t vertMiddleBarFull = vertMiddleBar | DCBars::TOP_MIDDLE_PERIOD| DCBars::BOTTOM_MIDDLE_PERIOD;
+
+			const int32_t forwardSlash = DCBars::FORWARD_SLASH_BL | DCBars::FORWARD_SLASH_TR;
+			const int32_t backSlash = DCBars::BACK_SLASH_TL| DCBars::BACK_SLASH_BR;
+
+
+			map[' '] = 0;
 			map['a'] = map['A'] = left | right | topBar | middleBarFull | DCBars::BOTTOM_LEFT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
 			map['b'] = map['B'] = (circleBar | middleBar | DCBars::BOTTOM_LEFT_PERIOD | DCBars::TOP_LEFT_PERIOD) - DCBars::MIDDLE_RIGHT_PERIOD;
+			map['c'] = map['C'] = leftBarFull | topBar | bottomBar;
+			map['d'] = map['D'] = leftBarFull | topBar | bottomBar | rightBar;
+			map['e'] = map['E'] = leftBarFull | topBar | middleBar | bottomBar | DCBars::TOP_RIGHT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
+			map['f'] = map['F'] = leftBarFull | topBar | middleBar | DCBars::TOP_RIGHT_PERIOD;
+			map['g'] = map['G'] = DCBars::MIDDLE_RIGHT | DCBars::RIGHT_BOTTOM | DCBars::BOTTOM_RIGHT_PERIOD |bottomBar | leftBar | topBar | DCBars::TOP_LEFT_PERIOD;
+			map['h'] = map['H'] = middleBar | leftBarFull | rightBarFull;
+			map['i'] = map['I'] = vertMiddleBarFull | topBar | bottomBar;
+			map['j'] = map['J'] = rightBar | DCBars::TOP_RIGHT | bottomBar| DCBars::BOTTOM_LEFT;
+			map['k'] = map['K'] = leftBarFull | DCBars::MIDDLE_LEFT | DCBars::FORWARD_SLASH_TR | DCBars::BACK_SLASH_BR| DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD | DCBars::TOP_RIGHT_PERIOD;
+			map['l'] = map['L'] =  leftBarFull | bottomBar;
+			map['m'] = map['M'] =  leftBarFull | rightBarFull | DCBars::BACK_SLASH_TL | DCBars::FORWARD_SLASH_TR | DCBars::MIDDLE_MIDDLE_PERIOD/*| DCBars::MIDDLE_BOTTOM*/;
+			map['n'] = map['N'] =  leftBarFull | DCBars::BACK_SLASH_TL | DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BACK_SLASH_BR | rightBarFull ;
+			map['o'] = map['O'] =  circleBar;
+			map['p'] = map['P'] =  leftBarFull | topBar | middleBar | DCBars::RIGHT_TOP;
+			map['q'] = map['Q'] =  circle | DCBars::BACK_SLASH_BR | DCBars::BOTTOM_RIGHT_PERIOD;
+			map['r'] = map['R'] = leftBarFull | middleBar | topBar | DCBars::RIGHT_TOP|DCBars::BACK_SLASH_BR | DCBars::BOTTOM_RIGHT_PERIOD;
+			map['s'] = map['S'] =  topBar | middleBar | bottomBar | DCBars::LEFT_TOP | DCBars::RIGHT_BOTTOM;
+			map['t'] = map['T'] =  vertMiddleBarFull | topBarFull;
+			map['u'] = map['U'] =  leftBar | bottomBar | rightBar;
+			map['v'] = map['V'] = DCBars::BACK_SLASH_BL | DCBars::FORWARD_SLASH_BR | DCBars::RIGHT_TOP| DCBars::LEFT_TOP|DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::MIDDLE_RIGHT_PERIOD| DCBars::MIDDLE_LEFT_PERIOD;
+			map['w'] = map['W'] = leftBarFull | rightBarFull | DCBars::BACK_SLASH_BR | DCBars::FORWARD_SLASH_BL| DCBars::MIDDLE_MIDDLE_PERIOD/*|DCBars::MIDDLE_TOP*/;
+			map['x'] = map['X'] = DCBars::BACK_SLASH_TL | DCBars::BACK_SLASH_BR | DCBars::FORWARD_SLASH_TR | DCBars::FORWARD_SLASH_BL| DCBars::MIDDLE_MIDDLE_PERIOD;
+			map['y'] = map['Y'] = DCBars::BACK_SLASH_TL | DCBars::FORWARD_SLASH_TR | DCBars::MIDDLE_BOTTOM| DCBars::MIDDLE_MIDDLE_PERIOD;
+			map['z'] = map['Z'] =  topBar | DCBars::FORWARD_SLASH_TR | DCBars::FORWARD_SLASH_BL | bottomBar| DCBars::MIDDLE_MIDDLE_PERIOD;
+
+			map['!'] = DCBars::MIDDLE_TOP | DCBars::BOTTOM_MIDDLE_PERIOD;
+			map['@'] = topBarFull | bottomBarFull | leftBarFull|rightBarFull|DCBars::BACK_SLASH_BL |DCBars::BACK_SLASH_TR|DCBars::FORWARD_SLASH_BR|DCBars::FORWARD_SLASH_TL;
+			map['#'] = /*topBarFull | middleBarFull |*/ DCBars::BACK_SLASH_BL | DCBars::BACK_SLASH_BR | DCBars::BACK_SLASH_TL| DCBars::BACK_SLASH_TR
+						|DCBars::FORWARD_SLASH_BL | DCBars::FORWARD_SLASH_BR | DCBars::FORWARD_SLASH_TL | DCBars::FORWARD_SLASH_TR;
+			map['$'] = topBar | middleBar | bottomBar | DCBars::LEFT_TOP| DCBars::RIGHT_BOTTOM| vertMiddleBarFull;
+			map['%'] = forwardSlash | DCBars::FORWARD_SLASH_TL | DCBars::FORWARD_SLASH_BR | DCBars::BACK_SLASH_TL | DCBars::BACK_SLASH_BR;
+			map['^'] = DCBars::FORWARD_SLASH_TL | DCBars::BACK_SLASH_TR|DCBars::TOP_MIDDLE_PERIOD;
+			map['&'] = backSlash | topBar| DCBars::RIGHT_TOP |DCBars::MIDDLE_RIGHT|DCBars::FORWARD_SLASH_BL|DCBars::BOTTOM_LEFT|DCBars::FORWARD_SLASH_BL;
+			map['*'] = DCBars::BACK_SLASH_TL|DCBars::FORWARD_SLASH_TL;
+			map['('] = leftBar|DCBars::BOTTOM_LEFT|DCBars::TOP_LEFT;
+			map[')'] = rightBar|DCBars::BOTTOM_RIGHT|DCBars::TOP_RIGHT;
+			map['-'] = middleBar;
+			map['_'] = bottomBarFull;
+			map['+'] = middleBar|vertMiddleBar;
+			map['='] = middleBar|topBar;
+
+			map['\''] = DCBars::TOP_MIDDLE_PERIOD;
+			map['"'] = DCBars::TOP_MIDDLE_PERIOD | DCBars::TOP_RIGHT_PERIOD;
+			map[':'] = DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD;
+			map[';'] = DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD|DCBars::BOTTOM_LEFT;
+			map['.'] = DCBars::BOTTOM_MIDDLE_PERIOD;
+			map['>'] = DCBars::BACK_SLASH_TL | DCBars::FORWARD_SLASH_BL | DCBars::MIDDLE_RIGHT_PERIOD;
+			map['<'] = DCBars::BACK_SLASH_BR | DCBars::FORWARD_SLASH_TR | DCBars::MIDDLE_LEFT_PERIOD;
+			map[','] = DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::BOTTOM_LEFT;
+			map['/'] = forwardSlash |DCBars::MIDDLE_MIDDLE_PERIOD;
+			map['\\'] = backSlash | DCBars::MIDDLE_MIDDLE_PERIOD;
+			map['?'] = topBar|DCBars::RIGHT_TOP|DCBars::MIDDLE_RIGHT|DCBars::MIDDLE_BOTTOM;
+			map['|'] = middleBarFull;
+			map['~'] = DCBars::MIDDLE_LEFT|DCBars::MIDDLE_TOP|DCBars::MIDDLE_RIGHT;
+			map['`'] = DCBars::TOP_LEFT_PERIOD;
+
+			map['['] = leftBar | DCBars::BOTTOM_LEFT | DCBars::TOP_LEFT | DCBars::TOP_LEFT_PERIOD | DCBars::BOTTOM_LEFT_PERIOD;
+			map[']'] = rightBar | DCBars::BOTTOM_RIGHT | DCBars::TOP_RIGHT | DCBars::TOP_RIGHT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
+			map['{'] = vertMiddleBar | DCBars::MIDDLE_LEFT|DCBars::TOP_RIGHT|DCBars::BOTTOM_RIGHT;
+			map['}'] = vertMiddleBar | DCBars::MIDDLE_RIGHT | DCBars::TOP_LEFT | DCBars::BOTTOM_LEFT;
+
+			map['1'] = right;
+			map['2'] = topBar|middleBar|bottomBar|DCBars::LEFT_BOTTOM|DCBars::RIGHT_TOP;
+			map['3'] = right|bottomBar|middleBar|topBar;
+			map['4'] = DCBars::LEFT_TOP|middleBar|rightBar|DCBars::TOP_LEFT_PERIOD|DCBars::TOP_RIGHT_PERIOD;
+			map['5'] = topBar|middleBar|bottomBar|DCBars::LEFT_TOP|DCBars::RIGHT_BOTTOM;
+			map['6'] = bottomBar | middleBar | topBar | DCBars::RIGHT_BOTTOM | leftBar;
+			map['7'] = right|topBar;
+			map['8'] = topBar|middleBar|bottomBar|left|right;
+			map['9'] = right|topBar|middleBar|DCBars::LEFT_TOP;
+			map['0'] = circle;
 			
 			return 0;
 		}();
-
 		return map;
 	}
 
@@ -100,7 +186,7 @@ namespace SA
 	}
 
 
-	void DigitalClockGlyph::render(struct GameUIRenderData& rd_ui, Shader& shader)
+	void DigitalClockGlyph::render(Shader& shader)
 	{
 		if (vao)
 		{
@@ -332,6 +418,184 @@ namespace SA
 		}
 	}
 
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Digital clock font
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/*static*/sp<SA::DigitalClockGlyph> DigitalClockFont::sharedGlyph = nullptr;
+	/*static*/uint64_t DigitalClockFont::numFontInstances = 0;
+	DigitalClockFont::DigitalClockFont(const Data& init /*= {}*/) : data(init)
+	{
+		if (numFontInstances == 0)
+		{
+			sharedGlyph = new_sp<DigitalClockGlyph>();
+		}
+		++numFontInstances;
+
+		if (!data.shader)
+		{
+			data.shader = getDefaultGlyphShader_uniformBased();
+		}
+	}
+
+	DigitalClockFont::~DigitalClockFont()
+	{
+		--numFontInstances;
+		if (numFontInstances == 0)
+		{
+			sharedGlyph = nullptr;
+		}
+	}
+
+	void DigitalClockFont::render(const RenderData& rd)
+	{
+		if (cache.glyphModelMatrices.size() == cache.glyphBitVectors.size() && data.shader)
+		{
+			data.shader->use();
+			data.shader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(rd.projection_view));
+
+			for (size_t glyphIdx = 0; glyphIdx < cache.glyphBitVectors.size(); ++glyphIdx)
+			{
+				data.shader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(cache.glyphModelMatrices[glyphIdx]));
+				data.shader->setUniform1i("bitVec", cache.glyphBitVectors[glyphIdx]);
+				sharedGlyph->render(*data.shader);
+			}
+		}
+	}
+
+	void DigitalClockFont::renderGlyphsAsInstanced(const struct RenderData& rd)
+	{
+		prepareBatchedInstance(*this); //use batching system just for this;
+		renderBatched(rd);
+	}
+
+	void DigitalClockFont::prepareBatchedInstance(const DigitalClockFont& addToBatch)
+	{
+		//TODO probably needs to return false if cannot add anymore to batch, to signal that we need to render
+	}
+
+	void DigitalClockFont::renderBatched(const struct RenderData& rd)
+	{
+
+	}
+
+	void DigitalClockFont::postConstruct()
+	{
+		cache.glyphModelMatrices.reserve(20);
+		cache.glyphBitVectors.reserve(20);
+		rebuildDataCache();
+	}
+
+	void DigitalClockFont::setText(const std::string& newText)
+	{
+		data.text = newText;
+		rebuildDataCache();
+	}
+
+	void DigitalClockFont::setXform(const Transform& newXform)
+	{
+		xform = newXform;
+		cache.paragraphModelMat = xform.getModelMatrix();
+	}
+
+	void DigitalClockFont::rebuildDataCache()
+	{
+		using namespace glm;
+		using DCG = DigitalClockGlyph;
+
+		const std::array<int32_t, DCFont::NumPossibleValuesInChar>& charToIntMap = DCG::getCharToBitvectorMap();
+
+		cache.glyphBitVectors.clear();
+		cache.glyphModelMatrices.clear();
+
+		//parse text for rendering; cached for efficiency
+		vec2 nextCharPos{ 0.f, 0.f };
+		vec2 pgSize{ 0.f, DCG::GLYPH_HEIGHT };	//paragraph size; named this way to visually differeniate it from paragraphEndPoint
+		for (size_t charIdx = 0; charIdx < data.text.size(); ++charIdx)
+		{
+			char letter = data.text[charIdx];
+			if (letter == '\n')
+			{
+				//update paragraph vertical size
+				if (charIdx != data.text.size() - 1) //don't bother updating size if this is the last char; size is already configured
+				{
+					////////////////////////////////////////////////////////
+					// set up next glyph position
+					////////////////////////////////////////////////////////
+					//before we update paragraph size, the next glyph will start at an offset of that size, plus a little spacing.
+					nextCharPos.y = -(pgSize.y + DCG::BETWEEN_GLYPH_SPACE); //offset by paragraph size, and add a little spacing
+					nextCharPos.x = 0;	//reset horizontal position for this new line
+
+					////////////////////////////////////////////////////////
+					// update paragraph size tracking
+					////////////////////////////////////////////////////////
+					//vec2 paragraphEndPos = nextCharPos;
+					//paragraphEndPos.x = 0;	//reset the horizontal tracking since we're starting a new line
+					//paragraphEndPos.y -= DCG::GLYPH_HEIGHT + DCG::BETWEEN_GLYPH_SPACE; //may need a vertical space field to use here
+
+					pgSize.y += DCG::BETWEEN_GLYPH_SPACE + DCG::GLYPH_HEIGHT; //in this case the spacing is for previous line, and size is for this line. We start with height of single glyph
+				}
+			}
+			else
+			{
+				////////////////////////////////////////////////////////
+				// set up glyph 
+				////////////////////////////////////////////////////////
+				vec3 glyphPos = vec3(nextCharPos, 0.f);
+				char letter = data.text[charIdx];
+				int bitVector = charToIntMap[letter];
+				mat4 glyphModel = glm::translate(glm::mat4(1.f), glyphPos);
+
+				//push the model matrix and a bitvector that defines which portions of digital clock will highlight
+				cache.glyphModelMatrices.push_back(glyphModel);
+				cache.glyphBitVectors.push_back(bitVector);
+
+				////////////////////////////////////////////////////////
+				// set up next glyph position
+				////////////////////////////////////////////////////////
+				vec2 paragraphEndPos = nextCharPos;
+				paragraphEndPos.x += DCG::GLYPH_WIDTH;
+
+				nextCharPos.x = paragraphEndPos.x + DCG::BETWEEN_GLYPH_SPACE;
+
+				////////////////////////////////////////////////////////
+				// maintain paragraph size for alignment calculations
+				////////////////////////////////////////////////////////
+				if (paragraphEndPos.x > pgSize.x)
+				{
+					pgSize.x = paragraphEndPos.x; //does not include space between glyphs
+				}
+			}
+		}
+
+		////////////////////////////////////////////////////////
+		// pivot alignment
+		////////////////////////////////////////////////////////
+		vec3 pivotOffset{ 0.f };
+
+		//update horizontal pivot, left assumed ie (0,0) is on the left side
+		if (data.pivotHorizontal == EHorizontalPivot::CENTER)
+		{
+			pivotOffset.x += pgSize.x / 2;
+		}
+		else if (data.pivotHorizontal == EHorizontalPivot::RIGHT)
+		{
+			pivotOffset.x += pgSize.x / 2;
+		}
+
+		//update vertical pivot, top assumed; ie (0,0) is on the top of the text
+		if (data.pivotVertical == EVerticalPivot::CENTER)
+		{
+			pivotOffset.y += pgSize.y / 2;
+		}
+		else if (data.pivotVertical == EVerticalPivot::BOTTOM)
+		{
+			pivotOffset.y += pgSize.y / 2;
+		}
+
+		cache.paragraphPivotMat = glm::translate(mat4(1.f), pivotOffset);
+		cache.paragraphModelMat = xform.getModelMatrix();
+	}
 
 }
 

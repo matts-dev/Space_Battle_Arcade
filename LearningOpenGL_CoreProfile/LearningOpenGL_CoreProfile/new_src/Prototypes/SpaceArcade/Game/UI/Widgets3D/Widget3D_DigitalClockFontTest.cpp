@@ -15,6 +15,14 @@ namespace SA
 		rawGlyph = new_sp<DigitalClockGlyph>();
 		glyphShader = getDefaultGlyphShader_uniformBased();
 
+		DigitalClockFont::Data init;
+		init.text = 
+R"(a bcdefghijklmnopqrstuvwxyz
+A BCDEFGHIJKLMNOPQRSTUVWXYZ
+1234567890
+!@#$%^&*()_+-=[]{};:'",<.>/?\`~
+)";
+		textRenderer = new_sp<DigitalClockFont>(init);
 	}
 
 	void Widget3D_DigitalClockFontTest::render(GameUIRenderData& renderData)
@@ -38,10 +46,10 @@ namespace SA
 				{
 					if (glyphShader)
 					{
-						rawGlyph->render(renderData, *glyphShader);//just render layout
+						rawGlyph->render(*glyphShader);//just render layout
 					}
 				}
-				else if (constexpr bool bTestLettersIndividual = true)
+				else if (constexpr bool bTestLettersIndividual = false)
 				{
 
 					if (glyphShader)
@@ -59,17 +67,25 @@ namespace SA
 						//render a
 						glyphShader->setUniform1i("bitVec", DigitalClockGlyph::getCharToBitvectorMap()['a']);
 						glyphShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(aMat));
-						rawGlyph->render(renderData, *glyphShader);
+						rawGlyph->render(*glyphShader);
 
 						//render b
 						glyphShader->setUniform1i("bitVec", DigitalClockGlyph::getCharToBitvectorMap()['b']);
 						glyphShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(bMat));
-						rawGlyph->render(renderData, *glyphShader);
+						rawGlyph->render(*glyphShader);
 					}
 				}
-				else if (constexpr bool bTestParagraph = false)
+				else if (constexpr bool bTestParagraph = true)
 				{
-
+					GameBase& game = GameBase::get();
+					if (const RenderData* frd = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber()))
+					{
+						//Transform xform = textRenderer->getXform();
+						//xform.position = camPos + forwardOffset * 3.f;
+						//xform.scale = vec3(0.1f);
+						//textRenderer->setXform(xform);
+						textRenderer->render(*frd);
+					}
 				}
 				else if (constexpr bool bTestInstanced = false)
 				{

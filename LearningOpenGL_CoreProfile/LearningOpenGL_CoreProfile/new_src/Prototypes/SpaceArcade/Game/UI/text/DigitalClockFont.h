@@ -13,6 +13,7 @@
 #include <GLFW/glfw3.h>
 #include "../../../Rendering/SAGPUResource.h"
 #include <vector>
+#include "../../../Tools/DataStructures/SATransform.h"
 
 namespace SA
 {
@@ -67,6 +68,7 @@ namespace SA
 		constexpr size_t NumPossibleValuesInChar = 256;
 	}
 
+	/** A renderer for an single glyph (ie letter). This should be a shared resource */
 	class DigitalClockGlyph : public GPUResource
 	{
 	public:
@@ -75,7 +77,7 @@ namespace SA
 		static constexpr float GLYPH_HEIGHT = 1.0f; 
 		static constexpr float BETWEEN_GLYPH_SPACE = 0.2f; //the unscaled space between two glyphs so that they do not connect and provide visual spacing.
 	public:
-		void render(struct GameUIRenderData& renderData, Shader& shader);
+		void render(Shader& shader);
 		virtual ~DigitalClockGlyph();
 	protected:
 		virtual void postConstruct() override;
@@ -91,5 +93,51 @@ namespace SA
 		GLuint vbo_uvs = 0;
 		GLuint vbo_bits = 0;
 	};
+
+	/** A renderer for entire strings */
+	class DigitalClockFont : public GameEntity
+	{
+	public:
+		enum class EHorizontalPivot { CENTER, LEFT, RIGHT };
+		enum class EVerticalPivot { CENTER, TOP, BOTTOM };
+		struct Data;
+	public:
+		DigitalClockFont(const Data& init = {});
+		virtual ~DigitalClockFont();
+		void render(const struct RenderData& rd);			
+		void renderGlyphsAsInstanced(const struct RenderData& rd);	//requires initialization with instanced version of shader
+		void prepareBatchedInstance(const DigitalClockFont& addToBatch);
+		void renderBatched(const struct RenderData& rd);
+	public:
+		void setText(const std::string& newText);
+		const Transform& getXform() const { return xform; }
+		void setXform(const Transform& newXform);
+	protected:
+		virtual void postConstruct() override;
+		void rebuildDataCache();
+	private: //statics
+		static sp<DigitalClockGlyph> sharedGlyph;
+		static uint64_t numFontInstances;
+	public: //public so this can be filled out externally and passed to ctor; d3d style
+		struct Data
+		{
+			sp<Shader> shader;
+			EHorizontalPivot pivotHorizontal = EHorizontalPivot::CENTER;
+			EVerticalPivot pivotVertical = EVerticalPivot::CENTER;
+			std::string text = "";
+		};
+	private:
+		Data data;
+		struct CachedData
+		{
+			std::vector<glm::mat4> glyphModelMatrices;
+			std::vector<int> glyphBitVectors;
+			glm::mat4 paragraphPivotMat{ 1.f };
+			glm::mat4 paragraphModelMat{ 1.f };
+		};
+		CachedData cache;
+		Transform xform; //needs to be strongly encapsulated so we don't recalculate most of cache.
+	};
+
 
 }
