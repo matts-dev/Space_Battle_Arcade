@@ -2,6 +2,7 @@
 #include "../../../Rendering/OpenGLHelpers.h"
 #include "../../../Rendering/SAShader.h"
 #include "../../../Rendering/RenderData.h"
+#include "../../../GameFramework/SALog.h"
 
 namespace SA
 {
@@ -108,7 +109,7 @@ namespace SA
 			map['1'] = right;
 			map['2'] = topBar|middleBar|bottomBar|DCBars::LEFT_BOTTOM|DCBars::RIGHT_TOP;
 			map['3'] = right|bottomBar|middleBar|topBar;
-			map['4'] = DCBars::LEFT_TOP|middleBar|rightBar|DCBars::TOP_LEFT_PERIOD|DCBars::TOP_RIGHT_PERIOD;
+			map['4'] = DCBars::LEFT_TOP|middleBar|right|DCBars::TOP_LEFT_PERIOD|DCBars::TOP_RIGHT_PERIOD;
 			map['5'] = topBar|middleBar|bottomBar|DCBars::LEFT_TOP|DCBars::RIGHT_BOTTOM;
 			map['6'] = bottomBar | middleBar | topBar | DCBars::RIGHT_BOTTOM | leftBar;
 			map['7'] = right|topBar;
@@ -121,6 +122,24 @@ namespace SA
 		return map;
 	}
 
+	//not best solution to make these static, but works for now. Perhaps better is to have these stored in some render system for memory clean up and unit testing efficency
+	namespace InstanceBuffers
+	{
+		static std::vector<glm::mat4> modelMats;
+		static std::vector<glm::mat4> parentPivotMats;
+		static std::vector<glm::vec4> glyphColors;
+		static std::vector<int32_t> bitVectors;
+		static const int onetimeReserveCall = []()
+		{
+			size_t reserveSize = 1000;
+			modelMats.reserve(reserveSize);
+			parentPivotMats.reserve(reserveSize);
+			glyphColors.reserve(reserveSize);
+			bitVectors.reserve(reserveSize);
+			return 0;
+		}();
+	}
+
 	//#TODO expose these shaders publicly
 	static const char*const  DigitalClockShader_uniformDrive_vs = R"(
 		#version 330 core
@@ -129,9 +148,13 @@ namespace SA
 		layout (location = 2) in int vertBitVec;				
 				
 		out vec2 uvs;
+		out vec4 color;
 
-		uniform mat4 model = mat4(1.f);
+		uniform mat4 glyphModel = mat4(1.f);
 		uniform mat4 projection_view = mat4(1.f);
+		uniform mat4 pivotMat = mat4(1.f);
+		uniform mat4 parentModel = mat4(1.f);
+		uniform vec4 uColor = vec4(1.f);
 
 		uniform int bitVec = 0xFFFFFFFF; //replace this with an instanced attribute
 
@@ -140,40 +163,52 @@ namespace SA
 			//either create identity matrix or zero matrix to filter out digital clock segments
 			mat4 filterMatrix =	mat4((bitVec & vertBitVec) > 0 ? 1.f : 0.f);		//mat4(1.f) == identity matrix
 
-			gl_Position = projection_view * model * filterMatrix * vertPos;
+			gl_Position = projection_view * parentModel * pivotMat * glyphModel * filterMatrix * vertPos;
 			uvs = vertUVs;
+			color = uColor;
 		}
 	)";
 	static const char*const  DigitalClockShader_instanced_vs = R"(
 		#version 330 core
 		layout (location = 0) in vec4 vertPos;				
 		layout (location = 1) in vec2 vertUVs;				
-		layout (location = 2) in int vertBitVec;
-
-		//instanced propert				
-		layout (location = 3) in int instancedBitVec;
-				
+		layout (location = 2) in int vertBitVec;	//basically defineds what bitvector value this vertex should render under			
+		layout (location = 3) in mat4 glyphModel;
+		  //layout (location = 4) in mat4 glyphModel;
+		  //layout (location = 5) in mat4 glyphModel;
+		  //layout (location = 6) in mat4 glyphModel;
+		layout (location = 7) in mat4 parent_pivot;
+		  //layout (location = 8) in mat4 parent_pivot;
+		  //layout (location = 9) in mat4 parent_pivot;
+		  //layout (location = 10) in mat4 parent_pivot;
+		layout (location = 11) in vec4 glyphColor;
+		layout (location = 12) in int bitVec;
+		
 		out vec2 uvs;
+		out vec4 color;
 
-		uniform mat4 model = mat4(1.f);
 		uniform mat4 projection_view = mat4(1.f);
 
 		void main()
 		{
 			//either create identity matrix or zero matrix to filter out digital clock segments
-			mat4 filterMatrix =	mat4((instancedBitVec & vertBitVec) > 0 ? 1.f : 0.f);			//mat4(1.f) == identity matrix
+			mat4 filterMatrix =	mat4((bitVec & vertBitVec) > 0 ? 1.f : 0.f);		//mat4(1.f) == identity matrix
 
-			gl_Position = projection_view * model * filterMatrix * vertPos;
+			gl_Position = projection_view * parent_pivot * glyphModel * filterMatrix * vertPos;
+
 			uvs = vertUVs;
+			color = glyphColor;
 		}
 	)";
 	static const char*const DigitalClockShader_instanced_fs = R"(
 		#version 330 core
 		out vec4 fragmentColor;
 
+		in vec4 color;
+
 		void main()
 		{
-			fragmentColor = vec4(1.f);
+			fragmentColor = color;
 		}
 	)";
 	sp<Shader> getDefaultGlyphShader_uniformBased()
@@ -195,6 +230,92 @@ namespace SA
 			ec(glBindVertexArray(vao));
 			ec(glDrawArrays(GL_TRIANGLES, 0, vertex_positions.size()));
 		}
+	}
+
+	bool DigitalClockGlyph::renderInstanced(Shader& shader, const struct RenderData& rd)
+	{
+		bool bRendered = false;
+
+		if (hasAcquiredResources() && vao)
+		{
+			ec(glBindVertexArray(vao));
+
+			////////////////////////////////////////////////////////
+			// glyph model matrices
+			////////////////////////////////////////////////////////
+			ec(glBindBuffer(GL_ARRAY_BUFFER, vbo_instance_models));
+			ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * InstanceBuffers::modelMats.size(), &InstanceBuffers::modelMats[0], GL_DYNAMIC_DRAW)); 
+			ec(glEnableVertexAttribArray(3));
+			ec(glEnableVertexAttribArray(4));
+			ec(glEnableVertexAttribArray(5));
+			ec(glEnableVertexAttribArray(6));
+
+			ec(glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4*sizeof(glm::vec4), reinterpret_cast<void*>(0 * sizeof(glm::vec4))));
+			ec(glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4*sizeof(glm::vec4), reinterpret_cast<void*>(1 * sizeof(glm::vec4))));
+			ec(glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4*sizeof(glm::vec4), reinterpret_cast<void*>(2 * sizeof(glm::vec4))));
+			ec(glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4*sizeof(glm::vec4), reinterpret_cast<void*>(3* sizeof(glm::vec4))));
+
+			ec(glVertexAttribDivisor(3, 1));
+			ec(glVertexAttribDivisor(4, 1));
+			ec(glVertexAttribDivisor(5, 1));
+			ec(glVertexAttribDivisor(6, 1));
+
+			////////////////////////////////////////////////////////
+			// parent and pivot
+			////////////////////////////////////////////////////////
+			ec(glBindBuffer(GL_ARRAY_BUFFER, vbo_instance_parent_pivot));
+			ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * InstanceBuffers::parentPivotMats.size(), &InstanceBuffers::parentPivotMats[0], GL_DYNAMIC_DRAW));
+			ec(glEnableVertexAttribArray(7));
+			ec(glEnableVertexAttribArray(8));
+			ec(glEnableVertexAttribArray(9));
+			ec(glEnableVertexAttribArray(10));
+
+			ec(glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(0 * sizeof(glm::vec4))));
+			ec(glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(1 * sizeof(glm::vec4))));
+			ec(glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(2 * sizeof(glm::vec4))));
+			ec(glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), reinterpret_cast<void*>(3 * sizeof(glm::vec4))));
+
+			ec(glVertexAttribDivisor(7, 1));
+			ec(glVertexAttribDivisor(8, 1));
+			ec(glVertexAttribDivisor(9, 1));
+			ec(glVertexAttribDivisor(10, 1));
+
+			////////////////////////////////////////////////////////
+			// colors
+			////////////////////////////////////////////////////////
+			ec(glBindBuffer(GL_ARRAY_BUFFER, vbo_instance_color));
+			ec(glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * InstanceBuffers::glyphColors.size(), &InstanceBuffers::glyphColors[0], GL_DYNAMIC_DRAW));
+			ec(glEnableVertexAttribArray(11));
+			ec(glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), reinterpret_cast<void*>(0)));
+			ec(glVertexAttribDivisor(11, 1));
+
+			////////////////////////////////////////////////////////
+			// bitvectors
+			////////////////////////////////////////////////////////
+			ec(glBindBuffer(GL_ARRAY_BUFFER, vbo_instance_bitvec));
+			ec(glBufferData(GL_ARRAY_BUFFER, sizeof(int32_t) * InstanceBuffers::bitVectors.size(), &InstanceBuffers::bitVectors[0], GL_DYNAMIC_DRAW));
+			ec(glEnableVertexAttribArray(12));
+			ec(glVertexAttribIPointer(12, 1, GL_INT, sizeof(int32_t), reinterpret_cast<void*>(0)));
+			ec(glVertexAttribDivisor(12, 1));
+
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// RENDER WITH BUFFERED DATA
+			/////////////////////////////////////////////////////////////////////////////////////
+			shader.use();
+			ec(glBindVertexArray(vao));
+			ec(glDrawArraysInstanced(GL_TRIANGLES, 0, vertex_positions.size(), GLsizei(InstanceBuffers::bitVectors.size())));
+
+			//clear out the data to prevent memory leak, these will fill up as instances are prepared
+			InstanceBuffers::bitVectors.clear();
+			InstanceBuffers::modelMats.clear();
+			InstanceBuffers::parentPivotMats.clear();
+			InstanceBuffers::glyphColors.clear();
+
+			bRendered = true;
+		}
+
+		return bRendered;
 	}
 
 	DigitalClockGlyph::~DigitalClockGlyph()
@@ -403,6 +524,12 @@ namespace SA
 			ec(glVertexAttribIPointer(2, 1, GL_INT, sizeof(decltype(vertex_bits)::value_type), reinterpret_cast<void*>(0)));
 			ec(glEnableVertexAttribArray(2));
 
+			//generate instance data buffers for optimized instance rendering
+			ec(glGenBuffers(1, &vbo_instance_models));
+			ec(glGenBuffers(1, &vbo_instance_bitvec));
+			ec(glGenBuffers(1, &vbo_instance_color));
+			ec(glGenBuffers(1, &vbo_instance_parent_pivot));
+
 			ec(glBindVertexArray(0));
 		}
 	}
@@ -415,6 +542,10 @@ namespace SA
 			ec(glDeleteBuffers(1, &vbo_pos));
 			ec(glDeleteBuffers(1, &vbo_uvs));
 			ec(glDeleteBuffers(1, &vbo_bits));
+			ec(glDeleteBuffers(1, &vbo_instance_models));
+			ec(glDeleteBuffers(1, &vbo_instance_parent_pivot));
+			ec(glDeleteBuffers(1, &vbo_instance_bitvec));
+			ec(glDeleteBuffers(1, &vbo_instance_color));
 		}
 	}
 
@@ -453,10 +584,12 @@ namespace SA
 		{
 			data.shader->use();
 			data.shader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(rd.projection_view));
+			data.shader->setUniformMatrix4fv("pivotMat", 1, GL_FALSE, glm::value_ptr(cache.paragraphPivotMat));
+			data.shader->setUniformMatrix4fv("parentModel", 1, GL_FALSE, glm::value_ptr(cache.paragraphModelMat));
 
 			for (size_t glyphIdx = 0; glyphIdx < cache.glyphBitVectors.size(); ++glyphIdx)
 			{
-				data.shader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(cache.glyphModelMatrices[glyphIdx]));
+				data.shader->setUniformMatrix4fv("glyphModel", 1, GL_FALSE, glm::value_ptr(cache.glyphModelMatrices[glyphIdx]));
 				data.shader->setUniform1i("bitVec", cache.glyphBitVectors[glyphIdx]);
 				sharedGlyph->render(*data.shader);
 			}
@@ -465,18 +598,61 @@ namespace SA
 
 	void DigitalClockFont::renderGlyphsAsInstanced(const struct RenderData& rd)
 	{
-		prepareBatchedInstance(*this); //use batching system just for this;
-		renderBatched(rd);
+		DCFont::BatchData batchData;
+		if (prepareBatchedInstance(*this, batchData))
+		{
+			renderBatched(rd, batchData);
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "Too many glyphs for a single batch to render with current batch configuration; aborting render.");
+		}
 	}
 
-	void DigitalClockFont::prepareBatchedInstance(const DigitalClockFont& addToBatch)
+	bool DigitalClockFont::prepareBatchedInstance(const DigitalClockFont& addToBatch, DCFont::BatchData& batchData)
 	{
-		//TODO probably needs to return false if cannot add anymore to batch, to signal that we need to render
+		using namespace glm;
+		const CachedData& batching = addToBatch.cache;
+
+		size_t numBytesNeeded = 0;
+		numBytesNeeded += batching.bufferedChars * sizeof(mat4);	//figure out how data needed for model matrix
+		numBytesNeeded += batching.bufferedChars * sizeof(mat4);	//parent_pivot matrix
+		numBytesNeeded += batching.bufferedChars * sizeof(vec4);	//glyph colors
+		numBytesNeeded += batching.bufferedChars * sizeof(float);	//bit vector
+
+		mat4 parent_pivot = batching.paragraphModelMat * batching.paragraphPivotMat;
+
+		if (numBytesNeeded + batchData.attribBytesBuffered < batchData.MAX_BUFFERABLE_BYTES)
+		{
+			for (size_t charIdx = 0; charIdx < addToBatch.data.text.length(); ++charIdx)
+			{
+				InstanceBuffers::modelMats.insert(InstanceBuffers::modelMats.end(), batching.glyphModelMatrices.begin(), batching.glyphModelMatrices.end());
+				InstanceBuffers::bitVectors.insert(InstanceBuffers::bitVectors.end(), batching.glyphBitVectors.begin(), batching.glyphBitVectors.end());
+				InstanceBuffers::glyphColors.insert(InstanceBuffers::glyphColors.end(), batching.glyphColors.begin(), batching.glyphColors.end());
+				InstanceBuffers::parentPivotMats.insert(InstanceBuffers::parentPivotMats.end(), batching.bufferedChars, parent_pivot);
+			}
+
+			batchData.attribBytesBuffered += numBytesNeeded;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
-	void DigitalClockFont::renderBatched(const struct RenderData& rd)
+	void DigitalClockFont::renderBatched(const struct RenderData& rd, DCFont::BatchData& batchData)
 	{
-
+		if (data.shader)
+		{
+			data.shader->use();
+			data.shader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(rd.projection_view));
+			if (sharedGlyph->renderInstanced(*data.shader, rd))
+			{
+				batchData.attribBytesBuffered = 0;
+				++batchData.numBatchesRendered;
+			}
+		}
 	}
 
 	void DigitalClockFont::postConstruct()
@@ -507,6 +683,8 @@ namespace SA
 
 		cache.glyphBitVectors.clear();
 		cache.glyphModelMatrices.clear();
+		cache.glyphColors.clear();
+		cache.bufferedChars = 0;
 
 		//parse text for rendering; cached for efficiency
 		vec2 nextCharPos{ 0.f, 0.f };
@@ -545,6 +723,7 @@ namespace SA
 				char letter = data.text[charIdx];
 				int bitVector = charToIntMap[letter];
 				mat4 glyphModel = glm::translate(glm::mat4(1.f), glyphPos);
+				cache.glyphColors.push_back(data.fontColor);
 
 				//push the model matrix and a bitvector that defines which portions of digital clock will highlight
 				cache.glyphModelMatrices.push_back(glyphModel);
@@ -565,22 +744,23 @@ namespace SA
 				{
 					pgSize.x = paragraphEndPos.x; //does not include space between glyphs
 				}
+				++cache.bufferedChars;
 			}
 		}
 
 		////////////////////////////////////////////////////////
 		// pivot alignment
 		////////////////////////////////////////////////////////
-		vec3 pivotOffset{ 0.f };
+		vec3 pivotOffset{ DCG::GLYPH_WIDTH/2.f, -DCG::GLYPH_HEIGHT/2.f, 0.f };
 
 		//update horizontal pivot, left assumed ie (0,0) is on the left side
 		if (data.pivotHorizontal == EHorizontalPivot::CENTER)
 		{
-			pivotOffset.x += pgSize.x / 2;
+			pivotOffset.x += -pgSize.x / 2;
 		}
 		else if (data.pivotHorizontal == EHorizontalPivot::RIGHT)
 		{
-			pivotOffset.x += pgSize.x / 2;
+			pivotOffset.x += -pgSize.x;
 		}
 
 		//update vertical pivot, top assumed; ie (0,0) is on the top of the text
@@ -590,10 +770,11 @@ namespace SA
 		}
 		else if (data.pivotVertical == EVerticalPivot::BOTTOM)
 		{
-			pivotOffset.y += pgSize.y / 2;
+			pivotOffset.y += pgSize.y;
 		}
 
 		cache.paragraphPivotMat = glm::translate(mat4(1.f), pivotOffset);
+
 		cache.paragraphModelMat = xform.getModelMatrix();
 	}
 

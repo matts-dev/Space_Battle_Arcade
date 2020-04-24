@@ -62,10 +62,18 @@ namespace SA
 	}
 
 	sp<class Shader> getDefaultGlyphShader_uniformBased();
+	sp<class Shader> getDefaultGlyphShader_instanceBased();
 
 	namespace DCFont
 	{
 		constexpr size_t NumPossibleValuesInChar = 256;
+
+		struct BatchData
+		{
+			size_t attribBytesBuffered = 0;
+			size_t MAX_BUFFERABLE_BYTES = 1000000;
+			size_t numBatchesRendered = 0;
+		};
 	}
 
 	/** A renderer for an single glyph (ie letter). This should be a shared resource */
@@ -78,6 +86,7 @@ namespace SA
 		static constexpr float BETWEEN_GLYPH_SPACE = 0.2f; //the unscaled space between two glyphs so that they do not connect and provide visual spacing.
 	public:
 		void render(Shader& shader);
+		bool renderInstanced(Shader& shader, const struct RenderData& rd);
 		virtual ~DigitalClockGlyph();
 	protected:
 		virtual void postConstruct() override;
@@ -92,6 +101,10 @@ namespace SA
 		GLuint vbo_pos = 0;
 		GLuint vbo_uvs = 0;
 		GLuint vbo_bits = 0;
+		GLuint vbo_instance_models = 0;
+		GLuint vbo_instance_parent_pivot = 0;
+		GLuint vbo_instance_bitvec = 0;
+		GLuint vbo_instance_color = 0;
 	};
 
 	/** A renderer for entire strings */
@@ -106,8 +119,9 @@ namespace SA
 		virtual ~DigitalClockFont();
 		void render(const struct RenderData& rd);			
 		void renderGlyphsAsInstanced(const struct RenderData& rd);	//requires initialization with instanced version of shader
-		void prepareBatchedInstance(const DigitalClockFont& addToBatch);
-		void renderBatched(const struct RenderData& rd);
+
+		bool prepareBatchedInstance(const DigitalClockFont& addToBatch, DCFont::BatchData& batchData);
+		void renderBatched(const struct RenderData& rd, DCFont::BatchData& batchData);
 	public:
 		void setText(const std::string& newText);
 		const Transform& getXform() const { return xform; }
@@ -125,6 +139,7 @@ namespace SA
 			EHorizontalPivot pivotHorizontal = EHorizontalPivot::CENTER;
 			EVerticalPivot pivotVertical = EVerticalPivot::CENTER;
 			std::string text = "";
+			glm::vec4 fontColor = glm::vec4(1.f);
 		};
 	private:
 		Data data;
@@ -132,8 +147,10 @@ namespace SA
 		{
 			std::vector<glm::mat4> glyphModelMatrices;
 			std::vector<int> glyphBitVectors;
+			std::vector<glm::vec4> glyphColors;
 			glm::mat4 paragraphPivotMat{ 1.f };
 			glm::mat4 paragraphModelMat{ 1.f };
+			size_t bufferedChars;
 		};
 		CachedData cache;
 		Transform xform; //needs to be strongly encapsulated so we don't recalculate most of cache.

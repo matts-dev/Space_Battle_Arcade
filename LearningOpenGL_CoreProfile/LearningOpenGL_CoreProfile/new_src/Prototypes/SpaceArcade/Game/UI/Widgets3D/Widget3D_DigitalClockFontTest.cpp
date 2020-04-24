@@ -22,7 +22,28 @@ A BCDEFGHIJKLMNOPQRSTUVWXYZ
 1234567890
 !@#$%^&*()_+-=[]{};:'",<.>/?\`~
 )";
+
+		//init.pivotHorizontal = DigitalClockFont::EHorizontalPivot::LEFT;
+		init.pivotHorizontal = DigitalClockFont::EHorizontalPivot::CENTER;
+		//init.pivotHorizontal = DigitalClockFont::EHorizontalPivot::RIGHT;
+
+		//init.pivotVertical = DigitalClockFont::EVerticalPivot::TOP;
+		init.pivotVertical = DigitalClockFont::EVerticalPivot::CENTER;
+		//init.pivotVertical = DigitalClockFont::EVerticalPivot::BOTTOM;
 		textRenderer = new_sp<DigitalClockFont>(init);
+
+		Transform spawnXform;
+		spawnXform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+		textRenderer->setXform(spawnXform);
+
+
+		////////////////////////////////////////////////////////
+		// instanced text render
+		////////////////////////////////////////////////////////
+		init.shader = getDefaultGlyphShader_instanceBased(); //use instanced shader instead of default
+		instancedTextRenderer = new_sp<DigitalClockFont>(init);
+		textRenderer->setXform(spawnXform);
+		
 	}
 
 	void Widget3D_DigitalClockFontTest::render(GameUIRenderData& renderData)
@@ -75,7 +96,7 @@ A BCDEFGHIJKLMNOPQRSTUVWXYZ
 						rawGlyph->render(*glyphShader);
 					}
 				}
-				else if (constexpr bool bTestParagraph = true)
+				else if (constexpr bool bTestParagraph = false)
 				{
 					GameBase& game = GameBase::get();
 					if (const RenderData* frd = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber()))
@@ -87,9 +108,13 @@ A BCDEFGHIJKLMNOPQRSTUVWXYZ
 						textRenderer->render(*frd);
 					}
 				}
-				else if (constexpr bool bTestInstanced = false)
+				else if (constexpr bool bTestInstanced = true)
 				{
-
+					GameBase& game = GameBase::get();
+					if (const RenderData* frd = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber()))
+					{
+						instancedTextRenderer->renderGlyphsAsInstanced(*frd);
+					}
 				}
 			}
 		}
