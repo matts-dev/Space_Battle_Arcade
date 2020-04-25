@@ -3,7 +3,7 @@
 #include "../GameFramework/SALevel.h"
 #include "AssetConfigs/SASpawnConfig.h"
 #include "../GameFramework/SAGameEntity.h"
-#include "SAProjectileSystem.h"
+#include "GameSystems/SAProjectileSystem.h"
 #include "../GameFramework/SAAIBrainBase.h"
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../GameFramework/SAAssetSystem.h"
@@ -29,7 +29,7 @@
 #include "FX/SharedGFX.h"
 #include "Cheats/SpaceArcadeCheatSystem.h"
 #include "SAShipPlacements.h"
-#include "SAModSystem.h"
+#include "GameSystems/SAModSystem.h"
 #include "Components/FighterSpawnComponent.h"
 #include <type_traits>
 

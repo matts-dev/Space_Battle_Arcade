@@ -12,7 +12,7 @@
 #include "../SAGameEntity.h"
 #include "../../Rendering/SAWindow.h"
 #include "../../Game/SpaceArcade.h"
-#include "../../Game/SAUISystem.h"
+#include "../../Game/GameSystems/SAUISystem_Editor.h"
 #include "../../Rendering/Camera/SACameraBase.h"
 
 namespace SA

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "..\GameFramework\SASystemBase.h"
 #include <map>
 #include <vector>
-#include "..\Tools\DataStructures\MultiDelegate.h"
 #include <string>
+#include "../../Tools/DataStructures/MultiDelegate.h"
+#include "../../GameFramework/SASystemBase.h"
 
 namespace SA
 {

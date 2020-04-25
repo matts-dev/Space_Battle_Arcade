@@ -1,9 +1,9 @@
 #include "Widget3D_Base.h"
-#include "../../../GameFramework/SALevelSystem.h"
-#include "../../../GameFramework/SALevel.h"
-#include "../../../GameFramework/SATimeManagementSystem.h"
-#include "../../../GameFramework/SAGameBase.h"
-#include "../../../GameFramework/SAWindowSystem.h"
+#include "../../../../GameFramework/SALevelSystem.h"
+#include "../../../../GameFramework/SALevel.h"
+#include "../../../../GameFramework/SATimeManagementSystem.h"
+#include "../../../../GameFramework/SAGameBase.h"
+#include "../../../../GameFramework/SAWindowSystem.h"
 
 namespace SA
 {

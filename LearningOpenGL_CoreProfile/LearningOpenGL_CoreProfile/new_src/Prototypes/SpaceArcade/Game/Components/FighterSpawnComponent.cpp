@@ -1,6 +1,6 @@
 #include "FighterSpawnComponent.h"
 #include "../SpaceArcade.h"
-#include "../SAModSystem.h"
+#include "../GameSystems/SAModSystem.h"
 #include "../../GameFramework/SARandomNumberGenerationSystem.h"
 #include "../SAShip.h"
 #include "../../GameFramework/SALevelSystem.h"

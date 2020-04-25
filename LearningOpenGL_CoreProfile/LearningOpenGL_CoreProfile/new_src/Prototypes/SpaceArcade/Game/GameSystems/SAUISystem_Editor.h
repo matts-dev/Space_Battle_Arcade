@@ -1,6 +1,6 @@
 #pragma once
-#include "..\GameFramework\SASystemBase.h"
-#include "..\Tools\DataStructures\MultiDelegate.h"
+#include "../../GameFramework/SASystemBase.h"
+#include "../../Tools/DataStructures/MultiDelegate.h"
 
 struct GLFWwindow;
 
@@ -14,7 +14,6 @@ namespace SA
 	public:
 		MultiDelegate<> onUIFrameStarted;
 		MultiDelegate<> onUIFrameEnded;
-		MultiDelegate<> onUIGameRender;
 
 		inline void setEditorUIEnabled(bool bEnable) { bUIEnabled = bEnable; }
 		inline bool getEditorUIEnabled() { return bUIEnabled; }

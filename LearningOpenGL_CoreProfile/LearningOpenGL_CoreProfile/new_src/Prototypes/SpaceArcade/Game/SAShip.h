@@ -1,6 +1,6 @@
 #pragma once
 #include <optional>
-#include "SAProjectileSystem.h"
+#include "GameSystems/SAProjectileSystem.h"
 #include "AssetConfigs/SASpawnConfig.h"
 #include "../GameFramework/SAWorldEntity.h"
 #include "../GameFramework/RenderModelEntity.h"

@@ -2,7 +2,7 @@
 #include <optional>
 
 #include "AssetConfigs/SAConfigBase.h"
-#include "SAProjectileSystem.h"
+#include "GameSystems/SAProjectileSystem.h"
 #include "../Tools/DataStructures/SATransform.h"
 #include "../GameFramework/SAWorldEntity.h"
 #include "../GameFramework/RenderModelEntity.h"

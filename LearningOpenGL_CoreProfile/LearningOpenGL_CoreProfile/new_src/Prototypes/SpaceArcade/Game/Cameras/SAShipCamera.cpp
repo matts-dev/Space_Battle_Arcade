@@ -2,7 +2,7 @@
 #include "SAShipCamera.h"
 #include "../SAShip.h"
 #include "../SpaceArcade.h"
-#include "../SAUISystem.h"
+#include "../GameSystems/SAUISystem_Editor.h"
 #include "../SAPlayer.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/color_utils.h"

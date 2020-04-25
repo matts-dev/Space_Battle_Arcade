@@ -4,7 +4,7 @@
 
 #include "SASpawnConfig.h"
 #include "SAProjectileConfig.h"
-#include "../SAModSystem.h"
+#include "../GameSystems/SAModSystem.h"
 #include "../SpaceArcade.h"
 #include "../../Tools/ModelLoading/SAModel.h"
 #include "../../GameFramework/SALog.h"

@@ -3,12 +3,13 @@
 #include <filesystem>
 #include <fstream>
 #include <system_error>
-#include "..\GameFramework\SALog.h"
-#include "..\GameFramework\SAGameBase.h"
-#include "..\..\..\..\Libraries\nlohmann\json.hpp"
 #include <sstream>
-#include "AssetConfigs/SASpawnConfig.h"
-#include "AssetConfigs/SAProjectileConfig.h"
+
+#include "../AssetConfigs/SASpawnConfig.h"
+#include "../AssetConfigs/SAProjectileConfig.h"
+#include "../../GameFramework/SALog.h"
+#include "../../GameFramework/SAGameBase.h"
+#include "../../../../../Libraries/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 

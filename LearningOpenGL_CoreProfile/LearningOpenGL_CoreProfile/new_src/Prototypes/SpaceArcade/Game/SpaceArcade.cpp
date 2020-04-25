@@ -20,9 +20,9 @@
 #include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
 
 #include "../GameFramework/SACollisionUtils.h"
-#include "SAProjectileSystem.h"
-#include "SAUISystem.h"
-#include "SAModSystem.h"
+#include "GameSystems/SAProjectileSystem.h"
+#include "GameSystems/SAUISystem_Editor.h"
+#include "GameSystems/SAModSystem.h"
 
 //for quick level switching, can remove these
 #include "Levels/ProjectileEditor_Level.h"
@@ -30,11 +30,11 @@
 
 #include "SAShip.h"
 #include "Levels/BasicTestSpaceLevel.h"
-#include "UI/SAUIRootWindow.h"
+#include "UI/EditorUI/SAUIRootWindow.h"
 #include "SAPlayer.h"
 #include "../GameFramework/SAPlayerSystem.h"
 #include "../GameFramework/SATimeManagementSystem.h"
-#include "UI/SAHUD.h"
+#include "UI/GameUI/SAHUD.h"
 #include "SASpaceArcadeGlobalConstants.h"
 #include "../Rendering/Lights/SADirectionLight.h"
 #include "../Rendering/RenderData.h"

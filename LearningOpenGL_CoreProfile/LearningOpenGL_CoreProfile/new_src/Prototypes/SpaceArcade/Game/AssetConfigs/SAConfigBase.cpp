@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "../SAModSystem.h"
+#include "../GameSystems/SAModSystem.h"
 #include "../SpaceArcade.h"
 #include "../../../../../Libraries/nlohmann/json.hpp"
 

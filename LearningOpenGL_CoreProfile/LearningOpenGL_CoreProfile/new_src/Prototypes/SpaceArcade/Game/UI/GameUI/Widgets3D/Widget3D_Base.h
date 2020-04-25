@@ -1,6 +1,6 @@
 #pragma once
-#include "../../../GameFramework/Components/SAComponentEntity.h"
-#include "../../../Tools/DataStructures/SATransform.h"
+#include "../../../../GameFramework/Components/SAComponentEntity.h"
+#include "../../../../Tools/DataStructures/SATransform.h"
 #include <optional>
 
 namespace SA

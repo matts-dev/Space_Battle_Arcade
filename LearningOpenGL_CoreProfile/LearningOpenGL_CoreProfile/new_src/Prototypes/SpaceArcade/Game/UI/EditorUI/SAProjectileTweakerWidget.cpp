@@ -1,8 +1,8 @@
 #include "SAProjectileTweakerWidget.h"
-#include "../SAModSystem.h"
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
-#include "../SpaceArcade.h"
-#include "../AssetConfigs/SAProjectileConfig.h"
+#include "../../GameSystems/SAModSystem.h"
+#include "../../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "../../SpaceArcade.h"
+#include "../../AssetConfigs/SAProjectileConfig.h"
 
 namespace SA
 {
@@ -17,7 +17,6 @@ namespace SA
 			ImGui::Text("No active mode");
 			return;
 		}
-
 
 		static int selectedLoadIdx = -1;
 		if (ImGui::CollapsingHeader("PROJECTILE LOADING/SAVING", ImGuiTreeNodeFlags_DefaultOpen))

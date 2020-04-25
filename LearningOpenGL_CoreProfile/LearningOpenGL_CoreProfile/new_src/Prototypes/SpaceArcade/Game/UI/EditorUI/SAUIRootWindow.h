@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../GameFramework/SAGameEntity.h"
-#include "../../GameFramework/Interfaces/SATickable.h"
+#include "../../../GameFramework/SAGameEntity.h"
+#include "../../../GameFramework/Interfaces/SATickable.h"
 #include<cstdint>
 
 namespace SA

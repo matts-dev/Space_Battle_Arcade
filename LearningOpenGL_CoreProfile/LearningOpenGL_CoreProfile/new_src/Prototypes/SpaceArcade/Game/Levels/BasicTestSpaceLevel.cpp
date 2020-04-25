@@ -5,9 +5,9 @@
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 
 #include "../SpaceArcade.h"
-#include "../SAProjectileSystem.h"
-#include "../SAModSystem.h"
-#include "../SAUISystem.h"
+#include "../GameSystems/SAProjectileSystem.h"
+#include "../GameSystems/SAModSystem.h"
+#include "../GameSystems/SAUISystem_Editor.h"
 #include "../SAShip.h"
 #include "../AssetConfigs/SASpawnConfig.h"
 #include "../Tools/Debug/SAHitboxPicker.h"
@@ -21,7 +21,7 @@
 #include "../../Rendering/Camera/SACameraBase.h"
 
 #include "../SACollisionDebugRenderer.h"
-#include "../UI/SAProjectileTweakerWidget.h"
+#include "../UI/EditorUI/SAProjectileTweakerWidget.h"
 #include "../AI/SAShipAIBrain.h"
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../GameFramework/SAParticleSystem.h"

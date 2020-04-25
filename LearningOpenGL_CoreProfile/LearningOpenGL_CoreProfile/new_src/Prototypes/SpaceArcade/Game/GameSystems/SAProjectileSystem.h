@@ -4,11 +4,11 @@
 #include <list>
 #include <set>
 
-#include "../GameFramework/SASystemBase.h"
-#include "../Tools/ModelLoading/SAModel.h"
-#include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
-#include "../Tools/DataStructures/SATransform.h"
-#include "../Tools/DataStructures/ObjectPools.h"
+#include "../../GameFramework/SASystemBase.h"
+#include "../../Tools/ModelLoading/SAModel.h"
+#include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "../../Tools/DataStructures/SATransform.h"
+#include "../../Tools/DataStructures/ObjectPools.h"
 
 namespace SA
 {

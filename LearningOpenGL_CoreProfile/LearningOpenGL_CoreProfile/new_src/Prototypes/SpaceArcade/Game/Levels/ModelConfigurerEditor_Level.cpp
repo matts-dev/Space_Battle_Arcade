@@ -5,8 +5,8 @@
 #include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
 
 #include "../SpaceArcade.h"
-#include "../SAUISystem.h"
-#include "../SAModSystem.h"
+#include "../GameSystems/SAUISystem_Editor.h"
+#include "../GameSystems/SAModSystem.h"
 #include "../AssetConfigs/SASpawnConfig.h"
 #include "../SAPrimitiveShapeRenderer.h"
 #include "../../GameFramework/SAPlayerBase.h"

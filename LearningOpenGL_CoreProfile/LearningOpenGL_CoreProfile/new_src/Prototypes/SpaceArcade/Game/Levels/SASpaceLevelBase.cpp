@@ -5,7 +5,7 @@
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../Rendering/Camera/SACameraBase.h"
-#include "../SAProjectileSystem.h"
+#include "../GameSystems/SAProjectileSystem.h"
 #include "../Team/Commanders.h"
 #include "../Environment/StarField.h"
 #include "../Environment/Star.h"

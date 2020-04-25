@@ -10,7 +10,7 @@
 #include "../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
 #include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../Game/SpaceArcade.h"
-#include "../Game/SAModSystem.h"
+#include "../Game/GameSystems/SAModSystem.h"
 #include "../Tools/SACollisionHelpers.h"
 #include "SAAssetSystem.h"
 #include "../Game/SACollisionDebugRenderer.h"

@@ -16,7 +16,7 @@
 #include "../../../GameFramework/SALog.h"
 #include "../../../GameFramework/SADebugRenderSystem.h"
 #include "../../SpaceArcade.h"
-#include "../../SAUISystem.h"
+#include "../../GameSystems/SAUISystem_Editor.h"
 #include "../../../Tools/Algorithms/Algorithms.h"
 #include "../../SAShip.h"
 #include "../../../GameFramework/SABehaviorTree.h"

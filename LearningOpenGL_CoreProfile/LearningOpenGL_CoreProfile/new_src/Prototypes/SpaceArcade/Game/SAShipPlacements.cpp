@@ -18,7 +18,7 @@
 #include "../GameFramework/SARandomNumberGenerationSystem.h"
 #include "../Tools/SAUtilities.h"
 #include "../GameFramework/SADebugRenderSystem.h"
-#include "SAProjectileSystem.h"
+#include "GameSystems/SAProjectileSystem.h"
 #include "../Tools/color_utils.h"
 #include "../Rendering/OpenGLHelpers.h"
 
