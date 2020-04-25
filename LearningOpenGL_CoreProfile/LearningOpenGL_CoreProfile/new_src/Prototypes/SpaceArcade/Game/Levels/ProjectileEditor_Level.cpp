@@ -25,7 +25,7 @@ namespace SA
 		shapeRenderer = new_sp<PrimitiveShapeRenderer>();
 
 		SpaceArcade& game = SpaceArcade::get();
-		game.getUISystem()->onUIFrameStarted.addStrongObj(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
+		game.getEditorUISystem()->onUIFrameStarted.addStrongObj(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
 		game.getPlayerSystem().onPlayerCreated.addWeakObj(sp_this(), &ProjectileEditor_Level::handlePlayerCreated);
 		if (const sp<SA::PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{
@@ -50,7 +50,7 @@ namespace SA
 
 		SpaceArcade& game = SpaceArcade::get();
 
-		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
+		game.getEditorUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ProjectileEditor_Level::handleUIFrameStarted);
  
 		//unspawn all projectiles so they're not in the new level
 		sp<ProjectileSystem> projectileSys = game.getProjectileSystem();

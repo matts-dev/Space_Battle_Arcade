@@ -42,6 +42,7 @@
 #include "Cheats/SpaceArcadeCheatSystem.h"
 #include "../GameFramework/developer_console/DeveloperConsole.h"
 #include "Levels/StressTestLevel.h"
+#include "GameSystems/SAUISystem_Game.h"
 
 namespace SA
 {
@@ -228,8 +229,11 @@ namespace SA
 		projectileSystem = new_sp<ProjectileSystem>();
 		RegisterCustomSystem(projectileSystem);
 
-		uiSystem = new_sp<UISystem_Editor>();
-		RegisterCustomSystem(uiSystem);
+		uiSystem_Editor = new_sp<UISystem_Editor>();
+		RegisterCustomSystem(uiSystem_Editor);
+
+		uiSystem_Game = new_sp<UISystem_Game>();
+		RegisterCustomSystem(uiSystem_Game);
 
 		modSystem = new_sp<ModSystem>();
 		RegisterCustomSystem(modSystem);

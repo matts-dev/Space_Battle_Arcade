@@ -60,7 +60,7 @@ namespace SA
 		LevelSystem& levelSystem = game.getLevelSystem();
 
 		game.getPlayerSystem().getPlayer(0)->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT).addWeakObj(sp_this(), &HitboxPicker::handleRightClick);
-		game.getUISystem()->onUIFrameStarted.addWeakObj(sp_this(), &HitboxPicker::handleUIFrameStarted);
+		game.getEditorUISystem()->onUIFrameStarted.addWeakObj(sp_this(), &HitboxPicker::handleUIFrameStarted);
 		levelSystem.onPreLevelChange.addWeakObj(sp_this(), &HitboxPicker::handlePreLevelChange);
 		if (sp<LevelBase> currentLevel = levelSystem.getCurrentLevel())
 		{

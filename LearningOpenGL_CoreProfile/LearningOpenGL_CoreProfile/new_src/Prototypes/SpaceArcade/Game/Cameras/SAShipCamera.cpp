@@ -464,7 +464,7 @@ namespace SA
 		SpaceArcade& game = SpaceArcade::get();
 		LevelSystem& levelSystem = game.getLevelSystem();
 
-		game.getUISystem()->onUIFrameStarted.addWeakObj(sp_this(), &ShipCameraTweakerWidget::handleUIFrameStarted);
+		game.getEditorUISystem()->onUIFrameStarted.addWeakObj(sp_this(), &ShipCameraTweakerWidget::handleUIFrameStarted);
 	}
 
 	void ShipCameraTweakerWidget::handleUIFrameStarted()

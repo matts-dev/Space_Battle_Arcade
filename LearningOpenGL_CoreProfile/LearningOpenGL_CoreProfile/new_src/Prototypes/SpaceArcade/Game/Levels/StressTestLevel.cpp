@@ -76,7 +76,7 @@ namespace SA
 		SpaceArcade& game = SpaceArcade::get();
 		AssetSystem& assetSS = game.getAssetSystem();
 
-		const sp<UISystem_Editor>& uiSystem= game.getUISystem();
+		const sp<UISystem_Editor>& uiSystem= game.getEditorUISystem();
 		uiSystem->onUIFrameStarted.addStrongObj(sp_this(), &StressTestLevel::handleUIFrameStarted);
 
 		//specifically not loading model, because assuming model will be owned elsewhere 
@@ -308,7 +308,7 @@ namespace SA
 	void StressTestLevel::endLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
-		if (const sp<UISystem_Editor>& uISystem = game.getUISystem())
+		if (const sp<UISystem_Editor>& uISystem = game.getEditorUISystem())
 		{
 			uISystem->onUIFrameStarted.removeStrong(sp_this(), &StressTestLevel::handleUIFrameStarted);
 		}

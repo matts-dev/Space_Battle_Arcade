@@ -149,7 +149,7 @@ namespace SA
 	void ModelConfigurerEditor_Level::startLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
-		game.getUISystem()->onUIFrameStarted.addStrongObj(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
+		game.getEditorUISystem()->onUIFrameStarted.addStrongObj(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
 		game.getPlayerSystem().onPlayerCreated.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handlePlayerCreated);
 		game.getWindowSystem().onPrimaryWindowChangingEvent.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handlePrimaryWindowChanging);
 
@@ -185,7 +185,7 @@ namespace SA
 	void ModelConfigurerEditor_Level::endLevel_v()
 	{
 		SpaceArcade& game = SpaceArcade::get();
-		game.getUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
+		game.getEditorUISystem()->onUIFrameStarted.removeStrong(sp_this(), &ModelConfigurerEditor_Level::handleUIFrameStarted);
 
 		//cleaning up OpenGL resources immediately, these should get cleaned up with their dtors when this dtor is hit; so probably unecessary to do here
 		model3DShader = nullptr;

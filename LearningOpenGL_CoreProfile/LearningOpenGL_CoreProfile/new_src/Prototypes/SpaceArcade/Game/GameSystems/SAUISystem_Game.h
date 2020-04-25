@@ -8,7 +8,9 @@ namespace SA
 {
 	class UISystem_Game : public SystemBase
 	{
+		friend class SpaceArcade;
+		void startGameUIPass() const;
 	public:
-		MultiDelegate<> onUIGameRender;
+		mutable MultiDelegate<> onUIGameRender;
 	};
 }
