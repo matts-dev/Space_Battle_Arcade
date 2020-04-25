@@ -228,7 +228,7 @@ namespace SA
 		projectileSystem = new_sp<ProjectileSystem>();
 		RegisterCustomSystem(projectileSystem);
 
-		uiSystem = new_sp<UISystem>();
+		uiSystem = new_sp<UISystem_Editor>();
 		RegisterCustomSystem(uiSystem);
 
 		modSystem = new_sp<ModSystem>();

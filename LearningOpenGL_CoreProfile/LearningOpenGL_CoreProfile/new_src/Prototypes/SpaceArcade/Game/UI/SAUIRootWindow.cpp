@@ -16,7 +16,7 @@ namespace SA
 	void UIRootWindow::postConstruct()
 	{
 		SpaceArcade& game = SpaceArcade::get();
-		const sp<UISystem>& UI_Sys = game.getUISystem();
+		const sp<UISystem_Editor>& UI_Sys = game.getUISystem();
 		
 		UI_Sys->onUIFrameStarted.addWeakObj(sp_this(), &UIRootWindow::handleUIFrameStarted);
 

@@ -8,14 +8,16 @@ namespace SA
 {
 	class Window;
 
-	class UISystem : public SystemBase
+	/** UI system fpr the developer menus; separate from in game UI. */
+	class UISystem_Editor : public SystemBase
 	{
 	public:
 		MultiDelegate<> onUIFrameStarted;
 		MultiDelegate<> onUIFrameEnded;
+		MultiDelegate<> onUIGameRender;
 
-		inline void setUIEnabled(bool bEnable) { bUIEnabled = bEnable; }
-		inline bool getUIEnabled() { return bUIEnabled; }
+		inline void setEditorUIEnabled(bool bEnable) { bUIEnabled = bEnable; }
+		inline bool getEditorUIEnabled() { return bUIEnabled; }
 
 	private:
 		virtual void tick(float deltaSec) {}

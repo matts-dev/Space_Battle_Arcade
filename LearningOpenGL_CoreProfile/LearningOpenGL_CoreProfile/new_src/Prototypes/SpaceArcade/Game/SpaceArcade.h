@@ -18,7 +18,7 @@ namespace SA
 	class ProjectileClassHandle;
 
 	class ProjectileSystem;
-	class UISystem;
+	class UISystem_Editor;
 	class ModSystem;
 	
 	class CollisionShapeFactory;
@@ -54,11 +54,11 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 	public:
 		inline const sp<ProjectileSystem>& getProjectileSystem() noexcept { return projectileSystem; }
-		inline const sp<UISystem>& getUISystem() noexcept { return uiSystem; }
+		inline const sp<UISystem_Editor>& getUISystem() noexcept { return uiSystem; }
 		inline const sp<ModSystem>& getModSystem() noexcept { return modSystem; }
 	private:
 		sp<ProjectileSystem> projectileSystem;
-		sp<UISystem> uiSystem;
+		sp<UISystem_Editor> uiSystem;
 		sp<ModSystem> modSystem;
 		/////////////////////////////////////////////////////////////////////////////////////
 

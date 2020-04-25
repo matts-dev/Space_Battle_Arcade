@@ -11,13 +11,13 @@
 
 namespace SA
 {
-	void UISystem::initSystem()
+	void UISystem_Editor::initSystem()
 	{
 
 		//requires window system be available; which is safe within the initSystem 
 		WindowSystem& windowSystem = GameBase::get().getWindowSystem();
-		windowSystem.onWindowLosingOpenglContext.addWeakObj(sp_this(), &UISystem::handleLosingOpenGLContext);
-		windowSystem.onWindowAcquiredOpenglContext.addWeakObj(sp_this(), &UISystem::handleWindowAcquiredOpenGLContext);
+		windowSystem.onWindowLosingOpenglContext.addWeakObj(sp_this(), &UISystem_Editor::handleLosingOpenGLContext);
+		windowSystem.onWindowAcquiredOpenglContext.addWeakObj(sp_this(), &UISystem_Editor::handleWindowAcquiredOpenGLContext);
 
 		//in case things are refactored and windows are created during system initialization, this will catch
 		//the edge case where a window is already created before we start listening to the primary changed delegate
@@ -27,26 +27,26 @@ namespace SA
 		}
 
 		GameBase& game = GameBase::get();
-		game.onRenderDispatchEnding.addWeakObj(sp_this(), &UISystem::handleRenderDispatchEnding);
+		game.onRenderDispatchEnding.addWeakObj(sp_this(), &UISystem_Editor::handleRenderDispatchEnding);
 	}
 
-	void UISystem::handleLosingOpenGLContext(const sp<Window>& window)
+	void UISystem_Editor::handleLosingOpenGLContext(const sp<Window>& window)
 	{
 		if (!imguiBoundWindow.expired())
 		{
 			//assuming window == imguiBoundWindow since it ImGui should always be associated with current bound context
 			if (window)
 			{
-				window->onRawGLFWKeyCallback.removeStrong(sp_this(), &UISystem::handleRawGLFWKeyCallback);
-				window->onRawGLFWCharCallback.removeStrong(sp_this(), &UISystem::handleRawGLFWCharCallback);
-				window->onRawGLFWMouseButtonCallback.removeStrong(sp_this(), &UISystem::handleRawGLFWMouseButtonCallback);
-				window->onRawGLFWScrollCallback.removeStrong(sp_this(), &UISystem::handleRawGLFWScroll);
+				window->onRawGLFWKeyCallback.removeStrong(sp_this(), &UISystem_Editor::handleRawGLFWKeyCallback);
+				window->onRawGLFWCharCallback.removeStrong(sp_this(), &UISystem_Editor::handleRawGLFWCharCallback);
+				window->onRawGLFWMouseButtonCallback.removeStrong(sp_this(), &UISystem_Editor::handleRawGLFWMouseButtonCallback);
+				window->onRawGLFWScrollCallback.removeStrong(sp_this(), &UISystem_Editor::handleRawGLFWScroll);
 				destroyImGuiContext();
 			}
 		}
 	}
 
-	void UISystem::handleWindowAcquiredOpenGLContext(const sp<Window>& window)
+	void UISystem_Editor::handleWindowAcquiredOpenGLContext(const sp<Window>& window)
 	{
 		//make sure we have cleaned up the old context and have nullptr within the imguiBoundWindow
 		assert(imguiBoundWindow.expired());
@@ -63,14 +63,14 @@ namespace SA
 			imguiBoundWindow = window;
 
 			//manually unregister these when window loses active context
-			window->onRawGLFWKeyCallback.addStrongObj(sp_this(), &UISystem::handleRawGLFWKeyCallback);
-			window->onRawGLFWCharCallback.addStrongObj(sp_this(), &UISystem::handleRawGLFWCharCallback);
-			window->onRawGLFWMouseButtonCallback.addStrongObj(sp_this(), &UISystem::handleRawGLFWMouseButtonCallback);
-			window->onRawGLFWScrollCallback.addStrongObj(sp_this(), &UISystem::handleRawGLFWScroll);
+			window->onRawGLFWKeyCallback.addStrongObj(sp_this(), &UISystem_Editor::handleRawGLFWKeyCallback);
+			window->onRawGLFWCharCallback.addStrongObj(sp_this(), &UISystem_Editor::handleRawGLFWCharCallback);
+			window->onRawGLFWMouseButtonCallback.addStrongObj(sp_this(), &UISystem_Editor::handleRawGLFWMouseButtonCallback);
+			window->onRawGLFWScrollCallback.addStrongObj(sp_this(), &UISystem_Editor::handleRawGLFWScroll);
 		}
 	}
 
-	void UISystem::handleRawGLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	void UISystem_Editor::handleRawGLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		if (!imguiBoundWindow.expired())
 		{
@@ -78,7 +78,7 @@ namespace SA
 		}
 	}
 
-	void UISystem::handleRawGLFWCharCallback(GLFWwindow* window, unsigned int c)
+	void UISystem_Editor::handleRawGLFWCharCallback(GLFWwindow* window, unsigned int c)
 	{
 		if (!imguiBoundWindow.expired())
 		{
@@ -86,7 +86,7 @@ namespace SA
 		}
 	}
 
-	void UISystem::handleRawGLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	void UISystem_Editor::handleRawGLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	{
 		if (!imguiBoundWindow.expired())
 		{
@@ -94,7 +94,7 @@ namespace SA
 		}
 	}
 
-	void UISystem::handleRawGLFWScroll(GLFWwindow* window, double xOffset, double yOffset)
+	void UISystem_Editor::handleRawGLFWScroll(GLFWwindow* window, double xOffset, double yOffset)
 	{
 		if (!imguiBoundWindow.expired())
 		{
@@ -102,12 +102,12 @@ namespace SA
 		}
 	}
 
-	void UISystem::handleRenderDispatchEnding(float dt_sec)
+	void UISystem_Editor::handleRenderDispatchEnding(float dt_sec)
 	{
 		processUIFrame();
 	}
 
-	void UISystem::processUIFrame()
+	void UISystem_Editor::processUIFrame()
 	{
 		if (!imguiBoundWindow.expired() && bUIEnabled)
 		{
@@ -130,7 +130,7 @@ namespace SA
 		}
 	}
 
-	void UISystem::destroyImGuiContext()
+	void UISystem_Editor::destroyImGuiContext()
 	{
 		//shut down IMGUI
 		ImGui_ImplGlfw_Shutdown();
@@ -140,7 +140,7 @@ namespace SA
 	}
 
 
-	void UISystem::shutdown()
+	void UISystem_Editor::shutdown()
 	{
 		if (!imguiBoundWindow.expired())
 		{

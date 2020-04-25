@@ -62,7 +62,7 @@ namespace SA
 		//UI system needs to become an engine level system
 		//this should also be renamed to "editor" ui system to differentiate it from game UI
 		SpaceArcade& engine = SpaceArcade::get();
-		const sp<UISystem>& uiSystem = engine.getUISystem();
+		const sp<UISystem_Editor>& uiSystem = engine.getUISystem();
 		uiSystem->onUIFrameStarted.addWeakObj(sp_this(), &DeveloperConsole::handleUIFrameStarted);
 
 		std::memset(textBuffer, 0, sizeof(textBuffer));
