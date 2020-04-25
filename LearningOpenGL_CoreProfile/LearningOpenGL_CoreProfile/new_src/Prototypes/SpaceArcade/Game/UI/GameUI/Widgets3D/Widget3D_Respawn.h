@@ -10,7 +10,7 @@ namespace SA
 	protected:
 		virtual void postConstruct();
 	public:
-		virtual void render(GameUIRenderData& renderData);
+		virtual void render(struct GameUIRenderData& renderData);
 	};
 }
 

@@ -16,7 +16,7 @@ namespace SA
 	class HUD : public GameEntity
 	{
 	public:
-		void render(float dt_sec) const;
+		void handleGameUIRender(struct GameUIRenderData& uiRenderData);
 	protected:
 		virtual void postConstruct() override;
 	private:

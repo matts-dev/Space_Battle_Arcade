@@ -28,6 +28,8 @@ namespace UtilGL
 		unsigned long error = GL_NO_ERROR;
 		do
 		{
+			//if you get stuck in an infinite loop here on shutdown, make sure you're calling super postConstruct with GPU resources; that is what hooks into events to release GPU resources.
+			//inifinte loop here means you probably no longer have an opengl context.
 			error = glGetError();
 			//if (error != GL_NO_ERROR) { std::cerr << "Cleared error:" << std::hex << error << std::endl;}
 		} while (error != GL_NO_ERROR);

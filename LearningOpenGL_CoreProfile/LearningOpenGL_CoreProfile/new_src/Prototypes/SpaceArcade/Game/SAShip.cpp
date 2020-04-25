@@ -32,6 +32,7 @@
 #include "GameSystems/SAModSystem.h"
 #include "Components/FighterSpawnComponent.h"
 #include <type_traits>
+#include "UI/GameUI/Widgets3D/Widget3D_Ship.h"
 
 namespace SA
 {
@@ -143,6 +144,11 @@ namespace SA
 		{
 			hpComp->onHpChangedEvent.addWeakObj(sp_this(), &Ship::handleHpAdjusted);
 		}
+
+#if COMPILE_SHIP_WIDGET
+		shipWidget = new_sp<Widget3D_Ship>();
+		shipWidget->setOwnerShip(sp_this());
+#endif //COMPILE_SHIP_WIDGET
 
 #if COMPILE_CHEATS
 		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());

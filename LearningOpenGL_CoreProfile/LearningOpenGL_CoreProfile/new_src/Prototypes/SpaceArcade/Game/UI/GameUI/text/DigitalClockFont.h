@@ -79,6 +79,7 @@ namespace SA
 	/** A renderer for an single glyph (ie letter). This should be a shared resource */
 	class DigitalClockGlyph : public GPUResource
 	{
+		using Parent = GPUResource;
 	public:
 		static const std::array<int32_t, DCFont::NumPossibleValuesInChar>& getCharToBitvectorMap();
 		static constexpr float GLYPH_WIDTH = 1.0f; 
@@ -110,6 +111,7 @@ namespace SA
 	/** A renderer for entire strings */
 	class DigitalClockFont : public GameEntity
 	{
+		using Parent = GameEntity;
 	public:
 		enum class EHorizontalPivot { CENTER, LEFT, RIGHT };
 		enum class EVerticalPivot { CENTER, TOP, BOTTOM };

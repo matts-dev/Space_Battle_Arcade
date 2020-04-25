@@ -43,6 +43,7 @@
 #include "../GameFramework/developer_console/DeveloperConsole.h"
 #include "Levels/StressTestLevel.h"
 #include "GameSystems/SAUISystem_Game.h"
+#include "UI/GameUI/Widgets3D/Widget3D_Base.h"
 
 namespace SA
 {
@@ -103,7 +104,7 @@ namespace SA
 		return window;
 	}
 
-	void SpaceArcade::shutDown() 
+	void SpaceArcade::onShutDown() 
 	{
 		fpsCamera->deregisterToWindowCallbacks_v();
 	}
@@ -221,7 +222,7 @@ namespace SA
 			}
 		}
 
-		hud->render(deltaTimeSecs);
+		uiSystem_Game->runGameUIPass(); //render non-editor ui, like HUD and 3D widgets
 	}
 
 	void SpaceArcade::onRegisterCustomSystem()

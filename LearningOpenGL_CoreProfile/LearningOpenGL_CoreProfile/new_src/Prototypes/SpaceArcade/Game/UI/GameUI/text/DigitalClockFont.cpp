@@ -236,7 +236,7 @@ namespace SA
 	{
 		bool bRendered = false;
 
-		if (hasAcquiredResources() && vao)
+		if (hasAcquiredResources() && vao && InstanceBuffers::modelMats.size() > 0)
 		{
 			ec(glBindVertexArray(vao));
 
@@ -321,7 +321,6 @@ namespace SA
 	DigitalClockGlyph::~DigitalClockGlyph()
 	{
 		onReleaseGPUResources();
-
 	}
 
 	void DigitalClockGlyph::postConstruct()
@@ -536,7 +535,7 @@ namespace SA
 
 	void DigitalClockGlyph::onReleaseGPUResources()
 	{
-		if (vao)
+		if (vao)// && hasAcquiredResources())
 		{
 			ec(glDeleteVertexArrays(1, &vao));
 			ec(glDeleteBuffers(1, &vbo_pos));
@@ -546,6 +545,8 @@ namespace SA
 			ec(glDeleteBuffers(1, &vbo_instance_parent_pivot));
 			ec(glDeleteBuffers(1, &vbo_instance_bitvec));
 			ec(glDeleteBuffers(1, &vbo_instance_color));
+
+			vao = 0;
 		}
 	}
 
@@ -657,6 +658,8 @@ namespace SA
 
 	void DigitalClockFont::postConstruct()
 	{
+		Parent::postConstruct();
+
 		cache.glyphModelMatrices.reserve(20);
 		cache.glyphBitVectors.reserve(20);
 		rebuildDataCache();

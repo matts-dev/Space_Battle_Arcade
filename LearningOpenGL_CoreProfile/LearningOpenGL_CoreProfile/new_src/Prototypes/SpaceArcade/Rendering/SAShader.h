@@ -9,17 +9,27 @@
 #include <gtc/type_ptr.hpp>
 
 #include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "SAGPUResource.h"
+#include <optional>
 
 class Texture2D;
 
 namespace SA
 {
-	//#TODO this shader class needs to be a GPU resource that can release and acquire GPU resources
-	class Shader : public RemoveCopies, public RemoveMoves
+	struct ShaderInit
+	{
+		std::optional<std::string> vertexShaderSrc;
+		std::optional<std::string> geometryShaderSrc;
+		std::optional<std::string> fragmentShaderSrc;
+		bool bStringsAreFilePaths = false;
+	};
+
+	class Shader : public GPUResource, public RemoveCopies, public RemoveMoves
 	{
 	private:
 		void constructorSharedInitialization(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths = true);
-
+		virtual void onReleaseGPUResources();
+		virtual void onAcquireGPUResources();
 	public:
 		explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, bool stringsAreFilePaths = true);
 		explicit Shader(const std::string& vertexShaderFilePath, const std::string& fragmentShaderFilePath, const std::string& geometryShaderFilePath, bool stringsAreFilePaths = true);
@@ -42,7 +52,8 @@ namespace SA
 		bool failed;
 		bool active;
 		GLuint linkedProgram;
-
+	private:
+		ShaderInit initData;
 	private:
 		bool shaderCompileSuccess(GLuint shaderID);
 		bool programLinkSuccess(GLuint programID);

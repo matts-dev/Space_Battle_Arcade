@@ -6,6 +6,8 @@ namespace SA
 {
 	class Window;
 
+	//#TODO create system that detects post construct was not called and alert user; this could be mitigated with smarter events
+
 	class GPUResource : public GameEntity
 	{
 	public:
@@ -15,6 +17,7 @@ namespace SA
 	private:
 		void handleWindowLosingGPUContext(const sp<Window>& window);
 		void handleWindowAcquiredGPUContext(const sp<Window>& window);
+		void handlePostEngineShutdownTicksOver();
 	private: //subclass api provided
 		virtual void onReleaseGPUResources() = 0;
 		virtual void onAcquireGPUResources() = 0;

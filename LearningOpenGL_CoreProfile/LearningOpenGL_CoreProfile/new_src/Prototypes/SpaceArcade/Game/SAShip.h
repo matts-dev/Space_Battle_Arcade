@@ -16,6 +16,7 @@ namespace SA
 	// Compile flags
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr bool bDebugAvoidance = true;
+#define COMPILE_SHIP_WIDGET 1 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Runtime flags
@@ -206,6 +207,9 @@ namespace SA
 		FighterSpawnComponent* fighterSpawnComp = nullptr;
 
 		sp<ShipCamera> shipCamera = nullptr;
+#if COMPILE_SHIP_WIDGET
+		sp<class Widget3D_Ship> shipWidget; 
+#endif //COMPILE_SHIP_WIDGET
 
 		//boost
 		const float ENERGY_BOOST_RATIO_SEC = 50.f / 1.0f; // ( energy_cost / speed_increase). eg a speed up for 1.0 could cost 50 energy per sec

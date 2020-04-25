@@ -36,7 +36,7 @@ namespace SA
 		static SpaceArcade& get();
 	private:
 		virtual sp<SA::Window> startUp() override; 
-		virtual void shutDown() override;
+		virtual void onShutDown() override;
 		virtual void tickGameLoop(float deltaTimeSecs) override;
 		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) override;
 		virtual void renderLoop(float deltaTimeSecs) override;

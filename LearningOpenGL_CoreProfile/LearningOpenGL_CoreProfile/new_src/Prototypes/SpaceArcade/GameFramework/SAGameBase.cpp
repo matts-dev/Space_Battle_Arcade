@@ -82,13 +82,15 @@ namespace SA
 			}
 
 			//begin shutdown process
-			shutDown();
+			onShutDown();
 
 			//shutdown systems after game client has been shutdown
 			for (const sp<SystemBase>& system : systems){system->shutdown();}
 
 			//tick a few more times for any frame deferred processes
 			for (size_t shutdownTick = 0; shutdownTick < 3; ++shutdownTick){ tickGameloop_GameBase(); }
+
+			onShutdownGameloopTicksOver.broadcast();
 		}
 	}
 
@@ -100,6 +102,8 @@ namespace SA
 	void GameBase::startShutdown()
 	{
 		log("GameFramework", LogLevel::LOG, "Shutdown Initiated");
+		onShutdownInitiated.broadcast();
+		onShutDown();
 		bExitGame = true;
 	}
 
@@ -121,13 +125,17 @@ namespace SA
 			tickGameLoop(deltaTimeSecs);
 			onPostGameloopTick.broadcast(deltaTimeSecs);
 
-			cacheRenderDataForCurrentFrame(*renderSystem->getFrameRenderData_Write(frameNumber, identityKey));
-			renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
-			onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
-			onRenderDispatchEnding.broadcast(deltaTimeSecs);
+			//logic will be ticked a few times during shutdown for cleanup, but rendering resources are released. Do not render if shutting down.
+			if (!bExitGame)
+			{
+				cacheRenderDataForCurrentFrame(*renderSystem->getFrameRenderData_Write(frameNumber, identityKey));
+				renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
+				onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
+				onRenderDispatchEnding.broadcast(deltaTimeSecs);
 
-			//perhaps this should be a subscription service since few systems care about post render //TODO this sytem should probably be removed and instead just subscribe to delegate
-			for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}
+				//perhaps this should be a subscription service since few systems care about post render //TODO this sytem should probably be removed and instead just subscribe to delegate
+				for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}
+			}
 		}
 
 		//broadcast current frame and increment the frame number.

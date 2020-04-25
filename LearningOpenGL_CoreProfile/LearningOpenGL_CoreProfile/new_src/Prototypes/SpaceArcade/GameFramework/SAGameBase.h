@@ -70,12 +70,14 @@ namespace SA
 	public: //starting system
 		/** Starts up systems and begins game loop */
 		void start();
+		void startShutdown();
 		static bool isEngineShutdown();
+		MultiDelegate<> onShutdownInitiated;
 	protected:
 		/** Child game classes should set up pre-gameloop state here.
 			#return value Provide an initial primary window on startup.	*/
 		virtual sp<Window> startUp() = 0;
-		virtual void shutDown() = 0;
+		virtual void onShutDown() = 0;
 	private: //starting systems
 		bool bStarted = false;
 		bool bExitGame = false;
@@ -86,13 +88,13 @@ namespace SA
 	//////////////////////////////////////////////////////////////////////////////////////
 	public:
 		MultiDelegate<> onGameloopBeginning;
+		MultiDelegate<> onShutdownGameloopTicksOver;
 		MultiDelegate<float /*deltaSec*/> onPreGameloopTick;
 		MultiDelegate<float /*deltaSec*/> onPostGameloopTick;
 		MultiDelegate<float /*deltaSec*/> onRenderDispatch;
 		MultiDelegate<float /*deltaSec*/> onRenderDispatchEnding;
 		MultiDelegate<uint64_t /*endingFrameNumber*/> onFrameOver;
 
-		void startShutdown();
 	private: 
 		void tickGameloop_GameBase();
 	protected:

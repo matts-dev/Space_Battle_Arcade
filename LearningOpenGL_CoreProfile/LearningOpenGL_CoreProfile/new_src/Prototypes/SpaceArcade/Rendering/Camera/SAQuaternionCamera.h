@@ -20,6 +20,7 @@ namespace SA
 		virtual const glm::vec3 getRight() const override {return u_axis;}
 		virtual const glm::vec3 getUp() const override { return v_axis;}
 		virtual glm::mat4 getView() const;
+		virtual glm::quat getQuat() { return myQuat; }
 	public:
 		void setSpeed(float newSpeed) { freeRoamSpeed = newSpeed; }
 		float getSpeed() const { return freeRoamSpeed; }

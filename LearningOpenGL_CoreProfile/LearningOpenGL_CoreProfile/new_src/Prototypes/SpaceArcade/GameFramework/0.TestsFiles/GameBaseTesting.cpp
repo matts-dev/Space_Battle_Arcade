@@ -173,7 +173,7 @@ namespace
 			return window;
 		}
 
-		virtual void shutDown() override
+		virtual void onShutDown() override
 		{
 			fpsCamera->deregisterToWindowCallbacks_v();
 
