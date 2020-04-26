@@ -58,6 +58,7 @@ namespace SA
 			}
 
 			onNewControlTargetSet(oldControlTarget.get(), newControlTarget.get());
+			onControlTargetSet.broadcast(oldControlTarget.get(), newControlTarget.get());
 		}
 	}
 

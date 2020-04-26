@@ -9,6 +9,7 @@ namespace SA
 {
 	class WorldEntity;
 	class LevelBase;
+	class IControllable;
 
 	class HitboxPicker : public GameEntity, public ITickable
 	{
@@ -21,6 +22,7 @@ namespace SA
 
 	private:
 		void handleRightClick(int state, int modifier_keys);
+		void handlePlayerControlTargetSet(IControllable* oldTarget, IControllable* newTarget);
 		void handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel);
 		void handleUIFrameStarted();
 		void debugBehaviorTree();

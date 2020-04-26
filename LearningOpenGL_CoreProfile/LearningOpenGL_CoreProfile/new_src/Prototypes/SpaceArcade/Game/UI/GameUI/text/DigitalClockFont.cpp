@@ -213,13 +213,16 @@ namespace SA
 	)";
 	sp<Shader> getDefaultGlyphShader_uniformBased()
 	{
-		return new_sp<Shader>(DigitalClockShader_uniformDrive_vs, DigitalClockShader_instanced_fs, false);
+		//sharing shader, no reason to duplicate this
+		static sp<Shader> shader = new_sp<Shader>(DigitalClockShader_uniformDrive_vs, DigitalClockShader_instanced_fs, false);
+		return shader;
 	}
 	sp<Shader> getDefaultGlyphShader_instanceBased()
 	{
-		return new_sp<Shader>(DigitalClockShader_instanced_vs, DigitalClockShader_instanced_fs, false);
+		//sharing shader, no reason to duplicate this
+		static sp<Shader> shader = new_sp<Shader>(DigitalClockShader_instanced_vs, DigitalClockShader_instanced_fs, false);
+		return shader;
 	}
-
 
 	void DigitalClockGlyph::render(Shader& shader)
 	{
@@ -238,6 +241,7 @@ namespace SA
 
 		if (hasAcquiredResources() && vao && InstanceBuffers::modelMats.size() > 0)
 		{
+			//#TODO alot of attribute configuration may not need to happen each frame.
 			ec(glBindVertexArray(vao));
 
 			////////////////////////////////////////////////////////

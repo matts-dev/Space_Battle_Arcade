@@ -10,6 +10,9 @@ namespace SA
 		SAPlayer(int32_t playerIndex) : PlayerBase(playerIndex) {};
 		virtual ~SAPlayer() {}
 		virtual sp<CameraBase> generateDefaultCamera() const;
+	public:
+		MultiDelegate<float /*respawn time*/> onRespawnStarted;
+		MultiDelegate<bool /* Respawn Success */> onRespawnOver;
 	protected:
 		void postConstruct() override;
 		virtual void onNewControlTargetSet(IControllable* oldTarget, IControllable* newTarget) override;

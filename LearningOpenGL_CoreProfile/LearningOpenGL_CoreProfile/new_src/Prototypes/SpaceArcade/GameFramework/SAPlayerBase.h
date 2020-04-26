@@ -30,6 +30,7 @@ namespace SA
 		void setCamera(const sp<CameraBase>& newCamera);
 		const sp<CameraBase>& getCamera() const;
 		MultiDelegate<const sp<CameraBase>& /*old_camera*/, const sp<CameraBase>& /*new_camera*/> onCameraChanging;
+		MultiDelegate< IControllable* /*oldTarget*/, IControllable* /*newTarget*/> onControlTargetSet;
 		void setControlTarget(const sp<IControllable>& newControlTarget);
 		bool hasControlTarget() const;
 		IControllable* getControlTarget();

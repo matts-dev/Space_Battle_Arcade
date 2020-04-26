@@ -82,14 +82,16 @@ namespace SA
 		{
 			if (const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager())
 			{
-				float RespawnTimeSec = 5.f; //this should be controlled by a gamemode like class, avoiding putting in player header right now
-				worldTimeManager->createTimer(respawnTimerDelegate, RespawnTimeSec);
+				float respawnTimeSec = 5.f; //this should be controlled by a gamemode like class, avoiding putting in player header right now
+				worldTimeManager->createTimer(respawnTimerDelegate, respawnTimeSec);
+				onRespawnStarted.broadcast(respawnTimeSec);
 			}
 		}
 	}
 
 	void SAPlayer::handleRespawnTimerUp()
 	{
+		bool bRespawnSucess = false;
 
 		////////////////////////////////////////////////////////
 		// find valid spawn component to use
@@ -125,12 +127,15 @@ namespace SA
 			if (sp<Ship> newShip = spawnComp->spawnEntity())
 			{
 				setControlTarget(newShip);
+				bRespawnSucess = true;
 			}
 		}
 		else
 		{
 			log(__FUNCTION__, LogLevel::LOG_WARNING, "attempted player respawn but could not find a valid spawn component");
 		}
+
+		onRespawnOver.broadcast(bRespawnSucess);
 	}
 
 }

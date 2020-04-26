@@ -60,12 +60,14 @@ namespace SA
 		LevelSystem& levelSystem = game.getLevelSystem();
 
 		game.getPlayerSystem().getPlayer(0)->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT).addWeakObj(sp_this(), &HitboxPicker::handleRightClick);
+		game.getPlayerSystem().getPlayer(0)->onControlTargetSet.addWeakObj(sp_this(), &HitboxPicker::handlePlayerControlTargetSet);
 		game.getEditorUISystem()->onUIFrameStarted.addWeakObj(sp_this(), &HitboxPicker::handleUIFrameStarted);
 		levelSystem.onPreLevelChange.addWeakObj(sp_this(), &HitboxPicker::handlePreLevelChange);
 		if (sp<LevelBase> currentLevel = levelSystem.getCurrentLevel())
 		{
 			currentLevel->getWorldTimeManager()->registerTicker(sp_this());
 		}
+
 		
 	}
 
@@ -171,6 +173,13 @@ namespace SA
 		}
 	}
 
+
+	void HitboxPicker::handlePlayerControlTargetSet(IControllable* oldTarget, IControllable* newTarget)
+	{
+		//player set control target, stop trying to follow as we don't need to set camera position anymore.
+		//setting camera position will mess with respawn hud location if this moves camera.
+		bCameraFollowTarget = false;
+	}
 
 	void HitboxPicker::handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel)
 	{
