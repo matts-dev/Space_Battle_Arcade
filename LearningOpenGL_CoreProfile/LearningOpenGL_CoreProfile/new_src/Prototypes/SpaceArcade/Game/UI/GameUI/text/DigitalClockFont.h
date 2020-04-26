@@ -71,8 +71,8 @@ namespace SA
 		struct BatchData
 		{
 			size_t attribBytesBuffered = 0;
-			size_t MAX_BUFFERABLE_BYTES = 10000000;
 			size_t numBatchesRendered = 0;
+			static const size_t MAX_BUFFERABLE_BYTES = 5000000;
 		};
 	}
 

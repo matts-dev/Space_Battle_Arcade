@@ -162,11 +162,12 @@ namespace SA
 		const glm::mat4& projection,
 		glm::vec3 color /*= glm::vec3(1,1,1)*/)
 	{
-		static Shader debugLineShader{ SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false };
+		//static Shader debugLineShader{ SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false };
+		static sp<Shader> debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false); //this whole system shoudl be refactored to use debug line renderering.
 		auto& gridCells = gridNameToCells[&grid];
 
 		ec(glDepthFunc(GL_ALWAYS));
-		SH::drawCells(gridCells, grid.gridCellSize, color, debugLineShader, glm::mat4(1.0f), view, projection);
+		SH::drawCells(gridCells, grid.gridCellSize, color, *debugLineShader, glm::mat4(1.0f), view, projection);
 		ec(glDepthFunc(GL_LESS));
 
 		gridCells.reserve(gridCells.size());

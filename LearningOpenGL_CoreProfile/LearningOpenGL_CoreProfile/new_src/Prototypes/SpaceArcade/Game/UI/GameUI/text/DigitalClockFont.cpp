@@ -131,7 +131,8 @@ namespace SA
 		static std::vector<int32_t> bitVectors;
 		static const int onetimeReserveCall = []()
 		{
-			size_t reserveSize = 1000;
+			//#TODO #optimize #startup #slow these reserves add quite a bit of time to start up! add break point and see reserve will take noticable amount of time between vectors.
+			size_t reserveSize = DCFont::BatchData::MAX_BUFFERABLE_BYTES;
 			modelMats.reserve(reserveSize);
 			parentPivotMats.reserve(reserveSize);
 			glyphColors.reserve(reserveSize);
@@ -629,13 +630,10 @@ namespace SA
 
 		if (numBytesNeeded + batchData.attribBytesBuffered < batchData.MAX_BUFFERABLE_BYTES)
 		{
-			for (size_t charIdx = 0; charIdx < addToBatch.data.text.length(); ++charIdx)
-			{
-				InstanceBuffers::modelMats.insert(InstanceBuffers::modelMats.end(), batching.glyphModelMatrices.begin(), batching.glyphModelMatrices.end());
-				InstanceBuffers::bitVectors.insert(InstanceBuffers::bitVectors.end(), batching.glyphBitVectors.begin(), batching.glyphBitVectors.end());
-				InstanceBuffers::glyphColors.insert(InstanceBuffers::glyphColors.end(), batching.glyphColors.begin(), batching.glyphColors.end());
-				InstanceBuffers::parentPivotMats.insert(InstanceBuffers::parentPivotMats.end(), batching.bufferedChars, parent_pivot);
-			}
+			InstanceBuffers::modelMats.insert(InstanceBuffers::modelMats.end(), batching.glyphModelMatrices.begin(), batching.glyphModelMatrices.end());
+			InstanceBuffers::bitVectors.insert(InstanceBuffers::bitVectors.end(), batching.glyphBitVectors.begin(), batching.glyphBitVectors.end());
+			InstanceBuffers::glyphColors.insert(InstanceBuffers::glyphColors.end(), batching.glyphColors.begin(), batching.glyphColors.end());
+			InstanceBuffers::parentPivotMats.insert(InstanceBuffers::parentPivotMats.end(), batching.bufferedChars, parent_pivot);
 
 			batchData.attribBytesBuffered += numBytesNeeded;
 			return true;
