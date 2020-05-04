@@ -91,9 +91,9 @@ namespace SA
 				{
 					//spawned->spawnNewBrain<FlyInDirectionBrain>(); 
 					//spawned->spawnNewBrain<DogfightTestBrain_VerboseTree>();
-					spawned->spawnNewBrain<WanderBrain>();
+					//spawned->spawnNewBrain<WanderBrain>();
 					//spawned->spawnNewBrain<EvadeTestBrain>();
-					//spawned->spawnNewBrain<DogfightTestBrain>();
+					spawned->spawnNewBrain<DogfightTestBrain>();
 					//spawned->spawnNewBrain<FighterBrain>();
 				}
 			);

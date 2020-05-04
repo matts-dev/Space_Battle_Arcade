@@ -33,7 +33,7 @@ namespace SA
 		void buildSettingsMenu();
 
 		bool bInUIMode = false;
-		bool bFPSOverlay = true;
+		bool bFPSOverlay = false;
 		UIMenuState menuState = UIMenuState::MAIN_MENU;
 	};
 }

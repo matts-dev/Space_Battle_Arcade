@@ -77,6 +77,9 @@ namespace SA
 		////////////////////////////////////////////////////////////////////////////////////
 
 	public:
+		const sp<HUD> getHUD() const { return hud; }
+
+	public:
 		UniformResourceLocators URLs;
 
 	private: //debugging

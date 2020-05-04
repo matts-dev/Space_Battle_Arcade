@@ -597,6 +597,7 @@ namespace SA
 			{
 				data.shader->setUniformMatrix4fv("glyphModel", 1, GL_FALSE, glm::value_ptr(cache.glyphModelMatrices[glyphIdx]));
 				data.shader->setUniform1i("bitVec", cache.glyphBitVectors[glyphIdx]);
+				preIndividualGlyphRender(glyphIdx, *data.shader);
 				sharedGlyph->render(*data.shader);
 			}
 		}
@@ -618,7 +619,7 @@ namespace SA
 	bool DigitalClockFont::prepareBatchedInstance(const DigitalClockFont& addToBatch, DCFont::BatchData& batchData)
 	{
 		using namespace glm;
-		const CachedData& batching = addToBatch.cache;
+		const GlyphCalculationCache& batching = addToBatch.cache;
 
 		size_t numBytesNeeded = 0;
 		numBytesNeeded += batching.bufferedChars * sizeof(mat4);	//figure out how data needed for model matrix
@@ -686,6 +687,8 @@ namespace SA
 
 		const std::array<int32_t, DCFont::NumPossibleValuesInChar>& charToIntMap = DCG::getCharToBitvectorMap();
 
+		float SpaceBetweenGlyph = DCG::BETWEEN_GLYPH_SPACE * AdditionalGlyphSpacingFactor;
+
 		cache.glyphBitVectors.clear();
 		cache.glyphModelMatrices.clear();
 		cache.glyphColors.clear();
@@ -740,7 +743,7 @@ namespace SA
 				vec2 paragraphEndPos = nextCharPos;
 				paragraphEndPos.x += DCG::GLYPH_WIDTH;
 
-				nextCharPos.x = paragraphEndPos.x + DCG::BETWEEN_GLYPH_SPACE;
+				nextCharPos.x = paragraphEndPos.x + SpaceBetweenGlyph;
 
 				////////////////////////////////////////////////////////
 				// maintain paragraph size for alignment calculations
@@ -781,7 +784,10 @@ namespace SA
 		cache.paragraphPivotMat = glm::translate(mat4(1.f), pivotOffset);
 
 		cache.paragraphModelMat = xform.getModelMatrix();
+
+		onGlyphCacheRebuilt(cache);
 	}
+
 
 }
 

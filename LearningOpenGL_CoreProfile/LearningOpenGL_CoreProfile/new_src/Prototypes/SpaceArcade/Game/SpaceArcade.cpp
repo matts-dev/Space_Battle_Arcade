@@ -44,6 +44,8 @@
 #include "Levels/StressTestLevel.h"
 #include "GameSystems/SAUISystem_Game.h"
 #include "UI/GameUI/Widgets3D/Widget3D_Base.h"
+#include "Levels/MainMenuLevel.h"
+#include "Levels/EnigmaTutorials/EnigmaTutorialsLevel.h"
 
 namespace SA
 {
@@ -96,7 +98,9 @@ namespace SA
 		console = new_sp<DeveloperConsole>();
 
 		//make sure resources are loaded before the level starts
-		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
+		sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
+		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
 		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);

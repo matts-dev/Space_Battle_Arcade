@@ -763,7 +763,7 @@ namespace SA
 	}
 
 	void BasicTestSpaceLevel::onCreateLocalPlanets()
-{
+	{
 		sp<RNG> rng = GameBase::get().getRNGSystem().getSeededRNG(13);
 		
 		planets.push_back(makeRandomPlanet(*rng));

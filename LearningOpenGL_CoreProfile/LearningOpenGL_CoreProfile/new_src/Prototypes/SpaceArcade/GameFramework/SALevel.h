@@ -75,7 +75,7 @@ namespace SA
 	private: //virtuals; private indicates subclasses inherit when function called, but not how function is completed.
 		void tick(float dt_sec);
 	public:
-		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {};
+		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) {}; //#TODO #replace this with function that takes as parameter render data
 	protected: 
 		std::set<sp<WorldEntity>> worldEntities; //O(n) walks, but walks will not be very cache friendly as a lot of indirection. 
 		std::set<sp<RenderModelEntity>> renderEntities;

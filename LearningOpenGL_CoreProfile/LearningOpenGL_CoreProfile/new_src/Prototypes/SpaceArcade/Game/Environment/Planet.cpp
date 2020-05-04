@@ -33,7 +33,9 @@ namespace SA
 
 		void main(){
 			gl_Position = projection_view * model * vec4(position, 1.0f);
-			fragNormal_raw = normalize(normal);
+
+			mat4 normalMat = inverse(transpose(model));
+			fragNormal_raw = normalize(vec3(normalMat * vec4(normal,0)));
 			uv = vertUV;
 		}
 	)";
@@ -210,7 +212,7 @@ namespace SA
 				size_t lightIdx = 0;
 				for (const DirectionLight& light : FRD->dirLights)
 				{
-					light.applyToShader(*planetShader, lightIdx++);
+					light.applyToShader(*planetShader, ++lightIdx);
 				}
 			}
 		}

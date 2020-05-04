@@ -84,6 +84,12 @@ namespace SA
 		return glm::lookAt(getPosition(), getPosition() + getFront(), getUp());
 	}
 
+	void QuaternionCamera::setQuat(glm::quat newQuat)
+	{
+		myQuat = newQuat;
+		updateAxes();
+	}
+
 	void QuaternionCamera::onMouseMoved_v(double xpos, double ypos)
 	{
 		using namespace glm;

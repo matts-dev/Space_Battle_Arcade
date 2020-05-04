@@ -58,6 +58,8 @@ namespace SA
 			TOP_MIDDLE_PERIOD		= 1 << 27,
 			TOP_RIGHT_PERIOD		= 1 << 28,
 
+			//make sure max is correctly defined!
+			MAX						= 1 << 29
 		};
 	}
 
@@ -116,6 +118,8 @@ namespace SA
 		enum class EHorizontalPivot { CENTER, LEFT, RIGHT };
 		enum class EVerticalPivot { CENTER, TOP, BOTTOM };
 		struct Data;
+	protected:
+		struct GlyphCalculationCache;
 	public:
 		DigitalClockFont(const Data& init = {});
 		virtual ~DigitalClockFont();
@@ -131,6 +135,8 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 		void rebuildDataCache();
+		virtual void onGlyphCacheRebuilt(const GlyphCalculationCache& data) {};
+		virtual void preIndividualGlyphRender(size_t idx, Shader& shader) {} /** Only called on non-instanced/batched glyphs. Allows cstom shader parameters*/
 	private: //statics
 		static sp<DigitalClockGlyph> sharedGlyph;
 		static uint64_t numFontInstances;
@@ -143,9 +149,8 @@ namespace SA
 			std::string text = "";
 			glm::vec4 fontColor = glm::vec4(1.f);
 		};
-	private:
-		Data data;
-		struct CachedData
+	protected:
+		struct GlyphCalculationCache
 		{
 			std::vector<glm::mat4> glyphModelMatrices;
 			std::vector<int> glyphBitVectors;
@@ -154,7 +159,10 @@ namespace SA
 			glm::mat4 paragraphModelMat{ 1.f };
 			size_t bufferedChars;
 		};
-		CachedData cache;
+		float AdditionalGlyphSpacingFactor = 1.0f;
+	private:
+		Data data;
+		GlyphCalculationCache cache;
 		Transform xform; //needs to be strongly encapsulated so we don't recalculate most of cache.
 	};
 

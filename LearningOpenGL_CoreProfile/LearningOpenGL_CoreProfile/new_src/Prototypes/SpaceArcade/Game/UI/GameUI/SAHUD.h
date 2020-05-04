@@ -8,7 +8,7 @@ namespace SA
 	class TexturedQuad;
 	class Shader;
 
-#define HUD_FONT_TEST 1
+#define HUD_FONT_TEST 0
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// The object that renders the HUD to the screen
@@ -17,6 +17,8 @@ namespace SA
 	{
 	public:
 		void handleGameUIRender(struct GameUIRenderData& uiRenderData);
+		void setVisibility(bool bVisible) { bRenderHUD = bVisible; };
+		bool isVisible() { return bRenderHUD; };
 	protected:
 		virtual void postConstruct() override;
 	private:

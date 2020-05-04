@@ -50,6 +50,7 @@ namespace SA
 		virtual void postConstruct() override;
 		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
 		void setTransform(const Transform& newXform) { data.xform = newXform; }
+		Transform getTransform() { return data.xform; }
 		void setForceCentered(bool bInForceCentered) { bUseLargeDistanceApproximation = bInForceCentered; }
 	private:
 		void applySizeCorrections();

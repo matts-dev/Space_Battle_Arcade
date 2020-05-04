@@ -16,6 +16,7 @@
 #include "SADebugRenderSystem.h"
 #include "SARenderSystem.h"
 #include "CheatSystemBase.h"
+#include "CurveSystem.h"
 
 namespace SA
 {
@@ -175,11 +176,20 @@ namespace SA
 		cheatSystem = cheatSystem ? cheatSystem : new_sp<CheatSystemBase>();
 		systems.insert(cheatSystem);
 
+		curveSystem = createCurveSystemSubclass();
+		curveSystem = curveSystem ? curveSystem : new_sp<CurveSystem>();
+		systems.insert(curveSystem);
+
 		//initialize custom subclass systems; 
 		//ctor warning: this is not done in gamebase ctor because it systems may call gamebase virtuals
 		bCustomSystemRegistrationAllowedTimeWindow = true;
 		onRegisterCustomSystem();
 		bCustomSystemRegistrationAllowedTimeWindow = false;
+	}
+
+	sp<SA::CurveSystem> GameBase::createCurveSystemSubclass()
+	{
+		return new_sp<CurveSystem>();
 	}
 
 	void GameBase::subscribePostRender(const sp<SystemBase>& system)
