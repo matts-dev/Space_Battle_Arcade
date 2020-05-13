@@ -9,10 +9,13 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class Widget3D_Base : public SystemComponentEntity
 	{
+		using Parent = SystemComponentEntity;
 	public:
 		/** Mutable parameter is to allow lazy calculation*/
-		virtual void render(GameUIRenderData& renderData) = 0;
-
+		virtual void renderGameUI(GameUIRenderData& renderData) = 0;
+	protected:
+		void setRenderWithGameUIDispatch(bool bRender);
+		virtual void onDestroyed() override;
 	};
 
 }

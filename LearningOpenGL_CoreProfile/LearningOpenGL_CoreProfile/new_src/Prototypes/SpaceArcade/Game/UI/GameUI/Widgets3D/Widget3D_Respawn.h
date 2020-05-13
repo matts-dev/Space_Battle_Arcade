@@ -14,7 +14,7 @@ namespace SA
 	protected:
 		virtual void postConstruct();
 	public:
-		virtual void render(struct GameUIRenderData& renderData);
+		virtual void renderGameUI(struct GameUIRenderData& renderData);
 	private:
 		void handleRespawnStarted(float timeUntilRespawn);
 		void handleRespawnOver(bool bSuccess);

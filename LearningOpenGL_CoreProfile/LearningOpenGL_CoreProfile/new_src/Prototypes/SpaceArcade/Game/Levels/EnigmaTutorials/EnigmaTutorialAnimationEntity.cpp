@@ -119,7 +119,7 @@ namespace SA
 					cacheCam->lookAt_v(cameraData.endPoint);
 					quat endQ = cacheCam->getQuat();
 
-					quat fullRotQ = slerp(startQ, endQ, camCurve.eval_lerp(percDone));
+					quat fullRotQ = slerp(startQ, endQ, camCurve.eval_smooth(percDone));
 					cacheCam->setQuat(fullRotQ);
 				}
 				else if (timePassedSec < textAnimData.animSec + animationDurationSec)

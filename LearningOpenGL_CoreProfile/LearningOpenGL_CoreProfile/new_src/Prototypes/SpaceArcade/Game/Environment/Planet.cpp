@@ -220,6 +220,18 @@ namespace SA
 		planetModel->draw(*planetShader, false);
 	}
 
+	bool Planet::tick(float dt_sec)
+	{
+		data.xform.rotQuat;
+
+		if (data.rotSpeedSec_rad != 0.0f)
+		{
+			data.xform.rotQuat = glm::angleAxis(data.rotSpeedSec_rad * dt_sec, data.rotationAxis) * data.xform.rotQuat;
+		}
+
+		return true;
+	}
+
 	sp<class Planet> makeRandomPlanet(RNG& rng)
 	{
 		static const std::vector<std::string> defaultTextures = {

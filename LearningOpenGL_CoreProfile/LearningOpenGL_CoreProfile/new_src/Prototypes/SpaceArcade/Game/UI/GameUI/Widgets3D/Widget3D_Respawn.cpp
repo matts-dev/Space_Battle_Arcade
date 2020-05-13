@@ -36,7 +36,7 @@ namespace SA
 		}
 	}
 
-	void Widget3D_Respawn::render(GameUIRenderData& ui_rd)
+	void Widget3D_Respawn::renderGameUI(GameUIRenderData& ui_rd)
 	{
 		using namespace glm;
 

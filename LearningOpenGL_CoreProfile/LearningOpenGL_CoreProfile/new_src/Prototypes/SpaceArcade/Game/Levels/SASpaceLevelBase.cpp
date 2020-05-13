@@ -14,6 +14,10 @@
 #include "../../Rendering/RenderData.h"
 #include "../../GameFramework/SARenderSystem.h"
 #include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
+#include <fwd.hpp>
+#include <vector>
+#include "../../GameFramework/SAGameEntity.h"
+#include "../../GameFramework/SARandomNumberGenerationSystem.h"
 
 namespace SA
 {
@@ -117,6 +121,16 @@ namespace SA
 		refreshStarLightMapping();
 	}
 
+	void SpaceLevelBase::tick_v(float dt_sec)
+	{
+		LevelBase::tick_v(dt_sec);
+
+		for (sp<Planet>& planet : planets)
+		{
+			planet->tick(dt_sec);
+		}
+	}
+
 	sp<SA::StarField> SpaceLevelBase::onCreateStarField()
 	{
 		//by default generate a star field, if no star field should be in the level return null in an override;
@@ -156,5 +170,71 @@ namespace SA
 		localStars.push_back(defaultStar);
 	}
 
+	std::vector<sp<class Planet>> makeRandomizedPlanetArray(RNG& rng)
+	{
+		using namespace glm;
+
+		//std::string(DefaultPlanetTexturesPaths::albedo_terrain);
+		//std::string(DefaultPlanetTexturesPaths::albedo_sea);
+		//std::string(DefaultPlanetTexturesPaths::albedo_nightlight);
+
+		std::vector<std::string> defaultTextures = {
+			std::string( DefaultPlanetTexturesPaths::albedo1  ),
+			std::string( DefaultPlanetTexturesPaths::albedo2  ),
+			std::string( DefaultPlanetTexturesPaths::albedo3  ),
+			std::string( DefaultPlanetTexturesPaths::albedo4  ),
+			std::string( DefaultPlanetTexturesPaths::albedo5  ),
+			std::string( DefaultPlanetTexturesPaths::albedo6  ),
+			std::string( DefaultPlanetTexturesPaths::albedo7  ),
+			std::string( DefaultPlanetTexturesPaths::albedo8  )
+		};
+
+		//generate all planets
+		std::vector<sp<Planet>> planetArray;
+
+		auto randomizeLoc = [](Planet::Data& init, RNG& rng)
+		{
+			float distance = rng.getFloat(50.0f, 100.0f);
+			vec3 pos{ rng.getFloat(-20.f, 20.f), rng.getFloat(-20.f, 20.f), rng.getFloat(-20.f, 20.f) };
+			pos.x = (pos.x == 0) ? 0.1f : pos.x; //make sure normalization cannot divide by 0, which will create nans
+			pos = normalize(pos + vec3(0.1f)) * distance;
+			init.xform.position = pos;
+		};
+
+		//make special first planet
+		{
+			//use the multi-layer material example
+			Planet::Data init;
+			init.albedo1_filepath = DefaultPlanetTexturesPaths::albedo_sea;
+			init.albedo2_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+			init.albedo3_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+			init.nightCityLightTex_filepath = DefaultPlanetTexturesPaths::albedo_nightlight;
+			init.colorMapTex_filepath = DefaultPlanetTexturesPaths::colorChanel;
+			randomizeLoc(init, rng);
+			planetArray.push_back(new_sp<Planet>(init));
+		}
+
+		//use textures to generate array of planets
+		for (const std::string& texture : defaultTextures)
+		{
+			Planet::Data init;
+			init.albedo1_filepath = texture;
+			randomizeLoc(init, rng);
+			planetArray.push_back(new_sp<Planet>(init));
+		}
+
+		//randomize order
+		for (size_t idx = 0; idx < planetArray.size(); ++idx)
+		{
+			uint32_t randomSwapIdx = rng.getInt<size_t>(0, planetArray.size() - 1);
+
+			sp<Planet> swapOut = planetArray[idx];
+			planetArray[idx] = planetArray[randomSwapIdx];
+			planetArray[randomSwapIdx] = swapOut;
+		}
+
+		//return randomized order
+		return planetArray;
+	}
 }
 

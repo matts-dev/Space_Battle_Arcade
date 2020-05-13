@@ -46,7 +46,7 @@ A BCDEFGHIJKLMNOPQRSTUVWXYZ
 		
 	}
 
-	void Widget3D_DigitalClockFontTest::render(GameUIRenderData& renderData)
+	void Widget3D_DigitalClockFontTest::renderGameUI(GameUIRenderData& renderData)
 	{
 		using namespace glm;
 		GameBase& game = GameBase::get();

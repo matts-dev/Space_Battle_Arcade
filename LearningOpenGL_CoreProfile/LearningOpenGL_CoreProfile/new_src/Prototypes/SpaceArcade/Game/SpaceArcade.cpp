@@ -61,7 +61,7 @@ namespace SA
 		log("SpaceArcade", LogLevel::LOG_WARNING, "Capturing debug spatial hash information, this has is a perf hit and should be disabled for release");
 #endif
 
-		int width = 1500, height = 900;
+		int width = 1440, height = 810;
 		sp<SA::Window> window = new_sp<SA::Window>(width, height);
 		ec(glViewport(0, 0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
 
@@ -98,9 +98,9 @@ namespace SA
 		console = new_sp<DeveloperConsole>();
 
 		//make sure resources are loaded before the level starts
-		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
-		sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
+		sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
 		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		//sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
 		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);

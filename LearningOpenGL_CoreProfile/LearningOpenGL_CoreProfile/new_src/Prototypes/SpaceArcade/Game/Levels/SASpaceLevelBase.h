@@ -9,6 +9,8 @@ namespace SA
 	class Star;
 	class Planet;
 
+	std::vector<sp<class Planet>> makeRandomizedPlanetArray(class RNG& rng);
+
 	class SpaceLevelBase : public LevelBase
 	{
 
@@ -22,6 +24,7 @@ namespace SA
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
 		virtual void postConstruct() override;
+		virtual void tick_v(float dt_sec) override;
 
 	protected:
 		//#TODO this will need to be read from a saved config file or something instead. Same for local stars.

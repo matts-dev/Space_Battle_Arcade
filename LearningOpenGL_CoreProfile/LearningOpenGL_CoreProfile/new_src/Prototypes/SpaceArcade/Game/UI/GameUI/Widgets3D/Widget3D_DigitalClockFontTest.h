@@ -10,7 +10,7 @@ namespace SA
 	class Widget3D_DigitalClockFontTest final : public Widget3D_Base
 	{
 	public:
-		void render(GameUIRenderData& renderData) override;
+		void renderGameUI(GameUIRenderData& renderData) override;
 	protected:
 		virtual void postConstruct() override;
 	private:

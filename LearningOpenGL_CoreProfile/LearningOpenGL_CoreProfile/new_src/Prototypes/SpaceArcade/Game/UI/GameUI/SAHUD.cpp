@@ -59,9 +59,9 @@ namespace SA
 				}
 			}
 
-			respawnWidget->render(rd_ui);
+			respawnWidget->renderGameUI(rd_ui);
 #if HUD_FONT_TEST 
-			fontTest->render(rd_ui);
+			fontTest->renderGameUI(rd_ui);
 #endif
 		}
 	}

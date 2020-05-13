@@ -132,6 +132,8 @@ namespace SA
 		void setText(const std::string& newText);
 		const Transform& getXform() const { return xform; }
 		void setXform(const Transform& newXform);
+		float getWidth() const;
+		float getHeight() const;
 	protected:
 		virtual void postConstruct() override;
 		void rebuildDataCache();
@@ -160,6 +162,7 @@ namespace SA
 			size_t bufferedChars;
 		};
 		float AdditionalGlyphSpacingFactor = 1.0f;
+		glm::vec2 paragraphSize; //width and height of the paragraph
 	private:
 		Data data;
 		GlyphCalculationCache cache;

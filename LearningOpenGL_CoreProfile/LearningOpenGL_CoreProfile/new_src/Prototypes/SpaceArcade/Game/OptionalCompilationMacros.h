@@ -22,3 +22,12 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #endif //FIND_MEMORY_LEAKS
+
+//define debug build  based on platform specific 
+#ifdef _WIN32 
+#ifdef _DEBUG
+#define DEBUG_BUILD
+#endif //_DEBUG
+#endif //_WIN32 
+//#TODO linux debug build
+//#TODO osx debug builds

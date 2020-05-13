@@ -17,7 +17,7 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 		virtual void onDestroyed() override;
-		virtual void render(GameUIRenderData& renderData) override { handleRenderGameUI(renderData); }
+		virtual void renderGameUI(GameUIRenderData& renderData) override { handleRenderGameUI(renderData); }
 	private:
 		void handleOwnerDestroyed(const sp<GameEntity>& entity);
 		void handleRenderGameUI(struct GameUIRenderData& rd_ui);

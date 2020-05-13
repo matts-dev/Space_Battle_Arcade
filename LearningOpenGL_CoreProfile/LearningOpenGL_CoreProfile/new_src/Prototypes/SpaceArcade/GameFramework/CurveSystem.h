@@ -25,7 +25,7 @@ namespace SA
 			size_t stepIdx = size_t((RESOLUTION - 1) * a + 0.5f);
 			return curveSteps[stepIdx];
 		}
-		float eval_lerp(float a)
+		float eval_smooth(float a)
 		{
 			if constexpr (CLAMP_CURVE_PARAMS) { a = glm::clamp(a, 0.f, 1.f); } //this can be removed at compile time for performance; though that is not advised
 			

@@ -276,7 +276,7 @@ namespace SA
 
 			void main()
 			{
-				gl_Position = projection_view * shearMat * vec4(basis_vector, 1);
+				gl_Position = projection_view * shearMat * vec4(basis_vector, 1);	//w=0 is invalid here! 1 needed for view translation; 4th col of shear matrix must be (0,0,0,1) for this to still work
 				color = shearMat[2]; //3rd col is packed color
 			}
 		)";

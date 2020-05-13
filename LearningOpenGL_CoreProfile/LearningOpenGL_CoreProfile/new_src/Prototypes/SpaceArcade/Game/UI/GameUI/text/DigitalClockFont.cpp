@@ -680,6 +680,20 @@ namespace SA
 		cache.paragraphModelMat = xform.getModelMatrix();
 	}
 
+	float DigitalClockFont::getWidth() const
+	{
+		//no parent relationship here, perhaps make an alternative version where you can pass in a matrix that represents
+		//parent-child matrix concatenations and that transforms the size vector.
+		return paragraphSize.x * xform.scale.x;
+	}
+
+	float DigitalClockFont::getHeight() const
+	{
+		//no parent relationship here, perhaps make an alternative version where you can pass in a matrix that represents
+		//parent-child matrix concatenations and that transforms the size vector.
+		return paragraphSize.y * xform.scale.y;
+	}
+
 	void DigitalClockFont::rebuildDataCache()
 	{
 		using namespace glm;
@@ -696,7 +710,7 @@ namespace SA
 
 		//parse text for rendering; cached for efficiency
 		vec2 nextCharPos{ 0.f, 0.f };
-		vec2 pgSize{ 0.f, DCG::GLYPH_HEIGHT };	//paragraph size; named this way to visually differeniate it from paragraphEndPoint
+		vec2 pgSize = vec2{ 0.f, DCG::GLYPH_HEIGHT };	//paragraph size; named this way to visually differeniate it from paragraphEndPoint
 		for (size_t charIdx = 0; charIdx < data.text.size(); ++charIdx)
 		{
 			char letter = data.text[charIdx];
@@ -784,6 +798,8 @@ namespace SA
 		cache.paragraphPivotMat = glm::translate(mat4(1.f), pivotOffset);
 
 		cache.paragraphModelMat = xform.getModelMatrix();
+
+		paragraphSize = pgSize;
 
 		onGlyphCacheRebuilt(cache);
 	}

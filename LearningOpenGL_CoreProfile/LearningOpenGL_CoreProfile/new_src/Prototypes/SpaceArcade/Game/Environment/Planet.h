@@ -4,6 +4,7 @@
 #include "../../Tools/DataStructures/SATransform.h"
 #include <string>
 #include <optional>
+#include "../../GameFramework/Interfaces/SATickable.h"
 
 namespace SA
 {
@@ -31,7 +32,7 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// An environmental representation of a planet
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	class Planet : public GameEntity
+	class Planet : public GameEntity, public ITickable
 	{
 	public:
 		struct Data
@@ -41,17 +42,20 @@ namespace SA
 			std::optional<std::string> albedo3_filepath;
 			std::optional<std::string> nightCityLightTex_filepath;
 			std::optional<std::string> colorMapTex_filepath;
-			glm::vec3 orbitAxis = glm::vec3(0, 1, 0);
-			float orbitSpeedSec_rad = glm::radians(0.f);
+			glm::vec3 rotationAxis = glm::vec3(0, 1, 0);
+			float rotSpeedSec_rad = glm::radians(0.f);
 			Transform xform;
 		};
 		Planet(const Planet::Data& initData) : data(initData) { applySizeCorrections(); };
 	public:
 		virtual void postConstruct() override;
 		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
+		bool tick(float dt_sec) override;
 		void setTransform(const Transform& newXform) { data.xform = newXform; }
 		Transform getTransform() { return data.xform; }
 		void setForceCentered(bool bInForceCentered) { bUseLargeDistanceApproximation = bInForceCentered; }
+		void setRotationSpeed_radsec(float rotSpeed_radsec) { data.rotSpeedSec_rad = rotSpeed_radsec; }
+		void setRotationAxis(glm::vec3 rotAxis) { data.rotationAxis = glm::normalize(rotAxis); }
 	private:
 		void applySizeCorrections();
 	private: //statics
