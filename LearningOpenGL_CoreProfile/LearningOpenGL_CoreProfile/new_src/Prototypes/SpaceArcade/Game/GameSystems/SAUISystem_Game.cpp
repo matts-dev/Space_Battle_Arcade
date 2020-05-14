@@ -232,7 +232,7 @@ namespace SA
 				// y = tan(theta) * z
 				_hudData3D->savezoneMax_y = glm::tan(FOVy_rad) * _hudData3D->frontOffsetDist;
 				_hudData3D->savezoneMax_x = _hudData3D->savezoneMax_y * aspect();
-
+				_hudData3D->cameraNearPlane = gameCam->getNear();
 			}
 
 			if (!_hudData3D)

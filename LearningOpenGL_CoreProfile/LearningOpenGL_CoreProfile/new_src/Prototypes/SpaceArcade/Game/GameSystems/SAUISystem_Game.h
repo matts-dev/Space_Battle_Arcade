@@ -46,6 +46,7 @@ namespace SA
 		glm::vec3 camFront{ 0.f, 0.f, 1.f };
 		float savezoneMax_y = 1.f;
 		float savezoneMax_x = 1.f;
+		float cameraNearPlane = 1.f;
 	};
 
 	struct GameUIRenderData

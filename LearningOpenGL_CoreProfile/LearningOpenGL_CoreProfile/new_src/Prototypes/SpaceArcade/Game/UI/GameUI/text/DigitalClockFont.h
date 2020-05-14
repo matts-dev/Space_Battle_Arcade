@@ -137,6 +137,7 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 		void rebuildDataCache();
+		void setNewShader(const sp<Shader>& newShader);
 		virtual void onGlyphCacheRebuilt(const GlyphCalculationCache& data) {};
 		virtual void preIndividualGlyphRender(size_t idx, Shader& shader) {} /** Only called on non-instanced/batched glyphs. Allows cstom shader parameters*/
 	private: //statics

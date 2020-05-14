@@ -12,6 +12,8 @@
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
 #include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_GameMainMenuScreen.h"
+#include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_MenuScreenBase.h"
+#include "../../Tools/PlatformUtils.h"
 
 namespace SA
 {
@@ -33,6 +35,7 @@ namespace SA
 		game.getGameUISystem()->onUIGameRender.addWeakObj(sp_this(), &MainMenuLevel::handleGameUIRenderDispatch);
 
 		mainMenuScreen = new_sp<Widget3D_GameMainMenuScreen>();
+		menuScreens.push_back(mainMenuScreen.get());
 	}
 
 	void MainMenuLevel::startLevel_v()
@@ -116,6 +119,19 @@ namespace SA
 		Parent::render(dt_sec, view, projection);
 
 
+	}
+
+	void MainMenuLevel::tick_v(float dt_sec)
+	{
+		Parent::tick_v(dt_sec);
+
+		for (Widget3D_MenuScreenBase* menuScreen : menuScreens)
+		{
+			if (menuScreen) {
+				menuScreen->tick(dt_sec);
+			}
+			else{STOP_DEBUGGER_HERE();}
+		}
 	}
 
 	void MainMenuLevel::handleGameUIRenderDispatch(GameUIRenderData& uiRenderData)

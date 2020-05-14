@@ -21,6 +21,7 @@ namespace SA
 		virtual void onCreateLocalPlanets() override;
 		virtual void onCreateLocalStars() override;
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
+		virtual void tick_v(float dt_sec) override;
 	private:
 		void handleGameUIRenderDispatch(GameUIRenderData& uiRenderData);
 		void handlePrimaryWindowChanging(const sp<Window>& old_window, const sp<Window>& new_window);
@@ -39,6 +40,8 @@ namespace SA
 
 		sp<Planet> mainScreen_planet1 = nullptr;
 		sp<Planet> mainScreen_planet2_far = nullptr;
+
+		std::vector<class Widget3D_MenuScreenBase*> menuScreens;
 
 		sp<class Widget3D_GameMainMenuScreen> mainMenuScreen;
 	};

@@ -805,5 +805,13 @@ namespace SA
 	}
 
 
+	void DigitalClockFont::setNewShader(const sp<Shader>& newShader)
+	{
+		if (newShader)
+		{
+			data.shader = newShader;
+		}
+	}
+
 }
 

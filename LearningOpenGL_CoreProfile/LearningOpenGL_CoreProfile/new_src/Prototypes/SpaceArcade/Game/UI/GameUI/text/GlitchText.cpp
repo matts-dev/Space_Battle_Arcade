@@ -56,6 +56,11 @@ namespace SA
 
 	GlitchTextFont::GlitchTextFont(const DigitalClockFont::Data& init) : DigitalClockFont(init)
 	{
+		if (!init.shader)
+		{
+			setNewShader(getGlitchTextShader());
+		}
+
 		//buffer shader data!
 		AdditionalGlyphSpacingFactor = 5.0f;
 		rng = GameBase::get().getRNGSystem().getSeededRNG(13);

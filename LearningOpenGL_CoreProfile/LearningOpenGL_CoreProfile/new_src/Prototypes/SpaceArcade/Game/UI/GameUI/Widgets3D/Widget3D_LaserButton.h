@@ -18,13 +18,15 @@ namespace SA
 		Widget3D_LaserButton(const std::string& text = "Laser Button");
 		void setText(const std::string& text);
 		void setXform(const Transform& xform);
+		const Transform& getXform() { return myXform; }
+		glm::vec2 getSize() const;
+		virtual bool tick(float dt_sec) override;
 	public:
 		MultiDelegate<> OnClickedDelegate;
 	protected:
 		virtual void postConstruct() override;
 	private:
 		virtual void renderGameUI(GameUIRenderData& renderData) override;
-		virtual bool tick(float dt_sec) override;
 	private:
 		void changeLaserDelegateSubscription(LaserUIObject& laser, bool bSubscribe);
 		virtual void onActivationChanged(bool bActive) override;
@@ -32,8 +34,9 @@ namespace SA
 		void onDeactivated();
 		void updateLaserPositions();
 	private:
-		float widthPaddingFactor = 1.25f;
-		float heightPaddingFactor = 1.25f;
+		const float widthPaddingFactor = 1.25f;
+		const float heightPaddingFactor = 1.25f;
+		float baseLaserAnimSpeed = 1.0f;
 	private:
 		std::string textCache;
 		sp<GlitchTextFont> myGlitchText;

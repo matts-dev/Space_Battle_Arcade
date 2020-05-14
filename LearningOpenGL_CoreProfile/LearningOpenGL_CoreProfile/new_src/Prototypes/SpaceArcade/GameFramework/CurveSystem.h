@@ -58,7 +58,7 @@ namespace SA
 	public: //curves are provided by copy to avoid memory corruption issues; cache these in your PostConstruct and use them.
 		Curve_highp sigmoid_medp() const;
 	public:
-		Curve_highp generateSigmoid_medp(float tuning = 3.0f);
+		Curve_highp generateSigmoid_medp(float tuning = 20.0f);
 	public:
 		CurveSystem();
 	protected:

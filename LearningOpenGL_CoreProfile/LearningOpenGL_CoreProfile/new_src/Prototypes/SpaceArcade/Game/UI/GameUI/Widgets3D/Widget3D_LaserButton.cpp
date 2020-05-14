@@ -27,6 +27,15 @@ namespace SA
 		updateLaserPositions();
 	}
 
+	glm::vec2 Widget3D_LaserButton::getSize() const
+	{
+		if (myGlitchText)
+		{
+			return glm::vec2(myGlitchText->getWidth(), myGlitchText->getHeight());
+		}
+		return glm::vec2(0.f);
+	}
+
 	void Widget3D_LaserButton::postConstruct()
 	{
 		setRenderWithGameUIDispatch(true);
@@ -50,36 +59,7 @@ namespace SA
 
 	bool Widget3D_LaserButton::tick(float dt_sec)
 	{
-
 		myGlitchText->tick(dt_sec);
-
-		//{//DEBUG get rid of this!
-		//	DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
-
-		//	using namespace glm;
-		//	float halfWidth = myGlitchText->getWidth() / 2.0f; //TODO get scale!
-		//	float halfHeight = myGlitchText->getHeight() / 2.0f;
-		//	vec3 myPos = myXform.getModelMatrix() *  vec4(0, 0, 0, 1);
-
-		//	debug.renderLine(myPos + vec3(halfWidth, halfHeight, 0), )
-
-		//	topLaser->randomizeAnimSpeed(); //prevent interpolation from looking rigid (without this, a line moving could potentially maintain parallel to screen box)
-		//	topLaser->animateStartTo();
-		//	topLaser->animateEndTo(myPos += vec3(-halfWidth, halfHeight, 0));
-
-		//	bottomLaser->randomizeAnimSpeed();
-		//	bottomLaser->animateStartTo(myPos += vec3(halfWidth, -halfHeight, 0));
-		//	bottomLaser->animateEndTo(myPos += vec3(-halfWidth, -halfHeight, 0));
-
-		//	rightLaser->randomizeAnimSpeed();
-		//	rightLaser->animateStartTo(myPos += vec3(halfWidth, halfHeight, 0));
-		//	rightLaser->animateEndTo(myPos += vec3(halfWidth, -halfHeight, 0));
-
-		//	leftLaser->randomizeAnimSpeed();
-		//	leftLaser->animateStartTo(myPos += vec3(-halfWidth, halfHeight, 0));
-		//	leftLaser->animateEndTo(myPos += vec3(-halfWidth, -halfHeight, 0));
-
-		//}
 
 		return true;
 	}
@@ -165,21 +145,19 @@ namespace SA
 
 			vec3 myPos = myXform.getModelMatrix() *  vec4(0, 0, 0, 1);
 
-			float baseAnimSpeed = 3.0f;
-
-			topLaser->randomizeAnimSpeed(baseAnimSpeed); //prevent interpolation from looking rigid (without this, a line moving could potentially maintain parallel to screen box)
+			topLaser->randomizeAnimSpeed(baseLaserAnimSpeed); //prevent interpolation from looking rigid (without this, a line moving could potentially maintain parallel to screen box)
 			topLaser->animateStartTo(myPos + vec3(halfWidth, halfHeight, 0));
 			topLaser->animateEndTo(myPos + vec3(-halfWidth, halfHeight, 0));
 
-			bottomLaser->randomizeAnimSpeed(baseAnimSpeed);
+			bottomLaser->randomizeAnimSpeed(baseLaserAnimSpeed);
 			bottomLaser->animateStartTo(myPos + vec3(halfWidth, -halfHeight, 0));
 			bottomLaser->animateEndTo(myPos + vec3(-halfWidth, -halfHeight, 0));
 
-			rightLaser->randomizeAnimSpeed(baseAnimSpeed);
+			rightLaser->randomizeAnimSpeed(baseLaserAnimSpeed);
 			rightLaser->animateStartTo(myPos + vec3(halfWidth, halfHeight, 0));
 			rightLaser->animateEndTo(myPos + vec3(halfWidth, -halfHeight, 0));
 
-			leftLaser->randomizeAnimSpeed(baseAnimSpeed);
+			leftLaser->randomizeAnimSpeed(baseLaserAnimSpeed);
 			leftLaser->animateStartTo(myPos + vec3(-halfWidth, halfHeight, 0));
 			leftLaser->animateEndTo(myPos + vec3(-halfWidth, -halfHeight, 0));
 		}

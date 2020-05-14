@@ -211,6 +211,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\GlitchText.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_ActivatableBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_GameMainMenuScreen.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_MenuScreenBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Base.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DigitalClockFontTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_LaserButton.h" />

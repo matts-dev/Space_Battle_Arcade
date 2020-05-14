@@ -436,7 +436,6 @@ namespace SA
 	void LaserUIObject::setOffscreenMode(const std::optional<ELaserOffscreenMode>& inOffscreenMode, bool bResetAnimProgress, GameUIRenderData& ui_rd)
 	{
 		using namespace glm;
-		//#TODO _perhaps_this_should_be_a_dirty_and_clean_next_tick_so_hud3d_can_be_calculated; since this is calculated from event
 
 		offscreenMode = inOffscreenMode;
 
@@ -447,8 +446,8 @@ namespace SA
 				const HUDData3D& hud_3d = ui_rd.getHUDData3D();
 
 				const float szOffsetFactor = 1.01f;
-				vec3 upOffscreen = (szOffsetFactor*hud_3d.savezoneMax_y) * hud_3d.camUp;
-				vec3 rightOffscreen = (szOffsetFactor*hud_3d.savezoneMax_x) * hud_3d.camRight;
+				vec3 upOffscreen = (szOffsetFactor*hud_3d.savezoneMax_y)*hud_3d.camUp;
+				vec3 rightOffscreen = (szOffsetFactor*hud_3d.savezoneMax_x)*hud_3d.camRight;
 
 				struct Helper {
 					vec3 start;
@@ -462,7 +461,6 @@ namespace SA
 					vec3 basePnt = hud_3d.camPos + -upOffscreen;
 					newGoal->start = basePnt + -rightOffscreen;
 					newGoal->end = basePnt + rightOffscreen;
-
 				}
 				else if (*offscreenMode == ELaserOffscreenMode::TOP)
 				{
@@ -488,6 +486,11 @@ namespace SA
 
 				if (newGoal.has_value())
 				{
+					//safezone calculations are based on a certain distance in front of the camera.
+					vec3 frontOffset = (1.01f)*hud_3d.frontOffsetDist* hud_3d.camFront;
+					newGoal->start += frontOffset;
+					newGoal->end += frontOffset;
+
 					if (bResetAnimProgress)
 					{
 						//these calls will handle updating camera
