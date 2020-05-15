@@ -167,6 +167,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAPlayerSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\TimeManagement\TickGroupManager.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASystemBase.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SAUISystem_Game.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SystemData\SATickGroups.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialAnimationEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialsLevel.h" />
@@ -498,6 +500,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAssetSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\TimeManagement\TickGroupManager.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\MemoryLeakTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatSystem.cpp" />
@@ -507,6 +510,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SAUISystem_Game.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SystemData\SATickGroups.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialAnimationEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialsLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\MainMenuLevel.cpp" />

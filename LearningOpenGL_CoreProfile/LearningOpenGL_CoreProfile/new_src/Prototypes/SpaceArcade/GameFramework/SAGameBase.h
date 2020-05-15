@@ -25,6 +25,9 @@ namespace SA
 	
 	class CheatSystemBase;
 
+	struct TickGroups;
+	class TickGroupManager;
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	struct EngineConstants
 	{
@@ -186,12 +189,18 @@ namespace SA
 	public:
 		TimeSystem& getTimeSystem() { return timeSystem; }
 		TimeManager& getSystemTimeManager(){ return *systemTimeManager; }
-
+		TickGroups& tickGroups() { return *tickGroupData; }
+		TickGroupManager& getTickGroupManager() { return *tickGroupManager; }
+	private:
+		void registerTickGroups();
+		virtual sp<TickGroups> onRegisterTickGroups();
 	private: //time management 
 		/** Time management needs to be separate from systems since their tick relies on its results. */
 		TimeSystem timeSystem;
 		sp<TimeManager> systemTimeManager;
-
+		sp<TickGroups> tickGroupData = nullptr;
+		sp<TickGroupManager> tickGroupManager = nullptr;
+		bool bTickGoupsInitialized = false;
 	};
 
 }

@@ -4,6 +4,10 @@
 #include "../Tools/DataStructures/IterableHashSet.h"
 #include "../Tools/DataStructures/ObjectPools.h"
 #include <algorithm>
+#include <assert.h>
+#include "TimeManagement/TickGroupManager.h"
+#include "../Tools/PlatformUtils.h"
+#include "SAGameBase.h"
 
 namespace
 {
@@ -151,10 +155,39 @@ namespace SA
 		}
 		pendingAddTickables.clear();
 		pendingRemovalTickables.clear();
+
+		////////////////////////////////////////////////////////
+		// Tick Groups
+		////////////////////////////////////////////////////////
+		for (TickGroupEntry& tickGroup : tickGroups)
+		{
+			//delegate already cover subscription/removal edge cases, they do not need to be covered here. Just let someone attempt to register to event and it will be applied after broadcast.
+			tickGroup.onTick->broadcast(dt_dilatedSecs);
+		}
 	}
 
 	TimeManager::TimeManager()
 	{
+		TickGroupManager& tickGroupManager = GameBase::get().getTickGroupManager();
+
+		bool bTickGroupsInitialized = tickGroupManager.areTickGroupsInitialized();
+		if (!bTickGroupsInitialized)
+		{
+			STOP_DEBUGGER_HERE();	//a refactor happened so that tickgroup constant data was not initialized before time manager data,
+									//tick groups need to be initialized first so that time managers can configure sorted tick groups.
+		}
+		assert(tickGroupManager.areTickGroupsInitialized());
+		for (const TickGroupDefinition& tgDef : tickGroupManager.getSortedTickGroups())
+		{
+			tickGroups.emplace_back();
+			TickGroupEntry& tickGroup = tickGroups.back();
+			tickGroup.name = tgDef.name;
+			tickGroup.priority = tgDef.priority;
+			tickGroup.sortIdx = tgDef.sortIdx();
+			tickGroup.onTick = new_sp<MultiDelegate<float /*dt_sec*/>>(); //this makes copies shallow, which is what we want. Currently no copies should be possible.
+		}
+
+
 		timersToRemoveWhenTickingOver.reserve(removeTimerReservationSpace);
 		//pendingAddTickables.reserve(tickerDeferredRegistrationMinBufferSize);
 		//pendingRemovalTickables.reserve(tickerDeferredRegistrationMinBufferSize);
@@ -270,6 +303,15 @@ namespace SA
 		//return tickables.contains(tickable);
 		return (tickables.contains(tickable) || pendingAddTickables.contains(tickable)) 
 			&& !pendingRemovalTickables.contains(tickable); 
+	}
+
+	SA::MultiDelegate<float /*dt_sec*/>& TimeManager::getEvent(const TickGroupDefinition& tickGroupData)
+	{
+#ifdef DEBUG_BUILD
+		assert(tickGroups.size() > tickGroupData.sortIdx() && tickGroupData.isRegistered());
+#endif 
+		//use sorted index to bypass any slow lookups from string comparisons. sortIdx is set an engine start up.
+		return *tickGroups[tickGroupData.sortIdx()].onTick;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -9,6 +9,9 @@
 #include "../../GameFramework/SALog.h"
 #include "../../GameFramework/SAGameBase.h"
 #include "../../GameFramework/SAWindowSystem.h"
+#include "../../GameFramework/SALevelSystem.h"
+#include "../../GameFramework/SALevel.h"
+#include "../../GameFramework/TimeManagement/TickGroupManager.h"
 
 namespace SA
 {
@@ -41,6 +44,11 @@ namespace SA
 			window->mouseLeftEvent.removeWeak(sp_this(), &CameraBase::onWindowFocusedChanged_v);
 			window->scrollChanged.removeWeak(sp_this(), &CameraBase::onMouseWheelUpdate_v);
 		}
+	}
+
+	void CameraBase::postConstruct()
+	{
+		GameBase::get().getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &CameraBase::v_handlePostLevelChange);
 	}
 
 	void CameraBase::activate()
@@ -179,6 +187,22 @@ namespace SA
 			}
 		}
 		onCursorModeSet_v(inCursorMode);
+	}
+
+	void CameraBase::v_handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	{
+		if (bActive)
+		{
+			if (previousLevel)
+			{
+				previousLevel->getWorldTimeManager()->getEvent(TickGroups::get().CAMERA).removeWeak(sp_this(), &CameraBase::tick);
+			}
+
+			if (newCurrentLevel)
+			{
+				newCurrentLevel->getWorldTimeManager()->getEvent(TickGroups::get().CAMERA).addWeakObj(sp_this(), &CameraBase::tick);
+			}
+		}
 	}
 
 	void CameraBase::onCursorModeSet_v(bool inCursorMode)

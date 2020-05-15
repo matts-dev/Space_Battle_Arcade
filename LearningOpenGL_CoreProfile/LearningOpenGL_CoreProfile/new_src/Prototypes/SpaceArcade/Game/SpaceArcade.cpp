@@ -46,6 +46,7 @@
 #include "UI/GameUI/Widgets3D/Widget3D_Base.h"
 #include "Levels/MainMenuLevel.h"
 #include "Levels/EnigmaTutorials/EnigmaTutorialsLevel.h"
+#include "GameSystems/SystemData/SATickGroups.h"
 
 namespace SA
 {
@@ -248,6 +249,15 @@ namespace SA
 	{
 		//custom implementation of cheat manager for this game.
 		return new_sp<SpaceArcadeCheatSystem>();
+	}
+
+	sp<SA::TickGroups> SpaceArcade::onRegisterTickGroups()
+	{
+		//creating a tick group (or table) is the only time they will be registered as valid tick groups.
+		//this is a form of system encapsulation that is 100% intentional to prevent any weird misuse of API
+		//that allows changing of tick group priorities
+		_SATickGroups = new_sp<SATickGroups>();
+		return _SATickGroups;
 	}
 
 	void SpaceArcade::updateInput(float detltaTimeSec)

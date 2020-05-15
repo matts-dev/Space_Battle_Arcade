@@ -4,6 +4,7 @@
 #include "../../GameFramework/SASystemBase.h"
 #include "../../Tools/DataStructures/MultiDelegate.h"
 #include "../../Tools/DataStructures/SATransform.h" //glm includes
+#include "../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
 
 struct GLFWwindow;
 
@@ -13,10 +14,19 @@ namespace SA
 	struct RenderData; //frame render data
 	class CameraBase;
 	class DigitalClockFont;
+	class LevelBase;
 
-	////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////
+	// An interface to inherit from to be inserted into the UI spatial hash grid.
+	/////////////////////////////////////////////////////////////////////////////////////
+	class IMouseInteractable 
+	{
+		//#TODO add interface virtuals so that these can be overloaded and called when spatial hash stuff is detecting mouse over
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Game UI system
-	////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class UISystem_Game : public SystemBase
 	{
 	public:
@@ -24,12 +34,16 @@ namespace SA
 	private:
 		friend class SpaceArcade;
 		void runGameUIPass() const;
-		virtual void initSystem() override;;
+		void postCameraTick(float dt_sec);
+		virtual void initSystem() override;
+	private:
+		void handleLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
 	public:
 		mutable MultiDelegate<GameUIRenderData&> onUIGameRender;
-		char textProcessingBuffer[16384]; //a temporary buffer for formatted processing, intended to be only used in game thread.
+		char textProcessingBuffer[16384];												//a shared temporary buffer for formatted processing, intended to be only used in game thread.
 	private:
-		sp<DigitalClockFont> defaultTextBatcher = nullptr;
+		SH::SpatialHashGrid<IMouseInteractable> spatialHashGrid{glm::vec3(10.f)};		//a grid for efficient button-mouse collision testing.
+		sp<DigitalClockFont> defaultTextBatcher = nullptr;								//a DCFont that can be used as a batching-end-point for instanced rendering
 		mutable bool bRenderingGameUI = false;
 	};
 

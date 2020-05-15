@@ -17,6 +17,8 @@
 #include "SARenderSystem.h"
 #include "CheatSystemBase.h"
 #include "CurveSystem.h"
+#include "TimeManagement/TickGroupManager.h"
+#include "../Tools/PlatformUtils.h"
 
 namespace SA
 {
@@ -37,10 +39,8 @@ namespace SA
 			throw std::runtime_error("Only a single instance of the game can be created.");
 		}
 
-		//initialize time management systems
-		systemTimeManager = timeSystem.createManager();
-		timeSystem.markManagerCritical(TimeSystem::PrivateKey{}, systemTimeManager);
-
+		//tick group manager comes before time system so that time system can set up tick groups
+		tickGroupManager = new_sp<TickGroupManager>();
 	}
 
 	GameBase::~GameBase()
@@ -65,6 +65,7 @@ namespace SA
 		if (!bStarted)
 		{
 			onInitEngineConstants(configuredConstants);	//this should happen before the subclass game has started. this means systems can read it.
+			registerTickGroups();						//tick groups created very early, these are effectively static and not intended to be initialized with dnyamic logic from systems. Thus these are created before systems.
 			createEngineSystems();
 			//systems are initialized after all systems have been created; this way cross-system interaction can be achieved during initailization (ie subscribing to events, etc.)
 			for (const sp<SystemBase>& system : systems) { system->initSystem(); }
@@ -144,6 +145,10 @@ namespace SA
 		// !!! REFACTOR WARNING !!  do not place this within the ctor; polymorphic systems are designed to be instantiated via virtual functions; virutal functions shouldn't be called within a ctor!
 		//this is provided outside of ctor so that virtual functions may be called to define systems that are polymorphic based on the game
 
+		//initialize time management systems; this is done after tick groups are created so that timeManager can set up tick groups at construction
+		systemTimeManager = timeSystem.createManager();
+		timeSystem.markManagerCritical(TimeSystem::PrivateKey{}, systemTimeManager);
+
 		//create and register systems
 		windowSystem = new_sp<WindowSystem>();
 		systems.insert(windowSystem);
@@ -195,6 +200,26 @@ namespace SA
 	void GameBase::subscribePostRender(const sp<SystemBase>& system)
 	{
 		postRenderNotifys.insert(system);
+	}
+
+	void GameBase::registerTickGroups()
+	{
+		tickGroupManager->start_TickGroupRegistration(TickGroupManager::GameBaseKey{});
+
+		//give users change to create special subclass with extra tick groups.
+		tickGroupData = onRegisterTickGroups();
+		if (!tickGroupData) 
+		{
+			STOP_DEBUGGER_HERE(); //subclass did not provide a subclass, providing default one. This is not expected behavior.
+			tickGroupData = new_sp<TickGroups>();
+		}
+
+		tickGroupManager->stop_TickGroupRegistration(TickGroupManager::GameBaseKey{});
+	}
+
+	SA::sp<SA::TickGroups> GameBase::onRegisterTickGroups()
+	{
+		return new_sp<TickGroups>();
 	}
 
 	void GameBase::RegisterCustomSystem(const sp<SystemBase>& system)

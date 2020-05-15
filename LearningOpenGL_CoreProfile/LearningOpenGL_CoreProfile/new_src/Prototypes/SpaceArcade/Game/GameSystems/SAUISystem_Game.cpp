@@ -13,6 +13,7 @@
 #include "../../Rendering/RenderData.h"
 #include "../../GameFramework/SARenderSystem.h"
 #include "../../Tools/PlatformUtils.h"
+#include "../../GameFramework/TimeManagement/TickGroupManager.h"
 
 namespace SA
 {
@@ -61,12 +62,49 @@ namespace SA
 		bRenderingGameUI = true;
 	}
 
+	void UISystem_Game::postCameraTick(float dt_sec)
+	{
+		//since camera ticking is over, it isn't going to move. Shoot a ray and see if we hit anything in hitest grid... if we're in cursor mode.
+		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+		{
+			if (const sp<CameraBase>& camera = player->getCamera())
+			{
+				if (camera->isInCursorMode())
+				{
+					//shot ray into hit test grid and attempt to interact with some ui this frame
+
+				}
+			}
+		}
+	}
 
 	void UISystem_Game::initSystem()
 	{
 		DigitalClockFont::Data initBatcher;
 		initBatcher.shader = getDefaultGlyphShader_instanceBased();
 		defaultTextBatcher = new_sp<DigitalClockFont>(initBatcher);
+
+		LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+		levelSystem.onPostLevelChange.addWeakObj(sp_this(), &UISystem_Game::handleLevelChange);
+
+		//this shouldn't happen as levels should be created after all systems are initialized, but adding this to prevent code fragility.
+		if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
+		{
+			handleLevelChange(nullptr, currentLevel);
+		}
+	}
+
+	void UISystem_Game::handleLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	{
+		if (previousLevel)
+		{
+			previousLevel->getWorldTimeManager()->getEvent(TickGroups::get().POST_CAMERA).removeWeak(sp_this(), &UISystem_Game::postCameraTick);
+		}
+
+		if (newCurrentLevel) 
+		{
+			newCurrentLevel->getWorldTimeManager()->getEvent(TickGroups::get().POST_CAMERA).addWeakObj(sp_this(), &UISystem_Game::postCameraTick);
+		}
 	}
 
 	////////////////////////////////////////////////////////

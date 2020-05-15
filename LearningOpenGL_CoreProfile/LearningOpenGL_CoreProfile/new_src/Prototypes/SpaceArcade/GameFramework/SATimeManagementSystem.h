@@ -14,6 +14,8 @@ namespace SA
 	template<typename T>
 	class IterableHashSet;
 
+	struct TickGroupDefinition;
+
 	//#consider this may be better suited as bit-vector for masking operations (eg SUCCESS = DEFERRED | REMOVED | ADDED) 
 	enum class ETimerOperationResult : char
 	{
@@ -70,6 +72,7 @@ namespace SA
 		inline int getRemaningFramesToStep() const { return framesToStep; }
 		inline bool isTimeFrozen() const { return bFreezeTime && framesToStep == 0; }
 		inline bool isFrameStepping() const { return bFreezeTime && framesToStep > 0; }
+		MultiDelegate<float /*dt_sec*/>& getEvent(const TickGroupDefinition& tickGroupDeclaration);
 
 	public: //timers
 		/** timer functions returning bool indicate success/failure */
@@ -121,6 +124,16 @@ namespace SA
 		IterableHashSet<sp<ITickable>> tickables;
 		IterableHashSet<sp<ITickable>> pendingRemovalTickables;
 		IterableHashSet<sp<ITickable>> pendingAddTickables;
+
+		//#todo perhaps replace ITickable and only have tick groups. I think ITickable currently has better performance.
+		struct TickGroupEntry 
+		{
+			std::string name;
+			float priority = 0.f;
+			size_t sortIdx = 0;
+			sp<MultiDelegate<float /*dt_sec*/>> onTick = nullptr;
+		};
+		std::vector<TickGroupEntry> tickGroups;
 	};
 
 

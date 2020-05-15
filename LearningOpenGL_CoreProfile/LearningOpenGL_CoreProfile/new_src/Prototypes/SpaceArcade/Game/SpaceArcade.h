@@ -11,6 +11,7 @@
 
 namespace SA
 {
+	struct SATickGroups;
 	class CameraFPS;
 	class Shader;
 	class Model3D;
@@ -42,6 +43,7 @@ namespace SA
 		virtual void renderLoop(float deltaTimeSecs) override;
 		virtual void onRegisterCustomSystem() override;
 		virtual sp<CheatSystemBase> createCheatSystemSubclass() override;
+		virtual sp<TickGroups> onRegisterTickGroups();
 
 		void updateInput(float detltaTimeSec);
 
@@ -78,7 +80,7 @@ namespace SA
 
 	public:
 		const sp<HUD> getHUD() const { return hud; }
-
+	public:
 	public:
 		UniformResourceLocators URLs;
 
@@ -90,6 +92,18 @@ namespace SA
 		bool bRenderDebugAvoidanceSphereCells = false;
 		bool bRenderProjectileOBBs = false;
 		bool bEnableDevConsoleFeature = true;
+
+	////////////////////////////////////////////////////////
+	// custom tick groups
+	////////////////////////////////////////////////////////
+	public:
+		inline const SATickGroups& saTickGroups() { return *_SATickGroups; }
+	private:
+		sp<SATickGroups> _SATickGroups = nullptr;
+
+	////////////////////////////////////////////////////////
+	// other
+	////////////////////////////////////////////////////////
 
 	private:
 		sp<SA::CameraFPS> fpsCamera;
