@@ -10,6 +10,8 @@
 #include "Levels/SASpaceLevelBase.h"
 #include "SAShip.h"
 #include "Components/FighterSpawnComponent.h"
+#include "SpaceArcade.h"
+#include "../GameFramework/Input/SAInput.h"
 
 namespace SA
 {
@@ -34,6 +36,9 @@ namespace SA
 		PlayerBase::postConstruct();
 		respawnTimerDelegate = new_sp<MultiDelegate<>>();
 		respawnTimerDelegate->addWeakObj(sp_this(), &SAPlayer::handleRespawnTimerUp);
+
+		getInput().getKeyEvent(GLFW_KEY_ESCAPE).addWeakObj(sp_this(), &SAPlayer::handleEscapeKey);
+
 	}
 
 	void SAPlayer::onNewControlTargetSet(IControllable* oldTarget, IControllable* newTarget)
@@ -136,6 +141,30 @@ namespace SA
 		}
 
 		onRespawnOver.broadcast(bRespawnSucess);
+	}
+
+	void SAPlayer::handleEscapeKey(int state, int modifier_keys, int scancode)
+	{
+		if (state == GLFW_PRESS)
+		{
+			SpaceArcade& game = SpaceArcade::get();
+			if (modifier_keys == GLFW_KEY_LEFT_SHIFT)
+			{
+				game.startShutdown();
+			}
+			else
+			{
+				if (game.isEditorMainmenuFeatureEnabled())
+				{
+					if (const sp<CameraBase>& camera = getCamera())
+					{
+						//probably should move editor UI to level off of some subsystem
+						game.toggleEditorUIMainMenuVisible();
+						camera->setCursorMode(SpaceArcade::get().isEditorMainMenuOnScreen() || camera->cameraRequiresCursorMode());
+					}
+				}
+			}
+		}
 	}
 
 }

@@ -14,7 +14,7 @@ namespace SA
 				onActivationChanged(bActive);
 			}
 		}
-		bool isActive() { return bActive; }
+		bool isActive() const { return bActive; }
 	protected:
 		virtual void onActivationChanged(bool bActive) {}
 	private:

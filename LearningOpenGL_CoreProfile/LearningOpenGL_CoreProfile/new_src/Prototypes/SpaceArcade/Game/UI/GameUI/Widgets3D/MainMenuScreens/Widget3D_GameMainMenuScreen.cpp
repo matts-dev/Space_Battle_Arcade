@@ -7,6 +7,8 @@ namespace SA
 {
 	void Widget3D_GameMainMenuScreen::tick(float dt_sec)
 	{
+		Parent::tick(dt_sec);
+
 		if (isActive())
 		{
 			animInTime += dt_sec;
@@ -18,17 +20,13 @@ namespace SA
 			animInButtonIdx = std::nullopt;
 		}
 
-		for (Widget3D_LaserButton* button : enabledButtons)
-		{
-			if (button) 
-			{
-				button->tick(dt_sec);
-			}
-		}
+
 	}
 
 	void Widget3D_GameMainMenuScreen::postConstruct()
 	{
+		Widget3D_MenuScreenBase::postConstruct();
+
 		campaignButton = new_sp<Widget3D_LaserButton>("Campaign");
 		enabledButtons.push_back(campaignButton.get());
 
@@ -44,7 +42,7 @@ namespace SA
 		exitButton = new_sp<Widget3D_LaserButton>("Exit");
 		enabledButtons.push_back(exitButton.get());
 
-		SpaceArcade::get().getGameUISystem()->onUIGameRender.addWeakObj(sp_this(), &Widget3D_GameMainMenuScreen::renderGameUI);
+		//SpaceArcade::get().getGameUISystem()->onUIGameRender.addWeakObj(sp_this(), &Widget3D_GameMainMenuScreen::renderGameUI);
 
 		sigmoid = GameBase::get().getCurveSystem().generateSigmoid_medp(20.0f);
 	}
@@ -56,19 +54,13 @@ namespace SA
 		if (bActive)
 		{
 			//alignButtonPositionsVertically();			//now done in tick to space out button anim-in
-			
+			//buttons activated in staggered fashion
 		}
 		else
 		{
 			//deactivated
+			for (Widget3D_LaserButton* button : enabledButtons) { button->activate(bActive);}
 		}
-
-		//for (Widget3D_LaserButton* button : enabledButtons)
-		//{
-		//	//perhaps this should be staggered? enabling each some time after the first.
-		//	button->activate(bActive);
-		//}
-
 	}
 
 	void Widget3D_GameMainMenuScreen::renderGameUI(GameUIRenderData& ui_rd)
@@ -130,9 +122,13 @@ namespace SA
 
 		if (!animInButtonIdx.has_value() || animInButtonIdx != enabledButtons.size())
 		{
-			float buttonAnimFrac = animInTime / showAllButtonsAnimDurSec;
+			float buttonAnimFrac = animInTime / (!bSeenOnce ? showAllButtonsAnimDurSec : showAllButtonsAnimDurSec/2.f);
 			float curvedButtonAnimFrac = buttonAnimFrac;// sigmoid.eval_smooth(buttonAnimFrac);
-			size_t newButtonIdx = glm::clamp<size_t>(size_t(enabledButtons.size() * curvedButtonAnimFrac), 0, enabledButtons.size() - 1);
+
+			//calculate next button index
+			size_t newButtonIdx = size_t(enabledButtons.size() * curvedButtonAnimFrac);
+			if (newButtonIdx == enabledButtons.size()) { bSeenOnce = true; } //check before clamped
+			newButtonIdx = glm::clamp<size_t>(newButtonIdx, 0, enabledButtons.size() - 1);
 
 			if (!animInButtonIdx.has_value() || newButtonIdx > *animInButtonIdx) //only do this once we cross into a new button index
 			{
@@ -179,6 +175,9 @@ namespace SA
 				//++animInButtonIdx; //this is now curve driven
 				//animInTime = 0.f;
 			}
+		}
+		else if (animInButtonIdx == enabledButtons.size())
+		{
 		}
 	}
 

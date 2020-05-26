@@ -30,7 +30,7 @@ namespace SA
 		{
 			float cameraTiltSec = 3.0f;	
 			glm::vec3 startPoint = glm::vec3(0.7f, 0.7f, 0.f);
-			glm::vec3 endPoint = glm::vec3(0.7, -0.65, 0.f); //becareful not to specify two points 180 apart as that will produce nans
+			glm::vec3 endPoint = glm::vec3(0.7, -0.65, 0.f); //be careful not to specify two points 180 apart as that will produce nans
 		} cameraData;
 		struct
 		{

@@ -312,10 +312,111 @@ namespace SA
 
 		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees)
 		{
+			//#TODO i think you can just construct quat like : quat(radX, radY, radZ);
 			glm::quat x = glm::angleAxis(glm::radians(rotationInDegrees.x), glm::vec3(1, 0, 0));
 			glm::quat y = glm::angleAxis(glm::radians(rotationInDegrees.y), glm::vec3(0, 1, 0));
 			glm::quat z = glm::angleAxis(glm::radians(rotationInDegrees.z), glm::vec3(0, 0, 1));
 			return x * y * z;
+		}
+
+		glm::vec3 findBoxLow(const std::array<glm::vec4, 8>& localAABB)
+		{
+			glm::vec3 min = glm::vec3(std::numeric_limits<float>::infinity());
+			for (const glm::vec4& vertex : localAABB)
+			{
+				min.x = vertex.x < min.x ? vertex.x : min.x;
+				min.y = vertex.y < min.y ? vertex.y : min.y;
+				min.z = vertex.z < min.z ? vertex.z : min.z;
+			}
+			return min;
+		}
+
+		glm::vec3 findBoxMax(const std::array<glm::vec4, 8>& localAABB)
+		{
+			glm::vec3 max = glm::vec3(-std::numeric_limits<float>::infinity());
+			for (const glm::vec4& vertex : localAABB)
+			{
+				max.x = vertex.x > max.x ? vertex.x : max.x;
+				max.y = vertex.y > max.y ? vertex.y : max.y;
+				max.z = vertex.z > max.z ? vertex.z : max.z;
+			}
+			return max;
+		}
+
+		bool rayHitTest_FastAABB(const glm::vec3& boxLow, const glm::vec3& boxMax, const glm::vec3 rayStart, const glm::vec3 rayDir)
+		{
+			//FAST RAY BOX INTERSECTION
+			//intersection = s + t*d;		where s is the start and d is the direction
+			//for an axis aligned box, we can look at each axis individually
+			//
+			//intersection_x = s_x + t_x * d_x
+			//intersection_y = s_y + t_y * d_y
+			//intersection_z = s_z + t_z * d_z
+			//
+			//for each of those, we can solve for t
+			//eg: (intersection_x - s_x) / d_z = t_z
+			//intersection_x can be easily found since we have an axis aligned box, and there are 2 yz-planes that represent x values a ray will have to pass through
+			//
+			//intuitively, a ray that DOES intersect will pass through 3 planes before entering the cube; and pass through 3 planes to exit the cube.
+			//the last plane it intersects when entering the cube, is the t value for the box intersection.
+			//		eg ray goes through X plane, Y plane, and then Z Plane, the intersection point is the t value associated with the Z plane
+			//the first plane it intersects when it leaves the box is also its exit intersection t value
+			//		eg ray goes leaves Y plane, X plane, Z plane, then the intersection of the Y plane is the intersection point
+			//if the object doesn't collide, then it will exit a plane before all 3 entrance places are intersected
+			//		eg ray Enters X Plane, Enters Y plane, Exits X PLane, Enters Z plane, Exits Y plane, Exits Z plane; 
+			//		there is no collision because it exited the x plane before it penetrated the z plane
+			//it seems that, if it is within the cube, the entrance planes will all have negative t values
+
+			////calculate bounding box dimensions; may need to nudge intersection pnt so it doesn't pick up previous box
+			float fX = boxLow.x;
+			float cX = boxMax.x;
+			float fY = boxLow.y;
+			float cY = boxMax.y;
+			float fZ = boxLow.z;
+			float cZ = boxMax.z;
+
+			//use algbra to calculate T when these planes are hit; similar to above example -- looking at single components
+			// pnt = s + t * d;			t = (pnt - s)/d
+			//these calculations may produce infinity
+			float tMaxX = (fX - rayStart.x) / rayDir.x;
+			float tMinX = (cX - rayStart.x) / rayDir.x;
+			float tMaxY = (fY - rayStart.y) / rayDir.y;
+			float tMinY = (cY - rayStart.y) / rayDir.y;
+			float tMaxZ = (fZ - rayStart.z) / rayDir.z;
+			float tMinZ = (cZ - rayStart.z) / rayDir.z;
+
+			float x_enter_t = std::min(tMinX, tMaxX);
+			float x_exit_t = std::max(tMinX, tMaxX);
+			float y_enter_t = std::min(tMinY, tMaxY);
+			float y_exit_t = std::max(tMinY, tMaxY);
+			float z_enter_t = std::min(tMinZ, tMaxZ);
+			float z_exit_t = std::max(tMinZ, tMaxZ);
+
+			float enterTs[3] = { x_enter_t, y_enter_t, z_enter_t };
+			std::size_t numElements = sizeof(enterTs) / sizeof(enterTs[0]);
+			std::sort(enterTs, enterTs + numElements);
+
+			float exitTs[3] = { x_exit_t, y_exit_t, z_exit_t };
+			std::sort(exitTs, exitTs + numElements);
+
+			//handle cases where infinity is within enterT
+			for (int idx = numElements - 1; idx >= 0; --idx)
+			{
+				if (enterTs[idx] != std::numeric_limits<float>::infinity())
+				{
+					//move a real value to the place where infinity was sorted
+					enterTs[2] = enterTs[idx];
+					break;
+				}
+			}
+
+			bool intersects = enterTs[2] <= exitTs[0];
+			float collisionT = enterTs[2];
+
+			//calculate new intersection point!
+			//glm::vec3 intersectPoint = start + collisionT * rayDir;
+
+			return intersects;
 		}
 
 		const float cubeVerticesWithUVs[] = {

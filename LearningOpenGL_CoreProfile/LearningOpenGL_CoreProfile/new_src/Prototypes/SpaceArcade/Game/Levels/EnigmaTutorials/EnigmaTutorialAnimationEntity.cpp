@@ -40,7 +40,7 @@ namespace SA
 		//camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(2.0);
 		//camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(3.0);
 		//camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(10.0);
-		camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(20.0);		//this feels the best
+		camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(20.0f);		//this feels the best
 		//camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(100.0);
 		//camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(1000.0);
 
@@ -119,8 +119,8 @@ namespace SA
 					cacheCam->lookAt_v(cameraData.endPoint);
 					quat endQ = cacheCam->getQuat();
 
-					quat fullRotQ = slerp(startQ, endQ, camCurve.eval_smooth(percDone));
-					cacheCam->setQuat(fullRotQ);
+					quat currentRotQ = glm::slerp(startQ, endQ, camCurve.eval_smooth(percDone));
+					cacheCam->setQuat(currentRotQ);
 				}
 				else if (timePassedSec < textAnimData.animSec + animationDurationSec)
 				{

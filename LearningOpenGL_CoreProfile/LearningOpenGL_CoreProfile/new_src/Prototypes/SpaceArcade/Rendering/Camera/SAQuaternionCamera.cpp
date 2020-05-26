@@ -164,32 +164,38 @@ namespace SA
 			{
 				bSpeedAccerlationFactor = 10.0f;
 			}
-			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			if (bEnableCameraMovement)
 			{
-				adjustPosition(-(getFront() * freeRoamSpeed * bSpeedAccerlationFactor * dt_sec));
+				if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+				{
+					adjustPosition(-(getFront() * freeRoamSpeed * bSpeedAccerlationFactor * dt_sec));
+				}
+				if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+				{
+					adjustPosition(getFront() * freeRoamSpeed * bSpeedAccerlationFactor  * dt_sec);
+				}
+				if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+				{
+					//the w basis vector is the -cameraFront
+					adjustPosition(getRight()* freeRoamSpeed * bSpeedAccerlationFactor  * dt_sec);
+				}
+				if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+				{
+					//the w basis vector is the -cameraFront
+					glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
+					adjustPosition(-(getRight()* freeRoamSpeed * bSpeedAccerlationFactor * dt_sec));
+				}
 			}
-			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			if (bEnableCameraRoll)
 			{
-				adjustPosition(getFront() * freeRoamSpeed * bSpeedAccerlationFactor  * dt_sec);
-			}
-			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			{
-				//the w basis vector is the -cameraFront
-				adjustPosition(getRight()* freeRoamSpeed * bSpeedAccerlationFactor  * dt_sec);
-			}
-			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			{
-				//the w basis vector is the -cameraFront
-				glm::vec3 cameraRight = glm::normalize(glm::cross(getWorldUp_n(), -getFront()));
-				adjustPosition(-(getRight()* freeRoamSpeed * bSpeedAccerlationFactor * dt_sec));
-			}
-			if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-			{
-				updateRoll(dt_sec * freeRoamRollSpeed_radSec);
-			}
-			if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-			{
-				updateRoll(dt_sec * -freeRoamRollSpeed_radSec);
+				if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+				{
+					updateRoll(dt_sec * freeRoamRollSpeed_radSec);
+				}
+				if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+				{
+					updateRoll(dt_sec * -freeRoamRollSpeed_radSec);
+				}
 			}
 		}
 	}

@@ -59,10 +59,13 @@ namespace SA
 		bool isInCursorMode() { return cursorMode; }
 		void setCursorMode(bool inCursorMode);
 
+		bool cameraRequiresCursorMode() const { return bCameraRequiresCursorMode; }
+		void setCameraRequiresCursorMode(bool bRequiresCursorMode, bool bApplyCursorModeRequirementNow = true);
+
 		void setOwningPlayerIndex(std::optional<int32_t> playerIndex) { this->owningPlayerIndex = playerIndex; }
 
 	protected:
-		/** The setter virtuals are provided for recalcuation when things outside of the camera are setting values. In some cases
+		/** The setter virtuals are provided for recalculation when things outside of the camera are setting values. In some cases
 		values have just been calculated, and it would be redundant to call the virtuals. In this case, the base class may set values
 		without invoking the virtual functions. The functions below meet that requirement. */
 		/** does not call native functions for setting position */
@@ -88,10 +91,10 @@ namespace SA
 		virtual void onWindowFocusedChanged_v(int focusEntered);
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset);
 		const std::optional<uint32_t>& getOwningPlayerIndex() { return owningPlayerIndex; }
-
 	protected:
 		bool refocused = true;
-
+	private:
+		bool bCameraRequiresCursorMode = false;
 	private:
 		glm::vec3 cameraPosition{0.f};
 		glm::vec3 cameraFront_n;

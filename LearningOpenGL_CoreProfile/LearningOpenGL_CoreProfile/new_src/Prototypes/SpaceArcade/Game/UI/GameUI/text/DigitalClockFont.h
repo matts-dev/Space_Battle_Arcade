@@ -14,6 +14,7 @@
 #include "../../../../Rendering/SAGPUResource.h"
 #include <vector>
 #include "../../../../Tools/DataStructures/SATransform.h"
+#include "../../../../Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {
@@ -130,10 +131,12 @@ namespace SA
 		void renderBatched(const struct RenderData& rd, DCFont::BatchData& batchData);
 	public:
 		void setText(const std::string& newText);
+		void setFontColor(glm::vec3 color);
 		const Transform& getXform() const { return xform; }
 		void setXform(const Transform& newXform);
 		float getWidth() const;
 		float getHeight() const;
+		glm::vec2 getSize_Unscaled() const;
 	protected:
 		virtual void postConstruct() override;
 		void rebuildDataCache();
@@ -144,6 +147,7 @@ namespace SA
 		static sp<DigitalClockGlyph> sharedGlyph;
 		static uint64_t numFontInstances;
 	public: //public so this can be filled out externally and passed to ctor; d3d style
+		MultiDelegate<> onNewTextDataBuilt;
 		struct Data
 		{
 			sp<Shader> shader;

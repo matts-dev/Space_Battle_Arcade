@@ -75,7 +75,7 @@ namespace SA
 
 		collisionShapeFactory = new_sp<CollisionShapeFactory>();
 
-		//camera
+		//camera //#TODO remove this or make it so that it is only spawned if level doesn't configure a camera
 		fpsCamera = new_sp<SA::CameraFPS>(45.f, 0.f, 0.f);
 		fpsCamera->registerToWindowCallbacks_v(window);
 		fpsCamera->setCursorMode(false);
@@ -94,7 +94,7 @@ namespace SA
 			//loaded!
 		}
 
-		ui_root = new_sp<UIRootWindow>();
+		ui_root_editor = new_sp<UIRootWindow>();
 		hud = new_sp<HUD>();
 		console = new_sp<DeveloperConsole>();
 
@@ -112,6 +112,16 @@ namespace SA
 	void SpaceArcade::onShutDown() 
 	{
 		fpsCamera->deregisterToWindowCallbacks_v();
+	}
+
+	void SpaceArcade::toggleEditorUIMainMenuVisible()
+	{
+		ui_root_editor->toggleUIVisible();
+	}
+
+	bool SpaceArcade::isEditorMainMenuOnScreen() const
+	{
+		return ui_root_editor->getUIVisible();
 	}
 
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
@@ -155,7 +165,7 @@ namespace SA
 
 		console->tick(deltaTimeSecs);
 
-		ui_root->tick(deltaTimeSecs);
+		ui_root_editor->tick(deltaTimeSecs);
 
 	}
 
@@ -270,24 +280,25 @@ namespace SA
 			static InputTracker input;
 			input.updateState(window);
 
-			if (input.isKeyJustPressed(window, GLFW_KEY_ESCAPE))
-			{
-				if (input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT))
-				{
-					startShutdown();
-				}
-				else
-				{
-					ui_root->toggleUIVisible();
-					if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
-					{
-						if (sp<CameraBase> camera = player->getCamera())
-						{
-							camera->setCursorMode(ui_root->getUIVisible());
-						}
-					}
-				}
-			}
+			//moveing default input to player class
+			//if (input.isKeyJustPressed(window, GLFW_KEY_ESCAPE))
+			//{
+			//	if (input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT))
+			//	{
+			//		startShutdown();
+			//	}
+			//	else
+			//	{
+			//		ui_root->toggleUIVisible();
+			//		if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
+			//		{
+			//			if (sp<CameraBase> camera = player->getCamera())
+			//			{
+			//				camera->setCursorMode(ui_root->getUIVisible());
+			//			}
+			//		}
+			//	}
+			//}
 
 			if (bEnableDevConsoleFeature && console)
 			{

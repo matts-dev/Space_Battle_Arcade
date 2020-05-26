@@ -14,6 +14,14 @@
 #include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_GameMainMenuScreen.h"
 #include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_MenuScreenBase.h"
 #include "../../Tools/PlatformUtils.h"
+#include "../../Tools/DataStructures/SATransform.h"
+#include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_CampaignScreen.h"
+#include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_SkirmishScreen.h"
+#include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_SettingScreen.h"
+#include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ModsScreen.h"
+#include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ExitScreen.h"
+#include "../../Tools/SAUtilities.h"
+#include "../UI/GameUI/SAHUD.h"
 
 namespace SA
 {
@@ -30,12 +38,60 @@ namespace SA
 		debugText = new_sp<DigitalClockFont>(debugTextInit);
 
 		menuCamera = new_sp<QuaternionCamera>();
+		menuCamera->setCameraRequiresCursorMode(true);
+		menuCamera->setEnableCameraRoll(false);
+		menuCamera->setEnableCameraMovement(false);
+
+		if (const sp<HUD> hud = SpaceArcade::get().getHUD())
+		{
+			hud->setVisibility(false);
+		}
+
+		if (bFreeCamera) //debug
+		{
+			//undo camera set up 
+			menuCamera->setCameraRequiresCursorMode(false);
+			menuCamera->setEnableCameraRoll(true);
+			menuCamera->setEnableCameraMovement(true);
+		}
 
 		SpaceArcade& game = SpaceArcade::get();
 		game.getGameUISystem()->onUIGameRender.addWeakObj(sp_this(), &MainMenuLevel::handleGameUIRenderDispatch);
 
+		camCurve = GameBase::get().getCurveSystem().generateSigmoid_medp(20.0f);		//this feels the best
+
 		mainMenuScreen = new_sp<Widget3D_GameMainMenuScreen>();
+		mainMenuScreen->getCampaignClicked().addWeakObj(sp_this(), &MainMenuLevel::handleCampaignClicked);
+		mainMenuScreen->getSkirmishClicked().addWeakObj(sp_this(), &MainMenuLevel::handleSkirmishClicked);
+		mainMenuScreen->getModsClicked().addWeakObj(sp_this(), &MainMenuLevel::handleModsClicked);
+		mainMenuScreen->getSettingsClicked().addWeakObj(sp_this(), &MainMenuLevel::handleSettingsClicked);
+		mainMenuScreen->getExitClicked().addWeakObj(sp_this(), &MainMenuLevel::handleExitClicked);
 		menuScreens.push_back(mainMenuScreen.get());
+
+		campaignScreen = new_sp<Widget3D_CampaignScreen>();
+		campaignScreen->getBackButton().addWeakObj(sp_this(), &MainMenuLevel::handleReturnToMainMenuClicked);
+		campaignScreen->activate(false);
+		menuScreens.push_back(campaignScreen.get());
+
+		skirmishScreen = new_sp<Widget3D_SkirmishScreen>();
+		skirmishScreen->getBackButton().addWeakObj(sp_this(), &MainMenuLevel::handleReturnToMainMenuClicked);
+		menuScreens.push_back(skirmishScreen.get());
+
+		settingsScreen = new_sp<Widget3D_SettingsScreen>();
+		settingsScreen->getBackButton().addWeakObj(sp_this(), &MainMenuLevel::handleReturnToMainMenuClicked);
+		menuScreens.push_back(settingsScreen.get());
+
+		modsScreen = new_sp<Widget3D_ModsScreen>();
+		modsScreen->getBackButton().addWeakObj(sp_this(), &MainMenuLevel::handleReturnToMainMenuClicked);
+		menuScreens.push_back(modsScreen.get());
+
+		exitScreen = new_sp<Widget3D_ExitScreen>();
+		exitScreen->getBackButton().addWeakObj(sp_this(), &MainMenuLevel::handleReturnToMainMenuClicked);
+		menuScreens.push_back(exitScreen.get());
+
+
+
+
 	}
 
 	void MainMenuLevel::startLevel_v()
@@ -127,11 +183,13 @@ namespace SA
 
 		for (Widget3D_MenuScreenBase* menuScreen : menuScreens)
 		{
-			if (menuScreen) {
+			if (menuScreen)
+			{
 				menuScreen->tick(dt_sec);
 			}
 			else{STOP_DEBUGGER_HERE();}
 		}
+		updateCamera(dt_sec);
 	}
 
 	void MainMenuLevel::handleGameUIRenderDispatch(GameUIRenderData& uiRenderData)
@@ -140,6 +198,11 @@ namespace SA
 		{
 			if (bRenderDebugText)
 			{
+				if (const sp<HUD> hud = SpaceArcade::get().getHUD())
+				{
+					hud->setVisibility(true); //show crosshairs where we are pointing
+				}
+
 				Transform debugTextXform;
 				debugTextXform.rotQuat = menuCamera->getQuat();
 				debugTextXform.position = menuCamera->getPosition() + menuCamera->getFront() * 50.f;
@@ -181,6 +244,155 @@ namespace SA
 	void MainMenuLevel::handleMainMenuStartupDelayOver()
 	{
 		mainMenuScreen->activate(true); 
+	}
+
+	void MainMenuLevel::updateCamera(float dt_sec)
+	{
+		using namespace glm;
+
+		if (cameraAnimData.has_value())
+		{
+			cameraAnimData->timePassedSec += dt_sec;
+
+			//very addhoc way of implementing this, but each time range does a different thing and is assumed to be discrete steps
+			if (cameraAnimData->timePassedSec <= cameraAnimData->cameraAnimDuration)
+			{
+				float percDone = cameraAnimData->timePassedSec / cameraAnimData->cameraAnimDuration; //[0,1]
+				vec3 toStart_n = normalize(cameraAnimData->startPoint - menuCamera->getPosition());
+				vec3 toEnd_n = normalize(cameraAnimData->endPoint - menuCamera->getPosition());
+
+				//NOTE: below is NOT CORRECT, which is why it is off. I don't think it is actually needed as all screens basically undo their rotations to get back to main menu.
+				//NOTE: better approach is probably to actually rotate the end quaternion's so that they're aligned with front/up plane, not do roll during animation.
+				//Figure out if up vector is drifting out of plane to camera front, and correct it
+				if constexpr (constexpr bool bCorrectCameraDrift = false)
+				{
+					const vec3 camUp_n = menuCamera->getUp();
+					const vec3 camFront_n = menuCamera->getFront();
+					const vec3 targetWorldUp_n{ 0.f,1.f,0.f };
+					const vec3 planeU_n = glm::normalize(glm::cross(-camFront_n, targetWorldUp_n));
+
+					//project to worldUp_front_plane, then see if different and rotate roll if different. plane is similar to cam right/up plane
+					const vec3 uProj = glm::dot(camUp_n, planeU_n) * planeU_n; //probably need to make projection and plane projection a function in math library
+					const vec3 vProj = glm::dot(camUp_n, targetWorldUp_n) * targetWorldUp_n; //probably need to make projection and plane projection a function in math library
+					const vec3 proj_n = normalize(uProj + vProj);
+					float normalRelatedness_costheta = glm::dot(proj_n, targetWorldUp_n);
+					//if (normalRelatedness < 0.99f) //same vectors will product value close to 1.0f
+					{
+						//up vector is drifting, roll camera to correct drift
+						float roll_rad = glm::acos(glm::clamp(normalRelatedness_costheta, -1.f, 1.f));
+						bool bOnLeft = (glm::dot(proj_n, planeU_n) < 0.f);
+
+						vec3 rollAxis = glm::cross(planeU_n, targetWorldUp_n);
+						quat rollQ = glm::angleAxis(bOnLeft ? -roll_rad : roll_rad, rollAxis);
+
+						//sometimes the roll will product nan because we've supplied a bad camera move (ie makes 180 with up vector), rather than account
+						//for that in the logic, just ignore the roll. this will likely cause a camera flip letting user (me) know they're doing something I don't
+						//want to support!
+						if (!Utils::anyValueNAN(rollQ))
+						{
+							//update roll before doing other logic
+							menuCamera->setQuat(rollQ * menuCamera->getQuat());
+						}
+					}
+				}
+
+				menuCamera->lookAt_v(cameraAnimData->startPoint);
+				quat startQ = menuCamera->getQuat();
+
+				menuCamera->lookAt_v(cameraAnimData->endPoint);
+				quat endQ = menuCamera->getQuat();
+
+				quat fullRotQ = glm::slerp(startQ, endQ, camCurve.eval_smooth(percDone));
+				menuCamera->setQuat(fullRotQ);
+			}
+			else
+			{
+				//make sure we finish the interpolation
+				menuCamera->lookAt_v(cameraAnimData->endPoint);
+
+				if (cameraAnimData->pendingScreenToActivate) { cameraAnimData->pendingScreenToActivate->activate(true);}
+				else { STOP_DEBUGGER_HERE(); } // did you forget to set a screen to animate to?
+
+				//prevent this from ticking until next animation
+				cameraAnimData.reset();
+			}
+
+		}
+	}
+
+	void MainMenuLevel::animateCameraTo(glm::vec3 endPoint, float animDuration)
+	{
+		cameraAnimData = std::make_optional<CameraAnimData>();
+		cameraAnimData->timePassedSec = 0.f;
+		cameraAnimData->startPoint = /*shouldbe(0,0,0)*/menuCamera->getPosition() + menuCamera->getFront(); //may be better to scale this vector a bit to generate a point
+		cameraAnimData->endPoint = endPoint;
+		cameraAnimData->cameraAnimDuration = animDuration;
+	}
+
+	void MainMenuLevel::setPendingScreenToActivate(Widget3D_ActivatableBase* screen)
+	{
+		if (cameraAnimData.has_value())
+		{
+			cameraAnimData->pendingScreenToActivate = screen;
+		}
+		else
+		{
+			STOP_DEBUGGER_HERE(); //should always have camera anim data if we call this function
+			assert(false);
+		}
+	}
+
+	void MainMenuLevel::deactivateAllScreens()
+	{
+		for (Widget3D_MenuScreenBase* screen : menuScreens)
+		{
+			if (screen->isActive()) 
+			{
+				screen->activate(false);
+			}
+		}
+	}
+
+	void MainMenuLevel::handleCampaignClicked()
+	{
+		deactivateAllScreens();
+		animateCameraTo(glm::vec3(-0.7f, 0.2f, 0.7f), 3.0f);
+		setPendingScreenToActivate(campaignScreen.get());
+	}
+
+	void MainMenuLevel::handleSkirmishClicked()
+	{
+		deactivateAllScreens();
+		animateCameraTo(glm::vec3(0.6f, -0.3f, 0.8f), 3.0f);
+		setPendingScreenToActivate(skirmishScreen.get());
+	}
+
+	void MainMenuLevel::handleModsClicked()
+	{
+		deactivateAllScreens();
+		animateCameraTo(glm::vec3(-0.7f, -0.7f, 0.1f), 3.0f);
+		setPendingScreenToActivate(modsScreen.get());
+	}
+
+	void MainMenuLevel::handleSettingsClicked()
+	{
+		deactivateAllScreens();
+		animateCameraTo(glm::vec3(0.7f, 0.8f, 0.0f), 3.0f);
+		setPendingScreenToActivate(settingsScreen.get());
+	}
+
+	void MainMenuLevel::handleExitClicked()
+	{
+		deactivateAllScreens();
+		animateCameraTo(glm::vec3(-0.1f, -0.4f, 0.9f), 3.0f);
+		setPendingScreenToActivate(exitScreen.get());
+	}
+
+	void MainMenuLevel::handleReturnToMainMenuClicked()
+	{
+		deactivateAllScreens();
+		animateCameraTo(glm::vec3(-0.f, -0.f, -1.f), 3.0f);
+		setPendingScreenToActivate(mainMenuScreen.get());
 	}
 
 }

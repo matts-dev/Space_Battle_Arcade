@@ -14,6 +14,9 @@
 #include "../../GameFramework/SARenderSystem.h"
 #include "../../Tools/PlatformUtils.h"
 #include "../../GameFramework/TimeManagement/TickGroupManager.h"
+#include "../../GameFramework/SADebugRenderSystem.h"
+#include "../../Tools/Algorithms/Algorithms.h"
+#include "../../Tools/SAUtilities.h"
 
 namespace SA
 {
@@ -21,7 +24,30 @@ namespace SA
 	// UI SYSTEM
 	////////////////////////////////////////////////////////
 
+	struct UISystem_Game::Internal
+	{
+		//ray casting
+		std::vector<sp<const SH::HashCell<IMouseInteractable>>> rayHitCells;
+		const float MAX_RAY_DIST = 1000.f;
+		bool bClickNextRaycast = false; //when a click is detected, it is deferred until raycast happens.
+		
+		//debug
+		glm::vec3 rayStart;
+		glm::vec3 rayEnd;
+	};
+
 	static DCFont::BatchData batchData;
+
+	UISystem_Game::UISystem_Game()
+	{
+		impl = new_up<Internal>();
+		impl->rayHitCells.reserve(100);
+	}
+
+	UISystem_Game::~UISystem_Game()
+	{
+		//define so deletion of impl is done in a translation unit that can see the definition
+	}
 
 	void UISystem_Game::batchToDefaultText(DigitalClockFont& text, GameUIRenderData& ui_rd)
 	{
@@ -45,7 +71,7 @@ namespace SA
 
 	void UISystem_Game::runGameUIPass() const
 	{
-		//start logic gaurd
+		//start logic guard
 		bRenderingGameUI = true;
 
 		GameUIRenderData uiRenderData;
@@ -64,18 +90,95 @@ namespace SA
 
 	void UISystem_Game::postCameraTick(float dt_sec)
 	{
+		constexpr bool bDrawPickRays = false;//debug
+		
 		//since camera ticking is over, it isn't going to move. Shoot a ray and see if we hit anything in hitest grid... if we're in cursor mode.
-		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+		const sp<Window>& window = GameBase::get().getWindowSystem().getPrimaryWindow();
+		const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0);
+		if (window && player)
 		{
-			if (const sp<CameraBase>& camera = player->getCamera())
+			const sp<CameraBase>& camera = player->getCamera();
+			if (camera && camera->isInCursorMode())
 			{
-				if (camera->isInCursorMode())
-				{
-					//shot ray into hit test grid and attempt to interact with some ui this frame
+				//#TODO taking from  HitboxPicker::handleRightClick, some of this may can be generalized into a function? just different enough that maybe not
+				int screenWidth = 0, screenHeight = 0;
+				double cursorPosX = 0.0, cursorPosY = 0.0;
+				glfwGetWindowSize(window->get(), &screenWidth, &screenHeight);
+				glfwGetCursorPos(window->get(), &cursorPosX, &cursorPosY);
 
+				glm::vec2 mousePos_TopLeft(static_cast<float>(cursorPosX), static_cast<float>(cursorPosY));
+				glm::vec2 screenResolution(static_cast<float>(screenWidth), static_cast<float>(screenHeight));
+
+				glm::vec3 rayNudge = camera->getRight() * 0.001f; //nude ray to side so visible when debugging
+
+				glm::vec3 camPos = camera->getPosition() + rayNudge;
+				Ray clickRay = ObjectPicker::generateRay(
+					glm::ivec2(screenWidth, screenHeight), mousePos_TopLeft,
+					camPos, camera->getUp(), camera->getRight(), camera->getFront(), camera->getFOV(),
+					window->getAspect());
+
+				impl->rayHitCells.clear();
+				spatialHashGrid.lookupCellsForLine(clickRay.start, clickRay.start + (clickRay.dir * impl->MAX_RAY_DIST), impl->rayHitCells);
+
+				float closestDistance2SoFar = std::numeric_limits<float>::infinity();
+				IMouseInteractable* closestPick = nullptr;
+
+				for (sp <const SH::HashCell<IMouseInteractable>>& hitCell : impl->rayHitCells)
+				{
+					for (sp<SH::GridNode<IMouseInteractable>> entityNode : hitCell->nodeBucket)
+					{
+						if (entityNode->element.isHitTestable())
+						{
+							glm::vec3 worldPos = entityNode->element.getWorldLocation();
+							float distance2 = glm::length2(worldPos - camPos);
+							if (distance2 < closestDistance2SoFar)
+							{
+								glm::mat4 inverseTransform = glm::inverse(entityNode->element.getModelMatrix());
+								glm::vec4 transformedStart = inverseTransform * glm::vec4(clickRay.start, 1.f);
+								glm::vec4 transformedDir = inverseTransform * glm::vec4(clickRay.dir, 0.f);
+
+								const std::array<glm::vec4, 8>& localAABB = entityNode->element.getLocalAABB();
+								glm::vec3 boxLow = Utils::findBoxLow(localAABB);
+								glm::vec3 boxMax = Utils::findBoxMax(localAABB);
+								if (Utils::rayHitTest_FastAABB(boxLow, boxMax, transformedStart, transformedDir))
+								{
+									closestPick = &entityNode->element;
+									closestDistance2SoFar = distance2;
+								}
+							}
+						}
+					}
 				}
+				if (closestPick)
+				{
+					if (impl->bClickNextRaycast)
+					{
+						closestPick->onClickedThisTick();
+					}
+					else
+					{
+						closestPick->onHoveredhisTick();
+					}
+				}
+
+				if constexpr (bDrawPickRays)
+				{
+					impl->rayStart = clickRay.start;
+					impl->rayEnd = clickRay.start + clickRay.dir * impl->MAX_RAY_DIST;
+				}
+
+				impl->rayHitCells.clear();
 			}
 		}
+
+		if constexpr (bDrawPickRays)
+		{
+			static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
+			debug.renderLine(impl->rayStart, impl->rayEnd, glm::vec3(1, 1, 1));
+		}
+
+		//always clear click, regardless if anything was hit; we don't want to click when dragging mouse over
+		impl->bClickNextRaycast = false;
 	}
 
 	void UISystem_Game::initSystem()
@@ -92,6 +195,15 @@ namespace SA
 		{
 			handleLevelChange(nullptr, currentLevel);
 		}
+
+		WindowSystem& windowSystem = GameBase::get().getWindowSystem();
+		windowSystem.onPrimaryWindowChangingEvent.addWeakObj(sp_this(), &UISystem_Game::handlePrimaryWindowChanged);
+		if (const sp<Window>& primaryWindow = windowSystem.getPrimaryWindow())
+		{
+
+			handlePrimaryWindowChanged(nullptr, primaryWindow);
+		}
+
 	}
 
 	void UISystem_Game::handleLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
@@ -104,6 +216,29 @@ namespace SA
 		if (newCurrentLevel) 
 		{
 			newCurrentLevel->getWorldTimeManager()->getEvent(TickGroups::get().POST_CAMERA).addWeakObj(sp_this(), &UISystem_Game::postCameraTick);
+		}
+	}
+
+	void UISystem_Game::handlePrimaryWindowChanged(const sp<Window>& old_window, const sp<Window>& new_window)
+	{
+		if (old_window)
+		{
+			new_window->onMouseButtonInput.removeWeak(sp_this(), &UISystem_Game::handleMouseButtonPressed);
+		}
+
+		if (new_window)
+		{
+			//alternatively we can bind to player input, but that seems wrong for a system like this. For now going straight to window.
+			new_window->onMouseButtonInput.addWeakObj(sp_this(), &UISystem_Game::handleMouseButtonPressed);
+		}
+
+	}
+
+	void UISystem_Game::handleMouseButtonPressed(int button, int action, int mods)
+	{
+		if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT)
+		{
+			impl->bClickNextRaycast = true;
 		}
 	}
 
@@ -208,6 +343,24 @@ namespace SA
 		}
 
 		return *_camUp;
+	}
+
+	glm::vec3 GameUIRenderData::camRight()
+	{
+		if (!_camRight)
+		{
+			if (CameraBase* cam = camera())
+			{
+				_camRight = glm::vec3(cam->getRight());
+			}
+
+			if (!_camRight)
+			{
+				_camRight = glm::vec3{ 0,1,0 };
+			}
+		}
+
+		return *_camRight;
 	}
 
 	glm::quat GameUIRenderData::camQuat()

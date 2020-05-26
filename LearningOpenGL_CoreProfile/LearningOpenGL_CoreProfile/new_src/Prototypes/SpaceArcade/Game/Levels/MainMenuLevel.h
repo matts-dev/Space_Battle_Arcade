@@ -1,11 +1,14 @@
 #pragma once
 #include "SASpaceLevelBase.h"
 #include "../../Tools/DataStructures/SATransform.h"
+#include "../../GameFramework/CurveSystem.h"
+#include <optional>
 
 namespace SA
 {
 	struct GameUIRenderData;
 	class Planet;
+	class Widget3D_ActivatableBase;
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,9 +34,33 @@ namespace SA
 	private://implementation helpers
 		sp<MultiDelegate<>> mainMenuStartLevelDelayActiveTimer = new_sp<MultiDelegate<>>();
 		void handleMainMenuStartupDelayOver();
-
-	private: //logical state
-		bool bRenderDebugText = true;
+	private:
+		void updateCamera(float dt_sec);
+		void animateCameraTo(glm::vec3 endPoint, float animDuration);
+		void setPendingScreenToActivate(Widget3D_ActivatableBase* screen);
+		void deactivateAllScreens();
+	private: //transitions
+		void handleCampaignClicked();
+		void handleSkirmishClicked();
+		void handleModsClicked();
+		void handleSettingsClicked();
+		void handleExitClicked();
+		void handleReturnToMainMenuClicked();
+	private:
+		struct CameraAnimData
+		{
+			float cameraAnimDuration = 3.0f;
+			glm::vec3 startPoint = glm::vec3(0.f);
+			glm::vec3 endPoint = glm::vec3(0.f); //be careful not to specify two points 180 apart as that will produce nans
+			float timePassedSec = 0.f;
+			Widget3D_ActivatableBase* pendingScreenToActivate = nullptr;
+		};
+		std::optional<CameraAnimData> cameraAnimData;
+		Curve_highp camCurve;
+	private://debug
+		bool bRenderDebugText = false;
+		bool bFreeCamera = false;
+	private: //logical states
 		sp<class DigitalClockFont> debugText = nullptr;
 		sp<class QuaternionCamera> menuCamera = nullptr;
 		//std::vector<MainMenuScreenData> screensData;
@@ -44,6 +71,12 @@ namespace SA
 		std::vector<class Widget3D_MenuScreenBase*> menuScreens;
 
 		sp<class Widget3D_GameMainMenuScreen> mainMenuScreen;
+		sp<class Widget3D_CampaignScreen> campaignScreen;
+		sp<class Widget3D_SkirmishScreen> skirmishScreen;
+		sp<class Widget3D_SettingsScreen> settingsScreen;
+		sp<class Widget3D_ModsScreen> modsScreen;
+		sp<class Widget3D_ExitScreen> exitScreen;
+		
 	};
 
 }

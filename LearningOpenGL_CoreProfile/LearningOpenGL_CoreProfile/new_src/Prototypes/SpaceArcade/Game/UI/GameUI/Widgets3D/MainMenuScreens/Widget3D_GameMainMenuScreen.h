@@ -1,10 +1,11 @@
 #pragma once
 #include "Widget3D_MenuScreenBase.h"
+#include "../Widget3D_LaserButton.h"
 #include "../../../../../GameFramework/CurveSystem.h"
 
 namespace SA
 {
-	class Widget3D_LaserButton;
+	//class Widget3D_LaserButton; //exposing click delegate
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// The in game (not editor) main menu screen. 
@@ -12,8 +13,14 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class Widget3D_GameMainMenuScreen : public Widget3D_MenuScreenBase
 	{
+		using Parent = Widget3D_MenuScreenBase;
 	public:
 		virtual void tick(float dt_sec) override;
+		GAMEMENUSCREENBASE_EXPOSE_CLICK_DELEGATE(getCampaignClicked, campaignButton);
+		GAMEMENUSCREENBASE_EXPOSE_CLICK_DELEGATE(getSkirmishClicked, skirmishButton);
+		GAMEMENUSCREENBASE_EXPOSE_CLICK_DELEGATE(getModsClicked, modsButton);
+		GAMEMENUSCREENBASE_EXPOSE_CLICK_DELEGATE(getSettingsClicked, settingsButton);
+		GAMEMENUSCREENBASE_EXPOSE_CLICK_DELEGATE(getExitClicked, exitButton);
 	protected:
 		virtual void postConstruct() override;
 		virtual void onActivationChanged(bool bActive) override;
@@ -28,6 +35,7 @@ namespace SA
 		std::optional<size_t> animInButtonIdx;
 		//float buttonDelay = 0.5f;
 		float showAllButtonsAnimDurSec = 2.5f;
+		bool bSeenOnce = false;
 		Curve_highp sigmoid;
 	private:
 		sp<Widget3D_LaserButton> campaignButton = nullptr;
@@ -35,9 +43,6 @@ namespace SA
 		sp<Widget3D_LaserButton> modsButton = nullptr;
 		sp<Widget3D_LaserButton> settingsButton = nullptr;
 		sp<Widget3D_LaserButton> exitButton = nullptr;
-
-		/** A container of only the buttons that are enabled*/
-		std::vector<Widget3D_LaserButton*> enabledButtons;
 	};
 
 }

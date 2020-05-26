@@ -68,7 +68,7 @@ namespace SA
 
 	void GlitchTextFont::preIndividualGlyphRender(size_t idx, Shader& shader)
 	{
-		if (idx > 0 && idx < animData.size())
+		if (idx >= 0 && idx < animData.size())
 		{
 			GlyphAnimData& glyphData = animData[idx];
 			shader.setUniform1i("animOffset", glyphData.shiftVal); 

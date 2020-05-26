@@ -8,6 +8,8 @@
 
 namespace SA
 {
+	using ColorType = glm::vec3; //attempt include this since colors below have issue finding include path for VAX smart-include
+
 	namespace color
 	{
 		glm::vec3 rgb(uint32_t hex);

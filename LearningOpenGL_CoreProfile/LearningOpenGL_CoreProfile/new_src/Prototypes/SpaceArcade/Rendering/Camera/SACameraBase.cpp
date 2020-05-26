@@ -15,6 +15,15 @@
 
 namespace SA
 {
+	//hiding this function from header as it is implementation detail, but if subclass needs it then either make it shared function or protected member function
+	static void _configureWindowForCursorMode(const sp<Window>& window, bool bCusorMode)
+	{
+		if (GLFWwindow* windowRaw = window ? window->get() : nullptr)
+		{
+			//It may be heavy handed to have the camera direct the state of the window; but doing this now as camera system is in flux
+			glfwSetInputMode(windowRaw, GLFW_CURSOR, bCusorMode? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+		}
+	}
 
 	CameraBase::~CameraBase()
 	{
@@ -28,9 +37,16 @@ namespace SA
 		{
 			registeredWindow = window;
 
-			window->cursorPosEvent.addWeakObj(sp_this(), &CameraBase::onMouseMoved_v);
-			window->mouseLeftEvent.addWeakObj(sp_this(), &CameraBase::onWindowFocusedChanged_v);
-			window->scrollChanged.addWeakObj(sp_this(), &CameraBase::onMouseWheelUpdate_v);
+			if (!isInCursorMode())
+			{
+				window->cursorPosEvent.addWeakObj(sp_this(), &CameraBase::onMouseMoved_v);
+				window->mouseLeftEvent.addWeakObj(sp_this(), &CameraBase::onWindowFocusedChanged_v);
+				window->scrollChanged.addWeakObj(sp_this(), &CameraBase::onMouseWheelUpdate_v);
+			}
+			else
+			{
+				_configureWindowForCursorMode(window, cursorMode);
+			}
 		}
 	}
 
@@ -166,16 +182,17 @@ namespace SA
 
 	void CameraBase::setCursorMode(bool inCursorMode)
 	{
+		if (bCameraRequiresCursorMode && !inCursorMode)
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "Attempting to disable cursor mode on a camera that has been flagged to require cursor mode! Logical error!");
+		}
+
 		cursorMode = inCursorMode;
 
 		if (!registeredWindow.expired())
 		{
 			if (sp<Window> primaryWindow = registeredWindow.lock())
 			{
-				GLFWwindow* window = primaryWindow->get();
-				//It may be heavy handed to have the camera direct the state of the window; but doing this now as camera system is in flux
-				glfwSetInputMode(window, GLFW_CURSOR, inCursorMode ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
-
 				if (inCursorMode)
 				{
 					deregisterToWindowCallbacks_v();
@@ -184,6 +201,7 @@ namespace SA
 				{
 					registerToWindowCallbacks_v(primaryWindow);
 				}
+				_configureWindowForCursorMode(primaryWindow, cursorMode);
 			}
 		}
 		onCursorModeSet_v(inCursorMode);
@@ -236,6 +254,16 @@ namespace SA
 	{
 		cameraPosition = newPosition;
 		onPositionSet_v(cameraPosition);
+	}
+
+	void CameraBase::setCameraRequiresCursorMode(bool bRequiresCursorMode, bool bApplyCursorModeRequirementNow /*= true*/)
+	{
+		bCameraRequiresCursorMode = bRequiresCursorMode;
+
+		if (bApplyCursorModeRequirementNow)
+		{
+			setCursorMode(bRequiresCursorMode);
+		}
 	}
 
 }

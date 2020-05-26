@@ -27,8 +27,6 @@ namespace SA
 		void handleUIFrameStarted();
 		void debugBehaviorTree();
 
-		/** Rough implementation that may have issues; which is why it isn't in a shared location; but the implemenation is good enough for this niche requirement */
-		bool rayHitTest_FastAABB(const glm::vec3& boxLow, const glm::vec3& boxMax, const glm::vec3 rayStart, const glm::vec3 rayDir);
 	private: //debug rendering
 		float accumulatedTime = 0.f;
 		float renderDuration = 5.0f;

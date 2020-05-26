@@ -592,6 +592,7 @@ namespace SA
 			data.shader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(rd.projection_view));
 			data.shader->setUniformMatrix4fv("pivotMat", 1, GL_FALSE, glm::value_ptr(cache.paragraphPivotMat));
 			data.shader->setUniformMatrix4fv("parentModel", 1, GL_FALSE, glm::value_ptr(cache.paragraphModelMat));
+			data.shader->setUniform4f("uColor", data.fontColor); 
 
 			for (size_t glyphIdx = 0; glyphIdx < cache.glyphBitVectors.size(); ++glyphIdx)
 			{
@@ -674,6 +675,11 @@ namespace SA
 		rebuildDataCache();
 	}
 
+	void DigitalClockFont::setFontColor(glm::vec3 color)
+	{
+		data.fontColor = glm::vec4(color, 1.f);
+	}
+
 	void DigitalClockFont::setXform(const Transform& newXform)
 	{
 		xform = newXform;
@@ -692,6 +698,11 @@ namespace SA
 		//no parent relationship here, perhaps make an alternative version where you can pass in a matrix that represents
 		//parent-child matrix concatenations and that transforms the size vector.
 		return paragraphSize.y * xform.scale.y;
+	}
+
+	glm::vec2 DigitalClockFont::getSize_Unscaled() const
+	{
+		return paragraphSize;
 	}
 
 	void DigitalClockFont::rebuildDataCache()
@@ -802,6 +813,8 @@ namespace SA
 		paragraphSize = pgSize;
 
 		onGlyphCacheRebuilt(cache);
+
+		onNewTextDataBuilt.broadcast();
 	}
 
 

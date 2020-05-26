@@ -13,9 +13,12 @@ namespace SA
 	public:
 		/** Mutable parameter is to allow lazy calculation*/
 		virtual void renderGameUI(GameUIRenderData& renderData) = 0;
+		virtual void postConstruct() override;
 	protected:
 		void setRenderWithGameUIDispatch(bool bRender);
 		virtual void onDestroyed() override;
+	protected:
+		bool bRegisterForGameUIRender = false;
 	};
 
 }

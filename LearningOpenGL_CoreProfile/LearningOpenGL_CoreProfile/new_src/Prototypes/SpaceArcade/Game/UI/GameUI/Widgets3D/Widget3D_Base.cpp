@@ -6,6 +6,16 @@
 namespace SA
 {
 
+	void Widget3D_Base::postConstruct()
+	{
+		Parent::postConstruct();
+		if (bRegisterForGameUIRender)
+		{
+			SpaceArcade::get().getGameUISystem()->onUIGameRender.addWeakObj(sp_this(), &Widget3D_Base::renderGameUI);
+		}
+
+	}
+
 	void Widget3D_Base::setRenderWithGameUIDispatch(bool bRender)
 	{
 		const sp<UISystem_Game>& gameUISystem = SpaceArcade::get().getGameUISystem();

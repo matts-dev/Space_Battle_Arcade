@@ -19,6 +19,8 @@ namespace SA
 	private:
 		void handleControlTargetDestroyed(const sp<GameEntity>& entity);
 		void handleRespawnTimerUp();
+	private://default input
+		void handleEscapeKey(int state, int modifier_keys, int scancode);
 	private:
 		sp<MultiDelegate<>> respawnTimerDelegate = nullptr;
 		fwp<class FighterSpawnComponent> spawnComp_safeCache;

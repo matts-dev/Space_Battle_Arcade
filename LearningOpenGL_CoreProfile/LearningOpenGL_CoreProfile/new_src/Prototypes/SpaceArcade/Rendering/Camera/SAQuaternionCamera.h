@@ -25,6 +25,12 @@ namespace SA
 	public:
 		void setSpeed(float newSpeed) { freeRoamSpeed = newSpeed; }
 		float getSpeed() const { return freeRoamSpeed; }
+
+		bool isCameraMovementEnabled() const { return bEnableCameraMovement; }
+		void setEnableCameraMovement(bool bEnabled) { bEnableCameraMovement = bEnabled; };
+
+		bool isCameraRollEnabled(){ return bEnableCameraRoll; }
+		void setEnableCameraRoll(bool bEnabled) { bEnableCameraRoll = bEnabled; }
 	protected:
 		virtual void onMouseMoved_v(double xpos, double ypos) override;
 		virtual void onMouseWheelUpdate_v(double xOffset, double yOffset) override;
@@ -60,5 +66,8 @@ namespace SA
 		float mouseSensitivity = 0.00125f;
 		float freeRoamSpeed = 10.0f;
 		float freeRoamRollSpeed_radSec = glm::radians(90.0f);
+
+		bool bEnableCameraMovement = true;
+		bool bEnableCameraRoll = true;
 	};
 }

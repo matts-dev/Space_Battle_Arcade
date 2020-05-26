@@ -77,7 +77,13 @@ namespace SA
 	private:
 		sp<CollisionShapeFactory> collisionShapeFactory = nullptr;
 		////////////////////////////////////////////////////////////////////////////////////
-
+	public:
+		void toggleEditorUIMainMenuVisible();
+		bool isEditorMainMenuOnScreen() const;
+		bool isEditorMainmenuFeatureEnabled() { return bEditorMainMenuEnabled; }
+		void setEditorMainmenuFeatureEnabled(bool bEnabled) { bEditorMainMenuEnabled = bEnabled; }
+	private:
+		bool bEditorMainMenuEnabled = true;
 	public:
 		const sp<HUD> getHUD() const { return hud; }
 	public:
@@ -118,8 +124,8 @@ namespace SA
 		//GLuint cubeVAO, cubeVBO;
 
 		//ui
-		sp<UIRootWindow> ui_root;
-		sp<HUD> hud;
+		sp<UIRootWindow> ui_root_editor;
+		sp<HUD> hud; //#TODO would like to move this to player class, but it will become very easy for circular references to become a thing, the HUDs needs to live external to player but be associated with player
 		sp<DeveloperConsole> console;
 	};
 

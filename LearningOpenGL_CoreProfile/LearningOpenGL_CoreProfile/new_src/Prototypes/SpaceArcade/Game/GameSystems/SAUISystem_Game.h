@@ -5,6 +5,7 @@
 #include "../../Tools/DataStructures/MultiDelegate.h"
 #include "../../Tools/DataStructures/SATransform.h" //glm includes
 #include "../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include <array>
 
 struct GLFWwindow;
 
@@ -15,22 +16,35 @@ namespace SA
 	class CameraBase;
 	class DigitalClockFont;
 	class LevelBase;
+	class Window;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// An interface to inherit from to be inserted into the UI spatial hash grid.
 	/////////////////////////////////////////////////////////////////////////////////////
 	class IMouseInteractable 
 	{
-		//#TODO add interface virtuals so that these can be overloaded and called when spatial hash stuff is detecting mouse over
+		friend class UISystem_Game;
+	public:
+		virtual glm::mat4 getModelMatrix() const = 0;
+		virtual const std::array<glm::vec4, 8>& getLocalAABB() const = 0;
+		virtual glm::vec3 getWorldLocation() const = 0;
+		virtual bool isHitTestable() const = 0;
+	protected:
+		virtual void onHoveredhisTick() {}
+		virtual void onClickedThisTick() {}
 	};
-
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Game UI system
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class UISystem_Game : public SystemBase
 	{
 	public:
+		UISystem_Game();
+		virtual ~UISystem_Game();
+	public:
 		void batchToDefaultText(DigitalClockFont& text, GameUIRenderData& ui_rd);
+		SH::SpatialHashGrid<IMouseInteractable>& getSpatialHash() { return spatialHashGrid; }
 	private:
 		friend class SpaceArcade;
 		void runGameUIPass() const;
@@ -38,6 +52,8 @@ namespace SA
 		virtual void initSystem() override;
 	private:
 		void handleLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
+		void handlePrimaryWindowChanged(const sp<Window>& old_window, const sp<Window>& new_window);
+		void handleMouseButtonPressed(int button, int action, int mods);
 	public:
 		mutable MultiDelegate<GameUIRenderData&> onUIGameRender;
 		char textProcessingBuffer[16384];												//a shared temporary buffer for formatted processing, intended to be only used in game thread.
@@ -45,6 +61,9 @@ namespace SA
 		SH::SpatialHashGrid<IMouseInteractable> spatialHashGrid{glm::vec3(10.f)};		//a grid for efficient button-mouse collision testing.
 		sp<DigitalClockFont> defaultTextBatcher = nullptr;								//a DCFont that can be used as a batching-end-point for instanced rendering
 		mutable bool bRenderingGameUI = false;
+	private:
+		struct Internal;
+		up<Internal> impl;
 	};
 
 
@@ -73,6 +92,7 @@ namespace SA
 		glm::mat4			orthographicProjection_m();
 		CameraBase*			camera();
 		glm::vec3			camUp();
+		glm::vec3			camRight();
 		glm::quat			camQuat();
 		const RenderData*	renderData();
 		const HUDData3D&	getHUDData3D();
@@ -86,6 +106,7 @@ namespace SA
 		optional<glm::mat4>			_orthographicProjection_m;
 		optional <sp<CameraBase> >	_camera;
 		optional<glm::vec3>			_camUp;
+		optional<glm::vec3>			_camRight;
 		optional<glm::quat>			_camRot;
 		optional<const RenderData*> _frameRenderData;
 		optional<HUDData3D>			_hudData3D;

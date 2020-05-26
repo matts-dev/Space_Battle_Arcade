@@ -212,8 +212,13 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\DigitalClockFont.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\GlitchText.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_ActivatableBase.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_CampaignScreen.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_ExitScreen.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_GameMainMenuScreen.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_MenuScreenBase.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_ModsScreen.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_SettingScreen.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_SkirmishScreen.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Base.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DigitalClockFontTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_LaserButton.h" />
@@ -520,7 +525,13 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\SAHUD.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\DigitalClockFont.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\GlitchText.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_CampaignScreen.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_ExitScreen.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_GameMainMenuScreen.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_MenuScreenBase.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_ModsScreen.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_SettingScreen.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\MainMenuScreens\Widget3D_SkirmishScreen.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Base.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DigitalClockFontTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_LaserButton.cpp" />

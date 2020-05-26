@@ -46,6 +46,7 @@ namespace SA
 		void randomizeAnimSpeed(float targetAnimDurationSecs = 1.0f, float randomDriftSecs = 0.25f);
 		float getRandomAnimTimeOffset(float rangeSecs);
 		void forceAnimComplete();
+		void setColorImmediate(const glm::vec3& color);
 	protected:
 		virtual void postConstruct() override;
 	private:

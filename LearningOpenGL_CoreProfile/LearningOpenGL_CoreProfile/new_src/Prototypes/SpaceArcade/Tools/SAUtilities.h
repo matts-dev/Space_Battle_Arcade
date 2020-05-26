@@ -10,6 +10,7 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 #include "DataStructures/SATransform.h"
+#include <array>
 
 
 namespace SA
@@ -100,6 +101,11 @@ namespace SA
 			return vec.x || vec.y || vec.z || vec.w;
 		};
 
+		glm::vec3 findBoxLow(const std::array<glm::vec4, 8>& localAABB);
+		glm::vec3 findBoxMax(const std::array<glm::vec4, 8>& localAABB);
+
+		/** Rough implementation that may have issues*/
+		bool rayHitTest_FastAABB(const glm::vec3& boxLow, const glm::vec3& boxMax, const glm::vec3 rayStart, const glm::vec3 rayDir);
 
 #if _DEBUG | ERROR_CHECK_GL_RELEASE 
 #define NAN_BREAK(value)\

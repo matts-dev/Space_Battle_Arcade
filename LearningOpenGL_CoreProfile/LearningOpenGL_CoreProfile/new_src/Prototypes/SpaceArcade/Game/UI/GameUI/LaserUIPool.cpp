@@ -148,6 +148,10 @@ namespace SA
 		game.onShutdownInitiated.addWeakObj(sp_this(), &LaserUIPool::handleGameShutdownStarted);
 
 		game.getWindowSystem().onPrimaryWindowChangingEvent.addWeakObj(sp_this(), &LaserUIPool::handlePrimaryWindowChanging);
+		if (const sp<Window>& primaryWindow = game.getWindowSystem().getPrimaryWindow())
+		{
+			handlePrimaryWindowChanging(nullptr, primaryWindow);
+		}
 
 		laserShader = new_sp<Shader>(laserShader_vs, laserShader_fs, false);
 	}
@@ -367,6 +371,11 @@ namespace SA
 		LerpToGoalPositions();
 	}
 
+	void LaserUIObject::setColorImmediate(const glm::vec3& color)
+	{
+		this->color = color;
+	}
+
 	void LaserUIObject::postConstruct()
 	{
 		rng = GameBase::get().getRNGSystem().getNamedRNG(LaserRNGKey);
@@ -445,7 +454,7 @@ namespace SA
 			{
 				const HUDData3D& hud_3d = ui_rd.getHUDData3D();
 
-				const float szOffsetFactor = 1.01f;
+				const float szOffsetFactor = 1.05f;
 				vec3 upOffscreen = (szOffsetFactor*hud_3d.savezoneMax_y)*hud_3d.camUp;
 				vec3 rightOffscreen = (szOffsetFactor*hud_3d.savezoneMax_x)*hud_3d.camRight;
 
