@@ -2,6 +2,7 @@
 #include <string>
 
 #include "MainMenuScreens/Widget3D_ActivatableBase.h"
+#include "../../../../Tools/DataStructures/MultiDelegate.h"
 
 
 namespace SA
@@ -27,6 +28,7 @@ namespace SA
 		virtual size_t getNumElements() = 0;
 		virtual std::string getStringForItem(size_t idx) = 0;
 		virtual void onActivationChanged(bool bActive) override;
+		virtual void onValueChanged() = 0;
 	protected:
 		void updateText();
 		void updateButtonLayout();
@@ -60,6 +62,10 @@ namespace SA
 		virtual size_t getNumElements() override;
 		virtual std::string getStringForItem(size_t idx) override;
 		const T& getValue();
+	protected:
+		virtual void onValueChanged() override;
+	public:
+		MultiDelegate<const T&> onValueChangedDelegate;
 	private:
 		ToStringFunc valueToStringFunction;
 		std::vector<T> selectables;
@@ -69,6 +75,12 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// template implementation 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template <typename T>
+	void SA::Widget3D_DiscreteSelector<T>::onValueChanged()
+	{
+		//alert world that value changed
+		onValueChangedDelegate.broadcast(getValue());
+	}
 
 
 	template <typename T>

@@ -1,9 +1,12 @@
 #pragma once
 
 #include "Widget3D_MenuScreenBase.h"
+#include "../Widget3D_DiscreteSelector.h"
 
 namespace SA
 {
+	class Widget3D_DiscreteSelectorBase;
+
 	class Widget3D_SettingsScreen : public Widget3D_MenuScreenBase
 	{
 		using Parent = Widget3D_MenuScreenBase;
@@ -16,6 +19,13 @@ namespace SA
 		virtual void onActivationChanged(bool bActive) override;
 		virtual void renderGameUI(GameUIRenderData& ui_rd) override;
 	private:
+		void handleDevConsoleChanged(const size_t& newValue);
+		void layoutSettings();
+	private:
 		sp<Widget3D_LaserButton> backButton = nullptr;
+
+		sp<Widget3D_DiscreteSelector<size_t>> selector_devConsole = nullptr;
+		std::vector<Widget3D_DiscreteSelectorBase*> allSelectors;
+		std::vector<Widget3D_ActivatableBase*> ordered_options;
 	};
 }

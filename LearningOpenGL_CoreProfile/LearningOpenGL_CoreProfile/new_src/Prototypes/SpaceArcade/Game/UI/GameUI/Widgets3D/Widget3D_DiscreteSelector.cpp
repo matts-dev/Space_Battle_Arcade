@@ -155,6 +155,9 @@ namespace SA
 
 		updateText();
 		updateButtonLayout();
+
+		//alert subclass
+		onValueChanged();
 	}
 
 	void Widget3D_DiscreteSelectorBase::updateText()
