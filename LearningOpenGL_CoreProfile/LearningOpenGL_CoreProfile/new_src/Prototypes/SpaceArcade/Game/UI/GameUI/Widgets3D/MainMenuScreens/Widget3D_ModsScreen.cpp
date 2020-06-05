@@ -18,6 +18,7 @@ namespace SA
 
 	void Widget3D_ModsScreen::onActivationChanged(bool bActive)
 	{
+		Parent::onActivationChanged(bActive);
 		if (bActive)
 		{
 			//activated

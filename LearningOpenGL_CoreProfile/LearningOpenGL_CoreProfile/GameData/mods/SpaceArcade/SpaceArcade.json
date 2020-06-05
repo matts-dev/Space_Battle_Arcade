@@ -1,4 +1,11 @@
 {
     "bIsDeletable": false,
-    "modName": "SpaceArcade"
+    "modName": "SpaceArcade",
+    "teamDefaultCarriers": [
+        "Carrier",
+        "Carrier",
+        "Carrier",
+        "Carrier",
+        "Carrier"
+    ]
 }

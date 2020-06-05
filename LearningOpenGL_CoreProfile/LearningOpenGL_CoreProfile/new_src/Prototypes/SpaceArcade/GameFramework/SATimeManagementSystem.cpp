@@ -320,6 +320,8 @@ namespace SA
 
 	void TimeSystem::updateTime(PrivateKey key)
 	{
+		bUpdatingTime = true;
+
 		float currentTime = static_cast<float>(glfwGetTime());
 		rawDeltaTimeSecs = currentTime - lastFrameTime;
 		rawDeltaTimeSecs = rawDeltaTimeSecs > MAX_DELTA_TIME_SECS ? MAX_DELTA_TIME_SECS : rawDeltaTimeSecs;
@@ -330,6 +332,8 @@ namespace SA
 		{
 			manager->update(TimeManager::PrivateKey{}, *this);
 		}
+
+		bUpdatingTime = false;
 	}
 
 	void TimeSystem::markManagerCritical(PrivateKey, sp<TimeManager>& manager)

@@ -51,7 +51,7 @@ namespace SA
 		void postCameraTick(float dt_sec);
 		virtual void initSystem() override;
 	private:
-		void handleLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
+		void handlePreLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
 		void handlePrimaryWindowChanged(const sp<Window>& old_window, const sp<Window>& new_window);
 		void handleMouseButtonPressed(int button, int action, int mods);
 	public:

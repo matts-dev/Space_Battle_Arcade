@@ -50,7 +50,7 @@ namespace SA
 	void Widget3D_GameMainMenuScreen::onActivationChanged(bool bActive)
 	{
 		using namespace glm;
-
+		Parent::onActivationChanged(bActive);
 		if (bActive)
 		{
 			//alignButtonPositionsVertically();			//now done in tick to space out button anim-in

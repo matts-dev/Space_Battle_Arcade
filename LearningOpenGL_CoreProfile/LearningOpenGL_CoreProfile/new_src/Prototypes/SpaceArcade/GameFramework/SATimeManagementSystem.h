@@ -148,6 +148,7 @@ namespace SA
 		inline float getRawDeltaTimeSecs() const { return rawDeltaTimeSecs; };
 		inline float getDeltaTimeSecs() const { return deltaTimeSecs; };
 		inline float getMAX_DELTA_TIME_SECS() const { return MAX_DELTA_TIME_SECS; };
+		inline bool isUpdatingTime() const { return bUpdatingTime; }
 
 		/* Private key only allows friends to call ctor*/
 		struct PrivateKey { private: friend class GameBase; PrivateKey() {}; };
@@ -164,6 +165,8 @@ namespace SA
 		float rawDeltaTimeSecs = 0;
 		float deltaTimeSecs = 0.f;
 		float MAX_DELTA_TIME_SECS = 0.5f;
+
+		bool bUpdatingTime = false;
 
 		std::set<sp<TimeManager>> managers;
 		std::set<sp<TimeManager>> criticalManagers;

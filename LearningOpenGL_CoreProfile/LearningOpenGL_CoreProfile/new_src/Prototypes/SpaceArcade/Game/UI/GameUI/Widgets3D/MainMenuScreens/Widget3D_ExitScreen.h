@@ -15,6 +15,9 @@ namespace SA
 		virtual void onActivationChanged(bool bActive) override;
 		virtual void renderGameUI(GameUIRenderData& ui_rd) override;
 	private:
+		void handleQuitClicked();
+	private:
 		sp<Widget3D_LaserButton> backButton = nullptr;
+		sp<Widget3D_LaserButton> quitButton = nullptr;
 	};
 }

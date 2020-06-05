@@ -64,7 +64,7 @@ namespace SA
 
 	void CameraBase::postConstruct()
 	{
-		GameBase::get().getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &CameraBase::v_handlePostLevelChange);
+		GameBase::get().getLevelSystem().onPreLevelChange.addWeakObj(sp_this(), &CameraBase::v_handlePreLevelChange);
 	}
 
 	void CameraBase::activate()
@@ -207,7 +207,7 @@ namespace SA
 		onCursorModeSet_v(inCursorMode);
 	}
 
-	void CameraBase::v_handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	void CameraBase::v_handlePreLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
 	{
 		if (bActive)
 		{

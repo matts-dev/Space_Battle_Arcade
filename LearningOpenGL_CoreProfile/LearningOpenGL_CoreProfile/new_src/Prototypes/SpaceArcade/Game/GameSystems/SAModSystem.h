@@ -16,6 +16,7 @@ namespace SA
 	// Constants
 	////////////////////////////////////////////////////////////////////
 	constexpr std::size_t MAX_MOD_NAME_LENGTH = 512;
+	constexpr size_t MAX_TEAM_NUM = 5;
 	const char* const MODS_DIRECTORY = "GameData/mods/";
 	std::string getModConfigFilePath();
 
@@ -72,12 +73,15 @@ namespace SA
 		void deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig);
 
 		//#TODO templatize modifying configs so there isn't code duplication for each config type
+		sp<SpawnConfig> getDeafultCarrierConfigForTeam(size_t teamIdx);
+		void setDeafultCarrierConfigForTeam(const std::string& configName, size_t teamIdx);
 
 		////////////////////////////////////////////////////////////////////
 		// Serialization
 		////////////////////////////////////////////////////////////////////
 		std::string serialize() ;
 		void deserialize(const std::string& str);
+		void writeToFile();
 
 	public: //locked methods for construction
 		void setModName(PrivateKey key, const std::string& newModName);
@@ -86,6 +90,7 @@ namespace SA
 		std::string modName;
 		bool bIsDeletable = true;
 
+		std::vector<std::string> defaultCarrierSpawnConfigNamesByTeamIdx;
 		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;
 		std::map<std::string, sp<ProjectileConfig>> projectileConfigsByName;
 	};

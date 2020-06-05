@@ -18,6 +18,7 @@ MultiDelegate<>& ##FUNC_NAME(){return field->onClickedDelegate;}
 	protected:
 		virtual void postConstruct() override;
 		void configureButtonToDefaultBackPosition(Widget3D_LaserButton& Button) const;
+		void configureGenericBottomLeftButton(Widget3D_LaserButton& Button) const;
 	protected:
 		/** A container of only the buttons that are enabled; memory is managed by child class*/
 		std::vector<Widget3D_LaserButton*> enabledButtons;

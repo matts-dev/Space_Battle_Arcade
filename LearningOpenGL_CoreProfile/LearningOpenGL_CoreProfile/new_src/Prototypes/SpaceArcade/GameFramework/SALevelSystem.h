@@ -30,7 +30,9 @@ namespace SA
 	private:
 		virtual void tick(float deltaSec);
 		virtual void shutdown() override;
-
+	private: //implementation
+		bool bTickingLevel = false;
+		sp<LevelBase> deferredLevelChange = nullptr;
 	private:
 		sp<LevelBase> loadedLevel = nullptr;
 		sp<TimeManager> levelTimeManager = nullptr;

@@ -63,6 +63,9 @@ namespace SA
 		worldEntities.clear();
 		renderEntities.clear();
 
+		//#todo #future perhaps the level system should do this after postlevelchagne is broadcast because it means world time manager will be null
+		//also, seems better that we shouldn't destroy it separately from level, instead we should just deregister it and let it be cleaned up in level dtor
+		//because right now it poses a risk, it makes API harder and the bug only shows up at runtime, not compile time.
 		GameBase::get().getTimeSystem().destroyManager(worldTimeManager);
 	}
 

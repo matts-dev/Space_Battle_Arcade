@@ -20,6 +20,9 @@ namespace SA
 	class CollisionData;
 	class ProjectileConfig;
 
+	//the maximum number of spawnable configs contained within a spawn config.
+	constexpr size_t MAX_SPAWNABLE_SUBCONFIGS = 10; //todo limit number UI lets you spawn
+
 	struct CollisionShapeSubConfig
 	{
 		int shape;		//avoiding strict alias violation, this is int type rather than enum;

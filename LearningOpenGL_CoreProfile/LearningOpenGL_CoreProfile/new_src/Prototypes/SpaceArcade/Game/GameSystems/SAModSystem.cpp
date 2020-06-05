@@ -128,6 +128,37 @@ namespace SA
 		}
 	}
 
+	sp<SA::SpawnConfig> Mod::getDeafultCarrierConfigForTeam(size_t teamIdx)
+	{
+		if (defaultCarrierSpawnConfigNamesByTeamIdx.size() > 0)
+		{
+			//wrap around team idx if it is too large
+			teamIdx = teamIdx % defaultCarrierSpawnConfigNamesByTeamIdx.size();
+
+			std::string configName = defaultCarrierSpawnConfigNamesByTeamIdx[teamIdx];
+	
+			auto findIter = spawnConfigsByName.find(configName);
+			if (findIter != spawnConfigsByName.end())
+			{
+				return findIter->second;
+			}
+		}
+		return nullptr;
+	}
+
+	void Mod::setDeafultCarrierConfigForTeam(const std::string& configName, size_t teamIdx)
+	{
+		if (teamIdx < MAX_TEAM_NUM)
+		{
+			while (defaultCarrierSpawnConfigNamesByTeamIdx.size() < (teamIdx+1))
+			{
+				defaultCarrierSpawnConfigNamesByTeamIdx.push_back("");
+			}
+
+			defaultCarrierSpawnConfigNamesByTeamIdx[teamIdx] = configName;
+		}
+	}
+
 	std::string Mod::getModName()
 	{
 		return modName;
@@ -140,10 +171,18 @@ namespace SA
 
 	std::string Mod::serialize()
 	{
+		json teamDefaultCarrierData;
+
+		for (const std::string& carrierName : defaultCarrierSpawnConfigNamesByTeamIdx)
+		{
+			teamDefaultCarrierData.push_back(carrierName);
+		}
+
 		json j =
 		{
 			{"modName", modName},
-			{"bIsDeletable", bIsDeletable}
+			{"bIsDeletable", bIsDeletable},
+			{"teamDefaultCarriers", teamDefaultCarrierData }
 		};
 
 		return j.dump(4);
@@ -157,6 +196,31 @@ namespace SA
 		//these checks also make user modifications less likely to cause crashes
 		modName = !j["modName"].is_null() ? j["modName"] : "INVALID";
 		bIsDeletable = !j["bIsDeletable"].is_null() ? (bool)j["bIsDeletable"] : true;
+
+		if (!j["teamDefaultCarriers"].is_null() && j["teamDefaultCarriers"].is_array())
+		{
+			const json& teamCarrierData = j["teamDefaultCarriers"];
+			defaultCarrierSpawnConfigNamesByTeamIdx.clear();
+
+			for (size_t teamIdx = 0; teamIdx < teamCarrierData.size() && MAX_TEAM_NUM; ++teamIdx)
+			{
+				defaultCarrierSpawnConfigNamesByTeamIdx.push_back(teamCarrierData[teamIdx]);
+			}
+		}
+	}
+
+	void Mod::writeToFile()
+	{
+		std::string modJsonStr = serialize();
+		{ //RAII scope
+			const std::string MOD_JSON_FILE_PATH = getModDirectoryPath() + modName + ".json";
+
+			std::ofstream outFile_RAII(MOD_JSON_FILE_PATH /*do not trunc; never overwrite prexisting mods here*/);
+			if (outFile_RAII.is_open())
+			{
+				outFile_RAII << modJsonStr;
+			}
+		}
 	}
 
 	void Mod::setModName(PrivateKey key, const std::string& newModName)
@@ -373,14 +437,15 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		// Serialize new mod
 		/////////////////////////////////////////////////////////////////////////////////////////////
-		std::string modJsonStr = mod->serialize();
-		{ //RAII scope
-			std::ofstream outFile_RAII(MOD_JSON_FILE_PATH /*do not trunc; never overwrite prexisting mods here*/);
-			if (outFile_RAII.is_open())
-			{
-				outFile_RAII << modJsonStr;
-			}
-		}
+		//std::string modJsonStr = mod->serialize();
+		//{ //RAII scope
+		//	std::ofstream outFile_RAII(MOD_JSON_FILE_PATH /*do not trunc; never overwrite prexisting mods here*/);
+		//	if (outFile_RAII.is_open())
+		//	{
+		//		outFile_RAII << modJsonStr;
+		//	}
+		//}
+		mod->writeToFile();
 
 
 		/////////////////////////////////////////////////////////////////////////////////////////////

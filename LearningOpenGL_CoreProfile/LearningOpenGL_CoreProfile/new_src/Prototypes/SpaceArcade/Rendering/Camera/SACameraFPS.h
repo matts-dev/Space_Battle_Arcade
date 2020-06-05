@@ -24,6 +24,7 @@ namespace SA
 		void setSpeed(float speed);
 		float getYaw() const { return yaw; }
 		float getPitch() const { return pitch; }
+		virtual glm::quat getQuat() const override;
 
 		virtual void lookAt_v(glm::vec3 point) override;
 

@@ -18,9 +18,18 @@
 #include <vector>
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../GameFramework/SARandomNumberGenerationSystem.h"
+#include "LevelConfigs/SpaceLevelConfig.h"
+#include "../../GameFramework/SAAssetSystem.h"
+#include "../../GameFramework/SALog.h"
+#include "../../Tools/PlatformUtils.h"
+#include "../SAShip.h"
+#include "../Components/FighterSpawnComponent.h"
+#include "../GameSystems/SAModSystem.h"
 
 namespace SA
 {
+	using namespace glm;
+
 	void SpaceLevelBase::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		using glm::vec3; using glm::mat4;
@@ -83,6 +92,313 @@ namespace SA
 		return teamIdx < commanders.size() ? commanders[teamIdx].get() : nullptr;
 	}
 
+	void SpaceLevelBase::setConfig(const sp<const SpaceLevelConfig>& config)
+	{
+		levelConfig = config; //store config for when level starts.
+
+	}
+	void SpaceLevelBase::applyLevelConfig()
+	{
+		if (levelConfig)
+		{
+			sp<RNG> rng = nullptr;
+			if (const std::optional<size_t>& seed = levelConfig->getSeed())
+			{
+				GameBase::get().getRNGSystem().getSeededRNG(*seed);
+			}
+			else
+			{
+				rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+			}
+
+			assert(rng);
+			auto makeRandomVec3 = [rng]()
+			{
+				vec3 randomVec = vec3(rng->getFloat());
+
+				//don't let zero vec occur
+				if (glm::length2(randomVec) < 0.0001f)
+				{
+					randomVec = vec3(1, 0, 0);
+				}
+
+				return randomVec;
+			};
+
+			////////////////////////////////////////////////////////
+			// set up planets
+			////////////////////////////////////////////////////////
+			planets.clear();
+			for (const PlanetData& planet : levelConfig->getPlanets())
+			{
+				glm::vec3 planetDir = normalize(planet.dir.has_value() ? *planet.dir : makeRandomVec3());
+				float planetDist = planet.distance.has_value() ? *planet.distance : rng->getFloat(1.0f, 30.f);
+				bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (rng->getInt(0, 8) == 0);
+
+				Planet::Data init = {};
+				init.albedo1_filepath = planet.texturePath;
+
+				if (bHasCivilization)
+				{
+					//if this was randomly generated, then be sure to use the earth-like planet
+					if (const bool bWasRandomized = !planet.bHasCivilization.has_value())
+					{
+						//use the multi-layer material example
+						init.albedo1_filepath = DefaultPlanetTexturesPaths::albedo_sea;
+						init.albedo2_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+						init.albedo3_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+					}
+					else
+					{
+						init.albedo2_filepath = init.albedo1_filepath; //this may not be necessary, but other code paths for nighttime lit planets set all albedos
+						init.albedo3_filepath = init.albedo1_filepath;
+					}
+					init.nightCityLightTex_filepath = DefaultPlanetTexturesPaths::albedo_nightlight;
+					init.colorMapTex_filepath = DefaultPlanetTexturesPaths::colorChanel;	//#future can make this a blend of a few textures for a random placeement effect
+				}
+
+				planets.push_back(new_sp<Planet>(init));
+			}
+
+			////////////////////////////////////////////////////////
+			// set up stars
+			////////////////////////////////////////////////////////
+			localStars.clear();
+
+			for (const StarData& star : levelConfig->getStars())
+			{
+				glm::vec3 starDir = normalize(star.dir.has_value() ? *star.dir : makeRandomVec3());
+				float starDist = star.distance.has_value() ? *star.distance : rng->getFloat(1.0f, 30.f);
+				vec3 starColor = star.color.has_value() ? *star.color : vec3(1.f);	//perhaps randomize color
+
+				localStars.push_back(new_sp<Star>());
+				const sp<Star>& newStar = localStars.back();
+				newStar->setLightLDR(starColor);
+				Transform starXform = {};
+				starXform.position = starDir * starDist;
+				newStar->setXform(starXform);
+			}
+
+			////////////////////////////////////////////////////////
+			// game mode
+			////////////////////////////////////////////////////////
+			if (levelConfig->getGamemodeTag() == TAG_GAMEMODE_EXPLORE)
+			{
+				//#TODO look up spline points for path and spawn enemies along path
+			}
+			else //assume TAG_GAMEMODE_CARRIER_TAKEDOWN in all failure cases
+			{
+				/*TAG_GAMEMODE_CARRIER_TAKEDOWN*/
+				applyLevelConfig_CarrierTakedownGameMode(*levelConfig, *rng);
+			}
+		}
+
+	}
+
+	static sp<SpawnConfig> getSpawnableConfigHelper(size_t idx, const SpawnConfig& sourceConfig, std::vector<sp<SpawnConfig>>& outCacheContainer)
+	{
+		sp<SpawnConfig> subConfig = nullptr;
+
+		if (idx >= MAX_SPAWNABLE_SUBCONFIGS)
+		{
+			return subConfig;
+		}
+
+		//grow cache container to meet idx
+		while (outCacheContainer.size() < (idx + 1) && outCacheContainer.size() != MAX_SPAWNABLE_SUBCONFIGS)
+		{
+			outCacheContainer.push_back(nullptr);
+		}
+
+		assert(outCacheContainer.size() > idx);
+
+		if (outCacheContainer[idx] != nullptr)
+		{
+			//use the entry we generated last time we wanted a spawn config with this idx
+			return outCacheContainer[idx];
+		}
+		else
+		{
+			//generate entry for the index position
+			if (!subConfig)
+			{
+				const sp<ModSystem>& modSystem = SpaceArcade::get().getModSystem();
+				sp<Mod> activeMod = modSystem->getActiveMod();
+				if (!activeMod)
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "No active mod");
+					return subConfig;
+				}
+				else
+				{
+					const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
+
+					const std::vector<std::string>& spawnableConfigsNames = sourceConfig.getSpawnableConfigsByName();
+					if (idx < spawnableConfigsNames.size())
+					{
+						if (const auto& iter = spawnConfigs.find(spawnableConfigsNames[idx]); iter != spawnConfigs.end())
+						{
+							subConfig = iter->second;
+						}
+					}
+
+					if (const bool bDidNotFindNamedConfig = !subConfig)
+					{
+						//attempt to load the default fighter config
+						if (const auto& iter = spawnConfigs.find("Fighter"); iter != spawnConfigs.end())
+						{
+							subConfig = iter->second;
+						}
+					}
+
+					//cache this away for next time
+					outCacheContainer[idx] = subConfig;
+				}
+			}
+		}
+
+
+		return subConfig;
+	}
+
+
+
+	static void helper_ChooseRandomCarrierPositionAndRotation(
+		const size_t teamIdx,
+		const size_t numTeams,
+		const size_t carrierIdxOnTeam,
+		bool bRandomizeElevation,
+		bool bRandomizeOffsetLocation,
+		RNG& rng,
+		glm::vec3& outLoc,
+		glm::quat& outRotation)
+	{
+		using namespace glm;
+		glm::vec3 worldUp = vec3(0, 1.f, 0);
+
+		//divide map up into a circle, where all teams are facing towards center.
+		float percOfPie = teamIdx / float(numTeams);
+		glm::quat centerRotation = glm::angleAxis(glm::radians<float>(glm::pi<float>()*percOfPie), worldUp);
+
+		vec3 teamOffsetVec_n = glm::normalize(vec3(1, 0, 0) * centerRotation); //normalizing for good measure
+		vec3 teamFacingDir_n = -teamOffsetVec_n;	//have entire team face same direction rather than looking at a center point; this will look more like a fleet.
+
+		constexpr float teamOffsetFromMapCenterDistance = 250.f; //TODO perhaps define this in config so it can be customized
+		vec3 teamLocation = teamOffsetVec_n * teamOffsetFromMapCenterDistance;
+		vec3 teamRight = glm::normalize(glm::cross(worldUp, -teamFacingDir_n));
+
+		constexpr float carrierOffsetFromTeamLocDistance = 100.f;
+		float randomizedTeamOffsetFactor = 1.f;
+		if (bRandomizeOffsetLocation)
+		{
+			randomizedTeamOffsetFactor = rng.getFloat(0.5f, 1.5f);
+		}
+		vec3 carrierBehindTeamLocOffset = (carrierOffsetFromTeamLocDistance * randomizedTeamOffsetFactor) * teamOffsetVec_n
+			+ teamLocation;
+
+		constexpr float carrierRightOffsetFactor = 50.f;
+		vec3 carrierRightOffset = float(carrierIdxOnTeam) * carrierRightOffsetFactor * teamRight;
+
+		vec3 carrierElevationOffset = vec3(0.f);
+		if (bRandomizeElevation)
+		{
+			constexpr float elevantionMaxDist = 50.f;
+			const float randomizedElevantionFactor = rng.getFloat(-1.f, 1.f);
+			carrierElevationOffset = randomizedElevantionFactor * elevantionMaxDist * worldUp;
+		}
+
+		vec3 carrierLocation = carrierBehindTeamLocOffset + carrierRightOffset;
+
+		outLoc = carrierLocation;
+		outRotation = glm::angleAxis(glm::radians(180.f), worldUp) * centerRotation; //just flip center rotation by 180
+	}
+
+	void SpaceLevelBase::applyLevelConfig_CarrierTakedownGameMode(const SpaceLevelConfig& LevelConfigRef, RNG& rng)
+	{
+		const SpaceLevelConfig::GameModeData_CarrierTakedown& gm = LevelConfigRef.getGamemodeData_CarrierTakedown();
+		
+		for (size_t teamIdx = 0; teamIdx < gm.teams.size(); ++teamIdx)
+		{
+			const SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& tm = gm.teams[teamIdx];
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//spawn carrier ships
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			for (size_t carrierIdx = 0; carrierIdx < tm.carrierSpawnData.size(); ++carrierIdx)
+			{
+				CarrierSpawnData carrierData = tm.carrierSpawnData[carrierIdx];
+
+				if (carrierData.shipSpawnConfig_carrier)
+				{
+					glm::quat randomCarrierRot;
+					glm::vec3 randomCarrierLoc;
+					if (!carrierData.position.has_value() || !carrierData.rotation_deg.has_value())
+					{
+						helper_ChooseRandomCarrierPositionAndRotation(teamIdx, numTeams, carrierIdx, true, true, rng, randomCarrierLoc, randomCarrierRot);
+					}
+
+					Transform carrierXform;
+					carrierXform.position = carrierData.position.has_value() ? *carrierData.position : randomCarrierLoc;
+					carrierXform.rotQuat = carrierData.rotation_deg.has_value() ? quat(*carrierData.rotation_deg) : randomCarrierRot;
+
+					Ship::SpawnData shipSpawnData;
+					shipSpawnData.team = teamIdx;
+					shipSpawnData.spawnConfig = carrierData.shipSpawnConfig_carrier;
+					shipSpawnData.spawnTransform = carrierXform;
+
+					if (sp<Ship> carrierShip = spawnEntity<Ship>(shipSpawnData))
+					{
+						FighterSpawnComponent::AutoRespawnConfiguration spawnFighterConfig{};
+						spawnFighterConfig.bEnabled= carrierData.fighterSpawnData.bEnableFighterRespawns;
+						spawnFighterConfig.maxShips = carrierData.fighterSpawnData.maxNumberOwnedFighterShips;
+						spawnFighterConfig.respawnCooldownSec = carrierData.fighterSpawnData.respawnCooldownSec;
+						if (FighterSpawnComponent* spawnComp = carrierShip->getGameComponent<FighterSpawnComponent>())
+						{
+							spawnComp->setAutoRespawnConfig(spawnFighterConfig);
+
+							////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+							//spawn initial fighters around carrier
+							////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+							Ship::SpawnData fighterShipSpawnData;
+							fighterShipSpawnData.team = teamIdx;
+
+							std::vector<sp<SpawnConfig>> cachedSpawnConfigs;//cache spawn configs so we're not hitting maps over and over, rather we hit them once then use an idx
+							fighterShipSpawnData.spawnConfig = getSpawnableConfigHelper(0, *carrierData.shipSpawnConfig_carrier, cachedSpawnConfigs);
+
+							if (fighterShipSpawnData.spawnConfig)
+							{
+								for (uint32_t fighterShip = 0; fighterShip < carrierData.numInitialFighters; ++fighterShip)
+								{
+									const float spawnRange = 50.f;
+
+									glm::vec3 startPos(rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange));
+									float randomRot_rad = glm::radians(rng.getFloat<float>(0, 360));
+									glm::quat rot = glm::angleAxis(randomRot_rad, glm::vec3(0, 1, 0));
+									startPos += carrierXform.position;
+									fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, glm::vec3(1.f) };
+
+									sp<Ship> fighter = spawnComp->spawnEntity(); //the carrier ship is responsible for assigning brain after a span happens via callback
+									fighter->setTransform(fighterShipSpawnData.spawnTransform);
+								}
+							}
+							else { STOP_DEBUGGER_HERE(); }
+						}
+					}
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_WARNING, "No carrier spawn config available; what is the model that should go with this carrier ship?");
+					STOP_DEBUGGER_HERE();
+				}
+			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//update team index after processing
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			++teamIdx;
+		}
+	}
+
 	void SpaceLevelBase::startLevel_v()
 	{
 		LevelBase::startLevel_v();
@@ -93,6 +409,8 @@ namespace SA
 		{
 			commanders.push_back(new_sp<TeamCommander>(teamId));
 		}
+
+		applyLevelConfig();
 	}
 
 	void SpaceLevelBase::endLevel_v()
@@ -135,7 +453,7 @@ namespace SA
 	{
 		//by default generate a star field, if no star field should be in the level return null in an override;
 		sp<StarField> defaultStarfield = new_sp<StarField>();
-		return defaultStarfield;
+		return defaultStarfield; 
 	}
 
 	void SpaceLevelBase::refreshStarLightMapping()
@@ -172,8 +490,6 @@ namespace SA
 
 	std::vector<sp<class Planet>> makeRandomizedPlanetArray(RNG& rng)
 	{
-		using namespace glm;
-
 		//std::string(DefaultPlanetTexturesPaths::albedo_terrain);
 		//std::string(DefaultPlanetTexturesPaths::albedo_sea);
 		//std::string(DefaultPlanetTexturesPaths::albedo_nightlight);

@@ -898,6 +898,35 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		ImGui::Separator();
 		if (activeConfig)
 		{
+			////////////////////////////////////////////////////////
+			// controlling default configs for mod
+			////////////////////////////////////////////////////////
+			if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+			{
+				ImGui::Text("Mods need to look up what should be the default carrier for a given team so that it knows what to spawn for some gamemodes.");
+				ImGui::Text("If the config name is changed, this data will need to be re-applied.");
+
+				static int carrierTeamIDProxy = 0;
+				ImGui::SliderInt("Team to make this the default carrier (multiple acceptable)", &carrierTeamIDProxy, 0, MAX_TEAM_NUM-1);
+
+				if(ImGui::Button("Make this default carrier for team"))
+				{
+					activeMod->setDeafultCarrierConfigForTeam(activeConfig->getName(), carrierTeamIDProxy);
+				}
+				if(ImGui::Button("Remove default carrier for this index"))
+				{
+					activeMod->setDeafultCarrierConfigForTeam("",carrierTeamIDProxy);
+				}
+				if(ImGui::Button("Save To Mod"))
+				{
+					activeMod->writeToFile();
+				}
+			}
+
+			////////////////////////////////////////////////////////
+			// Individual team data
+			////////////////////////////////////////////////////////
+
 			if (activeConfig->teamData.size() == 0)
 			{
 				activeConfig->teamData.push_back({});
@@ -955,6 +984,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			{
 				activeTeamData = activeConfig->teamData[viewTeamIdx];
 			}
+
 		}
 		ImGui::Separator();
 	}

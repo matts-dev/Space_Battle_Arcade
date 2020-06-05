@@ -190,6 +190,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\BasicTestSpaceLevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialAnimationEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialsLevel.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\LevelConfigs\SpaceLevelConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\MainMenuLevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.h" />
@@ -224,6 +225,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_LaserButton.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Respawn.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Ship.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DiscreteSelector.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.h" />
@@ -518,6 +520,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SystemData\SATickGroups.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialAnimationEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialsLevel.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\LevelConfigs\SpaceLevelConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\MainMenuLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\StressTestLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp" />
@@ -537,6 +540,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_LaserButton.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Respawn.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Ship.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DiscreteSelector.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.cpp" />

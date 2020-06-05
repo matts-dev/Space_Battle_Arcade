@@ -134,6 +134,14 @@ namespace SA
 		cameraSpeed = speed;
 	}
 
+	glm::quat CameraFPS::getQuat() const
+	{
+		//this may not be correct, adding to interface and haven't tested with FPS camera
+
+		//argument order to convert euler=>quater are: rotationAroundX, rotationAroundY, rotationAroundZ
+		return glm::quat(glm::vec3(pitch, yaw, /*roll*/ 0));
+	}
+
 	void CameraFPS::lookAt_v(glm::vec3 point)
 	{
 		glm::vec3 dir = glm::normalize(point - getPosition());

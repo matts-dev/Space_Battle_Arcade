@@ -20,12 +20,15 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class Widget3D_LaserButton : public Widget3D_ActivatableBase, public ITickable, public IMouseInteractable
 	{
+		using Parent = Widget3D_ActivatableBase;
 	public:
 		Widget3D_LaserButton(const std::string& text = "Laser Button");
 		void setText(const std::string& text);
 		void setXform(const Transform& xform);
 		const Transform& getXform();
 		glm::vec2 getSize() const;
+		glm::vec2 getPadding() const;
+		glm::vec2 getPaddedSize() const;
 		virtual bool tick(float dt_sec) override;
 	public: //IMouseInteractable
 		virtual glm::mat4 getModelMatrix() const override;

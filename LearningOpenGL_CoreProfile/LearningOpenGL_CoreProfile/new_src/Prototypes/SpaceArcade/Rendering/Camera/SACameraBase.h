@@ -32,6 +32,7 @@ namespace SA
 		virtual void registerToWindowCallbacks_v(const sp<Window>& window);
 		virtual void deregisterToWindowCallbacks_v();
 		virtual void lookAt_v(glm::vec3 point) = 0;
+		virtual glm::quat getQuat() const = 0;
 		virtual void postConstruct() override;
 	public:
 		void activate();
@@ -74,7 +75,7 @@ namespace SA
 		/* Not a great pattern to follow, but FOV case is trivial */
 		float& adjustFOV() { return FOV; }
 		void child_setFront(const glm::vec3& newFront_n) { cameraFront_n = newFront_n; }
-		virtual void v_handlePostLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& /*newCurrentLevel*/);
+		virtual void v_handlePreLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& /*newCurrentLevel*/);
 
 	private:
 		virtual void onPositionSet_v(const glm::vec3& newPosition) {}

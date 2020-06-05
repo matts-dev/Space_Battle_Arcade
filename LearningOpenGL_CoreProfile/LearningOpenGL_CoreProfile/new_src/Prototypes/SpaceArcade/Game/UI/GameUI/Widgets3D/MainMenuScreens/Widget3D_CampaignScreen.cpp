@@ -17,6 +17,7 @@ namespace SA
 
 	void Widget3D_CampaignScreen::onActivationChanged(bool bActive)
 	{
+		Parent::onActivationChanged(bActive);
 		if (bActive)
 		{
 			//activated

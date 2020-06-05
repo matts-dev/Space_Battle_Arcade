@@ -16,6 +16,8 @@
 #include "../../../GameFramework/SAPlayerSystem.h"
 #include "../../../Rendering/SAWindow.h"
 #include "../../../GameFramework/SAWindowSystem.h"
+#include "../../../Rendering/Camera/SAQuaternionCamera.h"
+#include "../../../Tools/PlatformUtils.h"
 
 namespace SA
 {
@@ -232,10 +234,10 @@ namespace SA
 			//use dilated world time, not system time
 			dt_sec = currentLevel->getWorldTimeManager()->getDeltaTimeSecs();
 
-			for (LaserUIObject* laser : activeLasers)
-			{
-				laser->tick(dt_sec);
-			}
+			//for (LaserUIObject* laser : activeLasers)
+			//{
+			//	laser->tick(dt_sec);
+			//}
 		}
 		return true;
 	}
@@ -314,6 +316,10 @@ namespace SA
 				glm::vec3 camPos = camera->getPosition();
 				out.camToBegin = out.begin - camPos;
 				out.camToEnd = out.end - camPos;
+
+				glm::quat inverseQuat = glm::inverse(camera->getQuat()); //take negative is not inverse
+				out.camToBegin = inverseQuat * out.camToBegin;
+				out.camToEnd = inverseQuat * out.camToEnd;
 			}
 		}
 	}

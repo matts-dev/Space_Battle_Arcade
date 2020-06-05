@@ -39,6 +39,7 @@ namespace SA
 		void setForceCentered(bool bInForceCentered) { bForceCentered = bInForceCentered; }
 		glm::vec3 getLightLDR() { return ldr_color; }
 		glm::vec3 getLightHDR() { return ldr_color * hdr_intensity; }
+		void setLightLDR(glm::vec3 inLdrColor) { ldr_color = inLdrColor; }
 	protected:
 		virtual void postConstruct() override;
 	private: //statics

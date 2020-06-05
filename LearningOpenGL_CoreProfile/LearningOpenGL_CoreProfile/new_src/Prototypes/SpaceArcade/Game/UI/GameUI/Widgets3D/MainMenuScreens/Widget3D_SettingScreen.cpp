@@ -16,6 +16,7 @@ namespace SA
 
 	void Widget3D_SettingsScreen::onActivationChanged(bool bActive)
 	{
+		Parent::onActivationChanged(bActive);
 		if (bActive)
 		{
 			//activated

@@ -188,7 +188,8 @@ namespace SA
 		uint32_t numFightersPerTeam = numFighterShipsToSpawn / numTeams;
 		float immediateSpawnPerc = 0.25f;
 
-		std::vector< std::vector<sp<Ship>> > teamTargets = {
+		//set up debug targets for easy ai testing (see usage)
+		std::vector< std::vector<sp<Ship>> > db_teamTargets = { 
 			std::vector<sp<Ship>>{},
 			std::vector<sp<Ship>>{}
 		};
@@ -213,7 +214,7 @@ namespace SA
 
 					//sp<Ship> fighter = spawnComp->spawnEntity<Ship>(fighterShipSpawnData);
 					sp<Ship> fighter = spawnComp->spawnEntity();
-					teamTargets[teamIdx].push_back(fighter);
+					db_teamTargets[teamIdx].push_back(fighter);
 					fighter->setTransform(fighterShipSpawnData.spawnTransform);
 
 					////////////////////////////////////////////////////////
@@ -260,11 +261,11 @@ namespace SA
 		bool bEnableDebugTargets = false;
 		if(bEnableDebugTargets)
 		{
-			size_t targetsToSet = teamTargets[0].size() < teamTargets[1].size() ? teamTargets[0].size() : teamTargets[1].size();
+			size_t targetsToSet = db_teamTargets[0].size() < db_teamTargets[1].size() ? db_teamTargets[0].size() : db_teamTargets[1].size();
 			for (size_t idx = 0; idx < targetsToSet ; idx++)
 			{
-				sp<Ship> a = teamTargets[0][idx];
-				sp<Ship> b = teamTargets[1][idx];
+				sp<Ship> a = db_teamTargets[0][idx];
+				sp<Ship> b = db_teamTargets[1][idx];
 
 				const BrainComponent* aBrainComp = a->getGameComponent<BrainComponent>();
 				const BrainComponent* bBrainComp = b->getGameComponent<BrainComponent>();

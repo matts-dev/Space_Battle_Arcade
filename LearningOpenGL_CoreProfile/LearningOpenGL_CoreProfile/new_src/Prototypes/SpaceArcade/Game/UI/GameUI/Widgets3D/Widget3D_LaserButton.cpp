@@ -25,7 +25,7 @@ namespace SA
 	void Widget3D_LaserButton::setXform(const Transform& xform)
 	{
 		myGlitchText->setXform(xform);
-		myGlitchText->onNewTextDataBuilt.addWeakObj(sp_this(), &Widget3D_LaserButton::handleNewTextDataSet);
+		
 
 		updateCollisionData(); //make sure this is called after we update position for glitchtext as it uses its tranform
 		updateLaserPositions();
@@ -45,6 +45,17 @@ namespace SA
 		return glm::vec2(0.f);
 	}
 
+	glm::vec2 Widget3D_LaserButton::getPadding() const
+	{
+		const Transform& myXform = myGlitchText->getXform();
+		return { widthPaddingFactor * myXform.scale.x , heightPaddingFactor * myXform.scale.y };
+	}
+
+	glm::vec2 Widget3D_LaserButton::getPaddedSize() const
+	{
+		return getSize() + 2.f*getPadding();
+	}
+
 	void Widget3D_LaserButton::postConstruct()
 	{
 		setRenderWithGameUIDispatch(true);
@@ -56,6 +67,8 @@ namespace SA
 
 		myGlitchText->setAnimPlayForward(true); //this will make glyphs invisible until this button is activated.
 		myGlitchText->play(false);
+
+		myGlitchText->onNewTextDataBuilt.addWeakObj(sp_this(), &Widget3D_LaserButton::handleNewTextDataSet);
 
 		if (const sp<UISystem_Game>& gameUISystem = SpaceArcade::get().getGameUISystem()) //#TODO should never be null... this needs a refactor to return reference
 		{
@@ -168,6 +181,8 @@ namespace SA
 
 	void Widget3D_LaserButton::onActivationChanged(bool bActive)
 	{
+		Parent::onActivationChanged(bActive);
+
 		if (bActive) 
 		{ 
 			onActivated();
@@ -231,8 +246,10 @@ namespace SA
 			float halfWidth = myGlitchText->getWidth() / 2.0f; 
 			float halfHeight = myGlitchText->getHeight() / 2.0f;
 
-			halfWidth += widthPaddingFactor * myXform.scale.x;
-			halfHeight += heightPaddingFactor * myXform.scale.y;
+			glm::vec2 padding = getPadding();
+
+			halfWidth += padding.x;
+			halfHeight += padding.y;
 
 			vec3 myPos = myXform.getModelMatrix() *  vec4(0, 0, 0, 1);
 
@@ -323,6 +340,8 @@ namespace SA
 			rightLaser->setColorImmediate(color);
 		}
 	}
+
+
 
 }
 

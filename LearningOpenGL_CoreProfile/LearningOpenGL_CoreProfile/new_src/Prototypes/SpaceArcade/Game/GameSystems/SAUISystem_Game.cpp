@@ -188,12 +188,12 @@ namespace SA
 		defaultTextBatcher = new_sp<DigitalClockFont>(initBatcher);
 
 		LevelSystem& levelSystem = GameBase::get().getLevelSystem();
-		levelSystem.onPostLevelChange.addWeakObj(sp_this(), &UISystem_Game::handleLevelChange);
+		levelSystem.onPreLevelChange.addWeakObj(sp_this(), &UISystem_Game::handlePreLevelChange);
 
 		//this shouldn't happen as levels should be created after all systems are initialized, but adding this to prevent code fragility.
 		if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
 		{
-			handleLevelChange(nullptr, currentLevel);
+			handlePreLevelChange(nullptr, currentLevel);
 		}
 
 		WindowSystem& windowSystem = GameBase::get().getWindowSystem();
@@ -206,7 +206,7 @@ namespace SA
 
 	}
 
-	void UISystem_Game::handleLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	void UISystem_Game::handlePreLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
 	{
 		if (previousLevel)
 		{
@@ -368,7 +368,8 @@ namespace SA
 		if (!_camRot)
 		{
 			//dyn cast :( but cameras were not built to use transforms. Next time they will be!
-			if (QuaternionCamera* quatCam = dynamic_cast<QuaternionCamera*>(camera()))
+			//if (QuaternionCamera* quatCam = dynamic_cast<QuaternionCamera*>(camera())) //adding getQuat to interface and testing
+			if(CameraBase* quatCam = camera())
 			{
 				_camRot = quatCam->getQuat();
 			}

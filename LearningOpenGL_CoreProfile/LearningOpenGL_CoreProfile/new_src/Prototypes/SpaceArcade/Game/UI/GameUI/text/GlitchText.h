@@ -29,6 +29,7 @@ namespace SA
 		void setAnimPlayForward(bool bForward);
 		void play(bool bPlay) { bPlaying = bPlay; }
 		void setSpeedScale(float newScale) { speedScale = newScale; }
+		bool isPlaying() const { return bPlaying; }
 	public:
 		virtual bool tick(float dt_sec) override;
 	private:

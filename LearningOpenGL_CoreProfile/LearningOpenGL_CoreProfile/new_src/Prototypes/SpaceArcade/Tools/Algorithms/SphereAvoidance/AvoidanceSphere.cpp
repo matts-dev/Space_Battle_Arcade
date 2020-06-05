@@ -97,6 +97,8 @@ namespace SA
 
 	void AvoidanceSphere::handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
 	{
+		//!!WARNING: previous level no longer has a timer manager!! if time management is needed use pre level change
+
 		if (SH::SpatialHashGrid<AvoidanceSphere>* avoidanceGrid = newCurrentLevel->getTypedGrid<AvoidanceSphere>())
 		{
 			if (!myGridEntry)
