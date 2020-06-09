@@ -53,6 +53,8 @@ namespace SA
 			menuCamera->setCameraRequiresCursorMode(false);
 			menuCamera->setEnableCameraRoll(true);
 			menuCamera->setEnableCameraMovement(true);
+
+			SpaceArcade::get().setEscapeShouldOpenEditorMenu(true); //if using free camera, allow escape to eenter cursor mode so that things can be clicked
 		}
 
 		SpaceArcade& game = SpaceArcade::get();

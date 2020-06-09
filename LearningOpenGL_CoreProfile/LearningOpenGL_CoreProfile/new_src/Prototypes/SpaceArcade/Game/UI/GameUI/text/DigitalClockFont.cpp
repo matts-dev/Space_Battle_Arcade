@@ -700,6 +700,18 @@ namespace SA
 		return paragraphSize.y * xform.scale.y;
 	}
 
+	void DigitalClockFont::setHorizontalPivot(const EHorizontalPivot& pivot)
+	{
+		data.pivotHorizontal = pivot;
+		rebuildDataCache();
+	}
+
+	void DigitalClockFont::setVerticalPivot(const EVerticalPivot& pivot)
+	{
+		data.pivotVertical = pivot;
+		rebuildDataCache();
+	}
+
 	glm::vec2 DigitalClockFont::getSize_Unscaled() const
 	{
 		return paragraphSize;

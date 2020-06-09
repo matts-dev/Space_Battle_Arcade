@@ -2,6 +2,7 @@
 #include "../../../../SpaceArcade.h"
 #include "../Widget3D_DiscreteSelector.h"
 #include "../../../../GameSystems/SAUISystem_Game.h"
+#include "../Widget3D_Slider.h"
 
 namespace SA
 {
@@ -27,8 +28,12 @@ namespace SA
 		});
 		selector_devConsole->onValueChangedDelegate.addWeakObj(sp_this(), &Widget3D_SettingsScreen::handleDevConsoleChanged); //TODO really need weaklambda support for these kinds of things
 
+		slider_masterAudio = new_sp<Widget3D_Slider>();
+		allSliders.push_back(slider_masterAudio.get());
+
 		//defines the order of selectors/sliders
 		ordered_options.push_back(selector_devConsole.get());
+		ordered_options.push_back(slider_masterAudio.get());
 	}
 
 	void Widget3D_SettingsScreen::onActivationChanged(bool bActive)
@@ -46,6 +51,7 @@ namespace SA
 			for (Widget3D_LaserButton* button : enabledButtons) { button->activate(bActive); }
 		}
 		for (Widget3D_DiscreteSelectorBase* selector : allSelectors) { selector->activate(bActive); };
+		for (Widget3D_Slider* slider : allSliders) { slider->activate(bActive); };
 
 		layoutSettings();
 	}
@@ -77,6 +83,8 @@ namespace SA
 		xform.scale = vec3(defaultSelectorScale);
 		xform.rotQuat = ui_rd.camQuat();
 
+		float sliderHalfWidth = sliderWidths / 2.f;
+
 		for (Widget3D_ActivatableBase* setting_raw : ordered_options)
 		{
 			bool bUpdateNextPos = false;
@@ -88,10 +96,11 @@ namespace SA
 				setting_selector->setWorldXform(xform);
 				bUpdateNextPos = true;
 			}
-			//else if (Widget3D_Slider* slider = dynamic_cast<Widget3D_Slider*>(setting_raw))
-			//{
-
-			//}
+			else if (Widget3D_Slider* slider = dynamic_cast<Widget3D_Slider*>(setting_raw))
+			{
+				slider->setStart(xform.position - sliderHalfWidth * hd.camRight);
+				slider->setEnd(xform.position + sliderHalfWidth * hd.camRight);
+			}
 
 			//only update if we found a setting that we know the type of
 			if (bUpdateNextPos)

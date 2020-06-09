@@ -226,6 +226,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Respawn.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Ship.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DiscreteSelector.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Slider.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAUniformResourceLocators.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Team\Commanders.h" />
@@ -253,6 +254,8 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\GeometryMath.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\Plane.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.h" />
@@ -541,6 +544,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Respawn.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Ship.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DiscreteSelector.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Slider.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.cpp" />
@@ -585,6 +589,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\GeometryMath.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAModel.cpp" />

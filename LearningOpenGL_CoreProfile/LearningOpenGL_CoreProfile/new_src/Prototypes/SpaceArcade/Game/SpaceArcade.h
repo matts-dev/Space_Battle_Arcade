@@ -80,10 +80,13 @@ namespace SA
 	public:
 		void toggleEditorUIMainMenuVisible();
 		bool isEditorMainMenuOnScreen() const;
-		bool isEditorMainmenuFeatureEnabled() { return bEditorMainMenuEnabled; }
+		bool isEditorMainmenuFeatureEnabled() const { return bEditorMainMenuEnabled; }
+		bool escapeShouldOpenEditorMenu() const { return bEscapeShouldOpenEditorMenu; }
+		void setEscapeShouldOpenEditorMenu(bool bValue) { bEscapeShouldOpenEditorMenu = bValue; }
 		void setEditorMainmenuFeatureEnabled(bool bEnabled) { bEditorMainMenuEnabled = bEnabled; }
 	private:
 		bool bEditorMainMenuEnabled = true;
+		bool bEscapeShouldOpenEditorMenu = false;
 	public:
 		const sp<HUD> getHUD() const { return hud; }
 	public:

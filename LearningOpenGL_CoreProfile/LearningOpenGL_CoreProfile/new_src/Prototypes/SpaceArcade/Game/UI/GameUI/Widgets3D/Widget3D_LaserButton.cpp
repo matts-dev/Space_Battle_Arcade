@@ -262,19 +262,19 @@ namespace SA
 			vec3 top = halfHeight * cUp;
 			vec3 bottom = -halfHeight * cUp;
 
-			topLaser->randomizeAnimSpeed(baseLaserAnimSpeed); //prevent interpolation from looking rigid (without this, a line moving could potentially maintain parallel to screen box)
+			topLaser->randomizeAnimSpeed(baseLaserAnimSpeedSec); //prevent interpolation from looking rigid (without this, a line moving could potentially maintain parallel to screen box)
 			topLaser->animateStartTo(myPos + right + top);
 			topLaser->animateEndTo(myPos + left + top);
 
-			bottomLaser->randomizeAnimSpeed(baseLaserAnimSpeed);
+			bottomLaser->randomizeAnimSpeed(baseLaserAnimSpeedSec);
 			bottomLaser->animateStartTo(myPos + right + bottom);
 			bottomLaser->animateEndTo(myPos + left + bottom);
 
-			rightLaser->randomizeAnimSpeed(baseLaserAnimSpeed);
+			rightLaser->randomizeAnimSpeed(baseLaserAnimSpeedSec);
 			rightLaser->animateStartTo(myPos + right + top);
 			rightLaser->animateEndTo(myPos + right + bottom);
 
-			leftLaser->randomizeAnimSpeed(baseLaserAnimSpeed);
+			leftLaser->randomizeAnimSpeed(baseLaserAnimSpeedSec);
 			leftLaser->animateStartTo(myPos + left + top);
 			leftLaser->animateEndTo(myPos + left + bottom);
 		}

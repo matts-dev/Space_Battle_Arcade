@@ -41,6 +41,8 @@ namespace SA
 			handlePreLevelChange(nullptr, currentLevel);
 		}
 
+		myText->resetAnim();//make sure text starts in a hidden state that is ready to play forward
+		myText->play(false);//make sure text starts in a hidden state that is ready to play forward
 	}
 
 	void Widget3D_DiscreteSelectorBase::renderGameUI(GameUIRenderData& renderData)

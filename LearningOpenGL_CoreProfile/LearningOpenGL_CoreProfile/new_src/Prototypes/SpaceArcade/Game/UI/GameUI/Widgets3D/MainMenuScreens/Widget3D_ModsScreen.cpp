@@ -1,4 +1,5 @@
 #include "Widget3D_ModsScreen.h"
+#include "../../../../SpaceArcade.h"
 
 namespace SA
 {
@@ -19,16 +20,29 @@ namespace SA
 	void Widget3D_ModsScreen::onActivationChanged(bool bActive)
 	{
 		Parent::onActivationChanged(bActive);
+
+		SpaceArcade& game = SpaceArcade::get();
+
 		if (bActive)
 		{
 			//activated
 			configureButtonToDefaultBackPosition(*backButton);
 			for (Widget3D_LaserButton* button : enabledButtons) { button->activate(bActive); } //for stagged anim, stagger in tick.
+
+			if (game.isEditorMainmenuFeatureEnabled() && !game.isEditorMainMenuOnScreen())
+			{
+				game.toggleEditorUIMainMenuVisible();
+			}
 		}
 		else
 		{
 			//deactivated
 			for (Widget3D_LaserButton* button : enabledButtons) { button->activate(bActive); }
+
+			if (game.isEditorMainmenuFeatureEnabled() && game.isEditorMainMenuOnScreen())
+			{
+				game.toggleEditorUIMainMenuVisible();
+			}
 		}
 	}
 

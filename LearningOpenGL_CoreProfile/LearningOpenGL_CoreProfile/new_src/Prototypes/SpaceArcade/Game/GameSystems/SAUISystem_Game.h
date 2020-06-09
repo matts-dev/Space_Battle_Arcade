@@ -32,6 +32,10 @@ namespace SA
 	protected:
 		virtual void onHoveredhisTick() {}
 		virtual void onClickedThisTick() {}
+
+		virtual bool supportsMouseDrag() const {return false;} //override this if you want to use the virtuals below
+		virtual void onMouseDraggedThisTick(const glm::vec3& worldMousePoint) {} //requires supportsMouseDrag() to be overriden to true
+		virtual void onMouseDraggedReleased() {} //requires supportsMouseDrag() to be overriden to true
 	};
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

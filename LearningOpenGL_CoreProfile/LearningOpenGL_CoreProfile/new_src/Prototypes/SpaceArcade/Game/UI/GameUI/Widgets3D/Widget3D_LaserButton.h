@@ -61,7 +61,7 @@ namespace SA
 	private:
 		const float widthPaddingFactor = 1.25f; //if setters are added for padding fields, the aabb will need to be regenerated.
 		const float heightPaddingFactor = 1.25f;
-		float baseLaserAnimSpeed = 1.0f;
+		float baseLaserAnimSpeedSec = 1.0f;
 		float clickResetDelaySec = 0.05f;
 	private:
 		bool bHoveredThisTick = false;

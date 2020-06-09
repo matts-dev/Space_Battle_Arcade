@@ -17,6 +17,8 @@
 #include "../../GameFramework/SADebugRenderSystem.h"
 #include "../../Tools/Algorithms/Algorithms.h"
 #include "../../Tools/SAUtilities.h"
+#include "../../Tools/Geometry/Plane.h"
+#include "../../Tools/Geometry/GeometryMath.h"
 
 namespace SA
 {
@@ -30,7 +32,12 @@ namespace SA
 		std::vector<sp<const SH::HashCell<IMouseInteractable>>> rayHitCells;
 		const float MAX_RAY_DIST = 1000.f;
 		bool bClickNextRaycast = false; //when a click is detected, it is deferred until raycast happens.
-		
+		bool bMouseHeld = false;
+
+		//used for tracking a previous click for dragging and release events.
+		wp<SH::GridNode<IMouseInteractable>> previousClick;
+		Plane dragPlane;
+
 		//debug
 		glm::vec3 rayStart;
 		glm::vec3 rayEnd;
@@ -122,44 +129,86 @@ namespace SA
 
 				float closestDistance2SoFar = std::numeric_limits<float>::infinity();
 				IMouseInteractable* closestPick = nullptr;
-
-				for (sp <const SH::HashCell<IMouseInteractable>>& hitCell : impl->rayHitCells)
+				sp<SH::GridNode<IMouseInteractable>> closestPickNode = nullptr;
+				
+				const bool bDragging = !impl->previousClick.expired();
+				if (!bDragging)
 				{
-					for (sp<SH::GridNode<IMouseInteractable>> entityNode : hitCell->nodeBucket)
+					//we're not dragging, see if we're hovering or clicking
+					for (sp <const SH::HashCell<IMouseInteractable>>& hitCell : impl->rayHitCells)
 					{
-						if (entityNode->element.isHitTestable())
+						for (sp<SH::GridNode<IMouseInteractable>> entityNode : hitCell->nodeBucket)
 						{
-							glm::vec3 worldPos = entityNode->element.getWorldLocation();
-							float distance2 = glm::length2(worldPos - camPos);
-							if (distance2 < closestDistance2SoFar)
+							if (entityNode->element.isHitTestable())
 							{
-								glm::mat4 inverseTransform = glm::inverse(entityNode->element.getModelMatrix());
-								glm::vec4 transformedStart = inverseTransform * glm::vec4(clickRay.start, 1.f);
-								glm::vec4 transformedDir = inverseTransform * glm::vec4(clickRay.dir, 0.f);
-
-								const std::array<glm::vec4, 8>& localAABB = entityNode->element.getLocalAABB();
-								glm::vec3 boxLow = Utils::findBoxLow(localAABB);
-								glm::vec3 boxMax = Utils::findBoxMax(localAABB);
-								if (Utils::rayHitTest_FastAABB(boxLow, boxMax, transformedStart, transformedDir))
+								glm::vec3 worldPos = entityNode->element.getWorldLocation();
+								float distance2 = glm::length2(worldPos - camPos);
+								if (distance2 < closestDistance2SoFar)
 								{
-									closestPick = &entityNode->element;
-									closestDistance2SoFar = distance2;
+									glm::mat4 inverseTransform = glm::inverse(entityNode->element.getModelMatrix());
+									glm::vec4 transformedStart = inverseTransform * glm::vec4(clickRay.start, 1.f);
+									glm::vec4 transformedDir = inverseTransform * glm::vec4(clickRay.dir, 0.f);
+
+									const std::array<glm::vec4, 8>& localAABB = entityNode->element.getLocalAABB();
+									glm::vec3 boxLow = Utils::findBoxLow(localAABB);
+									glm::vec3 boxMax = Utils::findBoxMax(localAABB);
+									if (Utils::rayHitTest_FastAABB(boxLow, boxMax, transformedStart, transformedDir))
+									{
+										closestPickNode = entityNode;
+										closestPick = &entityNode->element;
+										closestDistance2SoFar = distance2;
+									}
 								}
 							}
 						}
 					}
+
+					if (closestPick)
+					{
+						if (impl->bClickNextRaycast)
+						{
+							closestPick->onClickedThisTick();
+							if (closestPick->supportsMouseDrag()) 
+							{
+								impl->previousClick = closestPickNode; /*cache for next tick drag updates*/
+								impl->dragPlane.point = closestPick->getWorldLocation();
+								impl->dragPlane.normal_v = -camera->getFront();
+							}
+						}
+						else
+						{
+							closestPick->onHoveredhisTick();
+						}
+					}
 				}
-				if (closestPick)
+				else /*if dragging*/
 				{
-					if (impl->bClickNextRaycast)
+					sp<SH::GridNode<IMouseInteractable>> previousClickNode = impl->previousClick.lock();
+					assert(previousClickNode); //should be impossible to get into this branch if we don't have a previous click
+					if (previousClickNode)
 					{
-						closestPick->onClickedThisTick();
-					}
-					else
-					{
-						closestPick->onHoveredhisTick();
+						//we're dragging
+						if (impl->bMouseHeld)
+						{
+							if (std::optional<glm::vec3> dragPoint = rayPlaneIntersection(impl->dragPlane, clickRay.start, clickRay.dir))
+							{
+								previousClickNode->element.onMouseDraggedThisTick(*dragPoint);
+							}
+							else
+							{
+								log(__FUNCTION__, LogLevel::LOG_WARNING, "Did not find a drag point when dragging a UI widget, this is likely dud to the ray being parallel with the drag plane; ignoring event");
+							}
+						}
+						else
+						{
+							previousClickNode->element.onMouseDraggedReleased();
+
+							//clear out this clicked node so that we can go back to clicking and hovering
+							impl->previousClick.reset();
+						}
 					}
 				}
+
 
 				if constexpr (bDrawPickRays)
 				{
@@ -236,10 +285,20 @@ namespace SA
 
 	void UISystem_Game::handleMouseButtonPressed(int button, int action, int mods)
 	{
-		if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT)
+		if (button == GLFW_MOUSE_BUTTON_LEFT)
 		{
-			impl->bClickNextRaycast = true;
+			if (action == GLFW_PRESS)
+			{
+				impl->bClickNextRaycast = true;
+				impl->bMouseHeld = true;
+			}
+			else
+			{
+				impl->bClickNextRaycast = false; //this is probably redundant as the click even will clear it; but perhaps this is the best way to clear it.
+				impl->bMouseHeld = false;
+			}
 		}
+
 	}
 
 	////////////////////////////////////////////////////////

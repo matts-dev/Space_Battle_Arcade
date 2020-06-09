@@ -136,6 +136,10 @@ namespace SA
 		void setXform(const Transform& newXform);
 		float getWidth() const;
 		float getHeight() const;
+		EHorizontalPivot getHorizontalPivot() const { return data.pivotHorizontal; }
+		EVerticalPivot getVerticalPivot() const { return data.pivotVertical; }
+		void setHorizontalPivot(const EHorizontalPivot& pivot);
+		void setVerticalPivot(const EVerticalPivot& pivot);
 		glm::vec2 getSize_Unscaled() const;
 	protected:
 		virtual void postConstruct() override;

@@ -154,7 +154,7 @@ namespace SA
 			}
 			else
 			{
-				if (game.isEditorMainmenuFeatureEnabled())
+				if (game.isEditorMainmenuFeatureEnabled() && game.escapeShouldOpenEditorMenu())
 				{
 					if (const sp<CameraBase>& camera = getCamera())
 					{
