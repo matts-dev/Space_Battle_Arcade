@@ -27,8 +27,10 @@ namespace SA
 		void setStart(const glm::vec3& start);
 		void setEnd(const glm::vec3& end);
 		std::array<glm::vec4, 8> getOBB();
-		void setHorizontalPivot(DigitalClockFont::EHorizontalPivot& pivot);
-		void setVerticalPivot(DigitalClockFont::EVerticalPivot& pivot);
+		void setTitleText(const std::string titleStr);
+		void setTitleTextScale(float newScale);
+		//void setHorizontalPivot(DigitalClockFont::EHorizontalPivot& pivot);
+		//void setVerticalPivot(DigitalClockFont::EVerticalPivot& pivot);
 	protected:
 		virtual void postConstruct() override;
 		virtual void renderGameUI(GameUIRenderData& renderData);
@@ -39,8 +41,8 @@ namespace SA
 		virtual void onActivated();
 		void refresh();
 		void updateLaserPositions(bool bResetAnimations = true);
-		void updateLaserTextStr();
-		void updateLaserTextPosition(const glm::vec3& sliderUp_n, const glm::quat& camRot);
+		void updateValueTextStr();
+		void updateTextPosition(const glm::vec3& sliderUp_n, const glm::quat& camRot);
 		//IMouseInteractable interface
 		virtual glm::mat4 getModelMatrix() const;
 		virtual const std::array<glm::vec4, 8>& getLocalAABB() const;
@@ -60,7 +62,8 @@ namespace SA
 		float edgeSizeFactor = 0.25f; //like the edge height, but since sliders may be vertical avoiding calling it a height
 		float valueScalar = 1.f; //setting this value to 5 will make slider on range [0,5] instead of [0,1]
 		float sliderBoxWidth = 0.25f;
-		float textScale = 0.2f;
+		float valueTextScale = 0.2f;
+		float titleTextScale = 0.2f;
 		glm::vec2 textPadding{ 0.25f, 0.25f };
 		glm::vec3 hoverColor = color::metalicgold();
 		glm::vec3 dragColor = color::lightYellow();
@@ -72,7 +75,7 @@ namespace SA
 		glm::vec3 sliderStartPoint;
 		glm::vec3 sliderEndPoint;
 		sp<GlitchTextFont> valueText;
-		//sp<GlitchTextFont> settingText;
+		sp<GlitchTextFont> titleText;
 
 		sp<LaserUIObject> laser_rangeBar;
 		sp<LaserUIObject> laser_startEdge;

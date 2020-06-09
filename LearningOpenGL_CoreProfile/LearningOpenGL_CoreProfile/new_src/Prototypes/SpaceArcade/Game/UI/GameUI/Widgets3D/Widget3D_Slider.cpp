@@ -27,7 +27,7 @@ namespace SA
 		DigitalClockFont::Data textInit;
 		textInit.text = "No text set on slider!";
 		valueText = new_sp<GlitchTextFont>(textInit);
-		//settingText = ...;
+		titleText = new_sp<GlitchTextFont>(textInit);
 
 		if (const sp<UISystem_Game>& gameUISystem = SpaceArcade::get().getGameUISystem()) //#TODO should never be null... this needs a refactor to return reference
 		{
@@ -44,6 +44,10 @@ namespace SA
 		valueText->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::LEFT); //by default use left pivot unless changed
 		valueText->resetAnim();//make sure text starts in a hidden state that is ready to play forward
 		valueText->play(false);//make sure text starts in a hidden state that is ready to play forward
+
+		titleText->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::RIGHT); //by default use left pivot unless changed
+		titleText->resetAnim();//make sure text starts in a hidden state that is ready to play forward
+		titleText->play(false);//make sure text starts in a hidden state that is ready to play forward		
 	}
 
 	void Widget3D_Slider::handlePreLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
@@ -82,6 +86,7 @@ namespace SA
 #endif
 
 		valueText->tick(dt_sec);
+		titleText->tick(dt_sec);
 	}
 
 	void Widget3D_Slider::renderGameUI(GameUIRenderData& renderData)
@@ -92,6 +97,7 @@ namespace SA
 		if (const RenderData* rd_game = renderData.renderData())
 		{
 			valueText->render(*rd_game);
+			titleText->render(*rd_game);
 		}
 	}
 
@@ -127,17 +133,30 @@ namespace SA
 		return OBB;
 	}
 
-	void Widget3D_Slider::setHorizontalPivot(DigitalClockFont::EHorizontalPivot& pivot)
+	void Widget3D_Slider::setTitleText(const std::string titleStr)
 	{
-		valueText->setHorizontalPivot(pivot);
+		titleText->setText(titleStr);
 		refresh();
 	}
 
-	void Widget3D_Slider::setVerticalPivot(DigitalClockFont::EVerticalPivot& pivot)
+	void Widget3D_Slider::setTitleTextScale(float newScale)
 	{
-		valueText->setVerticalPivot(pivot);
+		titleTextScale = newScale;
 		refresh();
 	}
+
+	//commenting out because switching to system where two texts are used
+	//void Widget3D_Slider::setHorizontalPivot(DigitalClockFont::EHorizontalPivot& pivot)
+	//{
+	//	valueText->setHorizontalPivot(pivot);
+	//	refresh();
+	//}
+
+	//void Widget3D_Slider::setVerticalPivot(DigitalClockFont::EVerticalPivot& pivot)
+	//{
+	//	valueText->setVerticalPivot(pivot);
+	//	refresh();
+	//}
 
 	void Widget3D_Slider::onActivated()
 	{
@@ -165,6 +184,9 @@ namespace SA
 
 		valueText->setAnimPlayForward(true);
 		valueText->play(true);
+
+		titleText->setAnimPlayForward(true);
+		titleText->play(true);
 	}
 
 	void Widget3D_Slider::refresh()
@@ -196,6 +218,9 @@ namespace SA
 
 		valueText->setAnimPlayForward(false);
 		valueText->resetAnim();
+
+		titleText->setAnimPlayForward(false);
+		titleText->resetAnim();
 	}
 
 	void Widget3D_Slider::updateLaserPositions(bool bResetAnimations /*= true*/)
@@ -309,15 +334,15 @@ namespace SA
 				////////////////////////////////////////////////////////
 				//update laser text
 				////////////////////////////////////////////////////////
-				updateLaserTextStr();
-				updateLaserTextPosition(sliderUp_n, uiData.camQuat());
+				updateValueTextStr();
+				updateTextPosition(sliderUp_n, uiData.camQuat());
 			}
 		}
 
 		updateCollisionData();
 	}
 
-	void Widget3D_Slider::updateLaserTextStr()
+	void Widget3D_Slider::updateValueTextStr()
 	{
 		if (toStringFunc)
 		{
@@ -325,52 +350,58 @@ namespace SA
 		}
 	}
 
-	void Widget3D_Slider::updateLaserTextPosition(const glm::vec3& sliderUp_n, const glm::quat& camRot)
+	void Widget3D_Slider::updateTextPosition(const glm::vec3& sliderUp_n, const glm::quat& camRot)
 	{
 		using namespace glm;
 
-		DigitalClockFont::EHorizontalPivot horizontalPivot =valueText->getHorizontalPivot();
-		DigitalClockFont::EVerticalPivot vertPivot = valueText->getVerticalPivot();
+		auto updateText = [this, &sliderUp_n, &camRot](const sp<GlitchTextFont>& text, float scale)
+		{
+			DigitalClockFont::EHorizontalPivot horizontalPivot = text->getHorizontalPivot();
+			DigitalClockFont::EVerticalPivot vertPivot = text->getVerticalPivot();
 
-		//apply transform scale so we can calculate accurate width/height
-		Transform newTextXform = valueText->getXform();
-		newTextXform.scale = glm::vec3(textScale);
-		valueText->setXform(newTextXform);
+			//apply transform scale so we can calculate accurate width/height
+			Transform newTextXform = text->getXform();
+			newTextXform.scale = glm::vec3(scale);
+			text->setXform(newTextXform);
 
-		glm::vec3 textPosition{ 0.f };
-		if (horizontalPivot == DigitalClockFont::EHorizontalPivot::LEFT)
-		{
-			vec3 slideDir_n = glm::normalize(sliderStartPoint - sliderEndPoint);
-			textPosition = sliderStartPoint + (slideDir_n*textPadding.x) + slideDir_n*valueText->getWidth();
-		}
-		else if (horizontalPivot == DigitalClockFont::EHorizontalPivot::RIGHT)
-		{
-			vec3 slideDir_n = glm::normalize(sliderEndPoint - sliderStartPoint);
-			textPosition = sliderEndPoint + (slideDir_n * textPadding.x) + (slideDir_n*valueText->getWidth());
-		}
-		else
-		{
-			textPosition = (sliderStartPoint + sliderEndPoint) / 2.f; //take middle point of start and end
-		}
+			glm::vec3 textPosition{ 0.f };
+			if (horizontalPivot == DigitalClockFont::EHorizontalPivot::LEFT)
+			{
+				vec3 slideDir_n = glm::normalize(sliderStartPoint - sliderEndPoint);
+				textPosition = sliderStartPoint + (slideDir_n*textPadding.x) + slideDir_n*text->getWidth();
+			}
+			else if (horizontalPivot == DigitalClockFont::EHorizontalPivot::RIGHT)
+			{
+				vec3 slideDir_n = glm::normalize(sliderEndPoint - sliderStartPoint);
+				textPosition = sliderEndPoint + (slideDir_n * textPadding.x) + (slideDir_n*text->getWidth());
+			}
+			else
+			{
+				textPosition = (sliderStartPoint + sliderEndPoint) / 2.f; //take middle point of start and end
+			}
 
 
-		if (vertPivot == DigitalClockFont::EVerticalPivot::TOP)
-		{
-			textPosition += sliderUp_n * edgeSizeFactor + sliderUp_n*textPadding.y;
-		}
-		else if (vertPivot == DigitalClockFont::EVerticalPivot::BOTTOM)
-		{
-			textPosition += -(sliderUp_n * edgeSizeFactor + sliderUp_n * textPadding.y);
-		}
-		else
-		{
-			//do nothing, we already took average of points when doing horizontal calculation
-		}
+			if (vertPivot == DigitalClockFont::EVerticalPivot::TOP)
+			{
+				textPosition += sliderUp_n * edgeSizeFactor + sliderUp_n*textPadding.y;
+			}
+			else if (vertPivot == DigitalClockFont::EVerticalPivot::BOTTOM)
+			{
+				textPosition += -(sliderUp_n * edgeSizeFactor + sliderUp_n * textPadding.y);
+			}
+			else
+			{
+				//do nothing, we already took average of points when doing horizontal calculation
+			}
 
-		//apply final data
-		newTextXform.position = textPosition;
-		newTextXform.rotQuat = camRot;
-		valueText->setXform(newTextXform);
+			//apply final data
+			newTextXform.position = textPosition;
+			newTextXform.rotQuat = camRot;
+			text->setXform(newTextXform);
+		};
+
+		updateText(valueText, valueTextScale);
+		updateText(titleText, titleTextScale);
 	}
 
 	glm::mat4 Widget3D_Slider::getModelMatrix() const

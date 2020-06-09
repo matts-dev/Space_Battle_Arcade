@@ -30,6 +30,8 @@ namespace SA
 
 		slider_masterAudio = new_sp<Widget3D_Slider>();
 		allSliders.push_back(slider_masterAudio.get());
+		slider_masterAudio->setTitleText("Master Volume");
+		slider_masterAudio->setTitleTextScale(0.125f);
 
 		//defines the order of selectors/sliders
 		ordered_options.push_back(selector_devConsole.get());
