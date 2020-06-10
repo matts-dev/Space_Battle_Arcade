@@ -33,6 +33,7 @@ namespace SA
 		bool bIsDeletable = true;
 
 	protected: //non serialized properties
+		friend class Mod;
 		std::string owningModDir;      //do not serialize this, spawn configs should be copy-and-pastable to other mods; set on loading
 
 	};

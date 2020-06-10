@@ -1,0 +1,10 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "SettingsProfileConfig_0"
+    },
+    "SettingsProfileConfig_0": {
+        "bEnableDevConsole": true,
+        "masterVolume": 0.11734236776828766
+    }
+}

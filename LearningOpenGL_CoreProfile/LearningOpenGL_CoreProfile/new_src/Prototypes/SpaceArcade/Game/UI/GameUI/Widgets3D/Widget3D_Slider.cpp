@@ -84,9 +84,28 @@ namespace SA
 			debugRenderSystem.renderCube(sliderBoxModelMat, vec3(0.f, 0.5f, 0.5f)); //visual debug the model matrix position and rotation
 		}
 #endif
+		if (isActive())
+		{
+			if (bHoveredThisTick && !bDragging)
+			{
+				bHoveredThisTick = false;
+				setSliderColor(hoverColor);
+			}
+			else if (bDragging)
+			{
+				setSliderColor(dragColor);
+			}
+			else
+			{
+				setSliderColor(defaultColor);
+			}
+		}
+
 
 		valueText->tick(dt_sec);
 		titleText->tick(dt_sec);
+
+
 	}
 
 	void Widget3D_Slider::renderGameUI(GameUIRenderData& renderData)
@@ -114,6 +133,11 @@ namespace SA
 			onDeactivated();
 		}
 
+	}
+
+	void Widget3D_Slider::setValue(float newValue)
+	{
+		currentValueAlpha = glm::clamp(newValue, 0.f, 1.f);
 	}
 
 	void Widget3D_Slider::setStart(const glm::vec3& start)
@@ -207,6 +231,9 @@ namespace SA
 			&& laser_sliderBoxBottom
 			&& laser_sliderBoxRight
 		);
+
+		//set colors back to default before releasing. (may not be necessary later if I change how release pool works to reset color)
+		setSliderColor(defaultColor);
 
 		pool.releaseLaser(laser_rangeBar);
 		pool.releaseLaser(laser_startEdge);
@@ -421,12 +448,12 @@ namespace SA
 
 	void Widget3D_Slider::onHoveredhisTick()
 	{
-		//setSliderColor(hoverColor); //will need to clear in tick
+		bHoveredThisTick = true;
 	}
 
 	void Widget3D_Slider::onClickedThisTick()
 	{
-		//todo;
+		//right now nothing need be done here
 	}
 
 	void Widget3D_Slider::onMouseDraggedThisTick(const glm::vec3& worldMousePoint)
@@ -441,12 +468,17 @@ namespace SA
 
 		updateSliderPosition();
 
-		setSliderColor(dragColor);
+		bDragging = true;
+
+		//setSliderColor(dragColor);
 	}
 
 	void Widget3D_Slider::onMouseDraggedReleased()
 	{
-		setSliderColor(defaultColor);
+		bDragging = false;
+		bHoveredThisTick = true; //show hovered color immediately instead of on next tick; this will show hover color for a frame if mouse is not on slider.
+
+		//setSliderColor(defaultColor);
 	}
 
 	void Widget3D_Slider::updateSliderPosition()

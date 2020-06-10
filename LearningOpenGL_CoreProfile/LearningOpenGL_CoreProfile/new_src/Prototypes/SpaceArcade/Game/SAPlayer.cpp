@@ -12,6 +12,9 @@
 #include "Components/FighterSpawnComponent.h"
 #include "SpaceArcade.h"
 #include "../GameFramework/Input/SAInput.h"
+#include "GameSystems/SAModSystem.h"
+#include "../Tools/PlatformUtils.h"
+#include "AssetConfigs/SASettingsProfileConfig.h"
 
 namespace SA
 {
@@ -31,11 +34,28 @@ namespace SA
 		return defaultCamera;
 	}
 
+	void SAPlayer::setSettingsProfile(const sp<SettingsProfileConfig>& newSettingsProfile)
+	{
+		sp<SettingsProfileConfig> oldSettings = settings;
+		settings = newSettingsProfile;
+		onSettingsChanged.broadcast(oldSettings, newSettingsProfile);
+	}
+
 	void SAPlayer::postConstruct()
 	{
 		PlayerBase::postConstruct();
 		respawnTimerDelegate = new_sp<MultiDelegate<>>();
 		respawnTimerDelegate->addWeakObj(sp_this(), &SAPlayer::handleRespawnTimerUp);
+
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			settings = activeMod->getSettingsProfile(0);
+		}
+		else
+		{
+			settings = new_sp<SettingsProfileConfig>(); //create default settings if we cannot get a settings profile
+			STOP_DEBUGGER_HERE(/*we didn't find a settings profile... this shouldn't happen.*/);
+		}
 
 		getInput().getKeyEvent(GLFW_KEY_ESCAPE).addWeakObj(sp_this(), &SAPlayer::handleEscapeKey);
 

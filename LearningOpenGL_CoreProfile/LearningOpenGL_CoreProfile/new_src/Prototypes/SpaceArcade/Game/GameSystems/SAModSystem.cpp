@@ -10,6 +10,7 @@
 #include "../../GameFramework/SALog.h"
 #include "../../GameFramework/SAGameBase.h"
 #include "../../../../../Libraries/nlohmann/json.hpp"
+#include "../AssetConfigs/SASettingsProfileConfig.h"
 
 using json = nlohmann::json;
 
@@ -20,7 +21,7 @@ namespace SA
 		return MODS_DIRECTORY + std::string("config.json");
 	}
 
-	void Mod::addSpawnConfig(sp<SpawnConfig>& spawnConfig)
+	void Mod::addSpawnConfig(const sp<SpawnConfig>& spawnConfig)
 	{
 		if (spawnConfigsByName.find(spawnConfig->getName()) == spawnConfigsByName.end())
 		{
@@ -74,7 +75,7 @@ namespace SA
 		}
 	}
 
-	void Mod::addProjectileConfig(sp<ProjectileConfig>& projectileConfig)
+	void Mod::addProjectileConfig(const sp<ProjectileConfig>& projectileConfig)
 	{
 		if (projectileConfigsByName.find(projectileConfig->getName()) == projectileConfigsByName.end())
 		{
@@ -93,6 +94,32 @@ namespace SA
 	{
 		std::string name = projectileConfig->getName();
 		projectileConfigsByName.erase(name);
+	}
+
+	void Mod::addSettingsProfileConfig(const sp<SettingsProfileConfig>& settingsProfileConfig)
+	{
+		if (settingsProfileConfig)
+		{
+			settingsProfileConfig->owningModDir = getModDirectoryPath();
+			settingsProfileConfig->setProfileIndex(settingsProfiles.size());
+			settingsProfiles.push_back(settingsProfileConfig);
+		}
+	}
+
+	sp<SA::SettingsProfileConfig> Mod::getSettingsProfile(size_t index)
+	{
+		if (index < NUM_SETTINGS_PROFILES)
+		{
+			//create enough profiles to get to the target index
+			while (index < settingsProfiles.size() - 1)
+			{
+				addSettingsProfileConfig(new_sp<SettingsProfileConfig>());
+			}
+
+			return settingsProfiles[index];
+		}
+
+		return nullptr;
 	}
 
 	void Mod::deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig)
@@ -226,6 +253,19 @@ namespace SA
 	void Mod::setModName(PrivateKey key, const std::string& newModName)
 	{
 		modName = newModName;
+	}
+
+	void Mod::postConstruct()
+	{
+		Parent::postConstruct();
+
+		//create all settings profiles before they are serialized/deserialized
+		//for (size_t settingsProfileIdx = 0; settingsProfileIdx < NUM_SETTINGS_PROFILES; ++settingsProfileIdx)
+		//{
+		//	settingsProfiles.push_back(new_sp<SettingsProfileConfig>());
+		//	settingsProfiles.back()->profileIndex = settingsProfileIdx;
+		//}
+
 	}
 
 	void ModSystem::refreshModList()
@@ -423,8 +463,16 @@ namespace SA
 		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/ProjectileConfigs"), mkModFolderEC);
 		if (mkModFolderEC)
 		{
-			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create game saves folder");
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create projectile configs folder");
 		}
+
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("Assets/Settings"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create settings configs folder");
+		}
+
+
 
 
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -561,7 +609,7 @@ namespace SA
 	template<typename T>
 	static void loadConfig(sp<Mod>& mod,
 		const std::string& assetLocation,
-		void(Mod::*addConfig)(sp<T>&),
+		void(Mod::*addConfig)(const sp<T>&),
 		const std::function<sp<ConfigBase>()>& factoryMethod
 	)
 	{
@@ -598,7 +646,7 @@ namespace SA
 	{
 		loadConfig<SpawnConfig>(mod, "Assets/SpawnConfigs/", &Mod::addSpawnConfig, [](){ return new_sp<SpawnConfig>(); });
 		loadConfig<ProjectileConfig>(mod, "Assets/ProjectileConfigs/", &Mod::addProjectileConfig, []() { return new_sp<ProjectileConfig>(); });
-		//loadSpawnConfigs(mod);
+		loadConfig<SettingsProfileConfig>(mod, "Assets/Settings/", &Mod::addSettingsProfileConfig, []() { return new_sp<SettingsProfileConfig>(); });
 	}
 
 	//void ModSystem::loadSpawnConfigs(sp<Mod>& mod)

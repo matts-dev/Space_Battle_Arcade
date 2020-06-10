@@ -24,6 +24,7 @@ namespace SA
 	public:
 		virtual void onActivationChanged(bool bActive) override;
 		float getValue() const { return currentValueAlpha * valueScalar; }
+		void setValue(float newValue); //[0,1] accepted range
 		void setStart(const glm::vec3& start);
 		void setEnd(const glm::vec3& end);
 		std::array<glm::vec4, 8> getOBB();
@@ -69,6 +70,9 @@ namespace SA
 		glm::vec3 dragColor = color::lightYellow();
 		glm::vec3 defaultColor = color::red();
 		std::function<std::string(float)> toStringFunc = &Widget3D_Slider_Utils::defaultSliderToString;
+	private: //IMouseInteractableState
+		bool bHoveredThisTick = false;
+		bool bDragging = false;
 	private:
 		float currentValueAlpha = 0.5f;	//[0,1] represents how far this slider is. This must be [0,1] for internal reasons like positioning.
 	private:

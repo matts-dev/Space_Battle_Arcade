@@ -4,15 +4,20 @@
 
 namespace SA
 {
+	class SettingsProfileConfig;
+
 	class SAPlayer : public PlayerBase
 	{
 	public:
 		SAPlayer(int32_t playerIndex) : PlayerBase(playerIndex) {};
 		virtual ~SAPlayer() {}
 		virtual sp<CameraBase> generateDefaultCamera() const;
+		void setSettingsProfile(const sp<SettingsProfileConfig>& newSettingsProfile);
+		const sp<SettingsProfileConfig>& getSettingsProfile() { return settings; }
 	public:
 		MultiDelegate<float /*respawn time*/> onRespawnStarted;
 		MultiDelegate<bool /* Respawn Success */> onRespawnOver;
+		MultiDelegate<const sp<SettingsProfileConfig>& /*oldSettings*/, const sp<SettingsProfileConfig>& /*newSettings*/> onSettingsChanged;
 	protected:
 		void postConstruct() override;
 		virtual void onNewControlTargetSet(IControllable* oldTarget, IControllable* newTarget) override;
@@ -22,6 +27,7 @@ namespace SA
 	private://default input
 		void handleEscapeKey(int state, int modifier_keys, int scancode);
 	private:
+		sp<SettingsProfileConfig> settings;
 		sp<MultiDelegate<>> respawnTimerDelegate = nullptr;
 		fwp<class FighterSpawnComponent> spawnComp_safeCache;
 		size_t currentTeamIdx = 0;

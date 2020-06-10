@@ -11,12 +11,14 @@ namespace SA
 	//forward declarations
 	class SpawnConfig;
 	class ProjectileConfig;
+	class SettingsProfileConfig;
 
 	////////////////////////////////////////////////////////////////////
 	// Constants
 	////////////////////////////////////////////////////////////////////
 	constexpr std::size_t MAX_MOD_NAME_LENGTH = 512;
 	constexpr size_t MAX_TEAM_NUM = 5;
+	constexpr size_t NUM_SETTINGS_PROFILES = 5;
 	const char* const MODS_DIRECTORY = "GameData/mods/";
 	std::string getModConfigFilePath();
 
@@ -30,6 +32,7 @@ namespace SA
 		/*#TODO #cleancode create a map from config type to its instances. Either create a template type to be the access that has all the boilerplate code or
 			do something like this post to emulate reflection to remove code duplication https://stackoverflow.com/questions/9859390/use-data-type-class-type-as-key-in-a-map
 		*/
+		using Parent = GameEntity;
 	public:
 		//////////////////////////////////////////////////////////
 		// Grants Module System specific private functions 
@@ -55,7 +58,7 @@ namespace SA
 		////////////////////////////////////////////////////////
 		/** WARNING: Care must be taken not to call functions modify the return obj while iterating */
 		const std::map<std::string, sp<SpawnConfig>>& getSpawnConfigs() { return spawnConfigsByName; }
-		void addSpawnConfig(sp<SpawnConfig>& spawnConfig);
+		void addSpawnConfig(const sp<SpawnConfig>& spawnConfig);
 		void removeSpawnConfig(sp<SpawnConfig>& spawnConfig);
 
 		/** WARNING: this will delete the spawn config from the file system! */
@@ -66,8 +69,9 @@ namespace SA
 		////////////////////////////////////////////////////////
 		/** WARNING: Care must be taken not to call functions that modify the return obj while iterating */
 		const std::map<std::string, sp<ProjectileConfig>>& getProjectileConfigs() { return projectileConfigsByName; }
-		void addProjectileConfig(sp<ProjectileConfig>& projectileConfig);
+		void addProjectileConfig(const sp<ProjectileConfig>& projectileConfig);
 		void removeProjectileConfig(sp<ProjectileConfig>& projectileConfig);
+
 
 		/** WARNING: this will delete the Projectile config from the file system! */
 		void deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig);
@@ -75,6 +79,12 @@ namespace SA
 		//#TODO templatize modifying configs so there isn't code duplication for each config type
 		sp<SpawnConfig> getDeafultCarrierConfigForTeam(size_t teamIdx);
 		void setDeafultCarrierConfigForTeam(const std::string& configName, size_t teamIdx);
+
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		// Settings. The number of profiles is considered static, so one cannot remove a profile.
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		void addSettingsProfileConfig(const sp<SettingsProfileConfig>& settingsProfileConfig);
+		sp<SettingsProfileConfig> getSettingsProfile(size_t index);
 
 		////////////////////////////////////////////////////////////////////
 		// Serialization
@@ -85,7 +95,8 @@ namespace SA
 
 	public: //locked methods for construction
 		void setModName(PrivateKey key, const std::string& newModName);
-
+	protected:
+		virtual void postConstruct() override;
 	private:
 		std::string modName;
 		bool bIsDeletable = true;
@@ -93,6 +104,7 @@ namespace SA
 		std::vector<std::string> defaultCarrierSpawnConfigNamesByTeamIdx;
 		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;
 		std::map<std::string, sp<ProjectileConfig>> projectileConfigsByName;
+		std::vector<sp<SettingsProfileConfig>> settingsProfiles;
 	};
 
 	////////////////////////////////////////////////////////////////////

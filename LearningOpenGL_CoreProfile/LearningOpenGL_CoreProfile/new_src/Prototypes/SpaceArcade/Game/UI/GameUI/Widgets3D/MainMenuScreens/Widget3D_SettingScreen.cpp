@@ -3,6 +3,11 @@
 #include "../Widget3D_DiscreteSelector.h"
 #include "../../../../GameSystems/SAUISystem_Game.h"
 #include "../Widget3D_Slider.h"
+#include "../../../../AssetConfigs/SASettingsProfileConfig.h"
+#include "../../../../SAPlayer.h"
+#include "../../../../../GameFramework/SAPlayerBase.h"
+#include "../../../../../GameFramework/SAPlayerSystem.h"
+#include "../../../../../GameFramework/SAGameBase.h"
 
 namespace SA
 {
@@ -16,6 +21,10 @@ namespace SA
 	{
 		backButton = new_sp<Widget3D_LaserButton>("Back");
 		enabledButtons.push_back(backButton.get());
+
+		applyButton = new_sp<Widget3D_LaserButton>("Apply");
+		enabledButtons.push_back(applyButton.get());
+		applyButton->onClickedDelegate.addWeakObj(sp_this(), &Widget3D_SettingsScreen::applySettings);
 
 		selector_devConsole = new_sp<Widget3D_DiscreteSelector<size_t>>();
 		allSelectors.push_back(selector_devConsole.get());
@@ -45,6 +54,8 @@ namespace SA
 		{
 			//activated
 			configureButtonToDefaultBackPosition(*backButton);
+			configureGenericBottomLeftButton(*applyButton);
+			readPlayerSettings();
 			for (Widget3D_LaserButton* button : enabledButtons) { button->activate(bActive); } //for stagged anim, stagger in tick.
 		}
 		else
@@ -109,6 +120,45 @@ namespace SA
 			{
 				xform.position += -hd.camUp * verticalOffset; //update for NEXT position, not this position
 			}
+		}
+	}
+
+	void Widget3D_SettingsScreen::applySettings()
+	{
+		if (activeSettingsProfile)
+		{
+			//read all widget values
+			activeSettingsProfile->bEnableDevConsole = bool(selector_devConsole->getValue());
+			activeSettingsProfile->masterVolume = slider_masterAudio->getValue();
+
+			//save
+			activeSettingsProfile->requestSave();
+
+			if (const sp<PlayerBase>& playerBase = GameBase::get().getPlayerSystem().getPlayer(selectedPlayer))
+			{
+				if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
+				{
+					player->setSettingsProfile(activeSettingsProfile);
+				}
+			}
+		}
+	}
+
+	void Widget3D_SettingsScreen::readPlayerSettings()
+	{
+		if (const sp<PlayerBase>& playerBase = GameBase::get().getPlayerSystem().getPlayer(selectedPlayer))
+		{
+			if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
+			{
+				activeSettingsProfile = player->getSettingsProfile();
+			}
+		}
+
+		if (activeSettingsProfile)
+		{
+			selector_devConsole->setIndex(size_t(activeSettingsProfile->bEnableDevConsole)); 
+			
+			slider_masterAudio->setValue(activeSettingsProfile->masterVolume);
 
 		}
 	}
