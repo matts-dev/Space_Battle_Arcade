@@ -11,6 +11,7 @@
 #include "../../GameFramework/SAGameBase.h"
 #include "../../../../../Libraries/nlohmann/json.hpp"
 #include "../AssetConfigs/SASettingsProfileConfig.h"
+#include "../AssetConfigs/CampaignConfig.h"
 
 using json = nlohmann::json;
 
@@ -111,7 +112,8 @@ namespace SA
 		if (index < NUM_SETTINGS_PROFILES)
 		{
 			//create enough profiles to get to the target index
-			while (index < settingsProfiles.size() - 1)
+			size_t itemOneBased = index + 1;
+			while (itemOneBased > settingsProfiles.size())
 			{
 				addSettingsProfileConfig(new_sp<SettingsProfileConfig>());
 			}
@@ -120,6 +122,36 @@ namespace SA
 		}
 
 		return nullptr;
+	}
+
+	sp<SA::CampaignConfig> Mod::getCampaign(size_t index)
+	{
+		if (index < MAX_NUM_CAMPAIGNS)
+		{
+			size_t itemOneBased = index + 1;
+			while (itemOneBased > campaigns.size())
+			{
+				//if we haven't loaded any campaigns, something is probably wrong but return an empty campaign to avoid a crash
+				addCampaignConfig(new_sp<CampaignConfig>());
+			}
+			return campaigns[index];
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_WARNING, "attempting to get a campaign that is out of bounds for max campaigns allowed");
+		}
+
+		return nullptr;
+	}
+
+	void Mod::addCampaignConfig(const sp<CampaignConfig>& campaignConfig)
+	{
+		if (campaignConfig)
+		{
+			campaignConfig->owningModDir = getModDirectoryPath();
+			campaignConfig->setCampaignIndex(settingsProfiles.size());
+			campaigns.push_back(campaignConfig);
+		}
 	}
 
 	void Mod::deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig)
@@ -466,13 +498,18 @@ namespace SA
 			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create projectile configs folder");
 		}
 
-		std::filesystem::create_directories(MOD_DIR_PATH + std::string("Assets/Settings"), mkModFolderEC);
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/Settings"), mkModFolderEC);
 		if (mkModFolderEC)
 		{
 			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create settings configs folder");
 		}
 
-
+		std::filesystem::create_directories(MOD_DIR_PATH + std::string("/Assets/Campaigns/"), mkModFolderEC);
+		if (mkModFolderEC)
+		{
+			log("ModSystem", LogLevel::LOG_ERROR, "Failed to create campaigns configs folder");
+		}
+		
 
 
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -647,6 +684,7 @@ namespace SA
 		loadConfig<SpawnConfig>(mod, "Assets/SpawnConfigs/", &Mod::addSpawnConfig, [](){ return new_sp<SpawnConfig>(); });
 		loadConfig<ProjectileConfig>(mod, "Assets/ProjectileConfigs/", &Mod::addProjectileConfig, []() { return new_sp<ProjectileConfig>(); });
 		loadConfig<SettingsProfileConfig>(mod, "Assets/Settings/", &Mod::addSettingsProfileConfig, []() { return new_sp<SettingsProfileConfig>(); });
+		loadConfig<CampaignConfig>(mod, "Assets/Campaigns/", &Mod::addCampaignConfig, []() { return new_sp<CampaignConfig>(); });
 	}
 
 	//void ModSystem::loadSpawnConfigs(sp<Mod>& mod)

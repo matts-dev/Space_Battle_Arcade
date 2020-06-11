@@ -176,6 +176,8 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWindowSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipBehaviorTreeNodes.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\CampaignConfig.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\JsonUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAConfigBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASettingsProfileConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.h" />
@@ -513,6 +515,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\TimeManagement\TickGroupManager.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\MemoryLeakTest.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\CampaignConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASettingsProfileConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatSystem.cpp" />

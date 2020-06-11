@@ -1,0 +1,17 @@
+{
+    "CampaignConfig_1": {
+        "levels": [
+            {
+                "level.name": "",
+                "level.outGoingPathIndices": [
+                    0
+                ]
+            }
+        ],
+        "userFacingName": "TEMPLATE"
+    },
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "CampaignConfig_1"
+    }
+}

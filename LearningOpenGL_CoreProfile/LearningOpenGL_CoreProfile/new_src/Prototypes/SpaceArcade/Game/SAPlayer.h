@@ -5,6 +5,7 @@
 namespace SA
 {
 	class SettingsProfileConfig;
+	class Mod;
 
 	class SAPlayer : public PlayerBase
 	{
@@ -26,6 +27,7 @@ namespace SA
 		void handleRespawnTimerUp();
 	private://default input
 		void handleEscapeKey(int state, int modifier_keys, int scancode);
+		void handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active);
 	private:
 		sp<SettingsProfileConfig> settings;
 		sp<MultiDelegate<>> respawnTimerDelegate = nullptr;

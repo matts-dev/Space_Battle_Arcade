@@ -106,9 +106,12 @@ namespace SA
 			{
 				outFile << serialize();
 			}
+			else
+			{
+				std::string message = "Failed to save file " + filepath;
+				log(__FUNCTION__, LogLevel::LOG_ERROR, message.c_str());
+			}
 		}
 	}
-
-
 }
 

@@ -1,0 +1,44 @@
+{
+    "CampaignConfig_1": {
+        "levels": [
+            {
+                "level.name": "",
+                "level.tier": 0,
+                "level.outGoingPathIndices": [
+                    1
+                ]
+            },
+            {
+                "level.name": "",
+                "level.tier": 1,
+                "level.outGoingPathIndices": [
+                    2
+                ]
+            },
+            {
+                "level.name": "",
+                "level.tier": 1,
+                "level.outGoingPathIndices": [
+                    3
+                ]
+            },
+            {
+                "level.name": "",
+                "level.tier": 2,
+                "level.outGoingPathIndices": [
+                    4
+                ]
+            },
+            {
+                "level.name": "",
+                "level.tier": 3,
+                "level.outGoingPathIndices": []
+            }
+        ],
+        "userFacingName": "Campaign"
+    },
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "CampaignConfig_1"
+    }
+}

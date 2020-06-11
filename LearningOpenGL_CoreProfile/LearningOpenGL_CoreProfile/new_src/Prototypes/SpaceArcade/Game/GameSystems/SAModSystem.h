@@ -12,6 +12,7 @@ namespace SA
 	class SpawnConfig;
 	class ProjectileConfig;
 	class SettingsProfileConfig;
+	class CampaignConfig;
 
 	////////////////////////////////////////////////////////////////////
 	// Constants
@@ -19,6 +20,7 @@ namespace SA
 	constexpr std::size_t MAX_MOD_NAME_LENGTH = 512;
 	constexpr size_t MAX_TEAM_NUM = 5;
 	constexpr size_t NUM_SETTINGS_PROFILES = 5;
+	constexpr size_t MAX_NUM_CAMPAIGNS = 1;
 	const char* const MODS_DIRECTORY = "GameData/mods/";
 	std::string getModConfigFilePath();
 
@@ -86,6 +88,13 @@ namespace SA
 		void addSettingsProfileConfig(const sp<SettingsProfileConfig>& settingsProfileConfig);
 		sp<SettingsProfileConfig> getSettingsProfile(size_t index);
 
+		/////////////////////////////////////////////////////////////////////////////////////
+		// campaign
+		/////////////////////////////////////////////////////////////////////////////////////
+		/** While there may only 1 campaign that is user facing, supporting an array of campaigns internally*/
+		sp<CampaignConfig> getCampaign(size_t index);
+		void addCampaignConfig(const sp<CampaignConfig>& settingsProfileConfig);
+
 		////////////////////////////////////////////////////////////////////
 		// Serialization
 		////////////////////////////////////////////////////////////////////
@@ -105,6 +114,7 @@ namespace SA
 		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;
 		std::map<std::string, sp<ProjectileConfig>> projectileConfigsByName;
 		std::vector<sp<SettingsProfileConfig>> settingsProfiles;
+		std::vector<sp<CampaignConfig>> campaigns;
 	};
 
 	////////////////////////////////////////////////////////////////////

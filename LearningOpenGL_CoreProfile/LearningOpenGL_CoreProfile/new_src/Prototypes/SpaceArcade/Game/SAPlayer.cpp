@@ -47,14 +47,12 @@ namespace SA
 		respawnTimerDelegate = new_sp<MultiDelegate<>>();
 		respawnTimerDelegate->addWeakObj(sp_this(), &SAPlayer::handleRespawnTimerUp);
 
-		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		const sp<ModSystem>& modSystem = SpaceArcade::get().getModSystem();
+		modSystem->onActiveModChanging.addWeakObj(sp_this(), &SAPlayer::handleActiveModChanging);
+
+		if (const sp<Mod>& activeMod = modSystem->getActiveMod())
 		{
-			settings = activeMod->getSettingsProfile(0);
-		}
-		else
-		{
-			settings = new_sp<SettingsProfileConfig>(); //create default settings if we cannot get a settings profile
-			STOP_DEBUGGER_HERE(/*we didn't find a settings profile... this shouldn't happen.*/);
+			handleActiveModChanging(nullptr, activeMod); //this will get the settings profile from the modk
 		}
 
 		getInput().getKeyEvent(GLFW_KEY_ESCAPE).addWeakObj(sp_this(), &SAPlayer::handleEscapeKey);
@@ -184,6 +182,18 @@ namespace SA
 					}
 				}
 			}
+		}
+	}
+
+	void SAPlayer::handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active)
+	{
+		if (active)
+		{
+			settings = active->getSettingsProfile(0); 
+		}
+		else
+		{
+			settings = new_sp<SettingsProfileConfig>(); //create default settings if we cannot get a settings profile
 		}
 	}
 
