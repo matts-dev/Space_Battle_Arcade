@@ -646,7 +646,7 @@ namespace SA
 	template<typename T>
 	static void loadConfig(sp<Mod>& mod,
 		const std::string& assetLocation,
-		void(Mod::*addConfig)(const sp<T>&),
+		void(Mod::*addConfigFunc)(const sp<T>&),
 		const std::function<sp<ConfigBase>()>& factoryMethod
 	)
 	{
@@ -664,7 +664,7 @@ namespace SA
 				//alternatively ConfigBase could be a template, but that requires it to expose a lot to header (filesystem, etc).
 				if (sp<T> derivedConfig = std::dynamic_pointer_cast<T>(baseConfig))
 				{
-					((*mod).*addConfig)(derivedConfig);
+					((*mod).*addConfigFunc)(derivedConfig);
 				}
 				else
 				{

@@ -14,7 +14,7 @@ namespace SA
 		};
 
 		std::string indexName = getIndexedName();
-		outData.push_back({ name, settingsData});
+		outData.push_back({ fileName, settingsData});
 	}
 
 	void SettingsProfileConfig::onDeserialize(const json& inData)
@@ -56,7 +56,7 @@ namespace SA
 	void SettingsProfileConfig::setProfileIndex(size_t newIndex)
 	{
 		profileIndex = newIndex;
-		name = getIndexedName();
+		fileName = getIndexedName();
 	}
 
 	void SettingsProfileConfig::requestSave()

@@ -20,6 +20,7 @@ namespace SA
 		view = glm::mat4{ 1.f };
 		projection = glm::mat4{ 1.f };
 		ambientLightIntensity = glm::vec3{ 0.f };
+		dt_sec = 0.f;
 	}
 
 }

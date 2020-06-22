@@ -25,6 +25,8 @@
 #include "../SAShip.h"
 #include "../Components/FighterSpawnComponent.h"
 #include "../GameSystems/SAModSystem.h"
+#include "../SpaceArcade.h"
+#include "../OptionalCompilationMacros.h"
 
 namespace SA
 {
@@ -131,8 +133,8 @@ namespace SA
 			planets.clear();
 			for (const PlanetData& planet : levelConfig->getPlanets())
 			{
-				glm::vec3 planetDir = normalize(planet.dir.has_value() ? *planet.dir : makeRandomVec3());
-				float planetDist = planet.distance.has_value() ? *planet.distance : rng->getFloat(1.0f, 30.f);
+				glm::vec3 planetDir = normalize(planet.offsetDir.has_value() ? *planet.offsetDir : makeRandomVec3());
+				float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : rng->getFloat(1.0f, 30.f);
 				bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (rng->getInt(0, 8) == 0);
 
 				Planet::Data init = {};
@@ -167,8 +169,8 @@ namespace SA
 
 			for (const StarData& star : levelConfig->getStars())
 			{
-				glm::vec3 starDir = normalize(star.dir.has_value() ? *star.dir : makeRandomVec3());
-				float starDist = star.distance.has_value() ? *star.distance : rng->getFloat(1.0f, 30.f);
+				glm::vec3 starDir = normalize(star.offsetDir.has_value() ? *star.offsetDir : makeRandomVec3());
+				float starDist = star.offsetDistance.has_value() ? *star.offsetDistance : rng->getFloat(1.0f, 30.f);
 				vec3 starColor = star.color.has_value() ? *star.color : vec3(1.f);	//perhaps randomize color
 
 				localStars.push_back(new_sp<Star>());
@@ -277,17 +279,17 @@ namespace SA
 		glm::vec3 worldUp = vec3(0, 1.f, 0);
 
 		//divide map up into a circle, where all teams are facing towards center.
-		float percOfPie = teamIdx / float(numTeams);
-		glm::quat centerRotation = glm::angleAxis(glm::radians<float>(glm::pi<float>()*percOfPie), worldUp);
+		float percOfCircle = teamIdx / float(numTeams);
+		glm::quat centerRotation = glm::angleAxis(2*glm::pi<float>()*percOfCircle, worldUp);
 
 		vec3 teamOffsetVec_n = glm::normalize(vec3(1, 0, 0) * centerRotation); //normalizing for good measure
 		vec3 teamFacingDir_n = -teamOffsetVec_n;	//have entire team face same direction rather than looking at a center point; this will look more like a fleet.
 
-		constexpr float teamOffsetFromMapCenterDistance = 250.f; //TODO perhaps define this in config so it can be customized
+		constexpr float teamOffsetFromMapCenterDistance = 150.f; //TODO perhaps define this in config so it can be customized
 		vec3 teamLocation = teamOffsetVec_n * teamOffsetFromMapCenterDistance;
 		vec3 teamRight = glm::normalize(glm::cross(worldUp, -teamFacingDir_n));
 
-		constexpr float carrierOffsetFromTeamLocDistance = 100.f;
+		constexpr float carrierOffsetFromTeamLocDistance = 50.f;
 		float randomizedTeamOffsetFactor = 1.f;
 		if (bRandomizeOffsetLocation)
 		{
@@ -296,7 +298,7 @@ namespace SA
 		vec3 carrierBehindTeamLocOffset = (carrierOffsetFromTeamLocDistance * randomizedTeamOffsetFactor) * teamOffsetVec_n
 			+ teamLocation;
 
-		constexpr float carrierRightOffsetFactor = 50.f;
+		constexpr float carrierRightOffsetFactor = 300.f;
 		vec3 carrierRightOffset = float(carrierIdxOnTeam) * carrierRightOffsetFactor * teamRight;
 
 		vec3 carrierElevationOffset = vec3(0.f);
@@ -316,87 +318,105 @@ namespace SA
 	void SpaceLevelBase::applyLevelConfig_CarrierTakedownGameMode(const SpaceLevelConfig& LevelConfigRef, RNG& rng)
 	{
 		const SpaceLevelConfig::GameModeData_CarrierTakedown& gm = LevelConfigRef.getGamemodeData_CarrierTakedown();
-		
-		for (size_t teamIdx = 0; teamIdx < gm.teams.size(); ++teamIdx)
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
 		{
-			const SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& tm = gm.teams[teamIdx];
-
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			//spawn carrier ships
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			for (size_t carrierIdx = 0; carrierIdx < tm.carrierSpawnData.size(); ++carrierIdx)
+			for (size_t teamIdx = 0; teamIdx < gm.teams.size(); ++teamIdx)
 			{
-				CarrierSpawnData carrierData = tm.carrierSpawnData[carrierIdx];
+				const SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& tm = gm.teams[teamIdx];
 
-				if (carrierData.shipSpawnConfig_carrier)
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				//spawn carrier ships
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				for (size_t carrierIdx = 0; carrierIdx < tm.carrierSpawnData.size(); ++carrierIdx)
 				{
-					glm::quat randomCarrierRot;
-					glm::vec3 randomCarrierLoc;
-					if (!carrierData.position.has_value() || !carrierData.rotation_deg.has_value())
+					CarrierSpawnData carrierData = tm.carrierSpawnData[carrierIdx];
+					auto findCarrierResult = activeMod->getSpawnConfigs().find(carrierData.carrierShipSpawnConfig_name);
+					if (findCarrierResult == activeMod->getSpawnConfigs().end())
 					{
-						helper_ChooseRandomCarrierPositionAndRotation(teamIdx, numTeams, carrierIdx, true, true, rng, randomCarrierLoc, randomCarrierRot);
+						std::string errorMsg = "Did not find carrier spawn config for name: " + carrierData.carrierShipSpawnConfig_name;
+						log(__FUNCTION__, LogLevel::LOG_ERROR, errorMsg.c_str());
+						continue;
 					}
-
-					Transform carrierXform;
-					carrierXform.position = carrierData.position.has_value() ? *carrierData.position : randomCarrierLoc;
-					carrierXform.rotQuat = carrierData.rotation_deg.has_value() ? quat(*carrierData.rotation_deg) : randomCarrierRot;
-
-					Ship::SpawnData shipSpawnData;
-					shipSpawnData.team = teamIdx;
-					shipSpawnData.spawnConfig = carrierData.shipSpawnConfig_carrier;
-					shipSpawnData.spawnTransform = carrierXform;
-
-					if (sp<Ship> carrierShip = spawnEntity<Ship>(shipSpawnData))
+					else if (const sp<SpawnConfig>& carrierSpawnConfig = findCarrierResult->second)
 					{
-						FighterSpawnComponent::AutoRespawnConfiguration spawnFighterConfig{};
-						spawnFighterConfig.bEnabled= carrierData.fighterSpawnData.bEnableFighterRespawns;
-						spawnFighterConfig.maxShips = carrierData.fighterSpawnData.maxNumberOwnedFighterShips;
-						spawnFighterConfig.respawnCooldownSec = carrierData.fighterSpawnData.respawnCooldownSec;
-						if (FighterSpawnComponent* spawnComp = carrierShip->getGameComponent<FighterSpawnComponent>())
+						glm::quat randomCarrierRot;
+						glm::vec3 randomCarrierLoc;
+						if (!carrierData.position.has_value() || !carrierData.rotation_deg.has_value())
 						{
-							spawnComp->setAutoRespawnConfig(spawnFighterConfig);
+							helper_ChooseRandomCarrierPositionAndRotation(teamIdx, numTeams, carrierIdx, true, true, rng, randomCarrierLoc, randomCarrierRot);
+						}
 
-							////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-							//spawn initial fighters around carrier
-							////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-							Ship::SpawnData fighterShipSpawnData;
-							fighterShipSpawnData.team = teamIdx;
+						Transform carrierXform;
+						carrierXform.position = carrierData.position.has_value() ? *carrierData.position : randomCarrierLoc;
+						carrierXform.rotQuat = carrierData.rotation_deg.has_value() ? quat(*carrierData.rotation_deg) : randomCarrierRot;
 
-							std::vector<sp<SpawnConfig>> cachedSpawnConfigs;//cache spawn configs so we're not hitting maps over and over, rather we hit them once then use an idx
-							fighterShipSpawnData.spawnConfig = getSpawnableConfigHelper(0, *carrierData.shipSpawnConfig_carrier, cachedSpawnConfigs);
+						Ship::SpawnData carrierShipSpawnData;
+						carrierShipSpawnData.team = teamIdx;
+						carrierShipSpawnData.spawnConfig = carrierSpawnConfig;
+						carrierShipSpawnData.spawnTransform = carrierXform;
 
-							if (fighterShipSpawnData.spawnConfig)
+						if (sp<Ship> carrierShip = spawnEntity<Ship>(carrierShipSpawnData))
+						{
+							carrierShip->setSpeedFactor(0); //make carrier stationary
+
+							FighterSpawnComponent::AutoRespawnConfiguration spawnFighterConfig{};
+							spawnFighterConfig.bEnabled= carrierData.fighterSpawnData.bEnableFighterRespawns;
+							spawnFighterConfig.maxShips = carrierData.fighterSpawnData.maxNumberOwnedFighterShips;
+							spawnFighterConfig.respawnCooldownSec = carrierData.fighterSpawnData.respawnCooldownSec;
+							uint32_t numInitFighters = carrierData.numInitialFighters;
+#ifdef DEBUG_BUILD
+							log(__FUNCTION__, LogLevel::LOG, "Scaling down number of spawns because this is a debug build");
+							float scaledownFactor = 0.05f;
+							spawnFighterConfig.maxShips = uint32_t(spawnFighterConfig.maxShips * scaledownFactor); //scale down for debug builds
+							numInitFighters = uint32_t(numInitFighters * scaledownFactor); //scale down for debug builds
+#endif 
+							if (FighterSpawnComponent* spawnComp = carrierShip->getGameComponent<FighterSpawnComponent>())
 							{
-								for (uint32_t fighterShip = 0; fighterShip < carrierData.numInitialFighters; ++fighterShip)
+								spawnComp->setAutoRespawnConfig(spawnFighterConfig);
+
+								////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+								//spawn initial fighters around carrier
+								////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+								Ship::SpawnData fighterShipSpawnData;
+								fighterShipSpawnData.team = teamIdx;
+
+								std::vector<sp<SpawnConfig>> cachedSpawnConfigs;//cache spawn configs so we're not hitting maps over and over, rather we hit them once then use an idx
+								fighterShipSpawnData.spawnConfig = getSpawnableConfigHelper(0, *carrierSpawnConfig, cachedSpawnConfigs);
+
+								if (fighterShipSpawnData.spawnConfig)
 								{
-									const float spawnRange = 50.f;
+									for (uint32_t fighterShip = 0; fighterShip < numInitFighters; ++fighterShip)
+									{
+										const float spawnRange = 50.f;
 
-									glm::vec3 startPos(rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange));
-									float randomRot_rad = glm::radians(rng.getFloat<float>(0, 360));
-									glm::quat rot = glm::angleAxis(randomRot_rad, glm::vec3(0, 1, 0));
-									startPos += carrierXform.position;
-									fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, glm::vec3(1.f) };
+										glm::vec3 startPos(rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange));
+										float randomRot_rad = glm::radians(rng.getFloat<float>(0, 360));
+										glm::quat rot = glm::angleAxis(randomRot_rad, glm::vec3(0, 1, 0));
+										startPos += carrierXform.position;
+										fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, glm::vec3(1.f) };
 
-									sp<Ship> fighter = spawnComp->spawnEntity(); //the carrier ship is responsible for assigning brain after a span happens via callback
-									fighter->setTransform(fighterShipSpawnData.spawnTransform);
+										sp<Ship> fighter = spawnComp->spawnEntity(); //the carrier ship is responsible for assigning brain after a span happens via callback
+										fighter->setTransform(fighterShipSpawnData.spawnTransform);
+									}
 								}
+								else { STOP_DEBUGGER_HERE(); }
 							}
-							else { STOP_DEBUGGER_HERE(); }
 						}
 					}
+					else
+					{
+						log(__FUNCTION__, LogLevel::LOG_WARNING, "No carrier spawn config available; what is the model that should go with this carrier ship?");
+						STOP_DEBUGGER_HERE();
+					}
 				}
-				else
-				{
-					log(__FUNCTION__, LogLevel::LOG_WARNING, "No carrier spawn config available; what is the model that should go with this carrier ship?");
-					STOP_DEBUGGER_HERE();
-				}
-			}
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			//update team index after processing
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			++teamIdx;
+			}
 		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "No active mod to use as lookup for spawn configs -- aborting application of carrier takedown data");
+		}
+		
 	}
 
 	void SpaceLevelBase::startLevel_v()

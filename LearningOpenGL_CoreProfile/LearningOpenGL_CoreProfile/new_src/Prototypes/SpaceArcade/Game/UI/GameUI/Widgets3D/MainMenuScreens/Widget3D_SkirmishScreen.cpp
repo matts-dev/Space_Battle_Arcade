@@ -9,6 +9,7 @@
 #include "../../../../AssetConfigs/SASpawnConfig.h"
 #include "../../../../GameSystems/SAModSystem.h"
 #include "../../text/GlitchText.h"
+#include "../../../../Levels/BasicTestSpaceLevel.h"
 
 namespace SA
 {
@@ -186,7 +187,7 @@ namespace SA
 						carrierData.fighterSpawnData.maxNumberOwnedFighterShips = maxFighters;
 
 						sp<SpawnConfig> carrierConfig = activeMod->getDeafultCarrierConfigForTeam(teamIdx);
-						carrierData.shipSpawnConfig_carrier = carrierConfig;
+						carrierData.carrierShipSpawnConfig_name = carrierConfig->getName();
 
 						if (!carrierConfig)
 						{
@@ -201,6 +202,9 @@ namespace SA
 
 
 			cachedLevelConfig = levelConfig;
+
+			cachedLevelConfig->applyDemoDataIfEmpty();
+			
 			////////////////////////////////////////////////////////
 			// start level load / animation
 			////////////////////////////////////////////////////////
@@ -235,7 +239,7 @@ namespace SA
 		{
 			LevelSystem& levelSystem = GameBase::get().getLevelSystem();
 
-			sp<SpaceLevelBase> newLevel = new_sp<SpaceLevelBase>();
+			sp<SpaceLevelBase> newLevel = bShouldUseDebugLevel ? new_sp<BasicTestSpaceLevel>() : new_sp<SpaceLevelBase>();
 			newLevel->setConfig(cachedLevelConfig);
 			cachedLevelConfig = nullptr;
 

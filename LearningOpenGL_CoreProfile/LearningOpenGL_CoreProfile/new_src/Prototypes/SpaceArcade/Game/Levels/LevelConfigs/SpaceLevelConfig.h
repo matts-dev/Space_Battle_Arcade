@@ -15,8 +15,8 @@ namespace SA
 	struct EnvironmentalBodyData
 	{
 		/** Optional fields that are not present will be randomized */
-		std::optional<glm::vec3> dir;		//will be normalized
-		std::optional<float> distance;		//how far the planet should be moved along its direction vector
+		std::optional<glm::vec3> offsetDir;		//will be normalized
+		std::optional<float> offsetDistance;		//how far the planet should be moved along its direction vector
 	};
 	struct PlanetData : public EnvironmentalBodyData
 	{
@@ -29,9 +29,9 @@ namespace SA
 	};
 	struct CarrierSpawnData
 	{
-		sp<SpawnConfig> shipSpawnConfig_carrier = nullptr;	//must be non-null or any fighters belonging to carrier will fail to spawn
-		std::optional<glm::vec3> position;								//world location relative to center of map
-		std::optional<glm::vec3> rotation_deg;							//used to construct a quaternion
+		std::string carrierShipSpawnConfig_name = "";	//must be non-null or any fighters belonging to carrier will fail to spawn
+		std::optional<glm::vec3> position;				//world location relative to center of map
+		std::optional<glm::vec3> rotation_deg;			//used to construct a quaternion
 		size_t numInitialFighters = 250;				//when game starts, how many fighters should be present around the carrier
 		struct FighterSpawnData 
 		{
@@ -47,7 +47,7 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class SpaceLevelConfig : public ConfigBase
 	{
-		friend class SpaceLevelBase;
+		friend class SpaceLevelBase; friend class SpaceArcadeCheatSystem;
 	public: //types
 		/** Only relevant is gamemode tag directs to TAG_GAMEMODE_CARRIER_TAKEDOWN*/
 		struct GameModeData_CarrierTakedown
@@ -58,7 +58,12 @@ namespace SA
 			};
 			std::vector<TeamData> teams;
 		};
+	protected:
+		virtual void postConstruct() override;
 	public:
+
+		void applyDemoDataIfEmpty(); //if config is empty, configure it so that it will be a demo map
+
 		const std::optional<size_t>& getSeed() const { return seed; }
 
 		/** Planets will be randomized until overridden*/
@@ -76,10 +81,11 @@ namespace SA
 		void setGamemodeData_CarrierTakedown(const GameModeData_CarrierTakedown& inData) { carrierGamemodeData = inData; }
 	public:
 		virtual std::string getRepresentativeFilePath() override;
-	protected:
 		virtual void onSerialize(json& outData) override;
 		virtual void onDeserialize(const json& inData) override;
 	private:
+		std::string userFacingName = "NoUserFacingName";
+
 		std::optional<size_t> seed;
 
 		size_t numPlanets = 0;

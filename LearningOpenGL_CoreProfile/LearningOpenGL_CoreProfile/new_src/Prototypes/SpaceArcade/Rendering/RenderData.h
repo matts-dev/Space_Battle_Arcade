@@ -20,5 +20,6 @@ namespace SA
 		glm::mat4 view{ 1.f }; //note: perhaps it will be better to make a classes that shift their data from frames. So one can just ask the camera for its frame data. No copies required.
 		glm::mat4 projection{ 1.f };
 		glm::mat4 projection_view{ 1.f };
+		float dt_sec = 0.f;
 	};
 }

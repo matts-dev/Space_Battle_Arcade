@@ -56,6 +56,7 @@ namespace SA
 		void setForceCentered(bool bInForceCentered) { bUseLargeDistanceApproximation = bInForceCentered; }
 		void setRotationSpeed_radsec(float rotSpeed_radsec) { data.rotSpeedSec_rad = rotSpeed_radsec; }
 		void setRotationAxis(glm::vec3 rotAxis) { data.rotationAxis = glm::normalize(rotAxis); }
+		void setUseCameraAsLight(bool bUseCameraLight);
 	private:
 		void applySizeCorrections();
 	private: //statics
@@ -67,10 +68,12 @@ namespace SA
 		sp<Texture_2D> albedo2Tex;
 		sp<Texture_2D> citylightTex;
 		sp<Texture_2D> colorMapTex;
+		sp<Texture_2D> nullBlackTex;
 	private: //instance data
 
 		Data data;
 		bool bUseLargeDistanceApproximation = true;
+		bool bUseCameraLight = false;
 	};
 
 }

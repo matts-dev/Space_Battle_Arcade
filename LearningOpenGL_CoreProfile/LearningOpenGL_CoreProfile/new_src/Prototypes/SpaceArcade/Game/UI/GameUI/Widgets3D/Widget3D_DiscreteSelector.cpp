@@ -11,6 +11,16 @@
 
 namespace SA
 {
+
+	Widget3D_DiscreteSelectorBase::~Widget3D_DiscreteSelectorBase()
+	{
+		//No lasers currently, but if added hook this up
+		//if (isActive())
+		//{
+		//	TODO; //clear lasers only if we have some
+		//}
+	}
+
 	void Widget3D_DiscreteSelectorBase::postConstruct()
 	{
 		Parent::postConstruct();

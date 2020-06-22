@@ -23,6 +23,7 @@ namespace SA
 		using Parent = Widget3D_ActivatableBase;
 	public:
 		Widget3D_LaserButton(const std::string& text = "Laser Button");
+		virtual ~Widget3D_LaserButton();
 		void setText(const std::string& text);
 		void setXform(const Transform& xform);
 		const Transform& getXform();

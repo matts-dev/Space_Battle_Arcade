@@ -1,5 +1,6 @@
 #include "CampaignConfig.h"
 #include "JsonUtils.h"
+#include "../Levels/LevelConfigs/SpaceLevelConfig.h"
 
 namespace SA
 {
@@ -7,7 +8,7 @@ namespace SA
 	void CampaignConfig::postConstruct()
 	{
 		Parent::postConstruct();
-		name = "CampaignConfig";
+		fileName = "CampaignConfig";
 	}
 
 	void CampaignConfig::onSerialize(json& outData)
@@ -24,6 +25,7 @@ namespace SA
 		{
 			//create a dummy level t fill out json template
 			levels.push_back(LevelData{});
+			levels.back().spaceLevelConfig = new_sp<SpaceLevelConfig>(); //create dummy level to serialize as an example
 			levels.back().outGoingPathIndices.push_back(0);//create path to itself to fill out template
 		}
 
@@ -35,12 +37,17 @@ namespace SA
 			//NOTE: this means on de-serialization the out symbol will need to be defined with the same name as the object in the for loop (ie level.name);
 			levelJson[SYMBOL_TO_STR(level.name)] = level.name;
 			levelJson[SYMBOL_TO_STR(level.tier)] = level.tier;
+			levelJson[SYMBOL_TO_STR(level.optional_defaultPlanetIdx)] = level.optional_defaultPlanetIdx;
+			levelJson[SYMBOL_TO_STR(level.optional_ui_planetSizeFactor)] = level.optional_ui_planetSizeFactor;
+
 
 			levelJson[SYMBOL_TO_STR(level.outGoingPathIndices)] = json{}; //start an array
 			for (size_t outIndex : level.outGoingPathIndices)
 			{
 				levelJson[SYMBOL_TO_STR(level.outGoingPathIndices)].push_back(outIndex);
 			}
+
+			if (level.spaceLevelConfig){level.spaceLevelConfig->onSerialize(levelJson);}
 
 			//the order of this array is very important as level contain indices this array
 			levelArray.push_back(levelJson);
@@ -57,9 +64,9 @@ namespace SA
 
 	void CampaignConfig::onDeserialize(const json& inData)
 	{
-		if(JsonUtils::has(inData, name))
+		if(JsonUtils::has(inData, fileName))
 		{
-			const json& campaignJson = inData[name];
+			const json& campaignJson = inData[fileName];
 			if (!campaignJson.is_null())
 			{
 				READ_JSON_STRING(userFacingName, campaignJson);
@@ -80,6 +87,12 @@ namespace SA
 						const json& levelJson = levelArray[levelIdx];
 						READ_JSON_STRING(level.name, levelJson);
 						READ_JSON_INT(level.tier, levelJson);
+
+						READ_JSON_INT_OPTIONAL(level.optional_defaultPlanetIdx, levelJson);
+						READ_JSON_FLOAT_OPTIONAL(level.optional_ui_planetSizeFactor, levelJson);
+
+						level.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+						level.spaceLevelConfig->onDeserialize(levelJson);
 
 						////////////////////////////////////////////////////////
 						// read outgoing levels

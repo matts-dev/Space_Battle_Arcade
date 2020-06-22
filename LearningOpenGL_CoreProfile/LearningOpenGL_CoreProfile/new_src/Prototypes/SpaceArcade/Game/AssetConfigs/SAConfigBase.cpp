@@ -69,7 +69,7 @@ namespace SA
 	{
 		json outData = {
 			{"ConfigBase" , {
-					{"name", name},
+					{"name", fileName},
 					{"bIsDeletable", bIsDeletable},
 				}
 			}
@@ -89,7 +89,7 @@ namespace SA
 			const json& baseData = rootData["ConfigBase"];
 
 			//for backwards compatibility, make sure to contains check all fields
-			name = baseData.contains("name") ? baseData["name"] : "";
+			fileName = baseData.contains("name") ? baseData["name"] : "";
 			bIsDeletable = baseData.contains("bIsDeletable") ? (bool)baseData["bIsDeletable"] : true;
 
 			onDeserialize(rootData);

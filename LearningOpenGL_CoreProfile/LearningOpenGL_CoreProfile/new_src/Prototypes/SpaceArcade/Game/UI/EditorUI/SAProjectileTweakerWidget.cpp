@@ -115,7 +115,7 @@ namespace SA
 		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
 		{
 			sp<ProjectileConfig> newProjConfig = new_sp<ProjectileConfig>();
-			newProjConfig->name = name;
+			newProjConfig->fileName = name;
 			newProjConfig->owningModDir = activeMod->getModDirectoryPath(); //#alternative perhaps should just pass owning mod to ctor and have this taken careof
 			newProjConfig->save();
 

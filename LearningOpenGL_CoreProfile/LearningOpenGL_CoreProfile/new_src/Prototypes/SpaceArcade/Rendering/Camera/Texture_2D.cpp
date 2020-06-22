@@ -20,7 +20,12 @@ namespace SA
 	void Texture_2D::onAcquireGPUResources()
 	{
 		static AssetSystem& assetSystem = GameBase::get().getAssetSystem();
-		if (assetSystem.loadTexture(filePath.c_str(), textureId))
+
+		if (filePath.size() > 0 && assetSystem.loadTexture(filePath.c_str(), textureId))
+		{
+			bLoadSuccess = true;
+		}
+		else if (bool bLoadedColor = solidColor.has_value() ? assetSystem.loadTexture(*solidColor, textureId) : false)
 		{
 			bLoadSuccess = true;
 		}

@@ -1,0 +1,101 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "SpaceLevelConfig"
+    },
+    "SpaceLevelConfig": {
+        "carrierGamemodeData": {
+            "carrierGamemodeData.teams": [
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": null,
+                            "carrierData.rotation_deg": [
+                                45.0,
+                                2.0,
+                                1.0
+                            ]
+                        },
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": null,
+                            "carrierData.rotation_deg": [
+                                45.0,
+                                2.0,
+                                1.0
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": null,
+                            "carrierData.rotation_deg": [
+                                45.0,
+                                2.0,
+                                1.0
+                            ]
+                        },
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": null,
+                            "carrierData.rotation_deg": [
+                                45.0,
+                                2.0,
+                                1.0
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "gamemodeTag": "Carrier Takedown",
+        "planets": [
+            {
+                "environmentBodyData.offsetDir": [
+                    1.0,
+                    0.0,
+                    0.0
+                ],
+                "environmentBodyData.offsetDistance": 5.0,
+                "planetData.bHasCivilization": false,
+                "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_1.png"
+            }
+        ],
+        "stars": [
+            {
+                "environmentBodyData.offsetDir": [
+                    -1.0,
+                    0.0,
+                    0.0
+                ],
+                "environmentBodyData.offsetDistance": 50.0,
+                "starData.color": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        ],
+        "userFacingName": "TEMPLATE_CONFIG"
+    }
+}

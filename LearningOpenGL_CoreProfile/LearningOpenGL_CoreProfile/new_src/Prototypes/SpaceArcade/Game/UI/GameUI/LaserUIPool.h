@@ -19,6 +19,7 @@ namespace SA
 	class Window;
 	class Shader;
 	class RNG;
+	class LevelBase;
 	struct GameUIRenderData;
 
 	enum class ELaserOffscreenMode
@@ -44,6 +45,8 @@ namespace SA
 		void updateEnd_NoAnimReset(const glm::vec3& endPoint);
 		void updateStart_NoAnimReset(const glm::vec3& startPoint);
 		void randomizeAnimSpeed(float targetAnimDurationSecs = 1.0f, float randomDriftSecs = 0.25f);
+		void setAnimDurations(float startSpeedSec, float endSpeedSec);
+		void scaleAnimSpeeds(float startScale, float endScale);
 		float getRandomAnimTimeOffset(float rangeSecs);
 		void forceAnimComplete();
 		void setColorImmediate(const glm::vec3& color);
@@ -91,6 +94,7 @@ namespace SA
 	public:
 		static LaserUIPool& get();
 		static Curve_highp laserLerpCurve;
+		virtual ~LaserUIPool();
 		sp<LaserUIObject> requestLaserObject();
 		void releaseLaser(sp<LaserUIObject>& out); //will null out shared pointer for you as a signal it was released
 		void assignRandomOffscreenMode(LaserUIObject& laser);
@@ -106,6 +110,7 @@ namespace SA
 		void handleGameShutdownStarted();
 		void handlePrimaryWindowChanging(const sp<Window>& old_window, const sp<Window>& new_window);
 		void handleFramebufferResized(int width, int height);
+		void handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel);
 	private:
 		std::vector<LaserUIObject*> activeLasers;
 		std::vector<sp<LaserUIObject>> unclaimedPool;

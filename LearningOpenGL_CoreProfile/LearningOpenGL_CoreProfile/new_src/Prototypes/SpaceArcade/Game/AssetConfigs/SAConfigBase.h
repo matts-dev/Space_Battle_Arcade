@@ -19,17 +19,16 @@ namespace SA
 		std::string serialize();
 		void deserialize(const std::string& fileAsStr);
 
-		const std::string& getName() const { return name; }
+		const std::string& getName() const { return fileName; }
 		bool isDeletable() const { return bIsDeletable; }
 		const std::string& getOwningModDir() const { return owningModDir; }
 	protected:
 		void save(); //access restricted, only allow certain classes to save this.
-
+	public: //public as these are modifying entirely external data
 		virtual void onSerialize(json& outData) = 0;
 		virtual void onDeserialize(const json& inData) = 0;
-
 	protected: //serializedProperties
-		std::string name;
+		std::string fileName;
 		bool bIsDeletable = true;
 
 	protected: //non serialized properties

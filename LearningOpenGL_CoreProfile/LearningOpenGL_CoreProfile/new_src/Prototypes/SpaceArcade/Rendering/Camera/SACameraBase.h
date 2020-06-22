@@ -102,7 +102,7 @@ namespace SA
 		glm::vec3 worldUp_n = glm::vec3(0.f, 1.f, 0.f);
 		float FOV = 45.0f;
 		float nearZ = 1.f;
-		float farZ = 500.f;
+		float farZ = 1000.f;
 		std::optional<uint32_t> owningPlayerIndex;
 		bool cursorMode = false;
 		bool bActive = false;

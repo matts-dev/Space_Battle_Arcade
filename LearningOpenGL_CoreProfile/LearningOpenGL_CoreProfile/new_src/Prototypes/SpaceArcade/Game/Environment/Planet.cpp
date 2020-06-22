@@ -146,9 +146,11 @@ namespace SA
 		albedo2Tex = data.albedo3_filepath.has_value() ? new_sp<Texture_2D>(data.albedo3_filepath.value()) : nullptr;
 		citylightTex = data.nightCityLightTex_filepath.has_value() ? new_sp<Texture_2D>(data.nightCityLightTex_filepath.value()) : nullptr;
 		colorMapTex = data.colorMapTex_filepath.has_value() ? new_sp<Texture_2D>(data.colorMapTex_filepath.value()) : nullptr;
+		nullBlackTex = assetSystem.getNullBlackTexture();
 	}
 
 	void Planet::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
+
 	{
 		if (!albedo0Tex) { return; }
 		static GameBase& game = GameBase::get();
@@ -159,15 +161,17 @@ namespace SA
 		//#TODO perhaps slightly move the planet when moving towards it? will need to map large distances to small changes
 		mat4 model = data.xform.getModelMatrix();
 		mat4 customView = view;
-		if (bUseLargeDistanceApproximation)
+		vec3 camFront_n = vec3(1.f, 0.f, 0.f);
+		PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
+		const sp<PlayerBase>& player = playerSys.getPlayer(0);
+		if (const sp<CameraBase>& camera = player ? player->getCamera() : nullptr)
 		{
-			PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
-			const sp<PlayerBase>& player = playerSys.getPlayer(0);
-			if (const sp<CameraBase>& camera = player ? player->getCamera() : nullptr)
+			if (bUseLargeDistanceApproximation)
 			{
 				vec3 origin{ 0.f };
 				customView = glm::lookAt(origin, origin + camera->getFront(), camera->getUp());
 			}
+			camFront_n = camera->getFront();
 		}
 		mat4 projection_view = projection * customView;
 
@@ -185,7 +189,6 @@ namespace SA
 		planetShader->setUniform1i("bEnableCityLights", int32_t(bUseCityLightTexture));
 		if (bUseMultiTexturePaint)
 		{
-
 			albedo1Tex->bindTexture(GL_TEXTURE1);
 			planetShader->setUniform1i("albedo_1", 1);
 
@@ -195,10 +198,24 @@ namespace SA
 			colorMapTex->bindTexture(GL_TEXTURE3);
 			planetShader->setUniform1i("colorMap", 3);
 		}
+		else
+		{
+			//clear out any previous data
+			nullBlackTex->bindTexture(GL_TEXTURE1);
+			planetShader->setUniform1i("albedo_1", 1);
+			planetShader->setUniform1i("albedo_2", 1);
+			planetShader->setUniform1i("colorMap", 1);
+		}
 
 		if (bUseCityLightTexture)
 		{
 			citylightTex->bindTexture(GL_TEXTURE4);
+			planetShader->setUniform1i("cityLights", 4);
+		}
+		else
+		{
+			//clear out any previous data
+			nullBlackTex->bindTexture(GL_TEXTURE4);
 			planetShader->setUniform1i("cityLights", 4);
 		}
 
@@ -210,9 +227,19 @@ namespace SA
 				planetShader->setUniform3f("ambientLight", FRD->ambientLightIntensity);
 
 				size_t lightIdx = 0;
-				for (const DirectionLight& light : FRD->dirLights)
+				if (!bUseCameraLight) //environment mode
 				{
-					light.applyToShader(*planetShader, ++lightIdx);
+					for (const DirectionLight& light : FRD->dirLights)
+					{
+						light.applyToShader(*planetShader, lightIdx++);
+					}
+				}
+				else //camera lit (UI mode)
+				{
+					DirectionLight uiLight;
+					uiLight.lightIntensity = vec3(1.f);
+					uiLight.direction_n = camFront_n;
+					uiLight.applyToShader(*planetShader, 0);
 				}
 			}
 		}
@@ -230,6 +257,11 @@ namespace SA
 		}
 
 		return true;
+	}
+
+	void Planet::setUseCameraAsLight(bool bInUseCameraLight)
+	{
+		bUseCameraLight = bInUseCameraLight;
 	}
 
 	sp<class Planet> makeRandomPlanet(RNG& rng)

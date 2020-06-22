@@ -22,5 +22,6 @@ namespace SA
 		void cheat_commsTargetPlayer(const std::vector<std::string>& cheatArgs);
 		void cheat_destroyAllGenerators(const std::vector<std::string>& cheatArgs);
 		void cheat_killPlayer(const std::vector<std::string>& cheatArgs);
+		void cheat_make_json_template_spacelevelconfig(const std::vector<std::string>& cheatArgs);
 	};
 }

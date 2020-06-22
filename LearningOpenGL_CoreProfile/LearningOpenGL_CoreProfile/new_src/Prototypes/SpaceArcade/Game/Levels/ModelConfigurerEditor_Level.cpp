@@ -1210,7 +1210,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			renderModel = SpaceArcade::get().getAssetSystem().loadModel(fullModelPath.c_str());
 
 			sp<SpawnConfig> newConfig = new_sp<SpawnConfig>();
-			newConfig->name = configName;
+			newConfig->fileName = configName;
 			newConfig->fullModelFilePath = fullModelPath;
 			newConfig->owningModDir = activeMod->getModDirectoryPath();
 			newConfig->save();

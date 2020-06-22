@@ -19,7 +19,7 @@ namespace SA
 {
 	std::string SpawnConfig::getRepresentativeFilePath()
 	{
-		return owningModDir + std::string("Assets/SpawnConfigs/") + name + std::string(".json");
+		return owningModDir + std::string("Assets/SpawnConfigs/") + fileName + std::string(".json");
 	}
 
 	sp<SA::Model3D> SpawnConfig::getModel() const

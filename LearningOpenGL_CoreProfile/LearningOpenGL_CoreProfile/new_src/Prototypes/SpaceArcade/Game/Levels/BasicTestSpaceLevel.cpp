@@ -76,163 +76,12 @@ namespace SA
 		SpaceArcade& game = SpaceArcade::get();
 		AssetSystem& assetSS = game.getAssetSystem();
 
+		const bool bShouldUseConfigSpawns = hasLevelConfig();
+
 		const sp<UISystem_Editor>& uiSystem= game.getEditorUISystem();
 		uiSystem->onUIFrameStarted.addStrongObj(sp_this(), &BasicTestSpaceLevel::handleUIFrameStarted);
 
-		//specifically not loading model, because assuming model will be owned elsewhere 
-		sp<Model3D> carrierModel = assetSS.getModel(game.URLs.carrierURL);
-		sp<Model3D> fighterModel = assetSS.getModel(game.URLs.fighterURL);
-		if (!carrierModel || !fighterModel)
-		{
-			std::cout << "models not available for level" << std::endl;
-			return;
-		}
-
-		const sp<ModSystem>& modSystem = game.getModSystem();
-		sp<Mod> activeMod = modSystem->getActiveMod();
-		if (!activeMod)
-		{
-			log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "No active mod");
-			return;
-		}
-
-		const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
-		if (const auto& iter = spawnConfigs.find("Fighter"); iter != spawnConfigs.end())
-		{
-			fighterSpawnConfig = iter->second;
-		}
-		if (const auto& iter = spawnConfigs.find("Carrier"); iter != spawnConfigs.end())
-		{
-			carrierSpawnConfig = iter->second;
-		}
-
-		if (!fighterSpawnConfig)
-		{
-			log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "Default Spawn Configs not available.");
-		}
-
-		glm::vec3 carrierPosition_teamA = { 0,0, 150 };
-		//glm::vec3 carrierPosition_teamA = { 0,0, 30 }; //testing dogfight
-
 		if (const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
-		{
-			const sp<CameraBase>& camera = player->getCamera();
-			camera->setFar(1000.f);
-
-			//camera->setPosition(glm::vec3(-300, 0, 0.f));
-			camera->setPosition(carrierPosition_teamA + glm::vec3(15, 20, 20));
-			camera->lookAt_v(camera->getPosition() + glm::vec3(0,0,-1)); //carriers are currently separated along the z axis; so look down that axis
-		}
-
-		////////////////////////////////////////////////////////
-		// fighter spawn control
-		////////////////////////////////////////////////////////
-		particleSpawnOffset = glm::vec3(0, 0, 0);
-
-		std::random_device rng;
-		std::seed_seq seed{ 28 };
-		std::mt19937 rng_eng = std::mt19937(seed);
-		std::uniform_real_distribution<float> startDist(-50.f, 50.f); //[a, b)
-
-		uint32_t numFighterShipsToSpawn = 5000;
-#ifdef _DEBUG
-		//numFighterShipsToSpawn = 250;
-		numFighterShipsToSpawn = 50;
-		//numFighterShipsToSpawn = 20;
-		//numFighterShipsToSpawn = 10;
-		//numFighterShipsToSpawn = 4;
-		//numFighterShipsToSpawn = 2;
-#endif//NDEBUG 
-		FighterSpawnComponent::AutoRespawnConfiguration spawnFighterConfig{};
-		spawnFighterConfig.maxShips = numFighterShipsToSpawn / 2;
-
-
-		////////////////////////////////////////////////////////
-		// Carriers
-		////////////////////////////////////////////////////////
-		constexpr bool bSpawnCarriers = true;
-		Transform carrierXform_TeamA;
-		carrierXform_TeamA.position = carrierPosition_teamA;
-		carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), normalize(glm::vec3(0, 1, 0)));
-		//carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-47.0f), normalize(glm::vec3(1, 1, 0)));
-
-		Ship::SpawnData carrierSpawnData_A;
-		carrierSpawnData_A.team = 0;
-		carrierSpawnData_A.spawnConfig = carrierSpawnConfig;
-		carrierSpawnData_A.spawnTransform = carrierXform_TeamA;
-		sp<Ship> carrierShip_TeamA = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_A) : nullptr;
-		if (FighterSpawnComponent* spawnComp = carrierShip_TeamA->getGameComponent<FighterSpawnComponent>())
-		{
-			spawnComp->setAutoRespawnConfig(spawnFighterConfig);
-		}
-
-		//#TODO #BUG passing same carrier spawn data shouldn't influence the other ships that were spawned. copying spawn data.
-		Ship::SpawnData carrierSpawnData_B = carrierSpawnData_A;
-		Transform carrierXform_TeamB = carrierXform_TeamA;
-		carrierXform_TeamB.position.z = -carrierXform_TeamB.position.z;
-		carrierXform_TeamB.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
-		carrierSpawnData_B.spawnTransform = carrierXform_TeamB;
-		carrierSpawnData_B.team = 1;
-		//sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
-		sp<Ship> carrierShip_TeamB = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_B) : nullptr;
-		if (FighterSpawnComponent* spawnComp = carrierShip_TeamB->getGameComponent<FighterSpawnComponent>())
-		{
-			spawnComp->setAutoRespawnConfig(spawnFighterConfig);
-		}
-
-		////////////////////////////////////////////////////////
-		// fighters
-		////////////////////////////////////////////////////////
-
-		uint32_t numTeams = 2;
-		uint32_t numFightersPerTeam = numFighterShipsToSpawn / numTeams;
-		float immediateSpawnPerc = 0.25f;
-
-		//set up debug targets for easy ai testing (see usage)
-		std::vector< std::vector<sp<Ship>> > db_teamTargets = { 
-			std::vector<sp<Ship>>{},
-			std::vector<sp<Ship>>{}
-		};
-
-		auto spawnFighters = [&](size_t teamIdx, glm::vec3 teamSpawnOrigin, FighterSpawnComponent* spawnComp) 
-		{
-			if (spawnComp)
-			{
-				Ship::SpawnData fighterShipSpawnData;
-				fighterShipSpawnData.team = teamIdx;
-				fighterShipSpawnData.spawnConfig = fighterSpawnConfig;
-
-				uint32_t numToSpawn = uint32_t(float(numFightersPerTeam) * immediateSpawnPerc);
-
-				for (uint32_t fighterShip = 0; fighterShip < numToSpawn; ++fighterShip)
-				{ 
-					glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
-					glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
-					startPos += teamSpawnOrigin;
-
-					fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, glm::vec3(1.f)};
-
-					//sp<Ship> fighter = spawnComp->spawnEntity<Ship>(fighterShipSpawnData);
-					sp<Ship> fighter = spawnComp->spawnEntity();
-					db_teamTargets[teamIdx].push_back(fighter);
-					fighter->setTransform(fighterShipSpawnData.spawnTransform);
-
-					////////////////////////////////////////////////////////
-					// preferably change the brain we spawn fighters with, but you can change here for quick override. but any spawns from ship will not have the brain below
-					////////////////////////////////////////////////////////
-					//fighter->spawnNewBrain<FlyInDirectionBrain>(); 
-					//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
-					//fighter->spawnNewBrain<WanderBrain>();
-					//fighter->spawnNewBrain<EvadeTestBrain>();
-					//fighter->spawnNewBrain<DogfightTestBrain>();
-					//fighter->spawnNewBrain<FighterBrain>();
-				}
-			}
-		};
-		spawnFighters(0, carrierXform_TeamA.position, carrierShip_TeamA->getGameComponent<FighterSpawnComponent>());
-		spawnFighters(1, carrierXform_TeamB.position, carrierShip_TeamB->getGameComponent<FighterSpawnComponent>());
-
-		if(const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
 		{
 			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleLeftMouseButton);
 			player->getInput().getMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT).addWeakObj(sp_this(), &BasicTestSpaceLevel::handleRightMouseButton);
@@ -257,60 +106,218 @@ namespace SA
 			}
 		}
 
-		//DEBUG assign targets to each other to test dogfighting
-		bool bEnableDebugTargets = false;
-		if(bEnableDebugTargets)
+		if (!bShouldUseConfigSpawns)
 		{
-			size_t targetsToSet = db_teamTargets[0].size() < db_teamTargets[1].size() ? db_teamTargets[0].size() : db_teamTargets[1].size();
-			for (size_t idx = 0; idx < targetsToSet ; idx++)
+			//specifically not loading model, because assuming model will be owned elsewhere 
+			sp<Model3D> carrierModel = assetSS.getModel(game.URLs.carrierURL);
+			sp<Model3D> fighterModel = assetSS.getModel(game.URLs.fighterURL);
+			if (!carrierModel || !fighterModel)
 			{
-				sp<Ship> a = db_teamTargets[0][idx];
-				sp<Ship> b = db_teamTargets[1][idx];
+				std::cout << "models not available for level" << std::endl;
+				return;
+			}
 
-				const BrainComponent* aBrainComp = a->getGameComponent<BrainComponent>();
-				const BrainComponent* bBrainComp = b->getGameComponent<BrainComponent>();
-				if (aBrainComp && bBrainComp)
+			const sp<ModSystem>& modSystem = game.getModSystem();
+			sp<Mod> activeMod = modSystem->getActiveMod();
+			if (activeMod)
+			{
+				const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
+				if (const auto& iter = spawnConfigs.find("Fighter"); iter != spawnConfigs.end())
 				{
-					BehaviorTreeBrain* aBrain = dynamic_cast<BehaviorTreeBrain*>(aBrainComp->getBrain());
-					BehaviorTreeBrain* bBrain = dynamic_cast<BehaviorTreeBrain*>(bBrainComp->getBrain());
-					if (aBrain && bBrain)
+					fighterSpawnConfig = iter->second;
+				}
+				if (const auto& iter = spawnConfigs.find("Carrier"); iter != spawnConfigs.end())
+				{
+					carrierSpawnConfig = iter->second;
+				}
+
+				if (!fighterSpawnConfig)
+				{
+					log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "Default Spawn Configs not available.");
+				}
+
+				glm::vec3 carrierPosition_teamA = { 0,0, 150 };
+				//glm::vec3 carrierPosition_teamA = { 0,0, 30 }; //testing dogfight
+
+				if (const sp<PlayerBase>& player = game.getPlayerSystem().getPlayer(0))
+				{
+					const sp<CameraBase>& camera = player->getCamera();
+					camera->setFar(1000.f);
+
+					//camera->setPosition(glm::vec3(-300, 0, 0.f));
+					camera->setPosition(carrierPosition_teamA + glm::vec3(15, 20, 20));
+					camera->lookAt_v(camera->getPosition() + glm::vec3(0,0,-1)); //carriers are currently separated along the z axis; so look down that axis
+				}
+
+				////////////////////////////////////////////////////////
+				// fighter spawn control
+				////////////////////////////////////////////////////////
+				particleSpawnOffset = glm::vec3(0, 0, 0);
+
+				std::random_device rng;
+				std::seed_seq seed{ 28 };
+				std::mt19937 rng_eng = std::mt19937(seed);
+				std::uniform_real_distribution<float> startDist(-50.f, 50.f); //[a, b)
+
+				uint32_t numFighterShipsToSpawn = 5000;
+		#ifdef _DEBUG
+				//numFighterShipsToSpawn = 250;
+				numFighterShipsToSpawn = 50;
+				//numFighterShipsToSpawn = 20;
+				//numFighterShipsToSpawn = 10;
+				//numFighterShipsToSpawn = 4;
+				//numFighterShipsToSpawn = 2;
+		#endif//NDEBUG 
+				FighterSpawnComponent::AutoRespawnConfiguration spawnFighterConfig{};
+				spawnFighterConfig.maxShips = numFighterShipsToSpawn / 2;
+
+
+				////////////////////////////////////////////////////////
+				// Carriers
+				////////////////////////////////////////////////////////
+				constexpr bool bSpawnCarriers = true;
+				Transform carrierXform_TeamA;
+				carrierXform_TeamA.position = carrierPosition_teamA;
+				carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-33.0f), normalize(glm::vec3(0, 1, 0)));
+				//carrierXform_TeamA.rotQuat = glm::angleAxis(glm::radians(-47.0f), normalize(glm::vec3(1, 1, 0)));
+
+				Ship::SpawnData carrierSpawnData_A;
+				carrierSpawnData_A.team = 0;
+				carrierSpawnData_A.spawnConfig = carrierSpawnConfig;
+				carrierSpawnData_A.spawnTransform = carrierXform_TeamA;
+				sp<Ship> carrierShip_TeamA = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_A) : nullptr;
+				if (FighterSpawnComponent* spawnComp = carrierShip_TeamA->getGameComponent<FighterSpawnComponent>())
+				{
+					spawnComp->setAutoRespawnConfig(spawnFighterConfig);
+				}
+
+				//#TODO #BUG passing same carrier spawn data shouldn't influence the other ships that were spawned. copying spawn data.
+				Ship::SpawnData carrierSpawnData_B = carrierSpawnData_A;
+				Transform carrierXform_TeamB = carrierXform_TeamA;
+				carrierXform_TeamB.position.z = -carrierXform_TeamB.position.z;
+				carrierXform_TeamB.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
+				carrierSpawnData_B.spawnTransform = carrierXform_TeamB;
+				carrierSpawnData_B.team = 1;
+				//sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
+				sp<Ship> carrierShip_TeamB = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_B) : nullptr;
+				if (FighterSpawnComponent* spawnComp = carrierShip_TeamB->getGameComponent<FighterSpawnComponent>())
+				{
+					spawnComp->setAutoRespawnConfig(spawnFighterConfig);
+				}
+
+				////////////////////////////////////////////////////////
+				// fighters
+				////////////////////////////////////////////////////////
+
+				uint32_t numTeams = 2;
+				uint32_t numFightersPerTeam = numFighterShipsToSpawn / numTeams;
+				float immediateSpawnPerc = 0.25f;
+
+				//set up debug targets for easy ai testing (see usage)
+				std::vector< std::vector<sp<Ship>> > db_teamTargets = { 
+					std::vector<sp<Ship>>{},
+					std::vector<sp<Ship>>{}
+				};
+
+				auto spawnFighters = [&](size_t teamIdx, glm::vec3 teamSpawnOrigin, FighterSpawnComponent* spawnComp) 
+				{
+					if (spawnComp)
 					{
-						BehaviorTree::Memory& aMem = aBrain->getBehaviorTree().getMemory();
-						BehaviorTree::Memory& bMem = bBrain->getBehaviorTree().getMemory();
+						Ship::SpawnData fighterShipSpawnData;
+						fighterShipSpawnData.team = teamIdx;
+						fighterShipSpawnData.spawnConfig = fighterSpawnConfig;
 
-						sp<WorldEntity> aWE = a;
-						sp<WorldEntity> bWE = b;
+						uint32_t numToSpawn = uint32_t(float(numFightersPerTeam) * immediateSpawnPerc);
 
-						WorldEntity* bAsTarget = aMem.replaceValue("target", bWE);
-						WorldEntity* aAsTarget = bMem.replaceValue("target", aWE);
+						for (uint32_t fighterShip = 0; fighterShip < numToSpawn; ++fighterShip)
+						{ 
+							glm::vec3 startPos(startDist(rng_eng), startDist(rng_eng), startDist(rng_eng));
+							glm::quat rot = glm::angleAxis(startDist(rng_eng), glm::vec3(0, 1, 0)); //angle is a little adhoc, but with radians it should cover full 360 possibilities
+							startPos += teamSpawnOrigin;
+
+							fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, glm::vec3(1.f)};
+
+							//sp<Ship> fighter = spawnComp->spawnEntity<Ship>(fighterShipSpawnData);
+							sp<Ship> fighter = spawnComp->spawnEntity();
+							db_teamTargets[teamIdx].push_back(fighter);
+							fighter->setTransform(fighterShipSpawnData.spawnTransform);
+
+							////////////////////////////////////////////////////////
+							// preferably change the brain we spawn fighters with, but you can change here for quick override. but any spawns from ship will not have the brain below
+							////////////////////////////////////////////////////////
+							//fighter->spawnNewBrain<FlyInDirectionBrain>(); 
+							//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();
+							//fighter->spawnNewBrain<WanderBrain>();
+							//fighter->spawnNewBrain<EvadeTestBrain>();
+							//fighter->spawnNewBrain<DogfightTestBrain>();
+							//fighter->spawnNewBrain<FighterBrain>();
+						}
+					}
+				};
+				spawnFighters(0, carrierXform_TeamA.position, carrierShip_TeamA->getGameComponent<FighterSpawnComponent>());
+				spawnFighters(1, carrierXform_TeamB.position, carrierShip_TeamB->getGameComponent<FighterSpawnComponent>());
+
+				//DEBUG assign targets to each other to test dogfighting
+				bool bEnableDebugTargets = false;
+				if (bEnableDebugTargets)
+				{
+					size_t targetsToSet = db_teamTargets[0].size() < db_teamTargets[1].size() ? db_teamTargets[0].size() : db_teamTargets[1].size();
+					for (size_t idx = 0; idx < targetsToSet; idx++)
+					{
+						sp<Ship> a = db_teamTargets[0][idx];
+						sp<Ship> b = db_teamTargets[1][idx];
+
+						const BrainComponent* aBrainComp = a->getGameComponent<BrainComponent>();
+						const BrainComponent* bBrainComp = b->getGameComponent<BrainComponent>();
+						if (aBrainComp && bBrainComp)
+						{
+							BehaviorTreeBrain* aBrain = dynamic_cast<BehaviorTreeBrain*>(aBrainComp->getBrain());
+							BehaviorTreeBrain* bBrain = dynamic_cast<BehaviorTreeBrain*>(bBrainComp->getBrain());
+							if (aBrain && bBrain)
+							{
+								BehaviorTree::Memory& aMem = aBrain->getBehaviorTree().getMemory();
+								BehaviorTree::Memory& bMem = bBrain->getBehaviorTree().getMemory();
+
+								sp<WorldEntity> aWE = a;
+								sp<WorldEntity> bWE = b;
+
+								WorldEntity* bAsTarget = aMem.replaceValue("target", bWE);
+								WorldEntity* aAsTarget = bMem.replaceValue("target", aWE);
+							}
+						}
 					}
 				}
-			}
-		}
 
 
-		//follow a target from the start
-		size_t targetIdx = 0;
-		size_t pickIdx = 0;
-		for (sp<WorldEntity> entity : worldEntities)
-		{
-			if (pickIdx == targetIdx)
-			{
-				if (Ship* ship = dynamic_cast<Ship*>(entity.get()))
+				//follow a target from the start
+				size_t targetIdx = 0;
+				size_t pickIdx = 0;
+				for (sp<WorldEntity> entity : worldEntities)
 				{
-					if (!ship->hasAvoidanceSpheres())
+					if (pickIdx == targetIdx)
 					{
-						hitboxPickerWidget->setPickTarget(entity);
-						break;
+						if (Ship* ship = dynamic_cast<Ship*>(entity.get()))
+						{
+							if (!ship->hasAvoidanceSpheres())
+							{
+								hitboxPickerWidget->setPickTarget(entity);
+								break;
+							}
+							else
+							{
+								//try the next one as this one is a large ship with avoidance attached
+								targetIdx++;
+							}
+						}
 					}
-					else
-					{
-						//try the next one as this one is a large ship with avoidance attached
-						targetIdx++;
-					}
+					pickIdx++;
 				}
 			}
-			pickIdx++;
+			else
+			{
+				log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "No active mod");
+			}
+
 		}
 	}
 

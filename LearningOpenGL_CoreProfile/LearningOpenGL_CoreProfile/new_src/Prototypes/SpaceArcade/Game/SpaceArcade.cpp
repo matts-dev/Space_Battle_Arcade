@@ -189,6 +189,10 @@ namespace SA
 				}
 			}
 
+			if (const sp<TimeManager>& worldTimeManager = loadedLevel->getWorldTimeManager())
+			{
+				FRD.dt_sec = worldTimeManager->getDeltaTimeSecs();
+			}
 			FRD.ambientLightIntensity = loadedLevel->getAmbientLight();
 
 			if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))

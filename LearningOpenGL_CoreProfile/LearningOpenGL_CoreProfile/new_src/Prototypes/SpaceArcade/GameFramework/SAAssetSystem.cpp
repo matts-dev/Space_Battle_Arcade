@@ -1,9 +1,12 @@
 #include "SAAssetSystem.h"
 
 #include <iostream>
+#include <stdio.h>
+
 #include "../../../../Libraries/stb_image.h"
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../Rendering/OpenGLHelpers.h"
+#include "../Rendering/Camera/Texture_2D.h"
 
 namespace SA
 {
@@ -66,6 +69,12 @@ namespace SA
 		}
 	}
 
+	sp<SA::Texture_2D> AssetSystem::getNullBlackTexture() const
+	{
+		static sp<Texture_2D> nullTexture = new_sp<Texture_2D>(glm::vec3(0.f));
+		return nullTexture;
+	}
+
 	bool AssetSystem::loadTexture(const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
 	{
 		//# TODO upgrade 3d model class to use this; but care will need to be taken so that textures are deleted after models
@@ -84,6 +93,40 @@ namespace SA
 			return false;
 		}
 
+		bool bSuccess = loadTexture_internal(textureData, img_width, img_height, img_nrChannels, relative_filepath, outTexId, texture_unit, useGammaCorrection);
+
+		stbi_image_free(textureData);
+		loadedTextureIds.insert({ relative_filepath, outTexId });
+
+		return bSuccess;
+	}
+
+	bool AssetSystem::loadTexture(glm::vec3 solidColor, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
+	{
+		//convert to integer based color
+		using byte = unsigned char;
+
+		byte rgb[] = { byte(solidColor.r * 255.f), byte(solidColor.g * 255.f), byte(solidColor.b * 255.f) };
+
+		char textBuffer[1024];
+		snprintf(textBuffer, sizeof(textBuffer), "solidColor[%d,%d,%d]", rgb[0], rgb[1], rgb[2]);
+
+		auto previousLoadTextureIter = loadedTextureIds.find(std::string(textBuffer));
+		if (previousLoadTextureIter != loadedTextureIds.end())
+		{
+			outTexId = previousLoadTextureIter->second;
+			return true;
+		}
+
+		bool bSuccess = loadTexture_internal(rgb, 1, 1, 3, textBuffer, outTexId, texture_unit, useGammaCorrection);
+
+		loadedTextureIds.insert({ std::string(textBuffer), outTexId });
+
+		return bSuccess;
+	}
+
+	bool AssetSystem::loadTexture_internal(unsigned char* textureData, int img_width, int img_height, int img_nrChannels, const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
+	{
 		GLuint textureID;
 		ec(glGenTextures(1, &textureID));
 
@@ -126,9 +169,6 @@ namespace SA
 		ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
 		ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 		ec(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-		stbi_image_free(textureData);
-
-		loadedTextureIds.insert({ relative_filepath, textureID });
 
 		outTexId = textureID;
 		return true;

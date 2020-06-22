@@ -1,11 +1,11 @@
 #include "LaserUIPool.h"
+#include <assert.h>
+#include <algorithm>
 #include "../../../GameFramework/SAGameBase.h"
 #include "../../../GameFramework/SATimeManagementSystem.h"
 #include "../../../GameFramework/SALevel.h"
 #include "../../../GameFramework/SALevelSystem.h"
-#include <assert.h>
 #include "../../OptionalCompilationMacros.h"
-#include <algorithm>
 #include "../../../GameFramework/SARandomNumberGenerationSystem.h"
 #include "../../../Rendering/Camera/SACameraBase.h"
 #include "../../GameSystems/SAUISystem_Game.h"
@@ -32,6 +32,11 @@ namespace SA
 	}
 
 	/*static*/ SA::Curve_highp LaserUIPool::laserLerpCurve;
+
+	LaserUIPool::~LaserUIPool()
+	{
+		log(__FUNCTION__, LogLevel::LOG, "releasing laser pool memory");
+	}
 
 	sp<SA::LaserUIObject> LaserUIPool::requestLaserObject()
 	{
@@ -91,6 +96,14 @@ namespace SA
 
 	void LaserUIPool::releaseLaser(sp<LaserUIObject>& out)
 	{
+		if (GameBase::isEngineShutdown())
+		{
+			//there exists a race condition between static-deinitialization, laser pool is dtored before game which causes things to be released after laser pool is destroyed.
+			//if we're shut down, then just ignore all releases.
+			return;
+		}
+
+
 		if (out)
 		{
 			unclaimedPool.push_back(out);
@@ -130,7 +143,6 @@ namespace SA
 
 			laser.setOffscreenMode(offMode);
 		}
-
 	}
 
 	void LaserUIPool::postConstruct()
@@ -154,6 +166,8 @@ namespace SA
 		{
 			handlePrimaryWindowChanging(nullptr, primaryWindow);
 		}
+
+		GameBase::get().getLevelSystem().onPreLevelChange.addWeakObj(sp_this(), &LaserUIPool::handlePreLevelChange);
 
 		laserShader = new_sp<Shader>(laserShader_vs, laserShader_fs, false);
 	}
@@ -192,6 +206,18 @@ namespace SA
 			//force recalculation using new framebuffer size metrics
 			laser->setOffscreenMode(laser->offscreenMode);
 		}
+	}
+
+	void LaserUIPool::handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel)
+	{
+		//clear all lasers as we're changing levels (holding off on this as it could cause bad bugs if something releases its laser after we've done the clear)
+
+		//TODO in order to do below, iterate over all the laser objects and set a "dead" flag that can be used to discard the laser when it is released instead of attempting to add it back to pool.
+		//since we do not ever changed owned lasers, we cannot rely on these "dead" lasers.
+
+		//activeLasers.clear();
+		//unclaimedPool.clear();
+		//ownedLaserObjects.clear();
 	}
 
 	void LaserUIPool::onReleaseGPUResources()
@@ -361,6 +387,18 @@ namespace SA
 	{
 		anim_Start.animDuration = targetAnimDurationSecs + getRandomAnimTimeOffset(randomDriftSecs);
 		anim_End.animDuration = targetAnimDurationSecs + getRandomAnimTimeOffset(randomDriftSecs);
+	}
+
+	void LaserUIObject::setAnimDurations(float startSpeedSec, float endSpeedSec)
+	{
+		anim_Start.animDuration = startSpeedSec;
+		anim_End.animDuration = endSpeedSec;
+	}
+
+	void LaserUIObject::scaleAnimSpeeds(float startScale, float endScale)
+	{
+		anim_Start.animDuration *= startScale;
+		anim_End.animDuration *= endScale;
 	}
 
 	float LaserUIObject::getRandomAnimTimeOffset(float rangeSecs)

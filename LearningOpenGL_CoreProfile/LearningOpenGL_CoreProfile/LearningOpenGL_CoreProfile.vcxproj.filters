@@ -852,6 +852,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\JsonUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_GenericMouseHoverable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -2070,6 +2073,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\CampaignConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_GenericMouseHoverable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -46,6 +46,7 @@ namespace SA
 		void handleSettingsClicked();
 		void handleExitClicked();
 		void handleReturnToMainMenuClicked();
+		void handleMoveCameraToCampaignPlanet(const glm::vec3& worldPos);
 	private:
 		struct CameraAnimData
 		{
@@ -54,6 +55,7 @@ namespace SA
 			glm::vec3 endPoint = glm::vec3(0.f); //be careful not to specify two points 180 apart as that will produce nans
 			float timePassedSec = 0.f;
 			Widget3D_ActivatableBase* pendingScreenToActivate = nullptr;
+			bool bIsSubScreenAnimation = true;
 		};
 		std::optional<CameraAnimData> cameraAnimData;
 		Curve_highp camCurve;

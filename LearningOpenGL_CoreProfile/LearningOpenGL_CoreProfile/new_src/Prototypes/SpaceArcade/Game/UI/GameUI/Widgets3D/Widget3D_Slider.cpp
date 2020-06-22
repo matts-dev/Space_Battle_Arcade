@@ -120,6 +120,15 @@ namespace SA
 		}
 	}
 
+	Widget3D_Slider::~Widget3D_Slider()
+	{
+		if (isActive())
+		{
+			//clear lasers (only if we have any)
+			onDeactivated();
+		}
+	}
+
 	void Widget3D_Slider::onActivationChanged(bool bActive)
 	{
 		Parent::onActivationChanged(bActive);
@@ -494,7 +503,7 @@ namespace SA
 		}
 		else
 		{
-			log(__FUNCTION__, LogLevel::LOG_ERROR, "No hash entry for UI button");
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "No hash entry");
 			STOP_DEBUGGER_HERE();
 		}
 	}

@@ -10,8 +10,8 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 #include "DataStructures/SATransform.h"
-#include <array>
-
+#include <array> 
+#include <vector> //perhaps should break things out into "array utils" etc, so we don't have to include these everywhere that wants access to utils
 
 namespace SA
 {
@@ -91,6 +91,12 @@ namespace SA
 		float getCosBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		glm::quat getRotationBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees);
+
+		template <typename T>
+		bool isValidIndex(const std::vector<T>& arr, size_t idx)
+		{
+			return arr.size() > 0 && idx < arr.size();
+		}
 
 		inline bool anyValueNAN(float a) { return glm::isnan(a); }
 		inline bool anyValueNAN(glm::vec3 vec) {return glm::isnan(vec.x) || glm::isnan(vec.y) || glm::isnan(vec.z);}

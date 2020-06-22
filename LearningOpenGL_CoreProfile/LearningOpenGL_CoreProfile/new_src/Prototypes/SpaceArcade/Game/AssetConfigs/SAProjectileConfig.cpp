@@ -10,7 +10,7 @@ namespace SA
 {
 	std::string ProjectileConfig::getRepresentativeFilePath()
 	{
-		return owningModDir + std::string("Assets/ProjectileConfigs/") + name + std::string(".json");
+		return owningModDir + std::string("Assets/ProjectileConfigs/") + fileName + std::string(".json");
 	}
 
 	void ProjectileConfig::onSerialize(json& outData)

@@ -16,6 +16,14 @@ namespace SA
 		textCache = text;
 	}
 
+	Widget3D_LaserButton::~Widget3D_LaserButton()
+	{
+		if (isActive())
+		{
+			onDeactivated(); //clear lasers
+		}
+	}
+
 	void Widget3D_LaserButton::setText(const std::string& text)
 	{
 		myGlitchText->setText(text);

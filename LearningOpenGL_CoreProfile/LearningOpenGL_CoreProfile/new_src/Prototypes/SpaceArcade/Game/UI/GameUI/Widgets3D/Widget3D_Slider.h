@@ -22,6 +22,8 @@ namespace SA
 	{
 		using Parent = Widget3D_ActivatableBase;
 	public:
+		virtual ~Widget3D_Slider();
+	public:
 		virtual void onActivationChanged(bool bActive) override;
 		float getValue() const { return currentValueAlpha * valueScalar; }
 		void setValue(float newValue); //[0,1] accepted range

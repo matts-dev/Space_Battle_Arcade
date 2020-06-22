@@ -17,6 +17,8 @@ namespace SA
 	class Widget3D_DiscreteSelectorBase : public Widget3D_ActivatableBase
 	{
 		using Parent = Widget3D_ActivatableBase;
+	public:
+		virtual ~Widget3D_DiscreteSelectorBase();
 	protected:
 		virtual void postConstruct() override;
 	public:

@@ -73,6 +73,7 @@ namespace SA
 		campaignScreen = new_sp<Widget3D_CampaignScreen>();
 		campaignScreen->getBackButton().addWeakObj(sp_this(), &MainMenuLevel::handleReturnToMainMenuClicked);
 		campaignScreen->activate(false);
+		campaignScreen->loadingPlanetAtUILocation.addWeakObj(sp_this(), &MainMenuLevel::handleMoveCameraToCampaignPlanet);
 		menuScreens.push_back(campaignScreen.get());
 
 		skirmishScreen = new_sp<Widget3D_SkirmishScreen>();
@@ -313,6 +314,7 @@ namespace SA
 				menuCamera->lookAt_v(cameraAnimData->endPoint);
 
 				if (cameraAnimData->pendingScreenToActivate) { cameraAnimData->pendingScreenToActivate->activate(true);}
+				else if (cameraAnimData->bIsSubScreenAnimation) {/*don't check/ensure if we're looking to activate a screen*/ }
 				else { STOP_DEBUGGER_HERE(); } // did you forget to set a screen to animate to?
 
 				//prevent this from ticking until next animation
@@ -395,6 +397,12 @@ namespace SA
 		deactivateAllScreens();
 		animateCameraTo(glm::vec3(-0.f, -0.f, -1.f), 3.0f);
 		setPendingScreenToActivate(mainMenuScreen.get());
+	}
+
+	void MainMenuLevel::handleMoveCameraToCampaignPlanet(const glm::vec3& worldPos)
+	{
+		animateCameraTo(worldPos - menuCamera->getPosition(), 1.f);
+		cameraAnimData->bIsSubScreenAnimation = true;
 	}
 
 }

@@ -21,7 +21,7 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////
 	std::string ParticleConfig::getRepresentativeFilePath()
 	{
-		return owningModDir + std::string("Assets/Particles/") + name + std::string(".json");
+		return owningModDir + std::string("Assets/Particles/") + fileName + std::string(".json");
 	}
 
 	void ParticleConfig::generateMutableEffectData(std::vector<MutableEffectData>& outEffectData) const

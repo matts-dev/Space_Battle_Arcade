@@ -1,8 +1,66 @@
 #include "SpaceLevelConfig.h"
 #include "../../../GameFramework/SALog.h"
+#include "../../AssetConfigs/JsonUtils.h"
+#include "../../AssetConfigs/SAConfigBase.h"
+#include "../../AssetConfigs/SASpawnConfig.h"
+#include "../../GameSystems/SAModSystem.h"
+#include "../../SpaceArcade.h"
+#include "../../Environment/Planet.h"
 
 namespace SA
 {
+	void SpaceLevelConfig::postConstruct()
+	{
+		ConfigBase::postConstruct();
+		fileName = SYMBOL_TO_STR(SpaceLevelConfig);
+	}
+
+	void SpaceLevelConfig::applyDemoDataIfEmpty()
+	{
+		if (const bool bIsEmpty = (gamemodeTag == ""))
+		{
+			if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+			{
+				owningModDir = activeMod->getModDirectoryPath();
+
+				userFacingName = "TEMPLATE_CONFIG";
+				gamemodeTag = TAG_GAMEMODE_CARRIER_TAKEDOWN;
+
+				planets.push_back(PlanetData{});
+				PlanetData& demoPlanet = planets.back();
+				demoPlanet.offsetDir = glm::vec3(1, 0, 0);
+				demoPlanet.offsetDistance = 50.f;
+				demoPlanet.bHasCivilization = false;
+				demoPlanet.texturePath = DefaultPlanetTexturesPaths::albedo1;
+
+				stars.push_back(StarData{});
+				StarData& starData = stars.back();
+				starData.offsetDir = glm::vec3(-1, 1, 0);
+				starData.offsetDistance = 50.f;
+				starData.color = glm::vec3(1.f);
+
+				for (size_t teamIdx = 0; teamIdx < 2; ++teamIdx)
+				{
+					carrierGamemodeData.teams.push_back({});
+					SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& team = carrierGamemodeData.teams.back();
+					for (size_t carrierIdx = 0; carrierIdx < 2; ++carrierIdx)
+					{
+						team.carrierSpawnData.push_back({});
+						CarrierSpawnData& carrierData = team.carrierSpawnData.back();
+						carrierData.numInitialFighters = 250;
+						carrierData.position = std::nullopt;
+						/*carrierData.rotation_deg = glm::vec3(45, 2, 1);*/
+						carrierData.rotation_deg = std::nullopt;
+						sp<SpawnConfig> deafultCarrierConfigForTeam = activeMod->getDeafultCarrierConfigForTeam(teamIdx);
+						carrierData.carrierShipSpawnConfig_name = deafultCarrierConfigForTeam ? deafultCarrierConfigForTeam->getName() : "";
+						carrierData.fighterSpawnData.bEnableFighterRespawns = true;
+						carrierData.fighterSpawnData.maxNumberOwnedFighterShips = 1000;
+						carrierData.fighterSpawnData.respawnCooldownSec = 3.f;
+					}
+				}
+			}
+		}
+	}
 
 	void SpaceLevelConfig::setNumPlanets(size_t number)
 	{
@@ -64,17 +122,211 @@ namespace SA
 
 	std::string SpaceLevelConfig::getRepresentativeFilePath()
 	{
-		return owningModDir + std::string("Assets/levels_configs/") + name + std::string(".json");
+		return owningModDir + std::string("Assets/Levels/") + fileName + std::string("_") + userFacingName+ std::string(".json");
 	}
 
 	void SpaceLevelConfig::onSerialize(json& outData)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+		json spaceLevelData;
+		spaceLevelData[SYMBOL_TO_STR(gamemodeTag)] = gamemodeTag;
+		spaceLevelData[SYMBOL_TO_STR(userFacingName)] = userFacingName;
+
+		auto writeEnvBodyData = [this](const EnvironmentalBodyData& environmentBodyData, json& j) 
+		{
+			//warning: name of this parameter defines field name!
+			JSON_WRITE_OPTIONAL_VEC3(environmentBodyData.offsetDir, j);
+			JSON_WRITE_OPTIONAL(environmentBodyData.offsetDistance, j);
+		};
+		auto writePlanetData = [this, writeEnvBodyData](const PlanetData& planetData, json& j)
+		{
+			//warning: name of this parameter defines field name!
+			JSON_WRITE_OPTIONAL(planetData.texturePath, j);
+			JSON_WRITE_OPTIONAL(planetData.bHasCivilization, j);
+			writeEnvBodyData(planetData, j);
+		};
+		auto writeStarData = [this, writeEnvBodyData](const StarData& starData, json& j)
+		{
+			//warning: name of this parameter defines field name!
+			JSON_WRITE_OPTIONAL_VEC3(starData.color, j);
+			writeEnvBodyData(starData, j);
+		};
+
+		////////////////////////////////////////////////////////
+		// environment planets
+		////////////////////////////////////////////////////////
+		json planetsArray;
+		for (const PlanetData& planetData : planets)
+		{
+			json planetJson;
+			writePlanetData(planetData, planetJson);
+			planetsArray.push_back(planetJson);
+		}
+		spaceLevelData.push_back({ SYMBOL_TO_STR(planets), planetsArray });
+
+		////////////////////////////////////////////////////////
+		// environment stars
+		////////////////////////////////////////////////////////
+		json starArray;
+		for (const StarData& starData : stars)
+		{
+			json starJson;
+			writeStarData(starData, starJson);
+			starArray.push_back(starJson);
+		}
+		spaceLevelData.push_back({ SYMBOL_TO_STR(stars), starArray });
+
+		////////////////////////////////////////////////////////
+		// carrier game mode data
+		////////////////////////////////////////////////////////
+		json json_carrierGamemodeData;
+		{
+			json json_teamArray;
+			for(size_t teamIdx = 0; teamIdx < carrierGamemodeData.teams.size(); ++teamIdx)
+			{
+				json json_Team;
+				GameModeData_CarrierTakedown::TeamData& teamData = carrierGamemodeData.teams[teamIdx];
+				json json_carrierSpawnArray;
+				for (size_t carrierIdx = 0; carrierIdx < teamData.carrierSpawnData.size(); ++carrierIdx)
+				{
+					CarrierSpawnData& carrierData = teamData.carrierSpawnData[carrierIdx];
+
+					json json_carrierData;
+					JSON_WRITE(carrierData.numInitialFighters, json_carrierData);
+					JSON_WRITE_OPTIONAL_VEC3(carrierData.position, json_carrierData);
+					JSON_WRITE_OPTIONAL_VEC3(carrierData.rotation_deg, json_carrierData);
+					JSON_WRITE(carrierData.carrierShipSpawnConfig_name, json_carrierData);
+					JSON_WRITE(carrierData.fighterSpawnData.bEnableFighterRespawns, json_carrierData);
+					JSON_WRITE(carrierData.fighterSpawnData.maxNumberOwnedFighterShips, json_carrierData);
+					JSON_WRITE(carrierData.fighterSpawnData.respawnCooldownSec, json_carrierData);
+					json_carrierSpawnArray.push_back(json_carrierData);
+				}
+				json_Team[SYMBOL_TO_STR(teamData.carrierSpawnData)] = json_carrierSpawnArray;
+				json_teamArray.push_back(json_Team);
+			}
+			json_carrierGamemodeData[SYMBOL_TO_STR(carrierGamemodeData.teams)] = json_teamArray;
+		}
+		spaceLevelData.push_back({ SYMBOL_TO_STR(carrierGamemodeData), json_carrierGamemodeData });
+	
+		outData.push_back({ getName(), spaceLevelData });
 	}
 
 	void SpaceLevelConfig::onDeserialize(const json& inData)
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+		if (JsonUtils::has(inData, fileName))
+		{
+			const json& spaceLevelConfigJson = inData[fileName];
+
+			////////////////////////////////////////////////////////
+			// helper lambdas
+			////////////////////////////////////////////////////////
+			auto readEnvBodyData = [this](EnvironmentalBodyData& environmentBodyData, const json& j)
+			{
+				//warning: name of this parameter defines field name!
+				READ_JSON_FLOAT_OPTIONAL(environmentBodyData.offsetDistance, j);
+				READ_JSON_VEC3_OPTIONAL(environmentBodyData.offsetDir, j);
+			};
+			auto readPlanetData = [this, readEnvBodyData](PlanetData& planetData, const json& j)
+			{
+				//warning: name of this parameter defines field name!
+				READ_JSON_STRING_OPTIONAL(planetData.texturePath, j);
+				READ_JSON_BOOL_OPTIONAL(planetData.bHasCivilization, j);
+				readEnvBodyData(planetData, j);
+			};
+			auto readStarData = [this, readEnvBodyData](StarData& starData, const json& j)
+			{
+				//warning: name of this parameter defines field name!
+				READ_JSON_VEC3_OPTIONAL(starData.color, j);
+				readEnvBodyData(starData, j);
+			};
+			
+			/////////////////////////////////////////////////////////////////////////////////////
+			// read json
+			/////////////////////////////////////////////////////////////////////////////////////
+
+			READ_JSON_STRING_OPTIONAL(gamemodeTag, inData);
+			READ_JSON_STRING_OPTIONAL(userFacingName, inData);
+
+			////////////////////////////////////////////////////////
+			// read planet data
+			////////////////////////////////////////////////////////
+			if (JsonUtils::hasArray(spaceLevelConfigJson, SYMBOL_TO_STR(planets)))
+			{
+				planets.clear(); //make sure the array is empty before we populate
+				const json& planetsArray = spaceLevelConfigJson[SYMBOL_TO_STR(planets)];
+				for (size_t planetIdx = 0; planetIdx < planetsArray.size(); ++planetIdx)
+				{
+					const json& planetJson = planetsArray[planetIdx];
+
+					planets.push_back(PlanetData{});
+					PlanetData& planetData = planets.back();
+					readPlanetData(planetData, planetJson);
+				}
+			}
+
+			////////////////////////////////////////////////////////
+			// read star data
+			////////////////////////////////////////////////////////
+			if (JsonUtils::hasArray(spaceLevelConfigJson, SYMBOL_TO_STR(stars)))
+			{
+				stars.clear(); //make sure the array is empty before we populate
+				const json& starArray = spaceLevelConfigJson[SYMBOL_TO_STR(stars)];
+				for (size_t starIdx = 0; starIdx < starArray.size(); ++starIdx)
+				{
+					const json& starJson = starArray[starIdx];
+
+					stars.push_back(StarData{});
+					StarData& starData = stars.back();
+					readStarData(starData, starJson);
+				}
+			}
+
+
+			////////////////////////////////////////////////////////
+			// read carrier take down game data
+			////////////////////////////////////////////////////////
+			if (JsonUtils::has(spaceLevelConfigJson, SYMBOL_TO_STR(carrierGamemodeData)))
+			{
+				const json& json_carrierGamemodeData = spaceLevelConfigJson[SYMBOL_TO_STR(carrierGamemodeData)];
+				if(JsonUtils::hasArray(json_carrierGamemodeData, SYMBOL_TO_STR(carrierGamemodeData.teams)))
+				{
+					carrierGamemodeData.teams.clear(); //clear any previous data; 
+
+					const json& json_teamArray = json_carrierGamemodeData[SYMBOL_TO_STR(carrierGamemodeData.teams)];
+					for (size_t teamIdx = 0; teamIdx < json_teamArray.size(); ++teamIdx)
+					{
+						carrierGamemodeData.teams.push_back({});
+						GameModeData_CarrierTakedown::TeamData& teamData = carrierGamemodeData.teams.back();
+
+						const json& json_teamData = json_teamArray[teamIdx];
+
+						if (JsonUtils::hasArray(json_teamData, SYMBOL_TO_STR(teamData.carrierSpawnData)))
+						{
+							teamData.carrierSpawnData.clear(); //clear any previous data
+
+							const json& json_carrierSpawnArray = json_teamData[SYMBOL_TO_STR(teamData.carrierSpawnData)];
+							for (size_t carrierIdx = 0; carrierIdx < json_carrierSpawnArray.size(); ++carrierIdx)
+							{
+								teamData.carrierSpawnData.push_back({});
+								CarrierSpawnData& carrierData = teamData.carrierSpawnData.back();
+								const json& json_carrierData = json_carrierSpawnArray[carrierIdx];
+
+								READ_JSON_INT_OPTIONAL(carrierData.numInitialFighters, json_carrierData);
+								READ_JSON_VEC3_OPTIONAL(carrierData.position, json_carrierData)
+								READ_JSON_VEC3_OPTIONAL(carrierData.rotation_deg, json_carrierData);
+								READ_JSON_STRING_OPTIONAL(carrierData.carrierShipSpawnConfig_name, json_carrierData);
+								READ_JSON_BOOL_OPTIONAL(carrierData.fighterSpawnData.bEnableFighterRespawns, json_carrierData);
+								READ_JSON_INT_OPTIONAL(carrierData.fighterSpawnData.maxNumberOwnedFighterShips, json_carrierData);
+								READ_JSON_FLOAT_OPTIONAL(carrierData.fighterSpawnData.respawnCooldownSec, json_carrierData);
+							}
+						}
+					}
+				}
+			}
+
+			//fix up any dependent fields
+			numPlanets = planets.size();
+			numStars = stars.size();
+		}
 	}
 
 

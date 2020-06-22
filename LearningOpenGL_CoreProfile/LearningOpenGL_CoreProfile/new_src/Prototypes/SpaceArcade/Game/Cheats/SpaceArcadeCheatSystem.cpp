@@ -5,6 +5,11 @@
 #include "../../GameFramework/Components/SAComponentEntity.h"
 #include "../../GameFramework/Components/GameplayComponents.h"
 #include "../../GameFramework/SAPlayerSystem.h"
+#include "../Levels/LevelConfigs/SpaceLevelConfig.h"
+#include "../Environment/Planet.h"
+#include "../GameSystems/SAModSystem.h"
+#include "../SpaceArcade.h"
+#include "../AssetConfigs/SASpawnConfig.h"
 
 namespace SA
 {
@@ -24,6 +29,7 @@ namespace SA
 		REGISTER_CHEAT("turrets_target_player", SpaceArcadeCheatSystem::cheat_turretsTargetPlayer);
 		REGISTER_CHEAT("comms_target_player", SpaceArcadeCheatSystem::cheat_commsTargetPlayer);
 		REGISTER_CHEAT("kill_player", SpaceArcadeCheatSystem::cheat_killPlayer);
+		REGISTER_CHEAT("make_json_template_spacelevelconfig", SpaceArcadeCheatSystem::cheat_make_json_template_spacelevelconfig);
 	}
 
 	void SpaceArcadeCheatSystem::cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs)
@@ -67,6 +73,34 @@ namespace SA
 					}
 				}
 			}
+		}
+#endif
+	}
+
+	void SpaceArcadeCheatSystem::cheat_make_json_template_spacelevelconfig(const std::vector<std::string>& cheatArgs)
+	{
+#if COMPILE_CHEATS
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			sp<SpaceLevelConfig> spaceConfig = new_sp<SpaceLevelConfig>();
+			spaceConfig->applyDemoDataIfEmpty();
+
+			spaceConfig->save();
+
+			std::string representativeFilePath = spaceConfig->getRepresentativeFilePath();
+			sp<ConfigBase> baseConfig = ConfigBase::load(representativeFilePath, []() {return new_sp<SpaceLevelConfig>(); });
+			if (SpaceLevelConfig* reloadedConfig = dynamic_cast<SpaceLevelConfig*>(baseConfig.get()))
+			{
+				log(__FUNCTION__, LogLevel::LOG, "loaded template config just saved");	//use debug to inspect values
+			}
+			else
+			{
+				log(__FUNCTION__, LogLevel::LOG_WARNING, "failed to load template config just saved");
+			}
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get active mod");
 		}
 #endif
 	}
