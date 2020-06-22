@@ -139,6 +139,7 @@ namespace SA
 
 				Planet::Data init = {};
 				init.albedo1_filepath = planet.texturePath;
+				init.xform.position = planetDist * planetDir;
 
 				if (bHasCivilization)
 				{
