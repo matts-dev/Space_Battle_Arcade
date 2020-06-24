@@ -10,6 +10,10 @@
 #include "../GameSystems/SAModSystem.h"
 #include "../SpaceArcade.h"
 #include "../AssetConfigs/SASpawnConfig.h"
+#include "../../Tools/PlatformUtils.h"
+#include "../Levels/SASpaceLevelBase.h"
+#include "../../GameFramework/SALevel.h"
+#include "../../GameFramework/SALevelSystem.h"
 
 namespace SA
 {
@@ -30,6 +34,7 @@ namespace SA
 		REGISTER_CHEAT("comms_target_player", SpaceArcadeCheatSystem::cheat_commsTargetPlayer);
 		REGISTER_CHEAT("kill_player", SpaceArcadeCheatSystem::cheat_killPlayer);
 		REGISTER_CHEAT("make_json_template_spacelevelconfig", SpaceArcadeCheatSystem::cheat_make_json_template_spacelevelconfig);
+		REGISTER_CHEAT("levelCheat_transitionToMainMenuLevel", SpaceArcadeCheatSystem::cheat_mainMenuTransitionTest);
 	}
 
 	void SpaceArcadeCheatSystem::cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs)
@@ -103,6 +108,25 @@ namespace SA
 			log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get active mod");
 		}
 #endif
+	}
+
+	void SpaceArcadeCheatSystem::cheat_mainMenuTransitionTest(const std::vector<std::string>& cheatArgs)
+	{
+		LevelSystem& levelSystem = SpaceArcade::get().getLevelSystem();
+		if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
+		{
+			if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+			{
+				EndGameParameters endP;
+				endP.delayTransitionMainmenuSec = 0.1f;
+				spaceLevel->endGame(endP);
+			}
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "No current level");
+			STOP_DEBUGGER_HERE();
+		}
 	}
 
 }

@@ -27,6 +27,9 @@
 #include "../GameSystems/SAModSystem.h"
 #include "../SpaceArcade.h"
 #include "../OptionalCompilationMacros.h"
+#include "../GameModes/ServerGameMode_Base.h"
+#include "MainMenuLevel.h"
+#include "../../GameFramework/SALevelSystem.h"
 
 namespace SA
 {
@@ -99,24 +102,38 @@ namespace SA
 		levelConfig = config; //store config for when level starts.
 
 	}
+
+	void SpaceLevelBase::endGame(const EndGameParameters& endParameters)
+	{
+		//call virtual onGameEnding() here if we need to add virtual
+
+		onGameEnding.broadcast(endParameters); //let everyone know we're ending
+
+		if (!endTransitionTimerDelegate)
+		{
+			endTransitionTimerDelegate = new_sp<MultiDelegate<>>();
+			endTransitionTimerDelegate->addWeakObj(sp_this(), &SpaceLevelBase::transitionToMainMenu);
+		}
+		getWorldTimeManager()->createTimer(endTransitionTimerDelegate, endParameters.delayTransitionMainmenuSec);
+	}
+
 	void SpaceLevelBase::applyLevelConfig()
 	{
 		if (levelConfig)
 		{
-			sp<RNG> rng = nullptr;
 			if (const std::optional<size_t>& seed = levelConfig->getSeed())
 			{
 				GameBase::get().getRNGSystem().getSeededRNG(*seed);
 			}
 			else
 			{
-				rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+				generationRNG = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
 			}
 
-			assert(rng);
-			auto makeRandomVec3 = [rng]()
+			assert(generationRNG);
+			auto makeRandomVec3 = [this]()
 			{
-				vec3 randomVec = vec3(rng->getFloat());
+				vec3 randomVec = vec3(generationRNG->getFloat());
 
 				//don't let zero vec occur
 				if (glm::length2(randomVec) < 0.0001f)
@@ -134,8 +151,8 @@ namespace SA
 			for (const PlanetData& planet : levelConfig->getPlanets())
 			{
 				glm::vec3 planetDir = normalize(planet.offsetDir.has_value() ? *planet.offsetDir : makeRandomVec3());
-				float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : rng->getFloat(1.0f, 30.f);
-				bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (rng->getInt(0, 8) == 0);
+				float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : generationRNG->getFloat(1.0f, 30.f);
+				bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (generationRNG->getInt(0, 8) == 0);
 
 				Planet::Data init = {};
 				init.albedo1_filepath = planet.texturePath;
@@ -171,7 +188,7 @@ namespace SA
 			for (const StarData& star : levelConfig->getStars())
 			{
 				glm::vec3 starDir = normalize(star.offsetDir.has_value() ? *star.offsetDir : makeRandomVec3());
-				float starDist = star.offsetDistance.has_value() ? *star.offsetDistance : rng->getFloat(1.0f, 30.f);
+				float starDist = star.offsetDistance.has_value() ? *star.offsetDistance : generationRNG->getFloat(1.0f, 30.f);
 				vec3 starColor = star.color.has_value() ? *star.color : vec3(1.f);	//perhaps randomize color
 
 				localStars.push_back(new_sp<Star>());
@@ -185,239 +202,23 @@ namespace SA
 			////////////////////////////////////////////////////////
 			// game mode
 			////////////////////////////////////////////////////////
-			if (levelConfig->getGamemodeTag() == TAG_GAMEMODE_EXPLORE)
+			if (bool bIsServer = true) //#TODO #multiplayer
 			{
-				//#TODO look up spline points for path and spawn enemies along path
-			}
-			else //assume TAG_GAMEMODE_CARRIER_TAKEDOWN in all failure cases
-			{
-				/*TAG_GAMEMODE_CARRIER_TAKEDOWN*/
-				applyLevelConfig_CarrierTakedownGameMode(*levelConfig, *rng);
+				if (gamemode = createGamemodeFromTag(levelConfig->gamemodeTag))
+				{
+					gamemode->setOwningLevel(sp_this());
+					gamemode->initialize(ServerGameMode_Base::InitKey{});
+				}
 			}
 		}
 
 	}
 
-	static sp<SpawnConfig> getSpawnableConfigHelper(size_t idx, const SpawnConfig& sourceConfig, std::vector<sp<SpawnConfig>>& outCacheContainer)
+	void SpaceLevelBase::transitionToMainMenu()
 	{
-		sp<SpawnConfig> subConfig = nullptr;
-
-		if (idx >= MAX_SPAWNABLE_SUBCONFIGS)
-		{
-			return subConfig;
-		}
-
-		//grow cache container to meet idx
-		while (outCacheContainer.size() < (idx + 1) && outCacheContainer.size() != MAX_SPAWNABLE_SUBCONFIGS)
-		{
-			outCacheContainer.push_back(nullptr);
-		}
-
-		assert(outCacheContainer.size() > idx);
-
-		if (outCacheContainer[idx] != nullptr)
-		{
-			//use the entry we generated last time we wanted a spawn config with this idx
-			return outCacheContainer[idx];
-		}
-		else
-		{
-			//generate entry for the index position
-			if (!subConfig)
-			{
-				const sp<ModSystem>& modSystem = SpaceArcade::get().getModSystem();
-				sp<Mod> activeMod = modSystem->getActiveMod();
-				if (!activeMod)
-				{
-					log(__FUNCTION__, LogLevel::LOG_ERROR, "No active mod");
-					return subConfig;
-				}
-				else
-				{
-					const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
-
-					const std::vector<std::string>& spawnableConfigsNames = sourceConfig.getSpawnableConfigsByName();
-					if (idx < spawnableConfigsNames.size())
-					{
-						if (const auto& iter = spawnConfigs.find(spawnableConfigsNames[idx]); iter != spawnConfigs.end())
-						{
-							subConfig = iter->second;
-						}
-					}
-
-					if (const bool bDidNotFindNamedConfig = !subConfig)
-					{
-						//attempt to load the default fighter config
-						if (const auto& iter = spawnConfigs.find("Fighter"); iter != spawnConfigs.end())
-						{
-							subConfig = iter->second;
-						}
-					}
-
-					//cache this away for next time
-					outCacheContainer[idx] = subConfig;
-				}
-			}
-		}
-
-
-		return subConfig;
-	}
-
-
-
-	static void helper_ChooseRandomCarrierPositionAndRotation(
-		const size_t teamIdx,
-		const size_t numTeams,
-		const size_t carrierIdxOnTeam,
-		bool bRandomizeElevation,
-		bool bRandomizeOffsetLocation,
-		RNG& rng,
-		glm::vec3& outLoc,
-		glm::quat& outRotation)
-	{
-		using namespace glm;
-		glm::vec3 worldUp = vec3(0, 1.f, 0);
-
-		//divide map up into a circle, where all teams are facing towards center.
-		float percOfCircle = teamIdx / float(numTeams);
-		glm::quat centerRotation = glm::angleAxis(2*glm::pi<float>()*percOfCircle, worldUp);
-
-		vec3 teamOffsetVec_n = glm::normalize(vec3(1, 0, 0) * centerRotation); //normalizing for good measure
-		vec3 teamFacingDir_n = -teamOffsetVec_n;	//have entire team face same direction rather than looking at a center point; this will look more like a fleet.
-
-		constexpr float teamOffsetFromMapCenterDistance = 150.f; //TODO perhaps define this in config so it can be customized
-		vec3 teamLocation = teamOffsetVec_n * teamOffsetFromMapCenterDistance;
-		vec3 teamRight = glm::normalize(glm::cross(worldUp, -teamFacingDir_n));
-
-		constexpr float carrierOffsetFromTeamLocDistance = 50.f;
-		float randomizedTeamOffsetFactor = 1.f;
-		if (bRandomizeOffsetLocation)
-		{
-			randomizedTeamOffsetFactor = rng.getFloat(0.5f, 1.5f);
-		}
-		vec3 carrierBehindTeamLocOffset = (carrierOffsetFromTeamLocDistance * randomizedTeamOffsetFactor) * teamOffsetVec_n
-			+ teamLocation;
-
-		constexpr float carrierRightOffsetFactor = 300.f;
-		vec3 carrierRightOffset = float(carrierIdxOnTeam) * carrierRightOffsetFactor * teamRight;
-
-		vec3 carrierElevationOffset = vec3(0.f);
-		if (bRandomizeElevation)
-		{
-			constexpr float elevantionMaxDist = 50.f;
-			const float randomizedElevantionFactor = rng.getFloat(-1.f, 1.f);
-			carrierElevationOffset = randomizedElevantionFactor * elevantionMaxDist * worldUp;
-		}
-
-		vec3 carrierLocation = carrierBehindTeamLocOffset + carrierRightOffset;
-
-		outLoc = carrierLocation;
-		outRotation = glm::angleAxis(glm::radians(180.f), worldUp) * centerRotation; //just flip center rotation by 180
-	}
-
-	void SpaceLevelBase::applyLevelConfig_CarrierTakedownGameMode(const SpaceLevelConfig& LevelConfigRef, RNG& rng)
-	{
-		const SpaceLevelConfig::GameModeData_CarrierTakedown& gm = LevelConfigRef.getGamemodeData_CarrierTakedown();
-		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
-		{
-			for (size_t teamIdx = 0; teamIdx < gm.teams.size(); ++teamIdx)
-			{
-				const SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& tm = gm.teams[teamIdx];
-
-				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				//spawn carrier ships
-				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				for (size_t carrierIdx = 0; carrierIdx < tm.carrierSpawnData.size(); ++carrierIdx)
-				{
-					CarrierSpawnData carrierData = tm.carrierSpawnData[carrierIdx];
-					auto findCarrierResult = activeMod->getSpawnConfigs().find(carrierData.carrierShipSpawnConfig_name);
-					if (findCarrierResult == activeMod->getSpawnConfigs().end())
-					{
-						std::string errorMsg = "Did not find carrier spawn config for name: " + carrierData.carrierShipSpawnConfig_name;
-						log(__FUNCTION__, LogLevel::LOG_ERROR, errorMsg.c_str());
-						continue;
-					}
-					else if (const sp<SpawnConfig>& carrierSpawnConfig = findCarrierResult->second)
-					{
-						glm::quat randomCarrierRot;
-						glm::vec3 randomCarrierLoc;
-						if (!carrierData.position.has_value() || !carrierData.rotation_deg.has_value())
-						{
-							helper_ChooseRandomCarrierPositionAndRotation(teamIdx, numTeams, carrierIdx, true, true, rng, randomCarrierLoc, randomCarrierRot);
-						}
-
-						Transform carrierXform;
-						carrierXform.position = carrierData.position.has_value() ? *carrierData.position : randomCarrierLoc;
-						carrierXform.rotQuat = carrierData.rotation_deg.has_value() ? quat(*carrierData.rotation_deg) : randomCarrierRot;
-
-						Ship::SpawnData carrierShipSpawnData;
-						carrierShipSpawnData.team = teamIdx;
-						carrierShipSpawnData.spawnConfig = carrierSpawnConfig;
-						carrierShipSpawnData.spawnTransform = carrierXform;
-
-						if (sp<Ship> carrierShip = spawnEntity<Ship>(carrierShipSpawnData))
-						{
-							carrierShip->setSpeedFactor(0); //make carrier stationary
-
-							FighterSpawnComponent::AutoRespawnConfiguration spawnFighterConfig{};
-							spawnFighterConfig.bEnabled= carrierData.fighterSpawnData.bEnableFighterRespawns;
-							spawnFighterConfig.maxShips = carrierData.fighterSpawnData.maxNumberOwnedFighterShips;
-							spawnFighterConfig.respawnCooldownSec = carrierData.fighterSpawnData.respawnCooldownSec;
-							uint32_t numInitFighters = carrierData.numInitialFighters;
-#ifdef DEBUG_BUILD
-							log(__FUNCTION__, LogLevel::LOG, "Scaling down number of spawns because this is a debug build");
-							float scaledownFactor = 0.05f;
-							spawnFighterConfig.maxShips = uint32_t(spawnFighterConfig.maxShips * scaledownFactor); //scale down for debug builds
-							numInitFighters = uint32_t(numInitFighters * scaledownFactor); //scale down for debug builds
-#endif 
-							if (FighterSpawnComponent* spawnComp = carrierShip->getGameComponent<FighterSpawnComponent>())
-							{
-								spawnComp->setAutoRespawnConfig(spawnFighterConfig);
-
-								////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-								//spawn initial fighters around carrier
-								////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-								Ship::SpawnData fighterShipSpawnData;
-								fighterShipSpawnData.team = teamIdx;
-
-								std::vector<sp<SpawnConfig>> cachedSpawnConfigs;//cache spawn configs so we're not hitting maps over and over, rather we hit them once then use an idx
-								fighterShipSpawnData.spawnConfig = getSpawnableConfigHelper(0, *carrierSpawnConfig, cachedSpawnConfigs);
-
-								if (fighterShipSpawnData.spawnConfig)
-								{
-									for (uint32_t fighterShip = 0; fighterShip < numInitFighters; ++fighterShip)
-									{
-										const float spawnRange = 50.f;
-
-										glm::vec3 startPos(rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange), rng.getFloat<float>(-spawnRange, spawnRange));
-										float randomRot_rad = glm::radians(rng.getFloat<float>(0, 360));
-										glm::quat rot = glm::angleAxis(randomRot_rad, glm::vec3(0, 1, 0));
-										startPos += carrierXform.position;
-										fighterShipSpawnData.spawnTransform = Transform{ startPos, rot, glm::vec3(1.f) };
-
-										sp<Ship> fighter = spawnComp->spawnEntity(); //the carrier ship is responsible for assigning brain after a span happens via callback
-										fighter->setTransform(fighterShipSpawnData.spawnTransform);
-									}
-								}
-								else { STOP_DEBUGGER_HERE(); }
-							}
-						}
-					}
-					else
-					{
-						log(__FUNCTION__, LogLevel::LOG_WARNING, "No carrier spawn config available; what is the model that should go with this carrier ship?");
-						STOP_DEBUGGER_HERE();
-					}
-				}
-
-			}
-		}
-		else
-		{
-			log(__FUNCTION__, LogLevel::LOG_ERROR, "No active mod to use as lookup for spawn configs -- aborting application of carrier takedown data");
-		}
-		
+		LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+		sp<LevelBase> mainMenuLevel = new_sp<MainMenuLevel>(); //this requires include of entire main menu level, which feels weird (this is mainmenus base). but I suppose it isn't that weird
+		levelSystem.loadLevel(mainMenuLevel);
 	}
 
 	void SpaceLevelBase::startLevel_v()
@@ -426,7 +227,10 @@ namespace SA
 
 		forwardShadedModelShader = new_sp<SA::Shader>(spaceModelShader_forward_vs, spaceModelShader_forward_fs, false);
 
-		for (size_t teamId = 0; teamId < numTeams; ++teamId)
+		//we don't know how many teams there will be after we load gamemode (in apply config), so make all teamcommands now
+		//#todo change this. this isn't great because we need team commanders to be around before spawning so they can be aware of when we spawn ships
+		//otherwise we won't have the ability to ask a commander for a target. currently just building maximum number of commanders
+		for (size_t teamId = 0; teamId < MAX_TEAM_NUM; ++teamId)
 		{
 			commanders.push_back(new_sp<TeamCommander>(teamId));
 		}

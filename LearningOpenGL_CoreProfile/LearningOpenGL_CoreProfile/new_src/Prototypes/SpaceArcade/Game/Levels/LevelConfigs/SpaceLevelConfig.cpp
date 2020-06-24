@@ -6,6 +6,7 @@
 #include "../../GameSystems/SAModSystem.h"
 #include "../../SpaceArcade.h"
 #include "../../Environment/Planet.h"
+#include "../../GameModes/ServerGameMode_CarrierTakedown.h"
 
 namespace SA
 {
@@ -329,6 +330,25 @@ namespace SA
 		}
 	}
 
+	sp<SA::ServerGameMode_Base> createGamemodeFromTag(const std::string& tag)
+	{
+		if (tag == TAG_GAMEMODE_CARRIER_TAKEDOWN)
+		{
+			return new_sp<ServerGameMode_CarrierTakedown>();
+		}
+		else if (tag == TAG_GAMEMODE_EXPLORE)
+		{
+			//TODO
+			STOP_DEBUGGER_HERE();
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "passed invalid gamemode tag");
+			STOP_DEBUGGER_HERE(); 
+		}
+
+		return nullptr;
+	}
 
 }
 
