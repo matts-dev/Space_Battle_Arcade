@@ -11,6 +11,9 @@
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../Components/FighterSpawnComponent.h"
 #include "../../Tools/DataStructures/MultiDelegate.h"
+#include "../../GameFramework/SAPlayerBase.h"
+#include "../../GameFramework/SAPlayerSystem.h"
+#include "../../Rendering/Camera/SACameraBase.h"
 
 namespace SA
 {
@@ -282,6 +285,37 @@ namespace SA
 				} else {STOP_DEBUGGER_HERE(); }
 			}
 		}
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// spawn player at carrier of their preferred team
+		/////////////////////////////////////////////////////////////////////////////////////
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+		if (activeMod && myTeamData.size() > 0)
+		{
+			size_t playerTeamIdx = activeMod->getPlayerPreferredTeam();
+			playerTeamIdx = clamp<size_t>(playerTeamIdx, 0, myTeamData.size());
+
+			TeamData& team = myTeamData[playerTeamIdx];
+			if (sp<Ship> carrierShip = (team.carriers.size() > 0 && !team.carriers[0].expired()) ? team.carriers[0].lock() : nullptr)
+			{
+				if (FighterSpawnComponent* spawnComp = carrierShip->getGameComponent<FighterSpawnComponent>())
+				{
+					PlayerSystem& playerSystem = SpaceArcade::get().getPlayerSystem();
+					for (size_t playerIdx = 0; playerIdx < playerSystem.numPlayers(); ++playerIdx)
+					{
+						if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
+						{
+							sp<Ship> playersShip = spawnComp->spawnEntity();
+							player->setControlTarget(playersShip);
+							if (const sp<CameraBase>& camera = player->getCamera())
+							{
+								camera->setCursorMode(false); //ensure that player's camera gets out of cursor mode from main menu
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	void ServerGameMode_CarrierTakedown::handleCarrierDestroyed(const sp<GameEntity>&)
@@ -297,7 +331,7 @@ namespace SA
 			for (const wp<Ship>& wp_carrier : currentTeam.carriers)
 			{
 				const sp<Ship> carrier = wp_carrier.lock();
-				aliveCarriersForThisTeam += (carrier && !carrier->isPendingDestroy()) ? 0 : 1;
+				aliveCarriersForThisTeam += (carrier && !carrier->isPendingDestroy()) ? 1 : 0;
 			}
 
 			if (aliveCarriersForThisTeam > 0)

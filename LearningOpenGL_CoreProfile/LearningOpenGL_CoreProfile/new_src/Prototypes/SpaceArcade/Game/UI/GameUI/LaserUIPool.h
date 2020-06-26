@@ -93,7 +93,8 @@ namespace SA
 	{
 	public:
 		static LaserUIPool& get();
-		static Curve_highp laserLerpCurve;
+		static Curve_highp laserLerpCurve;		//non const to allow changing of defaults
+		static glm::vec3 defaultColor;			//non const to allow changing of defaults
 		virtual ~LaserUIPool();
 		sp<LaserUIObject> requestLaserObject();
 		void releaseLaser(sp<LaserUIObject>& out); //will null out shared pointer for you as a signal it was released

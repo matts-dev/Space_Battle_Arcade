@@ -1,0 +1,17 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "SaveGameConfig"
+    },
+    "SaveGameConfig": {
+        "campaignData": [
+            {
+                "campaign.campaignName": "GameData/mods/SpaceArcade/Assets/Campaigns/CampaignConfig_1.json",
+                "campaign.completedLevels": [
+                    1,
+                    3
+                ]
+            }
+        ]
+    }
+}

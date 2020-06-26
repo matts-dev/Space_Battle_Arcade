@@ -18,7 +18,7 @@ namespace SA
 		//replace windows filepath separators with unix separators
 		for (uint32_t charIdx = 0; charIdx < filePath.size(); ++charIdx)
 		{
-			if (filePath[charIdx] == '//')
+			if (filePath[charIdx] == '\\')
 			{
 				filePath[charIdx] = '/';
 			}
@@ -50,6 +50,7 @@ namespace SA
 
 				std::string fileAsStr = ss.str();
 				if (fileAsStr.length() == 0)
+				
 				{
 					log(__FUNCTION__, LogLevel::LOG_ERROR, "loading empty config");
 				}
@@ -95,6 +96,10 @@ namespace SA
 			onDeserialize(rootData);
 		}
 	}
+
+	//prevent linker errors if someone calls super
+	void ConfigBase::onSerialize(json& outData) {}
+	void ConfigBase::onDeserialize(const json& inData) {}
 
 	void ConfigBase::save() //access restricted, only allow certain classes to save this.
 	{

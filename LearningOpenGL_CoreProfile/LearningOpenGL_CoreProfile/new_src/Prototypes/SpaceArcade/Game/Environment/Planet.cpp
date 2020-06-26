@@ -54,6 +54,7 @@ namespace SA
 
 		//city lights will match the terrain albedo (ie slot associated with green)
 		uniform int bEnableCityLights = 0;
+		uniform int bLuminosityGrayScale = 0;
 		uniform sampler2D cityLights;
 
 		uniform vec3 ambientLight = vec3(0.f);
@@ -114,6 +115,12 @@ namespace SA
 		#else
 			fragColor = vec4(color, 1.f);
 		#endif
+
+			if(bLuminosityGrayScale > 0) 
+			{
+				//fragColor = vec4(vec3(fragColor.r*0.3 + fragColor.g*0.59 + fragColor.b*0.11), 1.f); //based on tutorial point for converting RGB to grayscale
+				fragColor = vec4(vec3(fragColor.r + fragColor.g+ fragColor.b)/3.f, 1.f); //non-luminosity version
+			}
 		}
 	)";
 
@@ -187,6 +194,7 @@ namespace SA
 
 		planetShader->setUniform1i("bUseMultiTexturedPlanet", int32_t(bUseMultiTexturePaint)); //#optimize this can be optimized so it isn't done every frame, if we don't share a shader at least
 		planetShader->setUniform1i("bEnableCityLights", int32_t(bUseCityLightTexture));
+		planetShader->setUniform1i("bLuminosityGrayScale", int32_t(bUseGrayScale));
 		if (bUseMultiTexturePaint)
 		{
 			albedo1Tex->bindTexture(GL_TEXTURE1);

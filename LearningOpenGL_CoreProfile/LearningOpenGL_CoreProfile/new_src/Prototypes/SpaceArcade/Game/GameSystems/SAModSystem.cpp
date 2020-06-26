@@ -12,6 +12,7 @@
 #include "../../../../../Libraries/nlohmann/json.hpp"
 #include "../AssetConfigs/SASettingsProfileConfig.h"
 #include "../AssetConfigs/CampaignConfig.h"
+#include "../AssetConfigs/SaveGameConfig.h"
 
 using json = nlohmann::json;
 
@@ -154,6 +155,17 @@ namespace SA
 		}
 	}
 
+	sp<SA::SaveGameConfig> Mod::getSaveGameConfig() const
+	{
+		return saveGameData;
+	}
+
+	void Mod::addSaveGameConfig(const sp<SaveGameConfig>& inSaveGameConfig)
+	{
+		saveGameData = inSaveGameConfig;
+		saveGameData->owningModDir = getModDirectoryPath();
+	}
+
 	void Mod::deleteProjectileConfig(sp<ProjectileConfig>& projectileConfig)
 	{
 		if (projectileConfig)
@@ -216,6 +228,11 @@ namespace SA
 
 			defaultCarrierSpawnConfigNamesByTeamIdx[teamIdx] = configName;
 		}
+	}
+
+	size_t Mod::getActiveCampaignIndex() const
+	{
+		return activeCampaignIdx;
 	}
 
 	std::string Mod::getModName()
@@ -290,6 +307,8 @@ namespace SA
 	void Mod::postConstruct()
 	{
 		Parent::postConstruct();
+
+		saveGameData = new_sp<SaveGameConfig>(); //provide default save game in the event there isn't one loaded
 
 		//create all settings profiles before they are serialized/deserialized
 		//for (size_t settingsProfileIdx = 0; settingsProfileIdx < NUM_SETTINGS_PROFILES; ++settingsProfileIdx)
@@ -685,6 +704,7 @@ namespace SA
 		loadConfig<ProjectileConfig>(mod, "Assets/ProjectileConfigs/", &Mod::addProjectileConfig, []() { return new_sp<ProjectileConfig>(); });
 		loadConfig<SettingsProfileConfig>(mod, "Assets/Settings/", &Mod::addSettingsProfileConfig, []() { return new_sp<SettingsProfileConfig>(); });
 		loadConfig<CampaignConfig>(mod, "Assets/Campaigns/", &Mod::addCampaignConfig, []() { return new_sp<CampaignConfig>(); });
+		loadConfig<SaveGameConfig>(mod, "GameSaves/", &Mod::addSaveGameConfig, []() { return new_sp<SaveGameConfig>(); });
 	}
 
 	//void ModSystem::loadSpawnConfigs(sp<Mod>& mod)

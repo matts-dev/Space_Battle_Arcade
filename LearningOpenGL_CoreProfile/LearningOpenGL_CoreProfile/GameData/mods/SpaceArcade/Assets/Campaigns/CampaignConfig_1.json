@@ -14,7 +14,7 @@
                 "level.name": "1",
                 "level.tier": 0,
                 "level.optional_defaultPlanetIdx": 1,
-                "level.optional_ui_planetSizeFactor": 0.5,
+                "level.optional_ui_planetSizeFactor": 3.2,
                 "level.outGoingPathIndices": [
                     3,4
                 ]
@@ -100,7 +100,7 @@
                 "level.name": "11",
                 "level.tier": 4,
                 "level.optional_defaultPlanetIdx": 1,
-                "level.optional_ui_planetSizeFactor": 3.2,
+                "level.optional_ui_planetSizeFactor": 0.5,
                 "level.outGoingPathIndices": [13]
             },
             {

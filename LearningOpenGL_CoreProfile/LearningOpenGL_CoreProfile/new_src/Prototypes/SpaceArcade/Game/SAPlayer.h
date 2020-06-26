@@ -15,6 +15,7 @@ namespace SA
 		virtual sp<CameraBase> generateDefaultCamera() const;
 		void setSettingsProfile(const sp<SettingsProfileConfig>& newSettingsProfile);
 		const sp<SettingsProfileConfig>& getSettingsProfile() { return settings; }
+		size_t getCurrentTeamIdx() { return currentTeamIdx; }
 	public:
 		MultiDelegate<float /*respawn time*/> onRespawnStarted;
 		MultiDelegate<bool /* Respawn Success */> onRespawnOver;

@@ -30,6 +30,10 @@
 #include "../GameModes/ServerGameMode_Base.h"
 #include "MainMenuLevel.h"
 #include "../../GameFramework/SALevelSystem.h"
+#include "../AssetConfigs/SaveGameConfig.h"
+#include "../AssetConfigs/CampaignConfig.h"
+#include "../SAPlayer.h"
+#include <xutility>
 
 namespace SA
 {
@@ -115,6 +119,53 @@ namespace SA
 			endTransitionTimerDelegate->addWeakObj(sp_this(), &SpaceLevelBase::transitionToMainMenu);
 		}
 		getWorldTimeManager()->createTimer(endTransitionTimerDelegate, endParameters.delayTransitionMainmenuSec);
+
+		bool bWonMatch = false;
+		if (SAPlayer* player = dynamic_cast<SAPlayer*>(SpaceArcade::get().getPlayerSystem().getPlayer(0).get()))
+		{
+			bWonMatch = std::find(endParameters.winningTeams.begin(), endParameters.winningTeams.end(), player->getCurrentTeamIdx()) != endParameters.winningTeams.end();
+		}
+
+		///////////////////////////////////////////////////////////////////////////////////////////////
+		//mark this level as complete in campaign and save so user can progress to next level
+		///////////////////////////////////////////////////////////////////////////////////////////////
+		if (bWonMatch)
+		{
+			const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+			if (levelConfig && levelConfig->transientData.levelIdx.has_value() && activeMod)
+			{
+				size_t completedLevelIdx = *levelConfig->transientData.levelIdx;
+				size_t activeCampaignIdx = activeMod->getActiveCampaignIndex();
+				sp<CampaignConfig> campaign = activeMod->getCampaign(activeCampaignIdx);
+				sp<SaveGameConfig> saveGameConfig = activeMod->getSaveGameConfig();
+				if (saveGameConfig && campaign)
+				{
+					if (SaveGameConfig::CampaignData* campaignData = saveGameConfig->findCampaignByName_Mutable(campaign->getRepresentativeFilePath()))
+					{
+						auto& lvls = campaignData->completedLevels; //so annoying std::vector doesn't have a member function find, compressing name into levels
+						if (bool bNeedsInsertion = std::find(lvls.begin(), lvls.end(), completedLevelIdx) == lvls.end())
+						{
+							campaignData->completedLevels.push_back(completedLevelIdx);
+							saveGameConfig->requestSave();
+						}
+					}
+				}
+			}
+		}
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// detach all players from ships as we're about to do a level transition
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		PlayerSystem& playerSystem = SpaceArcade::get().getPlayerSystem();
+		for (size_t playerIdx = 0; playerIdx < playerSystem.numPlayers(); ++playerIdx)
+		{
+			if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
+			{
+				//clear out any ships the player may be piloting
+				player->setControlTarget(nullptr);
+			}
+		}
 	}
 
 	void SpaceLevelBase::applyLevelConfig()

@@ -86,6 +86,12 @@ namespace SA
 		virtual std::string getRepresentativeFilePath() override;
 		virtual void onSerialize(json& outData) override;
 		virtual void onDeserialize(const json& inData) override;
+	public:
+		struct TransientData
+		{
+			std::optional<size_t> levelIdx;
+		};
+		TransientData transientData;
 	private:
 		std::string userFacingName = "NoUserFacingName";
 

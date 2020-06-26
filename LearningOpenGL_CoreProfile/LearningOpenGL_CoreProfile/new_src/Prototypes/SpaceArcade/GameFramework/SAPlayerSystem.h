@@ -13,7 +13,7 @@ namespace SA
 	class PlayerSystem : public SystemBase
 	{
 	public:
-
+		size_t numPlayers() const { return players.size(); }
 		const sp<PlayerBase>& getPlayer(uint32_t player_idx);
 
 		template<typename T = PlayerBase>

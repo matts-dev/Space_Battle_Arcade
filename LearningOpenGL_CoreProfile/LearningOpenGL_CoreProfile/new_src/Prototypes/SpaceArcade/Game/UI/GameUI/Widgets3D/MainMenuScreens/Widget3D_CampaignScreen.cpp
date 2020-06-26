@@ -22,6 +22,7 @@
 #include "../../../../../Tools/SAUtilities.h"
 #include "../../../../Levels/LevelConfigs/SpaceLevelConfig.h"
 #include "../../../../Levels/BasicTestSpaceLevel.h"
+#include "../../../../AssetConfigs/SaveGameConfig.h"
 
 namespace SA
 {
@@ -100,7 +101,7 @@ namespace SA
 								}
 							}
 							else //deactivating
-							{	
+							{
 								planetScaleFactor = 1 - clamp((accumulatedTime - timestamp_deactivated) / tierAnimDelaySec, 0.f, 1.f);
 							}
 
@@ -117,7 +118,10 @@ namespace SA
 							}
 
 							//have planets update
-							level.uiPlanet->tick(dt_sec);
+							if (playableLevelSet.find(levelIdx) != playableLevelSet.end()) //only tick planets that are unlocked, so ones you can play spin but not locked planets
+							{
+								level.uiPlanet->tick(dt_sec);
+							}
 						}
 					}
 				}
@@ -171,7 +175,7 @@ namespace SA
 						}
 						if (level.hoverWidget)
 						{
-							level.hoverWidget->activate(true);
+							level.hoverWidget->activate(playableLevelSet.find(levelIdx) != playableLevelSet.end());
 						}
 					}
 				}
@@ -240,6 +244,9 @@ namespace SA
 						SelectableLevelData& level = linearLevels[levelIdx];
 						if (level.uiPlanet)
 						{
+							bool bUnlocked = playableLevelSet.find(levelIdx) != playableLevelSet.end();
+							level.uiPlanet->setUseGrayScale(!bUnlocked);
+							//level.uiPlanet->setUseCameraAsLight(bUnlocked); //testing whether this helps distinguish between unlocked/unlocked
 							level.uiPlanet->render(game_rd->dt_sec, game_rd->view, game_rd->projection);
 						}
 					}
@@ -268,19 +275,29 @@ namespace SA
 		return accumulatedTime - timestamp_deactivated < 3.0f;
 	}
 
-	void Widget3D_CampaignScreen::getCampaign()
+	void Widget3D_CampaignScreen::getConfigData()
 	{
 		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
 		{
 			activeCampaign = activeMod->getCampaign(activeCampaignIdx);
 			assert(activeCampaign); //only should be null if we're passing an invalid index. Currently there is only 1 but in future may support multiple
 
+			saveGameData = activeMod->getSaveGameConfig();
+
 			//DEBUG -- force a save to generate a template
 			//activeCampaign->requestSave();
 		}
 	}
 
-	sp<Planet> makePlanetFromDefaults(int64_t defaultIdx, size_t idxSeed)
+	struct DefaultPlanetTextureInfo
+	{
+		size_t clampedIndex;
+		size_t numTextures;
+		std::string texturePath;
+
+	};
+
+	DefaultPlanetTextureInfo getDefaultPlanetTexturePathForIndex(size_t defaultIndex)
 	{
 		const std::string defaultTextures[] = {
 			std::string(DefaultPlanetTexturesPaths::albedo1),
@@ -294,11 +311,25 @@ namespace SA
 		};
 		const size_t numDefaultPlanets = sizeof(defaultTextures) / sizeof(std::string);
 
+		DefaultPlanetTextureInfo texInfo;
+		texInfo.clampedIndex = glm::clamp<size_t>(defaultIndex, 0, numDefaultPlanets);
+		texInfo.numTextures = numDefaultPlanets;
+		texInfo.texturePath = defaultTextures[texInfo.clampedIndex];
+		return texInfo;
+	}
+
+
+	sp<Planet> makePlanetFromDefaults(int64_t defaultIdx, size_t idxSeed)
+	{
+
+		DefaultPlanetTextureInfo textureInfo = getDefaultPlanetTexturePathForIndex(size_t(defaultIdx));
+		size_t numDefaultPlanets = textureInfo.numTextures;
+
 		size_t planetIdx = size_t(defaultIdx);
 		if (defaultIdx >= 0 && planetIdx < numDefaultPlanets)
 		{
 			Planet::Data init;
-			init.albedo1_filepath = defaultTextures[defaultIdx];
+			init.albedo1_filepath = textureInfo.texturePath;
 
 			//use the idx as a seed to vary parameters on the planet for UI.
 
@@ -335,13 +366,33 @@ namespace SA
 	{
 		using namespace glm;
 
-		if (!activeCampaign)
+		if (!activeCampaign || !saveGameData)
 		{
-			getCampaign();
+			getConfigData();
 		}
+
+		if (!activeCampaign || !saveGameData) { STOP_DEBUGGER_HERE(); } //missing some config data
 
 		if (activeCampaign)
 		{
+			completedSet.clear();
+			if (saveGameData)
+			{
+				std::string campaignFilePath = activeCampaign->getRepresentativeFilePath();
+				if (const SaveGameConfig::CampaignData* savedData = saveGameData->findCampaignByName(campaignFilePath))
+				{
+					for(size_t completedLevel : savedData->completedLevels)
+					{
+						completedSet.insert(completedLevel);
+					}
+				}
+				else
+				{
+					//create a new entry in our save data for this campaign
+					saveGameData->addCampaign(campaignFilePath); //only save when update happens
+				}
+			}
+
 			if ( bool bLevelsNeedLoad = (tiers.size() == 0 && linearLevels.size() == 0) )
 			{
 				bHasPlanetSelected = false; //reset this if we're regenerating planet data
@@ -391,6 +442,8 @@ namespace SA
 					thisLevelTier.levelIndices.push_back(linearLevels.size() - 1); //this index will be used later as a lookup into linear levels to adjust position etc.
 				}
 			}
+
+			buildPlayableSet(completedSet);
 
 			////////////////////////////////////////////////////////
 			// position tiers now that final numbers are available
@@ -468,9 +521,48 @@ namespace SA
 				laser->randomizeAnimSpeed(tierAnimDelaySec); //use this anim delay sec so that laser will align right as we start animating another tier
 				laser->scaleAnimSpeeds(0.75f, 1.f); //make start faster than end
 
+				bool bBothLaserEndsValid = playableLevelSet.find(outIdx) != playableLevelSet.end() && completedSet.find(levelidx) != completedSet.end();
+				laser->setColorImmediate(bBothLaserEndsValid ? LaserUIPool::defaultColor : glm::vec3(0.25f));
+
 				tier.lasers.push_back(laser);
 			}
 		}
+	}
+
+	void Widget3D_CampaignScreen::buildPlayableSet(const std::set<size_t>& completedLevelSet)
+	{
+		//uses completedLevelSet parameter to make sure caller knows for fact that completedLevelSet needs to be populated before calling this function
+		if (linearLevels.size() == 0)
+		{
+			STOP_DEBUGGER_HERE(); //were linear levels not built yet?
+		}
+
+		playableLevelSet.clear();
+
+		LaserUIPool& laserPool = LaserUIPool::get();
+		for (const TierData& tier : tiers)
+		{
+			for (size_t levelidx : tier.levelIndices)
+			{
+				SelectableLevelData levelData = linearLevels[levelidx];
+
+				bool bOutgoingConnectionsUnlocked = completedLevelSet.find(levelidx) != completedLevelSet.end();
+				for (size_t outIdx : levelData.outGoingLevelPathIndices)
+				{
+					if (bOutgoingConnectionsUnlocked)
+					{
+						playableLevelSet.insert(outIdx); //we can play these levels
+					}
+				}
+			}
+		}
+
+		//always let first column be playable regardless if unlocks above happened
+		if (TierData* firstTier = (tiers.size() > 0) ? &tiers[0] : nullptr)
+		{
+			for (size_t levelIdx : firstTier->levelIndices) { playableLevelSet.insert(levelIdx); } //add first row as always playable
+		}
+
 	}
 
 	std::optional<size_t> Widget3D_CampaignScreen::findSelectedPlanetIdx()
@@ -502,6 +594,7 @@ namespace SA
 
 		//clear all data and have it repopulate when going to campaign
 		activeCampaign = nullptr;
+		saveGameData = nullptr;
 		linearLevels.clear();
 		tiers.clear();
 	}
@@ -515,7 +608,7 @@ namespace SA
 				if (levelIdx < linearLevels.size() && linearLevels.size() != 0)
 				{
 					SelectableLevelData& level = linearLevels[levelIdx];
-					if (level.hoverWidget)
+					if (level.hoverWidget && playableLevelSet.find(levelIdx) != playableLevelSet.end())
 					{
 						level.hoverWidget->setToggled(false);
 					}
@@ -548,10 +641,26 @@ namespace SA
 					const CampaignConfig::LevelData& selectedCampaignLevelData = campaignLevels[uiSelectedLevelData.levelIndexNumberInCampaignConfig];
 
 					cachedLevelConfig = selectedCampaignLevelData.spaceLevelConfig;
+					cachedLevelConfig->transientData.levelIdx = uiSelectedLevelData.levelIndexNumberInCampaignConfig;
 
 					if (cachedLevelConfig)
 					{
 						cachedLevelConfig->applyDemoDataIfEmpty();
+
+						////////////////////////////////////////////////////////
+						// use ui data to overwrite first planet texture
+						////////////////////////////////////////////////////////
+						if (bool bOverwritePlanetTextures = (selectedCampaignLevelData.optional_defaultPlanetIdx >= 0))
+						{
+							const std::vector<PlanetData>& planets = cachedLevelConfig->getPlanets();
+							if (planets.size() > 0)
+							{
+								DefaultPlanetTextureInfo planetTextureData = getDefaultPlanetTexturePathForIndex(size_t(selectedCampaignLevelData.optional_defaultPlanetIdx));
+								PlanetData planetCopy = planets.back();
+								planetCopy.texturePath = planetTextureData.texturePath;
+								cachedLevelConfig->overridePlanetData(0, planetCopy);
+							}
+						}
 
 						////////////////////////////////////////////////////////
 						// set up timer
@@ -573,11 +682,11 @@ namespace SA
 							LaserUIPool& laserPool = LaserUIPool::get();
 							for (sp<LaserUIObject>& laser : tier.lasers)
 							{
+								laser->setColorImmediate(LaserUIPool::defaultColor);
 								laserPool.releaseLaser(laser); //will set it to null within the array
 							}
 							tier.lasers.clear(); //clear out the nullptrs
 						}
-						
 					}
 				}
 			}

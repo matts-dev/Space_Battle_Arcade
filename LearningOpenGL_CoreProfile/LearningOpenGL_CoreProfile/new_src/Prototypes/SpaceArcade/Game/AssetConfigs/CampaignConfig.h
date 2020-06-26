@@ -25,13 +25,13 @@ namespace SA
 		virtual void postConstruct() override;
 		virtual void onSerialize(json& outData) override;
 		virtual void onDeserialize(const json& inData) override;
-		virtual std::string getRepresentativeFilePath() override;
 		std::string getIndexedName() const;
 	public:
 		/**Adding support for multiple campaigns in a mod, even though this may not be exposed to UI*/
 		void setCampaignIndex(size_t newIndex);
 		void requestSave();
 		const std::vector<LevelData>& getLevels() { return levels; }
+		virtual std::string getRepresentativeFilePath() override;
 	public://serialized fields
 		//WARNING: refactoring these names will influence the out put json!
 		std::string userFacingName = "Campaign";

@@ -9,6 +9,7 @@ namespace SA
 	class Mod;
 	class Planet;
 	class Widget3D_GenericMouseHoverable;
+	class SaveGameConfig;
 
 	class Widget3D_CampaignScreen : public Widget3D_MenuScreenBase
 	{
@@ -40,9 +41,10 @@ namespace SA
 		virtual void renderGameUI(GameUIRenderData& ui_rd) override;
 	private:
 		bool withinTickAfterDeactivationWindow();
-		void getCampaign();
+		void getConfigData();
 		void generateSelectableLevelData();
 		void startTierAnimation(TierData& tier);
+		void buildPlayableSet(const std::set<size_t>& completedLevelSet);
 		std::optional<size_t> findSelectedPlanetIdx();
 	private:
 		void handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active);
@@ -66,9 +68,12 @@ namespace SA
 		sp<SpaceLevelConfig> cachedLevelConfig = nullptr;
 	private:
 		size_t activeCampaignIdx = 0;
+		sp<SaveGameConfig> saveGameData;
 		sp<CampaignConfig> activeCampaign;
 		std::vector<TierData> tiers;
 		std::vector<SelectableLevelData> linearLevels;
+		std::set<size_t> completedSet; //perhaps more performant as linear array, but we're not in critical code
+		std::set<size_t> playableLevelSet;
 	private: //ui
 		sp<Widget3D_LaserButton> backButton = nullptr;
 		sp<Widget3D_LaserButton> startButton = nullptr;

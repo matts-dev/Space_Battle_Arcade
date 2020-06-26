@@ -180,6 +180,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\JsonUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAConfigBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASettingsProfileConfig.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SaveGameConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Components\FighterSpawnComponent.h" />
@@ -520,6 +521,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\0.TestFiles\MemoryLeakTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\CampaignConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASettingsProfileConfig.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SaveGameConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cameras\SAShipCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Cheats\SpaceArcadeCheatSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Components\FighterSpawnComponent.cpp" />

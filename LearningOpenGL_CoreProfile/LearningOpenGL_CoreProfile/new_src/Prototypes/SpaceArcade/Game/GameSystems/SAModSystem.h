@@ -13,6 +13,7 @@ namespace SA
 	class ProjectileConfig;
 	class SettingsProfileConfig;
 	class CampaignConfig;
+	class SaveGameConfig;
 
 	////////////////////////////////////////////////////////////////////
 	// Constants
@@ -94,6 +95,20 @@ namespace SA
 		/** While there may only 1 campaign that is user facing, supporting an array of campaigns internally*/
 		sp<CampaignConfig> getCampaign(size_t index);
 		void addCampaignConfig(const sp<CampaignConfig>& settingsProfileConfig);
+		size_t getActiveCampaignIndex() const;
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// save games
+		/////////////////////////////////////////////////////////////////////////////////////
+		sp<SaveGameConfig> getSaveGameConfig() const;
+		void addSaveGameConfig(const sp<SaveGameConfig>& saveGameConfig);
+		
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// team
+		/////////////////////////////////////////////////////////////////////////////////////
+		size_t getPlayerPreferredTeam() { return playerPreferredTeam; }
+		void setPlayerPreferredTeam(size_t team) { playerPreferredTeam = team; }
 
 		////////////////////////////////////////////////////////////////////
 		// Serialization
@@ -109,12 +124,15 @@ namespace SA
 	private:
 		std::string modName;
 		bool bIsDeletable = true;
+		size_t activeCampaignIdx = 0;
+		size_t playerPreferredTeam = 0;
 
 		std::vector<std::string> defaultCarrierSpawnConfigNamesByTeamIdx;
 		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;
 		std::map<std::string, sp<ProjectileConfig>> projectileConfigsByName;
 		std::vector<sp<SettingsProfileConfig>> settingsProfiles;
 		std::vector<sp<CampaignConfig>> campaigns;
+		sp<SaveGameConfig> saveGameData;
 	};
 
 	////////////////////////////////////////////////////////////////////

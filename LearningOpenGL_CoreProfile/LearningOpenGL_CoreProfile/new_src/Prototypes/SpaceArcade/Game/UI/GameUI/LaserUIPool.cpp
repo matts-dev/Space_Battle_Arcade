@@ -32,6 +32,7 @@ namespace SA
 	}
 
 	/*static*/ SA::Curve_highp LaserUIPool::laserLerpCurve;
+	/*static */glm::vec3 LaserUIPool::defaultColor = glm::vec3(1, 0, 0);
 
 	LaserUIPool::~LaserUIPool()
 	{

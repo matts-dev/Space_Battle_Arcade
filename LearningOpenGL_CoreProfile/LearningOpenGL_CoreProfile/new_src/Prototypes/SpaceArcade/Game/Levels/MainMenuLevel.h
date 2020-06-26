@@ -60,8 +60,8 @@ namespace SA
 		std::optional<CameraAnimData> cameraAnimData;
 		Curve_highp camCurve;
 	private://debug
-		bool bRenderDebugText = true;
-		bool bFreeCamera = true;
+		bool bRenderDebugText = false;
+		bool bFreeCamera = false;
 	private: //logical states
 		sp<class DigitalClockFont> debugText = nullptr;
 		sp<class QuaternionCamera> menuCamera = nullptr;

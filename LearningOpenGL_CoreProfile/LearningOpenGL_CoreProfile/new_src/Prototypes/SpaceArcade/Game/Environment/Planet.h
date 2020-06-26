@@ -57,6 +57,7 @@ namespace SA
 		void setRotationSpeed_radsec(float rotSpeed_radsec) { data.rotSpeedSec_rad = rotSpeed_radsec; }
 		void setRotationAxis(glm::vec3 rotAxis) { data.rotationAxis = glm::normalize(rotAxis); }
 		void setUseCameraAsLight(bool bUseCameraLight);
+		void setUseGrayScale(bool bShouldUseGrayScale) { bUseGrayScale = bShouldUseGrayScale; }
 	private:
 		void applySizeCorrections();
 	private: //statics
@@ -74,6 +75,7 @@ namespace SA
 		Data data;
 		bool bUseLargeDistanceApproximation = true;
 		bool bUseCameraLight = false;
+		bool bUseGrayScale = false;
 	};
 
 }
