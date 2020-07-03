@@ -99,8 +99,8 @@ namespace SA
 		console = new_sp<DeveloperConsole>();
 
 		//make sure resources are loaded before the level starts
-		sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
-		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
+		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
 		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
@@ -122,6 +122,11 @@ namespace SA
 	bool SpaceArcade::isEditorMainMenuOnScreen() const
 	{
 		return ui_root_editor->getUIVisible();
+	}
+
+	void SpaceArcade::setClearColor(glm::vec3 inClearColor)
+	{
+		renderClearColor = inClearColor;
 	}
 
 	void SpaceArcade::renderDebug(const glm::mat4& view, const glm::mat4& projection)
@@ -220,7 +225,7 @@ namespace SA
 		//prepare directional lights
 
 		ec(glEnable(GL_DEPTH_TEST));
-		ec(glClearColor(0, 0, 0, 1));
+		ec(glClearColor(renderClearColor.r, renderClearColor.g, renderClearColor.b, 1));
 		ec(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
 		if (const sp<LevelBase>& loadedLevel = getLevelSystem().getCurrentLevel())

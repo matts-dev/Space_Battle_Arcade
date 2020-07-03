@@ -84,9 +84,11 @@ namespace SA
 		bool escapeShouldOpenEditorMenu() const { return bEscapeShouldOpenEditorMenu; }
 		void setEscapeShouldOpenEditorMenu(bool bValue) { bEscapeShouldOpenEditorMenu = bValue; }
 		void setEditorMainmenuFeatureEnabled(bool bEnabled) { bEditorMainMenuEnabled = bEnabled; }
+		void setClearColor(glm::vec3 inClearColor);
+		glm::vec3 getClearColor() const { return renderClearColor; }
 	private:
 		bool bEditorMainMenuEnabled = true;
-		bool bEscapeShouldOpenEditorMenu = false;
+		bool bEscapeShouldOpenEditorMenu = true;
 	public:
 		const sp<HUD> getHUD() const { return hud; }
 	public:
@@ -123,8 +125,7 @@ namespace SA
 		sp<Shader> forwardShaded_EmissiveModelShader;
 		sp<Shader> debugLineShader;
 
-		////unit cube data
-		//GLuint cubeVAO, cubeVBO;
+		glm::vec3 renderClearColor{ 0.f };
 
 		//ui
 		sp<UIRootWindow> ui_root_editor;

@@ -9,6 +9,7 @@
 #include "../GameFramework/Interfaces/SAIControllable.h"
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../Tools/DataStructures/SATransform.h"
+#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
 
 namespace SA
 {
@@ -65,7 +66,7 @@ namespace SA
 		////////////////////////////////////////////////////////
 		//IControllable
 		////////////////////////////////////////////////////////
-		virtual void onPlayerControlTaken() override;
+		virtual void onPlayerControlTaken(const sp<PlayerBase>& player) override;
 		virtual void onPlayerControlReleased() override;
 		virtual sp<CameraBase> getCamera() override;
 		virtual GameEntity* asEntity() override;
@@ -86,7 +87,20 @@ namespace SA
 		////////////////////////////////////////////////////////
 		//Control functions
 		////////////////////////////////////////////////////////
-		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true, float rollAmplifier = 1.f, float viscosity = 0.f);
+		struct MoveTowardsPointArgs : public RemoveCopies, public RemoveMoves
+		{
+			MoveTowardsPointArgs(const glm::vec3& moveLoc, float dt_sec) : 
+				moveLoc(moveLoc), dt_sec(dt_sec) {};
+
+			glm::vec3 moveLoc{ 0.f };
+			float dt_sec = 0.f;
+			float speedMultiplier = 1.0f;
+			float turnMultiplier = 1.f;
+			float viscosity = 0.f;
+			bool bRoll = true;
+		};
+		void moveTowardsPoint(const MoveTowardsPointArgs& args);
+		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true, float rollAmplifier = 1.f, float viscosity = 0.f); //deprecated in favor of arg version
 		void roll(float rollspeed_rad, float dt_sec, float clamp_rad = 3.14f);
 		void adjustSpeedFraction(float targetSpeedFactor, float dt_sec);
 		void setNextFrameBoost(float targetSpeedFactor);
@@ -94,6 +108,8 @@ namespace SA
 		bool fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> fireRadius_cosTheta = std::optional<float>{}, float shootRandomOffsetStrength = 1.f) const;
 		void fireProjectile(class BrainKey privateKey); //#todo perhaps remove this in favor of fire in direction; #todo don't delete without cleaning up brain key
 		void fireProjectileInDirection(glm::vec3 dir_n) const; //#todo reconsider limiting this so only brains
+
+		inline float getAISkillLevel() { return aiSkillLevel; } //[0,1] 1 being the hardest enemy to face
 
 		////////////////////////////////////////////////////////
 		// Kinematics
@@ -188,6 +204,7 @@ namespace SA
 		float speedGamifier = 1.0f;
 		float engineSpeedChangeFactor = 1.0f; //somewhat like acceleration, but linear and gamified.
 		float fireCooldownSec = 0.15f;
+		float aiSkillLevel = 0.f; //[0,1], higher number means harder enemy
 		sp<RNG> rng;
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;

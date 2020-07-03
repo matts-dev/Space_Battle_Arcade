@@ -17,6 +17,7 @@
 #include <assert.h>
 #include "../../Tools/DataStructures/ChoiceChoosingHelper.h"
 #include "../../Tools/color_utils.h"
+#include "../../GameFramework/CurveSystem.h"
 //#include "../../GameFramework/SAGameBase.h"
 //#include "../../GameFramework/SALevelSystem.h"
 
@@ -30,7 +31,6 @@ namespace SA
 			std::string newMessage = treeInstance + " : " + node.getName() + "\t - " + msg;
 			log("ShipNodeDebugMessage", LogLevel::LOG, newMessage.c_str());
 		}
-
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Task find random location within radius of location
@@ -1456,16 +1456,88 @@ namespace SA
 		// DogfightNode and helpers
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		void ComboStepBase::updateTimeAlive(float dt_sec, TargetDirection arrangement)
+		void AiVsPlayer_MoveArgAdjustments(DogfightNodeTickData& p, Ship::MoveTowardsPointArgs& moveArgs)
 		{
-			basePOD.totalActiveTime += dt_sec;
-			if (isInArrangement(arrangement))
+			if (uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) & p.flags)
+			{
+				moveArgs.viscosity = getAIVsPlayer_Viscosity(p);
+				moveArgs.speedMultiplier = getAIVsPlayer_MoveSpeed(moveArgs.viscosity, p);
+			}
+		}
+
+		float getAIVsPlayer_Viscosity(DogfightNodeTickData& p)
+		{
+			if (uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) & p.flags)
+			{
+				const float variabilityTimeIntervalSec = p.owningDFNode.getVariabilityIntervalSec();
+				const float currentTime = p.owningDFNode.getAccumulatedTime();
+
+				float viscosity = 1.f;
+
+				float variabilityAlpha = std::fmod(currentTime, variabilityTimeIntervalSec);
+				variabilityAlpha = variabilityAlpha / variabilityTimeIntervalSec; //make range [0,1]
+
+				//TODO perhaps a shared location? curve system forces copying so memory corrupting isn't possible, but maybe shared among BT nodes
+				//static Curve_highp curve = GameBase::get().getCurveSystem().generateSigmoid_medp(); //do not use local static if this becomes a wider thing; thread safety issues
+				//viscosity *= curve.eval_smooth(variabilityAlpha);
+
+				//100% viscosity means the ship cannot turn, scale that down
+				viscosity *= 0.8f;
+
+				float shipDifficulty = p.myShip.getAISkillLevel(); //[0,1], 1 means no viscosity
+				viscosity *= glm::clamp((1.f-shipDifficulty),0.f,1.f); 
+
+				//scale based on distance
+				const SA::BehaviorTree::DogfightNodeTickData::TargetStats& t = p.targetStats();
+				float invMaxDistPercent = (1 - glm::clamp(t.toTargetDistance / DogFightConstants::AiVsPlayer_ViscosityRange, 0.f, 1.f));
+				viscosity *= invMaxDistPercent;
+
+				return viscosity; 
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+
+		float getAIVsPlayer_MoveSpeed(float viscosity, DogfightNodeTickData& p)
+		{
+			constexpr bool bEnableAISpeedupWithViscosity = true;
+
+			if (uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) & p.flags && bEnableAISpeedupWithViscosity)
+			{
+				//this more viscosity we're applying to an AI, the more we need to boost away.
+				//this is because it has reduced turn speed, but player is still having short distance between it and the ship.
+				const float maxSpeedupFactor = 4.0; //must be at least 1
+
+				float speedup = 1 + (maxSpeedupFactor - 1)* viscosity; //viscosity should be on range [0,1]
+
+				//scale based on distance
+				const SA::BehaviorTree::DogfightNodeTickData::TargetStats& t = p.targetStats();
+				float invMaxDistPercent = (1 - glm::clamp(t.toTargetDistance / DogFightConstants::AiVsPlayer_SpeedBoostRange, 0.f, 1.f));
+				speedup *= invMaxDistPercent;
+
+				//don't let factor go under 1, otherwise this will end up slowing the ship down
+				speedup = glm::max(speedup, 1.f);
+				return speedup;
+			}
+			else
+			{
+				return 1.f;
+			}
+		}
+
+		void ComboStepBase::updateTimeAlive(DogfightNodeTickData& p)
+		{
+			basePOD.totalActiveTime += p.dt_sec;
+			if (isInArrangement(p.arrangement))
 			{
 				basePOD.timeInWrongPhase = 0.f;
 			}
 			else
 			{
-				basePOD.timeInWrongPhase += dt_sec;
+				basePOD.timeInWrongPhase += p.dt_sec;
 			}
 		}
 
@@ -1489,14 +1561,17 @@ namespace SA
 					&& !bTimedOut;
 		}
 
-		void SharpTurnStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		void SharpTurnStep::tickStep(DogfightNodeTickData& p)
 		{
 			using namespace glm;
-			vec3 targetPos = myTarget.getWorldPosition();
-			vec3 myPos = myShip.getWorldPosition();
+			vec3 targetPos = p.myTarget.getWorldPosition();
+			vec3 myPos = p.myShip.getWorldPosition();
 
-			myShip.adjustSpeedFraction(dt_sec, 0.5f);
-			myShip.moveTowardsPoint(targetPos, dt_sec);
+			p.myShip.adjustSpeedFraction(p.dt_sec, 0.5f);
+
+			Ship::MoveTowardsPointArgs moveArgs{ targetPos, p.dt_sec };
+			AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+			p.myShip.moveTowardsPoint(moveArgs);
 
 			if constexpr (ENABLE_DEBUG_LINES)
 			{
@@ -1505,34 +1580,39 @@ namespace SA
 			}
 		}
 
-		void SlowWhenFacingStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		void SlowWhenFacingStep::tickStep(DogfightNodeTickData& p)
 		{
 			using namespace glm;
 			vec3 debugColor = vec3(0.81f, 0.92f, 0.81f);
 
-			vec3 targetPos = myTarget.getWorldPosition();
-			vec3 myPos = myShip.getWorldPosition();
+			vec3 targetPos = p.myTarget.getWorldPosition();
+			vec3 myPos = p.myShip.getWorldPosition();
 
-			if (arrangement == TargetDirection::FACING)
+			if (p.arrangement == TargetDirection::FACING)
 			{
 				vec3 toTarget = targetPos - myPos;
 				float lengthToTarget2 = glm::length2(toTarget);
 
-				vec3 targetPoint;
-
+				//vec3 targetPoint;
 				if (lengthToTarget2 > slowdownDist2)
 				{
-					targetPoint = targetPos;
-					myShip.adjustSpeedFraction(dt_sec, 1.0f);
-					myShip.moveTowardsPoint(targetPoint, dt_sec);
+					//targetPoint = targetPos; //#cleanup delete after refactor
+					p.myShip.adjustSpeedFraction(p.dt_sec, 1.0f);
+
+					Ship::MoveTowardsPointArgs moveArgs{ targetPos, p.dt_sec };
+					AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+					p.myShip.moveTowardsPoint(moveArgs);
 				}
 				else
 				{
-					targetPoint = targetPos + (vec3(myShip.getRightDir()) * 5.0f);
+					vec3 besideTargetPos = targetPos + (vec3(p.myShip.getRightDir()) * 5.0f); //move slightly beside target
 
-					//don't roll to stablize the right vector
-					myShip.moveTowardsPoint(targetPoint, dt_sec, 1.0f, false);
-					myShip.adjustSpeedFraction(dt_sec, 0.5f);
+					p.myShip.adjustSpeedFraction(p.dt_sec, 0.5f);
+
+					Ship::MoveTowardsPointArgs moveArgs{ besideTargetPos, p.dt_sec };
+					moveArgs.bRoll = false; //don't roll to stabilize the right vector
+					AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+					p.myShip.moveTowardsPoint(moveArgs);
 
 					if constexpr (ENABLE_DEBUG_LINES) { debugColor *= 0.5f; }
 				}
@@ -1545,7 +1625,7 @@ namespace SA
 			}
 		}
 
-		void FollowAndAttackStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		void FollowAndAttackStep::tickStep(DogfightNodeTickData& p)
 		{
 
 		}
@@ -1554,40 +1634,50 @@ namespace SA
 		////////////////////////////////////////////////////////
 		// Faceoff collision avoidance
 		////////////////////////////////////////////////////////
-		void FaceoffCollisionAvoidanceStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		void FaceoffCollisionAvoidanceStep::tickStep(DogfightNodeTickData& p)
 		{
 			using namespace glm;
 			wrongPhaseTimeout = data.optionalFloats.a;
 
-			vec3 myPos = myShip.getWorldPosition();
-			vec3 targetPos = myTarget.getWorldPosition();
+			vec3 myPos = p.myShip.getWorldPosition();
+			vec3 targetPos = p.myTarget.getWorldPosition();
 			float dist2 = glm::length2(targetPos - myPos);
 
 			vec3 debugColor(0.5f, 0.f, 0.9f);
 
-			if (arrangement == TargetDirection::FACING)
+			if (p.arrangement == TargetDirection::FACING)
 			{
 				if (dist2 > startAvoidDist2)
 				{
-					myShip.moveTowardsPoint(targetPos, dt_sec);
+					Ship::MoveTowardsPointArgs moveArgs{ targetPos, p.dt_sec };
+					AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+					p.myShip.moveTowardsPoint(moveArgs);
 				}
 				else 
 				{
 					//don't roll so right direction stays relatively stable
-					targetPos += normalize(vec3(myShip.getRightDir())) * 1.f;
-					myShip.moveTowardsPoint(targetPos, dt_sec, 1.f, false); 
+					targetPos += normalize(vec3(p.myShip.getRightDir())) * 1.f;
+
+					Ship::MoveTowardsPointArgs moveArgs{ targetPos, p.dt_sec };
+					moveArgs.bRoll = false;
+					AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+					p.myShip.moveTowardsPoint(moveArgs); 
+
 					debugColor *= 0.75f;
 				}
 			}
-			else /* out of arrangment*/
+			else /* out of appropriate arrangment*/
 			{
-				float rollLimit = (basePOD.timeInWrongPhase + 0.001f) / wrongPhaseTimeout;
+				float turnLimit = (basePOD.timeInWrongPhase + 0.001f) / wrongPhaseTimeout;
 
 				//do not let full turn happen, otherwise combo step will reengage when again facing
 				const float maximumTurnFactor = 0.25f;
-				rollLimit *= maximumTurnFactor; 
+				turnLimit *= maximumTurnFactor; 
 
-				myShip.moveTowardsPoint(targetPos, dt_sec, 1.f, true, rollLimit);
+				Ship::MoveTowardsPointArgs moveArgs{ targetPos, p.dt_sec };
+				AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+				moveArgs.turnMultiplier = turnLimit;
+				p.myShip.moveTowardsPoint(moveArgs);
 
 				debugColor *= 0.25f;
 			}
@@ -1603,21 +1693,31 @@ namespace SA
 		// Faceoff boost after avoidance
 		////////////////////////////////////////////////////////
 
-		void BoostAwayStep::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		void BoostAwayStep::tickStep(DogfightNodeTickData& p)
 		{
 			using namespace glm;
 			static vec3 debugColor = color::brightGreen();
 
 			inPhaseTimeout = data.optionalFloats.a;
 
-			myShip.setNextFrameBoost(4.0f);
+			float boostTargetSpeed = 4.0f;
+
+			//if ai is fighting player, then make sure to do move adjustments so that ship can create some distance between itself and player
+			if (uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) & p.flags)
+			{
+				Ship::MoveTowardsPointArgs moveArgs{ vec3(p.myShip.getForwardDir())*5.f + p.myShip.getWorldPosition(), p.dt_sec};
+				AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+				p.myShip.moveTowardsPoint(moveArgs);
+			}
+
+			p.myShip.setNextFrameBoost(boostTargetSpeed);
 
 			if constexpr (ENABLE_DEBUG_LINES)
 			{
 				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
 
-				vec3 myPos = myShip.getWorldPosition();
-				vec3 myForward = vec3(myShip.getForwardDir());
+				vec3 myPos = p.myShip.getWorldPosition();
+				vec3 myForward = vec3(p.myShip.getForwardDir());
 				debug.renderLine(vec4(myPos, 1), myPos + myForward*5.f, debugColor);
 			}
 		}
@@ -1652,21 +1752,21 @@ namespace SA
 			}
 		}
 
-		void DogFightComboProccessor::tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip)
+		void DogFightComboProccessor::tickStep(DogfightNodeTickData& p)
 		{
 			ComboStepBase* currentStep = activeStepIdx < activeSteps.size() ? activeSteps[activeStepIdx] : nullptr;
 			ComboStepBase* nextStep = activeStepIdx + 1 < activeSteps.size() ? activeSteps[activeStepIdx+1] : nullptr;
 			if (currentStep)
 			{
-				currentStep->updateTimeAlive(dt_sec, arrangement);
-				if (nextStep && nextStep->isInArrangement(arrangement) && !currentStep->inGracePeriod())
+				currentStep->updateTimeAlive(p);
+				if (nextStep && nextStep->isInArrangement(p.arrangement) && !currentStep->inGracePeriod())
 				{
 					advanceToState(activeStepIdx + 1);
-					nextStep->tickStep(dt_sec, arrangement, myTarget, myShip);
+					nextStep->tickStep(p);
 				}
 				else if (currentStep->inGracePeriod())
 				{
-					currentStep->tickStep(dt_sec, arrangement, myTarget, myShip);
+					currentStep->tickStep(p);
 				}
 				else //all steps are done
 				{
@@ -1696,7 +1796,7 @@ namespace SA
 		{
 			Task_TickingTaskBase::beginTask();
 
-			cur_TimeStamp = 0.f;
+			accumulatedTime_sec = 0.f;
 			fireData = FireData();
 
 			using namespace BehaviorTree;
@@ -1717,6 +1817,7 @@ namespace SA
 					{
 						myTarget_Cache = std::dynamic_pointer_cast<Ship>(weakTarget.lock());
 						assert(myTarget_Cache);
+						refreshCachedTargetState();
 					}
 
 					if (Ship* myShipRaw = brain.getControlledTarget())
@@ -1734,7 +1835,7 @@ namespace SA
 
 		bool Task_DogfightNode::tick(float dt_sec)
 		{
-			cur_TimeStamp += dt_sec;
+			accumulatedTime_sec += dt_sec;
 
 			if (myTarget_Cache && myShip_Cache)
 			{
@@ -1759,13 +1860,17 @@ namespace SA
 				//else if (arrangment == TargetArrangement::OPPOSING){}
 				//else if (arrangment == TargetArrangement::INFRONT){}
 
+				/*DF_ComboStepFlags*/ uint8_t flags;
+				flags |= bTargetIsPlayer ? uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) : 0;
+				DogfightNodeTickData tickData{ dt_sec, myTarget, myShip, arrangment, flags, *this };
+
 				if (comboProcessor.hasActiveCombo())
 				{
-					comboProcessor.tickStep(dt_sec, arrangment, myTarget, myShip);
+					comboProcessor.tickStep(tickData);
 				}
 				else
 				{
-					defaultBehavior(dt_sec, myTarget, myShip);
+					defaultBehavior(tickData);
 				}
 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1775,11 +1880,11 @@ namespace SA
 				if (uint8_t(arrangment) & fireArrangement)
 				{
 					float fireCooldown = fireData.state == FireState::BURST ? fireData.MIN_TIME_BETWEEN_BURST_SHOTS() : fireData.MIN_TIME_BETWEEN_NORMAL_SHOTS();
-					bool bCooldownUp = cur_TimeStamp - fireData.lastFire_TimeStamp > fireCooldown;
+					bool bCooldownUp = accumulatedTime_sec - fireData.lastFire_TimeStamp > fireCooldown;
 					if (bCooldownUp)
 					{
 						myShip.fireProjectileAtShip(myTarget);
-						fireData.lastFire_TimeStamp = cur_TimeStamp;
+						fireData.lastFire_TimeStamp = accumulatedTime_sec;
 						fireData.currentShotInBurst += fireData.state == FireState::BURST ? 1 : 0;
 					}
 				}
@@ -1790,14 +1895,14 @@ namespace SA
 					if (fireData.currentShotInBurst >= fireData.burstShotsNum)
 					{
 						fireData.currentShotInBurst = 0;
-						fireData.lastBurst_TimeStamp = cur_TimeStamp;
+						fireData.lastBurst_TimeStamp = accumulatedTime_sec;
 						fireData.state = FireState::NORMAL;
 						fireData.randomizeControllingParameters(*rng);
 					}
 				}
 				else //normal fire state
 				{
-					if (cur_TimeStamp - fireData.lastBurst_TimeStamp > fireData.burstTimeoutDuration)
+					if (accumulatedTime_sec - fireData.lastBurst_TimeStamp > fireData.burstTimeoutDuration)
 					{
 						fireData.state = FireState::BURST;
 					}
@@ -1830,6 +1935,8 @@ namespace SA
 					myTarget_Cache = nullptr;
 				}
 			}
+
+			refreshCachedTargetState();
 		}
 
 		void Task_DogfightNode::generateDefensiveCombo()
@@ -1874,24 +1981,39 @@ namespace SA
 			}
 		}
 
-		void Task_DogfightNode::defaultBehavior(float dt_sec, Ship& myTarget, Ship& myShip)
+		void Task_DogfightNode::defaultBehavior(DogfightNodeTickData& p)
 		{
 			using namespace glm;
-			vec3 myPos = myShip.getWorldPosition();
-			vec3 targetPos = myTarget.getWorldPosition();
+			vec3 myPos = p.myShip.getWorldPosition();
+			vec3 targetPos = p.myTarget.getWorldPosition();
 
 			//slow down when close to enemy to simulate aiming -- main reason is that it helps keep distance between fighters
 			const float slowdownDistFar2 = 10 * 10;
 			float speedFactor = glm::length2(targetPos - myPos) / slowdownDistFar2;
 			speedFactor = glm::clamp<float>(speedFactor, 0.25f, 1.f);
 
-			myShip.setNextFrameBoost(speedFactor); //allow gradual slow down
-			myShip.moveTowardsPoint(targetPos, dt_sec);
+			p.myShip.setNextFrameBoost(speedFactor); //allow gradual slow down
+
+			Ship::MoveTowardsPointArgs moveArgs{ targetPos, p.dt_sec };
+			AiVsPlayer_MoveArgAdjustments(p, moveArgs);
+			p.myShip.moveTowardsPoint(moveArgs);
 
 			if constexpr (ENABLE_DEBUG_LINES)
 			{
 				static DebugRenderSystem& debug = GameBase::get().getDebugRenderSystem();
 				debug.renderLine(vec4(myPos, 1), vec4(targetPos, 1), vec4(0.25f, 0.25f, 0.25f, 1));
+			}
+		}
+
+		void Task_DogfightNode::refreshCachedTargetState()
+		{
+			if (myTarget_Cache)
+			{
+				bTargetIsPlayer = myTarget_Cache->getGameComponent<OwningPlayerComponent>() && myTarget_Cache->getGameComponent<OwningPlayerComponent>()->hasOwningPlayer();
+			}
+			else
+			{
+				bTargetIsPlayer = false;
 			}
 		}
 
@@ -1941,6 +2063,19 @@ namespace SA
 		{
 			burstShotsNum = rng.getInt<uint16_t>(MIN_BURST_SHOT_RANDOMIZATION(), MAX_BURST_SHOT_RANDOMIZATION());
 			burstTimeoutDuration = rng.getFloat<float>(MIN_BURST_TIMEOUT_RANDOMIZATION(), MAX_BURST_TIMEOUT_RANDOMIZATION());
+		}
+
+		const SA::BehaviorTree::DogfightNodeTickData::TargetStats& DogfightNodeTickData::targetStats()
+		{
+			if (!_targetStats.has_value())
+			{
+				_targetStats = std::make_optional<TargetStats>();
+				_targetStats->toTarget_v = myTarget.getWorldPosition() - myShip.getWorldPosition();
+				_targetStats->toTargetDistance = glm::length(_targetStats->toTarget_v);
+				_targetStats->toTarget_n = _targetStats->toTarget_v / _targetStats->toTargetDistance;
+			}
+
+			return *_targetStats;
 		}
 
 	}

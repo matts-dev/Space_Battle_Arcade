@@ -13,6 +13,7 @@ namespace SA
 	class ProjectileConfig;
 	class ProjectileTweakerWidget;
 	class HitboxPicker;
+	class AIDebuggerWidget;
 	class ParticleConfig;
 	class RNG;
 
@@ -86,6 +87,7 @@ namespace SA
 		sp<SpawnConfig> carrierSpawnConfig;
 		sp<ProjectileTweakerWidget> projectileWidget;
 		sp<HitboxPicker> hitboxPickerWidget;
+		sp<AIDebuggerWidget> aiDebuggerWidget;
 
 		//needs to potentially have O(n) iteration
 		std::set<sp<Ship>> spawnedShips;

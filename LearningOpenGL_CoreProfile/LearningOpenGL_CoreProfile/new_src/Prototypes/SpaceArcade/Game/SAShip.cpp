@@ -351,7 +351,7 @@ namespace SA
 		//#TODO #BUG cleanup placements after carrier is destroyed
 	}
 
-	void Ship::onPlayerControlTaken()
+	void Ship::onPlayerControlTaken(const sp<PlayerBase>& player)
 	{
 		if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
 		{
@@ -360,12 +360,18 @@ namespace SA
 				brain->sleep();
 			}
 		}
+
+		if (OwningPlayerComponent* playerComp = createOrGetOptionalGameComponent<OwningPlayerComponent>(*this))
+		{
+			playerComp->setOwningPlayer(player);
+		}
+
 		bEnableAvoidanceFields = false || bForcePlayerAvoidance_debug;;
 		bAwakeBrainAfterStasis = false;
 	}
 
 	void Ship::onPlayerControlReleased()
-	{
+{
 		if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
 		{
 			if (AIBrain* brain = brainComp->getBrain())
@@ -373,6 +379,12 @@ namespace SA
 				brain->awaken();
 			}
 		}
+
+		if (OwningPlayerComponent* playerComp = getGameComponent<OwningPlayerComponent>())
+		{
+			playerComp->setOwningPlayer(nullptr);
+		}
+
 		bEnableAvoidanceFields = true;
 
 		if (shipCamera)  //release ship camera so it doesn't affect ship any longer
@@ -459,11 +471,21 @@ namespace SA
 
 	void Ship::moveTowardsPoint(const glm::vec3& moveLoc, float dt_sec, float speedAmplifier, bool bRoll, float turnAmplifier, float viscosity)
 	{
+		MoveTowardsPointArgs args{ moveLoc, dt_sec };
+		args.speedMultiplier = speedAmplifier;
+		args.bRoll = bRoll;
+		args.turnMultiplier = turnAmplifier;
+		args.viscosity = viscosity;
+		moveTowardsPoint(args);
+	}
+
+	void Ship::moveTowardsPoint(const MoveTowardsPointArgs& p)
+	{
 		//#TODO #REFACTOR #cleancode #input_vector this should in influencing an input vector, rather than directly influencing the velocity; tick should do the visual updates and velocity changes based on input vector
 		using namespace glm;
 
 		const Transform& xform = getTransform();
-		vec3 targetDir = moveLoc - xform.position;
+		vec3 targetDir = p.moveLoc - xform.position;
 
 		vec3 forwardDir_n = glm::normalize(vec3(getForwardDir()));
 		vec3 targetDir_n = glm::normalize(targetDir);
@@ -474,11 +496,11 @@ namespace SA
 			vec3 rotationAxis_n = glm::cross(forwardDir_n, targetDir_n);
 
 			float angleBetween_rad = Utils::getRadianAngleBetween(forwardDir_n, targetDir_n);
-			float maxTurn_Rad = getMaxTurnAngle_PerSec() * turnAmplifier * dt_sec;
+			float maxTurn_Rad = getMaxTurnAngle_PerSec() * p.turnMultiplier * p.dt_sec;
 			float possibleRotThisTick = glm::clamp(maxTurn_Rad / angleBetween_rad, 0.f, 1.f);
 
 			//slow down turn if some viscosity is being applied
-			float fluidity = glm::clamp(1.f - viscosity, 0.f, 1.f);
+			float fluidity = glm::clamp(1.f - p.viscosity, 0.f, 1.f);
 			possibleRotThisTick *= fluidity;
 
 			quat completedRot = Utils::getRotationBetween(forwardDir_n, targetDir_n) * xform.rotQuat;
@@ -489,7 +511,7 @@ namespace SA
 			bool bRollMatchesTurnAxis = glm::dot(rightVec_n, rotationAxis_n) >= 0.99f;
 
 			vec3 newForwardVec_n = glm::normalize(newRot * vec3(localForwardDir_n()));
-			if (!bRollMatchesTurnAxis && bRoll)
+			if (!bRollMatchesTurnAxis && p.bRoll)
 			{
 				float rollAngle_rad = Utils::getRadianAngleBetween(rightVec_n, rotationAxis_n);
 				float rollThisTick = glm::clamp(maxTurn_Rad / rollAngle_rad, 0.f, 1.f);
@@ -501,12 +523,12 @@ namespace SA
 			newXform.rotQuat = newRot;
 			setTransform(newXform);
 			setVelocityDir(newForwardVec_n);
-			speedGamifier = speedAmplifier;
+			speedGamifier = p.speedMultiplier;
 		}
 		else
 		{
 			setVelocityDir(forwardDir_n);
-			speedGamifier = speedAmplifier;
+			speedGamifier = p.speedMultiplier;
 		}
 	}
 

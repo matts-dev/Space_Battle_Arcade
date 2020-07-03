@@ -241,7 +241,7 @@ namespace SA
 				}
 				else
 				{
-					log("component system", LogLevel::LOG_WARNING, "deleting component that does't exist");
+					log("component system", LogLevel::LOG_WARNING, "deleting component that doesn't exist");
 					assert(false);
 				}
 			}
@@ -253,6 +253,22 @@ namespace SA
 		std::vector<sp<GameComponentBase>> componentArray;
 	};
 	
-
+	/** This is a lazy function that shouldn't be part of the normal work flow. This is because it can accidentally create bugs or waste space
+	when user just wants have component creation be explicit. But in some cases components are optional, and we only want to make them
+	if relevant (eg debugging) so this function exists to do that in a short compact way, but also not making as easy as normal component manipulation 
+	(ie, it is not as easy because requires you call a non-member function)*/
+	template<typename ComponentType>
+	ComponentType* createOrGetOptionalGameComponent(GameplayComponentEntity& componentEntity)
+	{
+		static_assert(std::is_base_of<GameComponentBase, ComponentType>::value);
+		if (componentEntity.hasGameComponent<ComponentType>())
+		{
+			return componentEntity.getGameComponent<ComponentType>();
+		}
+		else
+		{
+			return componentEntity.createGameComponent<ComponentType>();
+		}
+	}
 
 }

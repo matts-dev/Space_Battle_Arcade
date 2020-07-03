@@ -214,6 +214,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASpawnConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SASpaceArcadeGlobalConstants.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\LaserUIPool.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\SAHUD.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\DigitalClockFont.h" />
@@ -539,6 +540,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\MainMenuLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\StressTestLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\LaserUIPool.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\SAHUD.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\DigitalClockFont.cpp" />

@@ -82,5 +82,11 @@ namespace SA
 		}
 	}
 
+	void OwningPlayerComponent::setOwningPlayer(const sp<PlayerBase>& player)
+	{
+		//#TODO broadcast event if needed
+		owningPlayer = player;
+	}
+
 }
 

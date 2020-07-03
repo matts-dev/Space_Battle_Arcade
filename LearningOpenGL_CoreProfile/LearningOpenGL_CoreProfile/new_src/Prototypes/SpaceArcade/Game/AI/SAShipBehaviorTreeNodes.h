@@ -11,8 +11,15 @@
 
 namespace SA
 {
+	////////////////////////////////////////////////////////
+	// Forward Declarations
+	////////////////////////////////////////////////////////
 	class RNG;
 	class ShipAIBrain;
+	namespace BehaviorTree
+	{
+		struct DogfightNodeTickData;
+	}
 
 	enum class MentalState_Fighter : uint32_t
 	{
@@ -608,11 +615,17 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// DogfightNode
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		void AiVsPlayer_MoveArgAdjustments(DogfightNodeTickData& p, Ship::MoveTowardsPointArgs& moveArgs);
+		float getAIVsPlayer_Viscosity(DogfightNodeTickData& p);
+		float getAIVsPlayer_MoveSpeed(float viscosity, DogfightNodeTickData& p); //viscosity forced argument for perf function ordering (must call viscosity first if you want to do this, otherwise we're going to recalculate things)
+
 		enum class TargetDirection : uint8_t { FAILURE=0, INFRONT=1, BEHIND=1<<1, FACING=1<<2, OPPOSING=1<<3};
+		enum class DF_ComboStepFlags : uint8_t { NONE=0, FIGHTING_PLAYER=1<<0 };
 
 		struct ComboStepData
 		{
-			uint8_t arrangements_bitvector = 0;
+			/*TargetDirection*/   uint8_t arrangements_bitvector = 0;
 			glm::vec4 optionalFloats = glm::vec4(0.f);
 		};
 
@@ -622,12 +635,12 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			ComboStepBase(){}
 
 		public:
-			void updateTimeAlive(float dt_sec, TargetDirection arrangement);
+			void updateTimeAlive(DogfightNodeTickData& tickData);
 			bool isInArrangement(TargetDirection arrangement) const;
 
 			void setComboData(const ComboStepData& inComboData);
 			virtual bool inGracePeriod() const;
-			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip) {}
+			virtual void tickStep(DogfightNodeTickData& p) {}
 
 		protected:
 			ComboStepData data;
@@ -648,7 +661,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		{
 		public:
 			SharpTurnStep() : ComboStepBase(){}
-			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+			virtual void tickStep(DogfightNodeTickData& p) override;
 		};
 
 		////////////////////////////////////////////////////////
@@ -658,7 +671,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		{
 		public:
 			SlowWhenFacingStep() : ComboStepBase() {}
-			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+			virtual void tickStep(DogfightNodeTickData& p) override;
 
 		private:
 			float slowdownDist2 = 20 * 20;
@@ -671,7 +684,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		{
 		public:
 			FaceoffCollisionAvoidanceStep() : ComboStepBase() {}
-			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+			virtual void tickStep(DogfightNodeTickData& p) override;
 
 		private:
 			float startAvoidDist2 = 20 * 20;
@@ -684,7 +697,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		{
 		public:
 			BoostAwayStep() : ComboStepBase(){}
-			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+			virtual void tickStep(DogfightNodeTickData& p) override;
 
 		private:
 			float startAvoidDist2 = 20 * 20;
@@ -697,7 +710,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		{
 		public:
 			FollowAndAttackStep() : ComboStepBase() { }
-			virtual void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+			virtual void tickStep(DogfightNodeTickData& p) override;
 		};
 
 
@@ -705,7 +718,8 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			Processes combo steps. Combo steps can be used to define a series of actions given an arrangment of two fighting ships.
 
 			notes about efficiency:
-				Defining this with a normal behavior tree node structure is very slow because of all the tree node changes per tick. Thus this is all done internally to the ticking DogfightNode (ie the outer of this class)
+				Defining this with a normal behavior tree node structure is very slow because of all the tree node changes per tick.
+				Thus this is all done internally to the ticking DogfightNode (ie the outer of this class)
 				My optimizations make this a little strange to read. please see below.
 
 				For efficiency, these steps are shared per instance (see getSharedStepObj). This avoid new/mallocs. But means that we
@@ -734,7 +748,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 				//if a second step is added, we need to set up its data too so we can detect if we should transition.
 				if (activeSteps.size() == 1 || activeSteps.size() == 2) { advanceToState(0); }
 			}
-			void tickStep(float dt_sec, TargetDirection arrangement, Ship& myTarget, Ship& myShip);
+			void tickStep(DogfightNodeTickData& tickData);
 			void resetComboList();
 			bool hasActiveCombo() { return activeSteps.size() > 0; }
 		private:
@@ -763,6 +777,51 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		////////////////////////////////////////////////////////
 		// Dogfight node
 		////////////////////////////////////////////////////////
+		struct DogfightNodeTickData
+		{
+			DogfightNodeTickData(
+				float dt_sec
+				,Ship& myTarget
+				,Ship& myShip
+				,TargetDirection arrangement
+				,/*DF_ComboStepFlags*/ uint8_t flags
+				, class Task_DogfightNode& owningDFNode
+			) :
+				dt_sec(dt_sec)
+				,myTarget(myTarget)
+				,myShip(myShip)
+				, arrangement(arrangement)
+				,flags(flags) 
+				, owningDFNode(owningDFNode)
+			{}
+
+			struct TargetStats
+			{
+				glm::vec3 toTarget_v;
+				glm::vec3 toTarget_n;
+				float toTargetDistance;
+			};
+		private:
+			std::optional<TargetStats> _targetStats;
+		public:
+			////////////////////////////////////////////////////////
+			// Data
+			////////////////////////////////////////////////////////
+			float dt_sec;
+			Ship& myTarget;
+			Ship& myShip;
+			TargetDirection arrangement;
+			/*DF_ComboStepFlags*/ uint8_t flags;
+			class Task_DogfightNode& owningDFNode;
+			const TargetStats& targetStats();
+		};
+
+		namespace DogFightConstants
+		{
+			constexpr float AiVsPlayer_ViscosityRange = 50.f; //how far away an AI ship needs to be before all viscosity is lost.
+			constexpr float AiVsPlayer_SpeedBoostRange = 50.f; //how far away an AI ship needs to be before all viscosity is lost.
+		}
+
 		class Task_DogfightNode : public Task_TickingTaskBase
 		{
 		public:
@@ -775,6 +834,9 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 				target_key(target_key),
 				secondaryTarget_key(secondaryTarget_key)
 			{	}
+		public:
+			inline float getVariabilityIntervalSec() const { return variabilityIntervalSec;}
+			inline float getAccumulatedTime() const { return accumulatedTime_sec; }
 		protected:
 			virtual void notifyTreeEstablished() override;
 			virtual void beginTask() override;
@@ -785,11 +847,12 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			void updateTargetPointer();
 			void generateDefensiveCombo();
 			void generateFacingCombo();
-			void defaultBehavior(float dt_sec, Ship& myTarget, Ship& myShip);
+			void defaultBehavior(DogfightNodeTickData& tick);
+			void refreshCachedTargetState();
 		private:
 			TargetDirection calculateShipArangement(Ship& myTarget, Ship& myShip);
 		private:
-			float cur_TimeStamp = 0;
+			float accumulatedTime_sec = 0;
 			sp<RNG> rng;
 		private: 
 			enum class FireState : uint8_t{ NORMAL, BURST };
@@ -811,15 +874,16 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 				void randomizeControllingParameters(RNG& rng);
 			};
 			FireData fireData;
-
 		private: //cached values
 			fwp<Ship> myTarget_Cache = nullptr;
 			fwp<Ship> myShip_Cache = nullptr;
 			DogFightComboProccessor comboProcessor;
+			bool bTargetIsPlayer = false;
 		private: //node properties
 			const std::string brain_key;
 			const std::string target_key;
 			const std::string secondaryTarget_key;
+			float variabilityIntervalSec = 3.0f;
 		};
 
 	}

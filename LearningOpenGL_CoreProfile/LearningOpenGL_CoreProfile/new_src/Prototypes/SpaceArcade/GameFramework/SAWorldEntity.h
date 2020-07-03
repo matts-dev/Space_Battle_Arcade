@@ -9,6 +9,7 @@ namespace SA
 {
 	class LevelBase;
 	class CollisionData;
+	class PlayerBase;
 
 	/**
 		A world entity is a game entity that has a physical presence in the game world.

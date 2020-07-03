@@ -90,4 +90,14 @@ namespace SA
 	private:
 		float damageReductionFactor = 1;
 	};
+
+
+	class OwningPlayerComponent : public GameComponentBase
+	{
+	public:
+		bool hasOwningPlayer() const { return !owningPlayer.expired(); }
+		void setOwningPlayer(const sp<PlayerBase>& player);
+	private:
+		wp<PlayerBase> owningPlayer;
+	};
 }

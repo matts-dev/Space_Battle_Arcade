@@ -106,16 +106,14 @@ namespace SA
 			snprintf(buffer, sizeof(buffer), "Respawn in %2.1f seconds", cacheSecsUntilRespawn);
 			textRenderer->setText(buffer); 
 
-
-			{//DEBUG, DELETE ME
-				const Transform& xform = textRenderer->getXform();
-				glm::vec3 position = xform.position;
-				snprintf(buffer, sizeof(buffer), "pos[%2.0f,%2.0f,%2.0f]", position.x, position.y, position.z);
-				log(__FUNCTION__, LogLevel::LOG_ERROR, buffer);
-				//textRenderer->setText(buffer);
-
-				
-			}
+			//{//DEBUG, DELETE ME
+			//	const Transform& xform = textRenderer->getXform();
+			//	glm::vec3 position = xform.position;
+			//	snprintf(buffer, sizeof(buffer), "pos[%2.0f,%2.0f,%2.0f]", position.x, position.y, position.z);
+			//	log(__FUNCTION__, LogLevel::LOG_ERROR, buffer);
+			//	//textRenderer->setText(buffer);
+			//	
+			//}
 		}
 	}
 

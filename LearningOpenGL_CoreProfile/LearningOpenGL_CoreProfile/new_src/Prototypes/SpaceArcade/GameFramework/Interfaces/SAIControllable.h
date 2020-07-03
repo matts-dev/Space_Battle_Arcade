@@ -5,14 +5,15 @@
 namespace SA
 {
 	class CameraBase;
-
+	class PlayerBase;
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// A class that the player can take control of.
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class IControllable
 	{
 	public:
-		virtual void onPlayerControlTaken() = 0;
+		virtual void onPlayerControlTaken(const sp<PlayerBase>& player) = 0;
 		virtual void onPlayerControlReleased() = 0;
 		virtual sp<CameraBase> getCamera() = 0;
 

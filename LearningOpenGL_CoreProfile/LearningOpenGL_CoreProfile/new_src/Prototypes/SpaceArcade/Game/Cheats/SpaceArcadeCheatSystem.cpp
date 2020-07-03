@@ -18,6 +18,10 @@
 #include <string>
 #include "../AssetConfigs/CampaignConfig.h"
 #include <vcruntime_exception.h>
+#include "../../Rendering/Camera/SAQuaternionCamera.h"
+#include "../../GameFramework/SAWindowSystem.h"
+
+using namespace glm;
 
 namespace SA
 {
@@ -206,5 +210,27 @@ namespace SA
 		}
 	}
 #endif
+
+	void CheatStatics::givePlayerQuaternionCamera()
+	{
+		const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0);
+		const sp<Window>& primaryWindow = GameBase::get().getWindowSystem().getPrimaryWindow();
+		if (player && primaryWindow)
+		{
+			vec3 oldCamPos = vec3(0.f);
+			quat oldCamQuat = quat(1.f, 0, 0, 0);
+			if (const sp<CameraBase>& camera = player->getCamera())
+			{
+				oldCamPos = camera->getPosition();
+				oldCamQuat = camera->getQuat(); //fps camera has conversion functions
+			}
+
+			sp<QuaternionCamera> newCamera = new_sp<QuaternionCamera>();
+			newCamera->setPosition(oldCamPos);
+			newCamera->setQuat(oldCamQuat);
+			newCamera->registerToWindowCallbacks_v(primaryWindow);
+			player->setCamera(newCamera);
+		}
+	}
 
 }

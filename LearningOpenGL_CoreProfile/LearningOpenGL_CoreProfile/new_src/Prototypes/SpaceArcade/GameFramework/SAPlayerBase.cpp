@@ -49,7 +49,7 @@ namespace SA
 
 			if (newControlTarget)
 			{
-				newControlTarget->onPlayerControlTaken();
+				newControlTarget->onPlayerControlTaken(sp_this());
 				setCamera(newControlTarget->getCamera());
 			}
 			else

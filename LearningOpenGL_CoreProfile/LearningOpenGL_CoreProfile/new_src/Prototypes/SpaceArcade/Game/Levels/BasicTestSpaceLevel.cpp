@@ -11,6 +11,7 @@
 #include "../SAShip.h"
 #include "../AssetConfigs/SASpawnConfig.h"
 #include "../Tools/Debug/SAHitboxPicker.h"
+#include "../Tools/Debug/AIDebuggerWidget.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../GameFramework/RenderModelEntity.h"
 #include "../../GameFramework/SAPlayerBase.h"
@@ -59,7 +60,10 @@ namespace SA
 		}
 
 		projectileWidget = new_sp<ProjectileTweakerWidget>();
+
 		hitboxPickerWidget = new_sp<HitboxPicker>();
+
+		aiDebuggerWidget = new_sp<AIDebuggerWidget>();
 
 		testParticleConfig = ParticleFactory::getSimpleExplosionEffect();
 		testParticles.insert({ "simple explosion", testParticleConfig});

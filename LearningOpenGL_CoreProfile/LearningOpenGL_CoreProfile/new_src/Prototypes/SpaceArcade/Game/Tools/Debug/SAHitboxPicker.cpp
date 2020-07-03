@@ -224,7 +224,7 @@ namespace SA
 					glm::vec4 newFront = pickedObject->getTransform().getModelMatrix() * glm::vec4(1, 0, 0, 1);
 					camera->lookAt_v(camera->getPosition() + glm::vec3(newFront));
 				}
-			glm::vec3 newCamPos = objPos + cameraDistance * -camera->getFront();
+				glm::vec3 newCamPos = objPos + cameraDistance * -camera->getFront();
 				camera->setPosition(newCamPos);
 				camera->lookAt_v(objPos);
 			}

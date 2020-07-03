@@ -26,6 +26,7 @@ namespace SA
 		void handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel);
 		void handleUIFrameStarted();
 		void debugBehaviorTree();
+		virtual bool tick(float dt_sec) override;
 
 	private: //debug rendering
 		float accumulatedTime = 0.f;
@@ -37,7 +38,6 @@ namespace SA
 		bool bCameraFollowTarget_behind = false;
 		glm::vec3 rayStart;
 		glm::vec3 rayEnd;
-		virtual bool tick(float dt_sec) override;
 
 	private:
 		bool bPickingObject = false;
