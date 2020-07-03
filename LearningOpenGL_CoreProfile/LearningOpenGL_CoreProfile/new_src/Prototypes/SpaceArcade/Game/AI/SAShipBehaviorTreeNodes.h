@@ -617,8 +617,8 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		void AiVsPlayer_MoveArgAdjustments(DogfightNodeTickData& p, Ship::MoveTowardsPointArgs& moveArgs);
-		float getAIVsPlayer_Viscosity(DogfightNodeTickData& p);
-		float getAIVsPlayer_MoveSpeed(float viscosity, DogfightNodeTickData& p); //viscosity forced argument for perf function ordering (must call viscosity first if you want to do this, otherwise we're going to recalculate things)
+		float getAIVsPlayer_Viscosity(float variabilityMultiplier, DogfightNodeTickData& p);
+		float getAIVsPlayer_MoveSpeed(float variabilityMultiplier, DogfightNodeTickData& p); 
 
 		enum class TargetDirection : uint8_t { FAILURE=0, INFRONT=1, BEHIND=1<<1, FACING=1<<2, OPPOSING=1<<3};
 		enum class DF_ComboStepFlags : uint8_t { NONE=0, FIGHTING_PLAYER=1<<0 };

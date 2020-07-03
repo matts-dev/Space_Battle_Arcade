@@ -1460,26 +1460,27 @@ namespace SA
 		{
 			if (uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) & p.flags)
 			{
-				moveArgs.viscosity = getAIVsPlayer_Viscosity(p);
-				moveArgs.speedMultiplier = getAIVsPlayer_MoveSpeed(moveArgs.viscosity, p);
+				const float variabilityTimeIntervalSec = p.owningDFNode.getVariabilityIntervalSec();
+				const float currentTime = p.owningDFNode.getAccumulatedTime();
+				float variabilityMultiplier = std::fmod(currentTime, variabilityTimeIntervalSec);
+				variabilityMultiplier = variabilityMultiplier / variabilityTimeIntervalSec; //make range [0,1]
+
+				if constexpr (constexpr bool bDisableVariability_DEBUG = false) { variabilityMultiplier = 1.f; }
+
+				moveArgs.viscosity = getAIVsPlayer_Viscosity(variabilityMultiplier, p);
+				moveArgs.speedMultiplier = getAIVsPlayer_MoveSpeed(variabilityMultiplier, p);
 			}
 		}
 
-		float getAIVsPlayer_Viscosity(DogfightNodeTickData& p)
+		float getAIVsPlayer_Viscosity(float variabilityMultiplier, DogfightNodeTickData& p)
 		{
 			if (uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) & p.flags)
 			{
-				const float variabilityTimeIntervalSec = p.owningDFNode.getVariabilityIntervalSec();
-				const float currentTime = p.owningDFNode.getAccumulatedTime();
-
 				float viscosity = 1.f;
 
-				float variabilityAlpha = std::fmod(currentTime, variabilityTimeIntervalSec);
-				variabilityAlpha = variabilityAlpha / variabilityTimeIntervalSec; //make range [0,1]
-
 				//TODO perhaps a shared location? curve system forces copying so memory corrupting isn't possible, but maybe shared among BT nodes
-				//static Curve_highp curve = GameBase::get().getCurveSystem().generateSigmoid_medp(); //do not use local static if this becomes a wider thing; thread safety issues
-				//viscosity *= curve.eval_smooth(variabilityAlpha);
+				static Curve_highp curve = GameBase::get().getCurveSystem().generateSigmoid_medp(); //do not use local static if this becomes a wider thing; thread safety issues
+				viscosity *= curve.eval_smooth(variabilityMultiplier);
 
 				//100% viscosity means the ship cannot turn, scale that down
 				viscosity *= 0.8f;
@@ -1501,7 +1502,7 @@ namespace SA
 		}
 
 
-		float getAIVsPlayer_MoveSpeed(float viscosity, DogfightNodeTickData& p)
+		float getAIVsPlayer_MoveSpeed(float variabilityMultiplier, DogfightNodeTickData& p)
 		{
 			constexpr bool bEnableAISpeedupWithViscosity = true;
 
@@ -1511,7 +1512,7 @@ namespace SA
 				//this is because it has reduced turn speed, but player is still having short distance between it and the ship.
 				const float maxSpeedupFactor = 4.0; //must be at least 1
 
-				float speedup = 1 + (maxSpeedupFactor - 1)* viscosity; //viscosity should be on range [0,1]
+				float speedup = 1 + (maxSpeedupFactor - 1) * variabilityMultiplier; //variability should be on range [0,1]
 
 				//scale based on distance
 				const SA::BehaviorTree::DogfightNodeTickData::TargetStats& t = p.targetStats();
