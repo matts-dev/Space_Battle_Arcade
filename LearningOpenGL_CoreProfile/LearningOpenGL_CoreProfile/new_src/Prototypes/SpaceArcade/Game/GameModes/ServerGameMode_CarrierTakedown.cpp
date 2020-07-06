@@ -14,6 +14,10 @@
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/SAPlayerSystem.h"
 #include "../../Rendering/Camera/SACameraBase.h"
+#include "../../GameFramework/SABehaviorTree.h"
+#include "../../GameFramework/Components/GameplayComponents.h"
+#include "../AI/SAShipBehaviorTreeNodes.h"
+#include <memory>
 
 namespace SA
 {
@@ -149,8 +153,25 @@ namespace SA
 	{
 		ServerGameMode_Base::onInitialize(level);
 
+		myRNG = GameBase::get().getRNGSystem().getSeededRNG(11);
+
 		if (level)
 		{
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// set up heart beats
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if (const sp<TimeManager>& worldTimeManager = level->getWorldTimeManager())
+			{
+				targetPlayerHeartBeatDelegate = new_sp<MultiDelegate<>>();
+				targetPlayerHeartBeatDelegate->addWeakObj(sp_this(), &ServerGameMode_CarrierTakedown::targetPlayerHeartBeat);
+				targetPlayerHeartbeatConfig.heartBeatSec = bTargetHeartbeatEveryFrame ? 0.01f : targetPlayerHeartbeatConfig.heartBeatSec; //update value so that calculations in heartbeat are correct
+				worldTimeManager->createTimer(targetPlayerHeartBeatDelegate, targetPlayerHeartbeatConfig.heartBeatSec, true);
+			}
+
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// spawn ships for teams
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			const sp<const SpaceLevelConfig>& levelConfig = level->getConfig();
 			const sp<RNG>& rngPtr = level->getGenerationRNG();
 
@@ -167,6 +188,7 @@ namespace SA
 						const SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
 						myTeamData.push_back(TeamData{});
 						TeamData& team = myTeamData.back();
+						team.teamIdx = teamIdx;
 
 						////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						//spawn carrier ships
@@ -264,7 +286,10 @@ namespace SA
 			}
 			else
 			{
-				STOP_DEBUGGER_HERE(); //didn't get a level config or generation RNG. 
+				if (!level->isTestLevel()) //test level will not have config, but I need to set it up with a gamemode
+				{
+					STOP_DEBUGGER_HERE(); //didn't get a level config or generation RNG. 
+				}
 			}
 
 			processLoadedGameData();
@@ -350,5 +375,80 @@ namespace SA
 			endGame(p);
 		}
 	}
+
+	void ServerGameMode_CarrierTakedown::targetPlayerHeartBeat()
+	{
+		std::string BT_TargetKey = "target"; //#TODO need global lookup for these strings
+		std::string BT_AttackerKey = "activeAttackersKey";
+
+
+		targetPlayerHeartbeatData.accumulatedTime += targetPlayerHeartbeatConfig.heartBeatSec;
+
+		if (bool bWaitedLongEnough = targetPlayerHeartbeatData.accumulatedTime >= targetPlayerHeartbeatData.waitSec)
+		{
+			const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
+
+			Ship::playersNeedingTarget.clear();
+
+			for (const sp<PlayerBase> player : allPlayers)
+			{
+				if (player->hasControlTarget())
+				{
+					sp<IControllable> controlTargetBase = player->getControlTargetSP();
+
+					if(WorldEntity* playerControlWE = controlTargetBase->asWorldEntity())
+					{
+						if (BrainComponent* brain = playerControlWE->getGameComponent<BrainComponent>())
+						{
+							if (const BehaviorTree::Tree* tree = brain->getTree())
+							{
+								if (tree->getMemory().hasValue(BT_AttackerKey))
+								{
+									if (const BehaviorTree::ActiveAttackers* activeAttackers = tree->getMemory().getReadValueAs<BehaviorTree::ActiveAttackers>(BT_AttackerKey))
+									{
+										//BehaviorTree::cleanActiveAttackers(*activeAttackers);
+
+										if (activeAttackers->size() == 0)
+										{
+											Ship::playersNeedingTarget.push_back(player);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			targetPlayerHeartbeatData.waitSec = myRNG->getFloat<float>(targetPlayerHeartbeatConfig.minWaitSec, targetPlayerHeartbeatConfig.maxWaitSecc);
+			targetPlayerHeartbeatData.accumulatedTime = 0.f;
+
+		}
+	}
+
+	void ServerGameMode_CarrierTakedown::configureForTestLevel()
+	{
+		if (sp<SpaceLevelBase> level = getOwningLevel().lock())
+		{
+			myTeamData.clear();
+
+			//loop through all ships and find the carriers, then set those; this is going to be slow
+			const std::set<sp<WorldEntity>>& worldEntities = level->getWorldEntities();
+			for (const sp<WorldEntity>& worldEntity : worldEntities)
+			{
+				sp<Ship> asShip = std::dynamic_pointer_cast<Ship>(worldEntity);
+				if (bool bIsCarrier = asShip->getGameComponent<FighterSpawnComponent>() != nullptr)
+				{
+					size_t team = asShip->getTeam();
+					if (myTeamData.size() < team+1)
+					{
+						myTeamData.resize(team+1);
+					}
+					myTeamData[team].carriers.push_back(asShip);
+				}
+			}
+		}
+	}
+
 }
 

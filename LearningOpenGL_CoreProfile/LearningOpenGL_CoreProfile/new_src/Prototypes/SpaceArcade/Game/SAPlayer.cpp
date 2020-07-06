@@ -66,7 +66,7 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		// clean up old entity state
 		/////////////////////////////////////////////////////////////////////////////////////
-		if (GameEntity* oldEntity = oldTarget ? oldTarget->asEntity() : nullptr)
+		if (GameEntity* oldEntity = oldTarget ? oldTarget->asWorldEntity() : nullptr)
 		{
  			oldEntity->onDestroyedEvent->removeAll(sp_this());
 		}
@@ -75,7 +75,7 @@ namespace SA
 		////////////////////////////////////////////////////////
 		// subscribe new entity state
 		////////////////////////////////////////////////////////
-		if (GameEntity* newEntity = newTarget? newTarget->asEntity() : nullptr)
+		if (GameEntity* newEntity = newTarget? newTarget->asWorldEntity() : nullptr)
 		{
 			newEntity->onDestroyedEvent->addWeakObj(sp_this(), &SAPlayer::handleControlTargetDestroyed);
 

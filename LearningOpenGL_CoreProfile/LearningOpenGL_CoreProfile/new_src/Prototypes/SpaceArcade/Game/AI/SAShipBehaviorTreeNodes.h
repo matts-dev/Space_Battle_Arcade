@@ -333,6 +333,8 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			} data;
 		};
 
+		void cleanActiveAttackers(BehaviorTree::ActiveAttackers& attackers);
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Service that fires projectiles when targets align with crosshairs
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -818,8 +820,9 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 
 		namespace DogFightConstants
 		{
-			constexpr float AiVsPlayer_ViscosityRange = 50.f; //how far away an AI ship needs to be before all viscosity is lost.
-			constexpr float AiVsPlayer_SpeedBoostRange = 50.f; //how far away an AI ship needs to be before all viscosity is lost.
+			extern float AiVsPlayer_ViscosityRange; //how far away an AI ship needs to be before all viscosity is lost.
+			extern float AiVsPlayer_SpeedBoostRange; //how far away an AI ship needs to be before all viscosity is lost.
+			extern float AiVsPlayer_MaxSpeedBoost;
 		}
 
 		class Task_DogfightNode : public Task_TickingTaskBase

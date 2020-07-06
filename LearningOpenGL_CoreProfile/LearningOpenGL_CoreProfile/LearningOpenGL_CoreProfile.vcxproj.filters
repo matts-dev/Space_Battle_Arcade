@@ -867,6 +867,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\GlobalSpaceArcadeBehaviorTreeKeys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">

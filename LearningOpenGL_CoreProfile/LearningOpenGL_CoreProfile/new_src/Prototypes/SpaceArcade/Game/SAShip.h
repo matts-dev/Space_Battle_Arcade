@@ -38,6 +38,7 @@ namespace SA
 	class RNG;
 	class ShipCamera;
 	class ShipPlacementEntity;
+	class WorldEntity;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Ship Class
@@ -69,7 +70,7 @@ namespace SA
 		virtual void onPlayerControlTaken(const sp<PlayerBase>& player) override;
 		virtual void onPlayerControlReleased() override;
 		virtual sp<CameraBase> getCamera() override;
-		virtual GameEntity* asEntity() override;
+		virtual WorldEntity* asWorldEntity() override;
 
 		template <typename BrainType>
 		void spawnNewBrain()
@@ -165,6 +166,9 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
+
+		void TryTargetPlayer();
+
 	private:
 		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
 		void tickKinematic(float dt_sec);
@@ -189,6 +193,8 @@ namespace SA
 		MultiDelegate<> onCollided;
 	private: //statics
 		static bool bRenderAvoidanceSpheres;
+	public: //statics
+		static std::vector<fwp<PlayerBase>> playersNeedingTarget;
 	private: //cheat flags
 		bool bOneShotPlacements = false;
 	private:

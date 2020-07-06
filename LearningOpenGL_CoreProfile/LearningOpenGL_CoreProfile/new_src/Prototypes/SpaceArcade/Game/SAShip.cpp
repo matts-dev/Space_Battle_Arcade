@@ -33,6 +33,8 @@
 #include "Components/FighterSpawnComponent.h"
 #include <type_traits>
 #include "UI/GameUI/Widgets3D/Widget3D_Ship.h"
+#include "../Tools/DataStructures/AdvancedPtrs.h"
+#include "AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
 
 namespace SA
 {
@@ -41,6 +43,13 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	bool bDrawAvoidance_debug = false;
 	bool bForcePlayerAvoidance_debug = false;
+	float targetPlayerThresholdDist2 = std::powf(20.f, 2.f);
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// statics 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/*static*/ bool Ship::bRenderAvoidanceSpheres = false;
+	/*static*/ std::vector<fwp<PlayerBase>> Ship::playersNeedingTarget;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// methods
@@ -407,7 +416,7 @@ namespace SA
 		return shipCamera;
 	}
 
-	GameEntity* Ship::asEntity()
+	WorldEntity* Ship::asWorldEntity()
 	{
 		return this;
 	}
@@ -691,7 +700,66 @@ namespace SA
 			fighterSpawnComp->tick(dt_sec);
 		}
 
+		////////////////////////////////////////////////////////
+		// handle target player heartbeat
+		////////////////////////////////////////////////////////
+		bool bIsCarrier = fighterSpawnComp != nullptr;
+		if (playersNeedingTarget.size() > 0 && !bIsCarrier)
+		{
+			TryTargetPlayer();
+		}
 	} 
+
+	void Ship::TryTargetPlayer()
+	{
+		bool bCleanNullPlayers = false;
+
+		for (size_t playerIdx = 0; playerIdx < playersNeedingTarget.size(); ++playerIdx)
+		{
+			if (const fwp<PlayerBase>& player = playersNeedingTarget[playerIdx])
+			{
+				//guessing that calling virtual to check distance will be faster than accessing team component and comparing teams
+				IControllable* controlTarget = player->getControlTarget();
+				if (WorldEntity* playerControlTarget_WE = (controlTarget) ? controlTarget->asWorldEntity() : nullptr)
+				{
+					float distToPlayer2 = glm::distance2(playerControlTarget_WE->getWorldPosition(), getWorldPosition());
+					if (distToPlayer2 < targetPlayerThresholdDist2 && this != controlTarget)
+					{
+						TeamComponent* playerTeamComp = playerControlTarget_WE->getGameComponent<TeamComponent>();
+						if (playerTeamComp && playerTeamComp->getTeam() != getTeam())
+						{
+							//player should have already met targeting requirements as it shouldn't have been in container of players needing target
+							//worst case is player gets two ships targeting it.
+							BrainComponent* myBrainComp = getGameComponent<BrainComponent>();
+							if (const BehaviorTree::Tree* tree = myBrainComp ? myBrainComp->getTree() : nullptr)
+							{
+								BehaviorTree::Memory& memory = tree->getMemory();
+
+								sp<WorldEntity> playerWE = playerControlTarget_WE->requestTypedReference_Nonsafe<WorldEntity>().lock();
+								memory.replaceValue(BT_TargetKey, playerWE);
+							}
+
+							playersNeedingTarget[playerIdx] = nullptr; //null this since we don't want other ships to try and target player now that it has a target
+							bCleanNullPlayers = true;
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				bCleanNullPlayers = true;
+			}
+		}
+		if (bCleanNullPlayers)
+		{
+			auto newEndIter = std::remove_if(playersNeedingTarget.begin(), playersNeedingTarget.end(),
+				[this](const fwp<PlayerBase>& player){
+					return !bool(player); //if player is null, remove it.
+				});
+			playersNeedingTarget.erase(newEndIter, playersNeedingTarget.end());
+		}
+	}
 
 	void Ship::tickKinematic(float dt_sec)
 	{
@@ -1265,6 +1333,5 @@ namespace SA
 		debugRenderer.renderCube(cubeModel, vec3(percFrac, 0, 1.f - percFrac));
 	}
 
-	bool Ship::bRenderAvoidanceSpheres = false;
 
 }

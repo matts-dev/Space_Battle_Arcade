@@ -15,6 +15,7 @@ namespace SA
 	public:
 		size_t numPlayers() const { return players.size(); }
 		const sp<PlayerBase>& getPlayer(uint32_t player_idx);
+		const std::vector<sp<PlayerBase>>& getAllPlayers() const { return players; }
 
 		template<typename T = PlayerBase>
 		sp<T> createPlayer()

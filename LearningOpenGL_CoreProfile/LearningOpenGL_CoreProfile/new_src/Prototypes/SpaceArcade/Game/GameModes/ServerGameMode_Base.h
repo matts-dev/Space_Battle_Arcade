@@ -5,12 +5,13 @@
 namespace SA
 {
 	class SpaceLevelBase;
+	class BasicTestSpaceLevel;
 	struct EndGameParameters;
 
 	class ServerGameMode_Base : public GameEntity
 	{
 	public:
-		struct InitKey : public RemoveMoves {friend SpaceLevelBase; private: InitKey() {}};
+		struct InitKey : public RemoveMoves {friend SpaceLevelBase; friend BasicTestSpaceLevel; private: InitKey() {}};
 	public:
 		void initialize(const InitKey& key);
 		void						setOwningLevel(const sp<SpaceLevelBase>& level);

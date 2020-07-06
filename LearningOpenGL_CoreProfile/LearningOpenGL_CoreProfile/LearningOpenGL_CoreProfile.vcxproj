@@ -168,6 +168,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARandomNumberGenerationSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SARenderSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\TimeManagement\TickGroupManager.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\GlobalSpaceArcadeBehaviorTreeKeys.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SADogfightNodes_LargeTree.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipAIBrain.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SASystemBase.h" />

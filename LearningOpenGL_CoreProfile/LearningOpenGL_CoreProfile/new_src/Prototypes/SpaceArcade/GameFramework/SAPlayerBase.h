@@ -34,6 +34,7 @@ namespace SA
 		void setControlTarget(const sp<IControllable>& newControlTarget);
 		bool hasControlTarget() const;
 		IControllable* getControlTarget();
+		sp<IControllable> getControlTargetSP();	//this is more expensive than the raw pointer alternative
 
 	protected:
 		virtual sp<CameraBase> generateDefaultCamera() const = 0;

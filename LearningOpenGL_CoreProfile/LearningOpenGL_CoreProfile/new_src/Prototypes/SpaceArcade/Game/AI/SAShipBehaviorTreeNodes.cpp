@@ -32,6 +32,22 @@ namespace SA
 			log("ShipNodeDebugMessage", LogLevel::LOG, newMessage.c_str());
 		}
 
+		void cleanActiveAttackers(BehaviorTree::ActiveAttackers& attackers)
+		{
+			auto iter = attackers.begin();
+			while(iter != attackers.end())
+			{
+				if (!iter->second.attacker || iter->second.attacker->isPendingDestroy())
+				{
+					iter = attackers.erase(iter);
+				}
+				else
+				{
+					++iter;
+				}
+			}
+		}
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Task find random location within radius of location
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -579,6 +595,31 @@ namespace SA
 		// Service_AttackerSetter
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		void modifyAttackers(lp<TargetType>& target, bool bAdd, sp<TargetType>& myShip, const std::string& attackersKey)
+		{
+			if (BrainComponent* brainComp = target->getGameComponent<BrainComponent>())
+			{
+				if (const BehaviorTree::Tree* tree = brainComp->getTree())
+				{
+					Memory& targetMemory = tree->getMemory();
+					ScopedUpdateNotifier<PrimitiveWrapper<ActiveAttackers>> attackers_writable;
+					if (targetMemory.getWriteValueAs(attackersKey, attackers_writable))
+					{
+						ActiveAttackers& targetsAttackers = attackers_writable.get().value;
+						if (bAdd)
+						{
+							targetsAttackers.insert({ myShip.get(), CurrentAttackerDatum{ myShip } });
+						}
+						else
+						{
+							targetsAttackers.erase(myShip.get());
+						}
+					}
+				}
+			}
+		};
+
+
 		void Service_AttackerSetter::startService()
 		{
 			Memory& memory = getMemory();
@@ -616,6 +657,14 @@ namespace SA
 
 		void Service_AttackerSetter::stopService()
 		{
+			//make sure we clean up any attackers strutures
+			if (data.myShip)
+			{
+				sp<TargetType> ship = data.myShip;
+				if (data.currentTarget){modifyAttackers(data.currentTarget, false, ship, attackersKey);}
+				if (data.lastTarget) { modifyAttackers(data.lastTarget, false, ship, attackersKey); }
+			}
+
 			//unbinding handlers before anything else is generally a good idea, as write won't cause handlers to be invoked.
 			Memory& memory = getMemory();
 			memory.getReplacedDelegate(targetKey).removeStrong(sp_this(), &Service_AttackerSetter::handleTargetReplaced);
@@ -635,6 +684,7 @@ namespace SA
 				data.currentTarget = target_writable.get().requestTypedReference_Nonsafe<TargetType>().lock();
 			}
 
+			//this will remove attackers form datastructure on next service tick
 			data.bNeedsRefresh = true;
 		}
 
@@ -646,31 +696,8 @@ namespace SA
 
 				if (data.myShip)
 				{
-					auto modifyAttackers = [](lp<TargetType>& target, bool bAdd, sp<TargetType>& myShip, const std::string& attackersKey)
-					{
-						if (BrainComponent* brainComp = target->getGameComponent<BrainComponent>())
-						{
-							if (const BehaviorTree::Tree* tree = brainComp->getTree())
-							{
-								Memory& targetMemory = tree->getMemory();
-								ScopedUpdateNotifier<PrimitiveWrapper<ActiveAttackers>> attackers_writable;
-								if (targetMemory.getWriteValueAs(attackersKey, attackers_writable))
-								{
-									ActiveAttackers& targetsAttackers = attackers_writable.get().value;
-									if (bAdd)
-									{
-										targetsAttackers.insert({ myShip.get(), CurrentAttackerDatum{ myShip } });
-									}
-									else
-									{
-										targetsAttackers.erase(myShip.get());
-									}
-								}
-							}
-						}
-					};
-
 					sp<TargetType> myShipSp = data.myShip;
+
 					if (data.lastTarget)
 					{
 						modifyAttackers(data.lastTarget, false, myShipSp, attackersKey);
@@ -1510,7 +1537,7 @@ namespace SA
 			{
 				//this more viscosity we're applying to an AI, the more we need to boost away.
 				//this is because it has reduced turn speed, but player is still having short distance between it and the ship.
-				const float maxSpeedupFactor = 4.0; //must be at least 1
+				const float maxSpeedupFactor = DogFightConstants::AiVsPlayer_MaxSpeedBoost; //must be at least 1
 
 				float speedup = 1 + (maxSpeedupFactor - 1) * variabilityMultiplier; //variability should be on range [0,1]
 
@@ -1785,6 +1812,16 @@ namespace SA
 		////////////////////////////////////////////////////////
 		// dog fight node
 		////////////////////////////////////////////////////////
+
+		namespace DogFightConstants //non-constant so values can be tweaked at runtime
+		{
+			//50.f, 50.f for Viscosity/speed boost is a comfortable range, but the AI doesn't shoot a lot
+			//70visc and 70speedDist make it so that AI gets on average at least 1 shot in
+			float AiVsPlayer_ViscosityRange = 70.f; 
+			float AiVsPlayer_SpeedBoostRange = 70.f;
+			extern float AiVsPlayer_MaxSpeedBoost = 4.f;
+		}
+
 		void Task_DogfightNode::notifyTreeEstablished()
 		{
 			rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();

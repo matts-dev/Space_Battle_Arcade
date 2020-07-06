@@ -29,6 +29,7 @@ namespace SA
 		const sp<const SpaceLevelConfig>& getConfig() const { return levelConfig; }
 		const sp<RNG>& getGenerationRNG() { return generationRNG; } //non-const as user is likely about to modify state of RNG
 		bool hasLevelConfig() { return levelConfig != nullptr; }
+		virtual bool isTestLevel() { return false; }
 		void endGame(const EndGameParameters& endParameters);
 	protected:
 		virtual void startLevel_v() override;
@@ -54,7 +55,7 @@ namespace SA
 		std::vector<sp<Star>> localStars;
 		std::vector<sp<Planet>> planets;
 		sp<SA::Shader> forwardShadedModelShader;
-	private:
+	protected:
 		sp<ServerGameMode_Base> gamemode = nullptr;
 	private: //implementation helpers
 		bool bGeneratingLocalStars = false;

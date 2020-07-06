@@ -77,4 +77,16 @@ namespace SA
 		return nullptr;
 	}
 
+	sp<SA::IControllable> PlayerBase::getControlTargetSP()
+	{
+		sp<IControllable> controlTargetSP = nullptr;
+
+		if (controlTarget)
+		{
+			controlTargetSP = wp<IControllable>(controlTarget).lock();
+		}
+
+		return controlTargetSP;
+	}
+
 }

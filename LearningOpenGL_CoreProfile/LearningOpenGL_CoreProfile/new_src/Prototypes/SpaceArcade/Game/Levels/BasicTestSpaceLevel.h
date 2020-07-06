@@ -21,7 +21,7 @@ namespace SA
 	{
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
-
+		virtual bool isTestLevel() override { return true; }
 	protected:
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned) override;
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned) override;

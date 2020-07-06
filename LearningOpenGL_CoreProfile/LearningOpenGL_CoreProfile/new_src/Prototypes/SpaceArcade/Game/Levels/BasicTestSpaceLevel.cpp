@@ -43,6 +43,7 @@
 #include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 #include "../Cameras/SAShipCamera.h"
 #include "../Components/FighterSpawnComponent.h"
+#include "../GameModes/ServerGameMode_CarrierTakedown.h"
 
 namespace SA
 {
@@ -322,6 +323,17 @@ namespace SA
 				log("BasicTestSpaceLevel", LogLevel::LOG_ERROR, "No active mod");
 			}
 
+			if (bool bIsServer = true) //#multiplayer 
+			{
+				sp<ServerGameMode_CarrierTakedown> gamemodeSubclass = new_sp<ServerGameMode_CarrierTakedown>();
+				if (gamemodeSubclass)
+				{
+					gamemode = gamemodeSubclass;
+					gamemode->setOwningLevel(sp_this());
+					gamemode->initialize(ServerGameMode_Base::InitKey{});
+					gamemodeSubclass->configureForTestLevel();
+				}
+			}
 		}
 	}
 

@@ -9,7 +9,8 @@
                 "campaign.campaignName": "GameData/mods/SpaceArcade/Assets/Campaigns/CampaignConfig_1.json",
                 "campaign.completedLevels": [
                     1,
-                    3
+                    3,
+                    5
                 ]
             }
         ]

@@ -332,6 +332,8 @@ namespace SA
 
 	sp<SA::ServerGameMode_Base> createGamemodeFromTag(const std::string& tag)
 	{
+		sp<ServerGameMode_Base> newGamemode = nullptr;
+
 		if (tag == TAG_GAMEMODE_CARRIER_TAKEDOWN)
 		{
 			return new_sp<ServerGameMode_CarrierTakedown>();
@@ -347,7 +349,7 @@ namespace SA
 			STOP_DEBUGGER_HERE(); 
 		}
 
-		return nullptr;
+		return newGamemode;
 	}
 
 }
