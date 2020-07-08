@@ -30,6 +30,7 @@ namespace SA
 		const sp<RNG>& getGenerationRNG() { return generationRNG; } //non-const as user is likely about to modify state of RNG
 		bool hasLevelConfig() { return levelConfig != nullptr; }
 		virtual bool isTestLevel() { return false; }
+		ServerGameMode_Base* getServerGameMode();
 		void endGame(const EndGameParameters& endParameters);
 	protected:
 		virtual void startLevel_v() override;

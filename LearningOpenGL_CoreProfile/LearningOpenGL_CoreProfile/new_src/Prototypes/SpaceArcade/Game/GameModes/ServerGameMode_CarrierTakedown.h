@@ -29,9 +29,9 @@ namespace SA
 	private: //config
 		struct TargetPlayerHeartbeatConfig
 		{
-			float heartBeatSec = 10.f;
-			float minWaitSec = 40.f;
-			float maxWaitSecc = 70.f;
+			float heartBeatSec = 2.5f;
+			float minWaitSec = 20.f;
+			float maxWaitSecc = 30.f;
 		} targetPlayerHeartbeatConfig;
 	private:
 		std::vector<TeamData> myTeamData;

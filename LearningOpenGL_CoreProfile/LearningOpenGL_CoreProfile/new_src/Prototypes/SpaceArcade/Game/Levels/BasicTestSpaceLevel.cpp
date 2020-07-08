@@ -330,7 +330,7 @@ namespace SA
 				{
 					gamemode = gamemodeSubclass;
 					gamemode->setOwningLevel(sp_this());
-					gamemode->initialize(ServerGameMode_Base::InitKey{});
+					gamemode->initialize(ServerGameMode_Base::LevelKey{});
 					gamemodeSubclass->configureForTestLevel();
 				}
 			}

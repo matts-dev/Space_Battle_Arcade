@@ -21,10 +21,14 @@
 #include "GameSystems/SAProjectileSystem.h"
 #include "../Tools/color_utils.h"
 #include "../Rendering/OpenGLHelpers.h"
+#include "GameModes/ServerGameMode_Base.h"
+#include "Levels/SASpaceLevelBase.h"
+#include "../GameFramework/SALevelSystem.h"
 
 
 static constexpr bool bCOMPILE_DEBUG_TURRET = false;
 static constexpr bool bCOMPILE_DEBUG_SATELLITE = false;
+static constexpr float variabilityInTargetWaitSec = 5.f;
 
 namespace SA
 {
@@ -32,6 +36,7 @@ namespace SA
 	static const std::string turretStr = "TURRET";
 	static const std::string defStr = "DEFENSE";
 	static const std::string invalidStr = "INVALID";
+
 
 	/*static*/ sp<Model3D> CommunicationPlacement::seekerModel = nullptr;
 	/*static*/ sp<Shader> CommunicationPlacement::seekerShader = nullptr;
@@ -187,7 +192,9 @@ namespace SA
 			if (teamComp->getTeam() != hitProjectile.team)
 			{
 				//we were hit by a non-team member, apply game logic!
+				notifyDamagingHit(hitProjectile, hitLoc);
 				adjustHP(-float(hitProjectile.damage));
+				//WARNING: anything after adjusting HP make cause this object to be destroyed, do not make calls after it. #nextengine all destroys happen 1 frame deferred
 			}
 			else
 			{
@@ -549,12 +556,15 @@ namespace SA
 			const vec3 targetPos_wp = myTarget->getWorldPosition();
 			const vec3 myWorldPos = getWorldPosition();
 			const vec3 toTarget = targetPos_wp - myWorldPos;
-			const vec3 toTarget_n = glm::normalize(toTarget);
+			const float distToTarget = glm::length(toTarget);
+			const vec3 toTarget_n = toTarget / distToTarget;
 			const vec3 myForward_wn = getWorldForward_n();
 			const vec3 stationaryForward_n = getWorldStationaryForward_n();
 
 			const Transform& xform = getTransform();
 			Transform newXform = xform;
+
+			targetRequest.timeWithoutTargetSec = 0.f;
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//BOUNDS CHECK -- if target it out of bounds, generate a vector as close as possible to target, but still in bounds.
@@ -569,7 +579,6 @@ namespace SA
 				toTargetInBounds_n = glm::normalize(rot * stationaryForward_n);
 				bTargetOutOfBounds = true;
 			}
-
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// ROLL TOP OF TURRET -- roll the up direction of ship so that the barrels align with the outer cone
@@ -655,6 +664,34 @@ namespace SA
 				debugRenderSystem.renderLine(myWorldPos, myWorldPos + toTargetInBounds_n * 10.f, glm::vec3(0, 0, 1));
 				debugRenderSystem.renderCone(myWorldPos, stationaryForward_n, rotationLimit_rad, 10.f, glm::vec3(0, 0.5f, 0));
 			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// attempt to drop target if it has gotten too far away
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if (distToTarget > targetingData.dropTargetDistance)
+			{
+				setTarget(sp<TargetType>(nullptr));
+			}
+		}
+		else /*noTarget*/
+		{
+			targetRequest.timeWithoutTargetSec += dt_sec;
+			bool bIsServer = true;
+			if (!targetRequest.bDispatchedTargetRequest && targetRequest.timeWithoutTargetSec > targetRequest.waitBeforeRequestSec && bIsServer)
+			{ 
+				targetRequest.bDispatchedTargetRequest = true;
+
+				if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+				{
+					if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+					{
+						if (ServerGameMode_Base* gm = spaceLevel->getServerGameMode())
+						{
+							gm->addTurretNeedingTarget(sp_this());
+						}
+					}
+				}
+			}
 		}
 		if constexpr (bCOMPILE_DEBUG_TURRET)
 		{
@@ -683,6 +720,50 @@ namespace SA
 		Parent::updateModelMatrixCache();
 	}
 
+	void TurretPlacement::onTargetSet(TargetType* rawTarget)
+	{
+		Parent::onTargetSet(rawTarget);
+
+		targetRequest.bDispatchedTargetRequest = false; //we don't know if we've been given target from gamemode or not, regardless gamemdoe will clean up. so clear this.
+		targetRequest.timeWithoutTargetSec = 0.f; //regardless of if rawTarget is null, reset timer to give logic clean state
+	}
+
+	void TurretPlacement::notifyDamagingHit(const Projectile& hitProjectile, glm::vec3 hitLoc)
+	{
+		bool bShouldSwitchTarget = false; 
+
+		if (myTarget && hitProjectile.owner && myTarget.fastGet() != hitProjectile.owner)
+		{
+			glm::vec3 attackerPosition = hitProjectile.owner->getWorldPosition();
+			glm::vec3 targetPosition = myTarget->getWorldPosition();
+			glm::vec3 myPos = getWorldPosition();
+
+
+			float switchDistPerc = 0.75; //if it is % closer than current target, switch.
+			float targetDist = glm::length(targetPosition - myPos);
+			float attackerDist = glm::length(attackerPosition - myPos);
+			bShouldSwitchTarget |= (targetDist * switchDistPerc) > attackerDist;
+
+			//perhaps also consider if target is nearly dead?
+			//bShouldSwitchTarget &= !NearlyDead;
+
+		}
+		else if(!myTarget)
+		{
+			//if we don't have a target, try to switch
+			bShouldSwitchTarget = true;
+		}
+
+		if (bShouldSwitchTarget && hitProjectile.owner)
+		{
+			wp<TargetType> ownerAsTargetType = hitProjectile.owner->requestTypedReference_Safe<TargetType>();
+			if (!ownerAsTargetType.expired())
+			{
+				setTarget(ownerAsTargetType);
+			}
+		}
+	}
+
 	void TurretPlacement::postConstruct()
 	{
 		Parent::postConstruct();
@@ -695,6 +776,9 @@ namespace SA
 			barrelLocations_lp.push_back(glm::vec3(0.6f, 0.f, 2.3f));
 			barrelLocations_lp.push_back(glm::vec3(-0.6f, 0.f, 2.3));
 		}
+
+		sp<RNG> placementRNG = GameBase::get().getRNGSystem().getNamedRNG("placement");
+		targetRequest.waitBeforeRequestSec += placementRNG->getFloat<float>(0, variabilityInTargetWaitSec);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -795,22 +879,26 @@ namespace SA
 			return;
 		}
 
-		timeSinseFire_sec += dt_sec;
+		timeSinceFire_sec += dt_sec;
 
 		Parent::tick(dt_sec);
 		if (myTarget)
 		{
+			targetRequest.timeWithoutTargetSec = 0.f;
+
 			if (TargetType* target = myTarget.fastGet())
 			{
 				const vec3 targetPos_wp = target->getWorldPosition();
 				const vec3 myWorldPos_wp = getWorldPosition();
 				const vec3 toTarget_wv = targetPos_wp - myWorldPos_wp;
-				const vec3 toTarget_wn = glm::normalize(toTarget_wv);
+				const float distToTarget = glm::length(toTarget_wv);
+				const vec3 toTarget_wn = toTarget_wv / distToTarget;
 				const vec3 forward_wn = getWorldForward_n();
 
 				const vec3 spawnRight_wn = getSpawnRight_wn();
 				const vec3 spawnForward_wn = getSpawnForward_wn();
 				const vec3 spawnUp_wn = getSpawnUp_wn();
+				const float projectToTargetOnUp = glm::dot(spawnUp_wn, toTarget_wn);
 
 				//note: projecting to plane must be done on an orthonormal plane for it to work like expected; that is the case for this.
 				const vec3 targetProj_wn = normalize(Utils::project(toTarget_wn, spawnRight_wn) + Utils::project(toTarget_wn, spawnForward_wn));
@@ -851,12 +939,13 @@ namespace SA
 					}
 				}
 
-				if (timeSinseFire_sec > fireCooldown_sec && !activeSeeker.has_value())
+				bool bTargetIsAboveHorizon = projectToTargetOnUp > 0.f;
+				if (timeSinceFire_sec > fireCooldown_sec && !activeSeeker.has_value() && bTargetIsAboveHorizon)
 				{
 					activeSeeker = HealSeeker{};
 					activeSeeker->xform.position = getParentXLocalModelMatrix() * vec4(barrelLocation_lp, 1.f);
 					activeSeeker->xform.scale = vec3(0.5f);
-					timeSinseFire_sec = 0.f;
+					timeSinceFire_sec = 0.f;
 				}
 
 				if(activeSeeker)
@@ -888,6 +977,35 @@ namespace SA
 					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*myForwardProj_wn, color::metalicgold());
 					debugRenderer.renderLine(myWorldPos_wp, myWorldPos_wp + 10.f*targetProj_wn, color::lightPurple());
 				}
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// attempt to drop target if it has gotten too far away
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				if (distToTarget > targetingData.dropTargetDistance)
+				{
+					setTarget(sp<TargetType>(nullptr));
+				}
+			}
+
+		}
+		else /*noTarget*/
+		{
+			targetRequest.timeWithoutTargetSec += dt_sec;
+			bool bIsServer = true;
+			if (!targetRequest.bDispatchedTargetRequest && targetRequest.timeWithoutTargetSec > targetRequest.waitBeforeRequestSec && bIsServer)
+			{
+				targetRequest.bDispatchedTargetRequest = true;
+
+				if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+				{
+					if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+					{
+						if (ServerGameMode_Base* gm = spaceLevel->getServerGameMode())
+						{
+							gm->addHealerNeedingTarget(sp_this());
+						}
+					}
+				}
 			}
 		}
 		if constexpr (bCOMPILE_DEBUG_SATELLITE)
@@ -918,6 +1036,9 @@ namespace SA
 				log(__FUNCTION__, LogLevel::LOG_ERROR, "Failed to get tessellated texture!");
 			}
 		}
+
+		sp<RNG> placementRNG = GameBase::get().getRNGSystem().getNamedRNG("placement");
+		targetRequest.waitBeforeRequestSec += placementRNG->getFloat<float>(0, variabilityInTargetWaitSec);
 	}
 
 	void CommunicationPlacement::draw(Shader& shader)
@@ -958,6 +1079,9 @@ namespace SA
 				activeSeeker = std::nullopt;
 			}
 		}
+
+		targetRequest.bDispatchedTargetRequest = false; //we don't know if we've been given target from gamemode or not, regardless gamemdoe will clean up. so clear this.
+		targetRequest.timeWithoutTargetSec = 0.f; //regardless of if rawTarget is null, reset timer to give logic clean state
 	}
 
 	void CommunicationPlacement::replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig)

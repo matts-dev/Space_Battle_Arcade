@@ -79,10 +79,12 @@ namespace SA
 		virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig);
 		void adjustHP(float amount);
 		const TeamData& getTeamData() { return teamData; }
+		float getMaxTargetDistance2() { return targetingData.targetDistance2; };
 		void setHasGeneratorPower(bool bValue);
 		bool hasGeneratorPower() const { return bHasGeneratorPower; }
 		PlacementType getPlacementType() const { return config.placementType; }
 		void setTarget(const wp<TargetType>& newTarget);
+		bool hasTarget() { return bool(myTarget); }
 	protected:
 		void setForwardLocalSpace(glm::vec3 newForward_ls);
 		virtual void onTargetSet(TargetType* rawTarget) {}
@@ -93,6 +95,7 @@ namespace SA
 		glm::vec3 getSpawnForward_wn();
 	private:
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
+		virtual void notifyDamagingHit(const Projectile& hitProjectile, glm::vec3 hitLoc) {}
 		void doDamagedFX();
 		void tickDestroyingFX();
 	protected:
@@ -127,6 +130,14 @@ namespace SA
 		glm::vec3 right_ln{ 1,0,0 };
 		glm::vec3 shieldColor = glm::vec3(1.f);
 		TeamData teamData;
+	protected:
+		struct Targeting
+		{
+			float accetableTargetDistance = 100.f;
+			float targetDistance2 = std::powf(accetableTargetDistance,2.f);
+			float dropTargetDistance = accetableTargetDistance * 1.1f;
+			//float targetDropDistance2 = std::powf(dropTargetDistance, 2.f);
+		} targetingData;
 	private: //destruction fx
 		sp<MultiDelegate<>> destructionTickDelegate = nullptr;
 		const float destructionTickFrequencySec = 0.1f;
@@ -149,14 +160,22 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 		virtual void updateModelMatrixCache() override;
+		virtual void onTargetSet(TargetType* rawTarget) override;
+		virtual void notifyDamagingHit(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		//virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig) override;
 	private://cached
 		std::optional<glm::vec3> cache_worldStationaryForward_n;
 		bool bUseDefaultBarrelLocations = true; //specific to the turret model
 		size_t barrelIndex = 0;
+		struct TargetRequest
+		{
+			float timeWithoutTargetSec = 0.f;
+			bool bDispatchedTargetRequest = false;
+			float waitBeforeRequestSec = 0.1f; //short time means turrets will basically always be searching
+		} targetRequest;
 	private:
 		std::vector<glm::vec3> barrelLocations_lp; //local points
-		float rotationLimit_rad = glm::radians<float>(45.f);
+		float rotationLimit_rad = glm::radians<float>(85.f);
 		float rotationSpeed_radSec = glm::radians(30.f);
 		float fireCooldown_sec = 1.0f;
 		float timeSinseFire_sec = 1.0f;
@@ -190,11 +209,17 @@ namespace SA
 		static sp<Shader> seekerShader;
 		static uint32_t tessellatedTextureID;
 	private:
+		struct TargetRequest
+		{
+			float timeWithoutTargetSec = 0.f;
+			bool bDispatchedTargetRequest = false;
+			float waitBeforeRequestSec = 5.f;
+		} targetRequest;
 		glm::vec3 barrelLocation_lp{ 0.f, 1.1f, 0.65f };
 		std::optional<HealSeeker> activeSeeker = std::nullopt;
 		float rotationSpeed_radsec = glm::radians(30.f);
-		float fireCooldown_sec = 5.0f;
-		float timeSinseFire_sec = 1.0f;
+		float fireCooldown_sec = 10.0f;
+		float timeSinceFire_sec = 1.0f;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

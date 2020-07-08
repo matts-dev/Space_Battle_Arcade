@@ -104,7 +104,16 @@ namespace SA
 	void SpaceLevelBase::setConfig(const sp<const SpaceLevelConfig>& config)
 	{
 		levelConfig = config; //store config for when level starts.
+	}
 
+	SA::ServerGameMode_Base* SpaceLevelBase::getServerGameMode()
+	{
+		if (bool bIsServer = true) //#multiplayer
+		{
+			return gamemode.get();
+		}
+
+		return nullptr;
 	}
 
 	void SpaceLevelBase::endGame(const EndGameParameters& endParameters)
@@ -258,7 +267,7 @@ namespace SA
 				if (gamemode = createGamemodeFromTag(levelConfig->gamemodeTag))
 				{
 					gamemode->setOwningLevel(sp_this());
-					gamemode->initialize(ServerGameMode_Base::InitKey{});
+					gamemode->initialize(ServerGameMode_Base::LevelKey{});
 				}
 			}
 		}
@@ -322,6 +331,11 @@ namespace SA
 		for (sp<Planet>& planet : planets)
 		{
 			planet->tick(dt_sec);
+		}
+
+		if (gamemode)
+		{
+			gamemode->tick(dt_sec, ServerGameMode_Base::LevelKey{});
 		}
 	}
 

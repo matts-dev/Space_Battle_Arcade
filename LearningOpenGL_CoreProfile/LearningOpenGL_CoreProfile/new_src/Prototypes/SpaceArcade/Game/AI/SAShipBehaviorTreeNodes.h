@@ -368,7 +368,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			void handleSecondaryTargetsReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue);
 
 			bool canShoot() const;
-			bool tryShootAtTarget(const TargetType& target, const Ship* myShip, const glm::vec3& myPos, const glm::vec3& myForward_n);
+			bool tryShootAtTarget(const TargetType& target, Ship* myShip, const glm::vec3& myPos, const glm::vec3& myForward_n);
 
 		private:
 			sp<RNG> rng = nullptr;
@@ -384,7 +384,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			float shootCooldown = 1.1f;
 
 		private: //node cached values
-			const ShipAIBrain* owningBrain;
+			ShipAIBrain* owningBrain;
 			sp<const PrimitiveWrapper<SecondaryTargetContainer>> secondaryTargets; 
 			lp<const TargetType> primaryTarget = nullptr;
 			lp<const PrimitiveWrapper<MentalState_Fighter>> stateRef = nullptr;

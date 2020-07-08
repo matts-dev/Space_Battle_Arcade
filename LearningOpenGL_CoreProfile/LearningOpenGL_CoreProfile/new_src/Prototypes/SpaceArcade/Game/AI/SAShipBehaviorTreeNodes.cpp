@@ -18,6 +18,7 @@
 #include "../../Tools/DataStructures/ChoiceChoosingHelper.h"
 #include "../../Tools/color_utils.h"
 #include "../../GameFramework/CurveSystem.h"
+#include "../../Tools/PlatformUtils.h"
 //#include "../../GameFramework/SAGameBase.h"
 //#include "../../GameFramework/SALevelSystem.h"
 
@@ -719,7 +720,13 @@ namespace SA
 		void Service_OpportunisiticShots::startService()
 		{
 			Memory& memory = getMemory();
-			owningBrain = memory.getReadValueAs<ShipAIBrain>(brainKey);
+
+			//owningBrain = const_cast<ShipAIBrain*>(memory.getReadValueAs<ShipAIBrain>(brainKey));
+			{ //avoiding const cast on brain, cache a writable version.
+				ScopedUpdateNotifier<ShipAIBrain> brain_writable;
+				if (memory.getWriteValueAs(brainKey, brain_writable)) { owningBrain  = &brain_writable.get();}
+				else{log(__FUNCTION__, LogLevel::LOG_ERROR, "could not get mutable brain."); STOP_DEBUGGER_HERE();}
+			}
 
 			primaryTarget = memory.getMemoryReference<TargetType>(targetKey);
 			secondaryTargets = memory.getMemoryReference<const PrimitiveWrapper<SecondaryTargetContainer>>(secondaryTargetsKey);
@@ -773,7 +780,7 @@ namespace SA
 
 			if (canShoot())
 			{
-				if (const Ship* myShip = owningBrain->getControlledTarget())
+				if (Ship* myShip = owningBrain->getControlledTarget())
 				{
 					vec3 myPos = myShip->getWorldPosition();
 					vec4 myForward = myShip->getForwardDir();
@@ -821,7 +828,7 @@ namespace SA
 			return false;
 		}
 
-		bool Service_OpportunisiticShots::tryShootAtTarget(const TargetType& target, const Ship* myShip, const glm::vec3& myPos, const glm::vec3& myForward_n)
+		bool Service_OpportunisiticShots::tryShootAtTarget(const TargetType& target, Ship* myShip, const glm::vec3& myPos, const glm::vec3& myForward_n)
 		{
 			using namespace glm;
 

@@ -35,6 +35,7 @@
 #include "UI/GameUI/Widgets3D/Widget3D_Ship.h"
 #include "../Tools/DataStructures/AdvancedPtrs.h"
 #include "AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
+#include "GameModes/ServerGameMode_Base.h"
 
 namespace SA
 {
@@ -49,7 +50,7 @@ namespace SA
 	// statics 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/*static*/ bool Ship::bRenderAvoidanceSpheres = false;
-	/*static*/ std::vector<fwp<PlayerBase>> Ship::playersNeedingTarget;
+	
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// methods
@@ -440,7 +441,7 @@ namespace SA
 		}
 	}
 
-	void Ship::fireProjectileInDirection(glm::vec3 dir_n) const
+	void Ship::fireProjectileInDirection(glm::vec3 dir_n)
 	{
 		if (primaryProjectile && length2(dir_n) > 0.001 && FIRE_PROJECTILE_ENABLED)
 		{
@@ -576,7 +577,7 @@ namespace SA
 		boostNextFrame = targetSpeedFactor;
 	}
 
-	bool Ship::fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> inFireRadius_cosTheta /*=empty*/, float shootRandomOffsetStrength /*= 1.f*/) const
+	bool Ship::fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> inFireRadius_cosTheta /*=empty*/, float shootRandomOffsetStrength /*= 1.f*/)
 	{
 		using namespace glm;
 		static float defaultFireRadius_cosTheta = glm::cos(10 * glm::pi<float>() / 180);
@@ -700,64 +701,99 @@ namespace SA
 			fighterSpawnComp->tick(dt_sec);
 		}
 
-		////////////////////////////////////////////////////////
-		// handle target player heartbeat
-		////////////////////////////////////////////////////////
-		bool bIsCarrier = fighterSpawnComp != nullptr;
-		if (playersNeedingTarget.size() > 0 && !bIsCarrier)
-		{
-			TryTargetPlayer();
-		}
+		//shipTickBandwagon();
 	} 
+
+	//void Ship::shipTickBandwagon()
+	//{
+	//	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//	//
+	//	// I'm not a fan of this pattern, but doing for perf considerations. Ideally we would have the game mode do a 
+	//	// loop over all ships and have these checks. Things that care about finding a good ship would add to a gamemode/teamcommander
+	//	// delegate. 
+	//	//
+	//	// But right now delegates are not all that fast. So, rather, doing this within the ship's tick
+	//	// as that 1. limits to only ships and not all world entities 2. can set data directly rather than going through delegates
+	//	// 3. does not require any extra tracking/casting on gamemode end. I strongly want to refactor this, but also wanting 
+	//	// to complete this project in aa sensible time.
+	//	//
+	//	// Ideally in my next engine I will address the speed of delegates and try to come up with a fast-delegate that has near
+	//	// identical speed as calling raw functions.
+	//	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//	if(bool bIsServer = true) //#multiplayer
+	//	{
+	//		////////////////////////////////////////////////////////
+	//		// handle target player heartbeat
+	//		////////////////////////////////////////////////////////
+	//		//bool bIsCarrier = fighterSpawnComp != nullptr;
+	//		//if (Ship::playersNeedingTarget.size() > 0 && !bIsCarrier)
+	//		//{
+	//		//	TryTargetPlayer();
+	//		//}
+
+	//		////////////////////////////////////////////////////////
+	//		// handle offensive placements searching for target within range
+	//		////////////////////////////////////////////////////////
+
+	//		////////////////////////////////////////////////////////
+	//		// handle defensive placements looking for riendly target within range
+	//		////////////////////////////////////////////////////////
+
+
+	//	}
+	//}
 
 	void Ship::TryTargetPlayer()
 	{
-		bool bCleanNullPlayers = false;
-
-		for (size_t playerIdx = 0; playerIdx < playersNeedingTarget.size(); ++playerIdx)
+		if(bool bIsServer = true)
 		{
-			if (const fwp<PlayerBase>& player = playersNeedingTarget[playerIdx])
+			bool bCleanNullPlayers = false;
+
+			for (size_t playerIdx = 0; playerIdx < ServerGameMode_Base::playersNeedingTarget.size(); ++playerIdx)
 			{
-				//guessing that calling virtual to check distance will be faster than accessing team component and comparing teams
-				IControllable* controlTarget = player->getControlTarget();
-				if (WorldEntity* playerControlTarget_WE = (controlTarget) ? controlTarget->asWorldEntity() : nullptr)
+				if (const fwp<PlayerBase>& player = ServerGameMode_Base::playersNeedingTarget[playerIdx])
 				{
-					float distToPlayer2 = glm::distance2(playerControlTarget_WE->getWorldPosition(), getWorldPosition());
-					if (distToPlayer2 < targetPlayerThresholdDist2 && this != controlTarget)
+					//guessing that calling virtual to check distance will be faster than accessing team component and comparing teams
+					IControllable* controlTarget = player->getControlTarget();
+					if (WorldEntity* playerControlTarget_WE = (controlTarget) ? controlTarget->asWorldEntity() : nullptr)
 					{
-						TeamComponent* playerTeamComp = playerControlTarget_WE->getGameComponent<TeamComponent>();
-						if (playerTeamComp && playerTeamComp->getTeam() != getTeam())
+						float distToPlayer2 = glm::distance2(playerControlTarget_WE->getWorldPosition(), getWorldPosition());
+						if (distToPlayer2 < targetPlayerThresholdDist2 && this != controlTarget)
 						{
-							//player should have already met targeting requirements as it shouldn't have been in container of players needing target
-							//worst case is player gets two ships targeting it.
-							BrainComponent* myBrainComp = getGameComponent<BrainComponent>();
-							if (const BehaviorTree::Tree* tree = myBrainComp ? myBrainComp->getTree() : nullptr)
+							TeamComponent* playerTeamComp = playerControlTarget_WE->getGameComponent<TeamComponent>();
+							if (playerTeamComp && playerTeamComp->getTeam() != getTeam())
 							{
-								BehaviorTree::Memory& memory = tree->getMemory();
+								//player should have already met targeting requirements as it shouldn't have been in container of players needing target
+								//worst case is player gets two ships targeting it.
+								BrainComponent* myBrainComp = getGameComponent<BrainComponent>();
+								if (const BehaviorTree::Tree* tree = myBrainComp ? myBrainComp->getTree() : nullptr)
+								{
+									BehaviorTree::Memory& memory = tree->getMemory();
 
-								sp<WorldEntity> playerWE = playerControlTarget_WE->requestTypedReference_Nonsafe<WorldEntity>().lock();
-								memory.replaceValue(BT_TargetKey, playerWE);
+									sp<WorldEntity> playerWE = playerControlTarget_WE->requestTypedReference_Nonsafe<WorldEntity>().lock();
+									memory.replaceValue(BT_TargetKey, playerWE);
+								}
+
+								ServerGameMode_Base::playersNeedingTarget[playerIdx] = nullptr; //null this since we don't want other ships to try and target player now that it has a target
+								bCleanNullPlayers = true;
+								break;
 							}
-
-							playersNeedingTarget[playerIdx] = nullptr; //null this since we don't want other ships to try and target player now that it has a target
-							bCleanNullPlayers = true;
-							break;
 						}
 					}
 				}
+				else
+				{
+					bCleanNullPlayers = true;
+				}
 			}
-			else
+			if (bCleanNullPlayers)
 			{
-				bCleanNullPlayers = true;
+				auto newEndIter = std::remove_if(ServerGameMode_Base::playersNeedingTarget.begin(), ServerGameMode_Base::playersNeedingTarget.end(),
+					[this](const fwp<PlayerBase>& player){
+						return !bool(player); //if player is null, remove it.
+					});
+				ServerGameMode_Base::playersNeedingTarget.erase(newEndIter, ServerGameMode_Base::playersNeedingTarget.end());
 			}
-		}
-		if (bCleanNullPlayers)
-		{
-			auto newEndIter = std::remove_if(playersNeedingTarget.begin(), playersNeedingTarget.end(),
-				[this](const fwp<PlayerBase>& player){
-					return !bool(player); //if player is null, remove it.
-				});
-			playersNeedingTarget.erase(newEndIter, playersNeedingTarget.end());
 		}
 	}
 

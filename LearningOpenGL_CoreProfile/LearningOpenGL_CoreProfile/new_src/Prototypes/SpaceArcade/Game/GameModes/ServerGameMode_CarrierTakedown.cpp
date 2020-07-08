@@ -168,7 +168,6 @@ namespace SA
 				worldTimeManager->createTimer(targetPlayerHeartBeatDelegate, targetPlayerHeartbeatConfig.heartBeatSec, true);
 			}
 
-
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// spawn ships for teams
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -388,7 +387,7 @@ namespace SA
 		{
 			const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
 
-			Ship::playersNeedingTarget.clear();
+			ServerGameMode_Base::playersNeedingTarget.clear();
 
 			for (const sp<PlayerBase> player : allPlayers)
 			{
@@ -410,7 +409,7 @@ namespace SA
 
 										if (activeAttackers->size() == 0)
 										{
-											Ship::playersNeedingTarget.push_back(player);
+											ServerGameMode_Base::playersNeedingTarget.push_back(player);
 										}
 									}
 								}
@@ -422,7 +421,6 @@ namespace SA
 
 			targetPlayerHeartbeatData.waitSec = myRNG->getFloat<float>(targetPlayerHeartbeatConfig.minWaitSec, targetPlayerHeartbeatConfig.maxWaitSecc);
 			targetPlayerHeartbeatData.accumulatedTime = 0.f;
-
 		}
 	}
 

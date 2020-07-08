@@ -92,12 +92,6 @@ namespace SA
 		glm::quat getRotationBetween(const glm::vec3& from_n, const glm::vec3& to_n);
 		glm::quat degreesVecToQuat(const glm::vec3& rotationInDegrees);
 
-		template <typename T>
-		bool isValidIndex(const std::vector<T>& arr, size_t idx)
-		{
-			return arr.size() > 0 && idx < arr.size();
-		}
-
 		inline bool anyValueNAN(float a) { return glm::isnan(a); }
 		inline bool anyValueNAN(glm::vec3 vec) {return glm::isnan(vec.x) || glm::isnan(vec.y) || glm::isnan(vec.z);}
 		inline bool anyValueNAN(glm::vec4 vec) { return glm::isnan(vec.x) || glm::isnan(vec.y) || glm::isnan(vec.z) || glm::isnan(vec.w); };
@@ -106,13 +100,6 @@ namespace SA
 			glm::bvec4 vec = glm::isnan(quat);
 			return vec.x || vec.y || vec.z || vec.w;
 		};
-
-		glm::vec3 findBoxLow(const std::array<glm::vec4, 8>& localAABB);
-		glm::vec3 findBoxMax(const std::array<glm::vec4, 8>& localAABB);
-
-		/** Rough implementation that may have issues*/
-		bool rayHitTest_FastAABB(const glm::vec3& boxLow, const glm::vec3& boxMax, const glm::vec3 rayStart, const glm::vec3 rayDir);
-
 #if _DEBUG | ERROR_CHECK_GL_RELEASE 
 #define NAN_BREAK(value)\
 if(SA::Utils::anyValueNAN(value))\
@@ -123,5 +110,37 @@ if(SA::Utils::anyValueNAN(value))\
 #define NAN_BREAK(value) 
 #endif //_DEBUG
 
+		glm::vec3 findBoxLow(const std::array<glm::vec4, 8>& localAABB);
+		glm::vec3 findBoxMax(const std::array<glm::vec4, 8>& localAABB);
+
+		/** Rough implementation that may have issues*/
+		bool rayHitTest_FastAABB(const glm::vec3& boxLow, const glm::vec3& boxMax, const glm::vec3 rayStart, const glm::vec3 rayDir);
+
+
+		////////////////////////////////////////////////////////
+		// Vector Utils
+		////////////////////////////////////////////////////////
+		template <typename T>
+		bool isValidIndex(const std::vector<T>& arr, size_t idx)
+		{
+			return arr.size() > 0 && idx < arr.size();
+		}
+
+		template<typename T>
+		void swapAndPopback(std::vector<T>& arr, size_t idx)
+		{
+			if (isValidIndex(arr, idx))
+			{
+				if (arr.size() > 1)
+				{
+					std::iter_swap(arr.begin() + idx, arr.end() - 1);
+					arr.pop_back();
+				}
+				else
+				{
+					arr.clear(); //most likely faster to just clear it rather than the temp code generated for swap.
+				}
+			}
+		}
 	}
 }

@@ -106,9 +106,9 @@ namespace SA
 		void adjustSpeedFraction(float targetSpeedFactor, float dt_sec);
 		void setNextFrameBoost(float targetSpeedFactor);
 
-		bool fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> fireRadius_cosTheta = std::optional<float>{}, float shootRandomOffsetStrength = 1.f) const;
+		bool fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> fireRadius_cosTheta = std::optional<float>{}, float shootRandomOffsetStrength = 1.f);
 		void fireProjectile(class BrainKey privateKey); //#todo perhaps remove this in favor of fire in direction; #todo don't delete without cleaning up brain key
-		void fireProjectileInDirection(glm::vec3 dir_n) const; //#todo reconsider limiting this so only brains
+		void fireProjectileInDirection(glm::vec3 dir_n); //#todo reconsider limiting this so only brains
 
 		inline float getAISkillLevel() { return aiSkillLevel; } //[0,1] 1 being the hardest enemy to face
 
@@ -163,12 +163,13 @@ namespace SA
 		// Debug
 		////////////////////////////////////////////////////////
 		void renderPercentageDebugWidget(float rightOffset, float percFrac) const;
+	public:
+		inline FighterSpawnComponent* getFighterComp() { return fighterSpawnComp; } //optimization to avoid getting gameplay component, 
+		void TryTargetPlayer();
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
-
-		void TryTargetPlayer();
-
+		//void shipTickBandwagon(); 
 	private:
 		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
 		void tickKinematic(float dt_sec);
@@ -193,8 +194,6 @@ namespace SA
 		MultiDelegate<> onCollided;
 	private: //statics
 		static bool bRenderAvoidanceSpheres;
-	public: //statics
-		static std::vector<fwp<PlayerBase>> playersNeedingTarget;
 	private: //cheat flags
 		bool bOneShotPlacements = false;
 	private:
