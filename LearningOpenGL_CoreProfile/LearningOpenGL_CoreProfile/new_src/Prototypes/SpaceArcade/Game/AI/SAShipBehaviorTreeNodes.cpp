@@ -24,6 +24,8 @@
 
 namespace SA
 {
+	constexpr bool EVADE_STATE_ENABLED = false;
+
 	namespace BehaviorTree
 	{
 		void LogShipNodeDebugMessage(const Tree& tree, const NodeBase& node, const std::string& msg)
@@ -243,8 +245,10 @@ namespace SA
 			//this service should always have a brain available while it is ticking; if it doesn't this is a design error.
 			assert(owningBrain);
 			assert(attackers); //there is not a race condition here; service removes callback from timer when stopping
+			assert(stateRef);
 
-			if (bEvaluateActiveAttackersOnNextTick && TARGET_ATTACKERS_FEATURE_ENABLED)
+			bool bShouldTargetAttackers = !stateRef || stateRef->value != MentalState_Fighter::ATTACK_OBJECTIVE;
+			if (bEvaluateActiveAttackersOnNextTick && TARGET_ATTACKERS_FEATURE_ENABLED && bShouldTargetAttackers)
 			{
 				bEvaluateActiveAttackersOnNextTick = false;
 
@@ -304,6 +308,9 @@ namespace SA
 			Memory& memory = getMemory();
 			memory.getModifiedDelegate(targetKey).addStrongObj(sp_this(), &Service_TargetFinder::handleTargetModified);
 			memory.getModifiedDelegate(activeAttackersKey).addStrongObj(sp_this(), &Service_TargetFinder::handleActiveAttackersModified);
+			memory.getModifiedDelegate(stateKey).addStrongObj(sp_this(), &Service_TargetFinder::handleStateModified);
+
+			stateRef = memory.getMemoryReference<PrimitiveWrapper<MentalState_Fighter>>(stateKey);
 
 			resetSearchData();
 			{
@@ -355,6 +362,7 @@ namespace SA
 			Memory& memory = getMemory();
 			memory.getModifiedDelegate(targetKey).removeStrong(sp_this(), &Service_TargetFinder::handleTargetModified);
 			memory.getModifiedDelegate(activeAttackersKey).removeStrong(sp_this(), &Service_TargetFinder::handleActiveAttackersModified);
+			memory.getModifiedDelegate(stateKey).removeStrong(sp_this(), &Service_TargetFinder::handleStateModified);
 
 			//#TODO it is a little backwards that we give the command back a target we the ship is destroyed
 			//ideally the commander would pass out handles, and then on destroy that handle would give
@@ -364,6 +372,7 @@ namespace SA
 			setTarget(nullptr);
 			owningBrain = nullptr;
 			attackers = nullptr;
+			stateRef = nullptr;
 		}
 
 		void Service_TargetFinder::handleTargetModified(const std::string& key, const GameEntity* value)
@@ -414,6 +423,12 @@ namespace SA
 		{
 			setTarget(nullptr);
 			bEvaluateActiveAttackersOnNextTick = true;
+		}
+
+		void Service_TargetFinder::handleStateModified(const std::string& key, const GameEntity* value)
+		{
+			Memory& memory = getMemory();
+			stateRef = memory.getMemoryReference<PrimitiveWrapper<MentalState_Fighter>>(stateKey);
 		}
 
 		void Service_TargetFinder::resetSearchData()
@@ -616,6 +631,10 @@ namespace SA
 							targetsAttackers.erase(myShip.get());
 						}
 					}
+					else
+					{
+						//target does not track attackers (eg placement), that's okay and not an error
+					}
 				}
 			}
 		};
@@ -815,7 +834,7 @@ namespace SA
 			static LevelSystem& levelSys = GameBase::get().getLevelSystem();
 
 			assert(stateRef);
-			if (stateRef->value == MentalState_Fighter::ATTACK)
+			if (stateRef->value == MentalState_Fighter::ATTACK_FIGHTER)
 			{
 				return false;
 			}
@@ -951,25 +970,30 @@ namespace SA
 				/////////////////////////////////////////////////////////////////////////////////////
 				if (target)
 				{
-					if (activeAttackers->size() > 0)
+					if (targetIsAnObjective(*target))
 					{
-						if (activeAttackers->find(target) != activeAttackers->end())
+						writeState(*state, MentalState_Fighter::ATTACK_OBJECTIVE, memory);
+					}
+					else if (bool bShouldConsiderEvading = activeAttackers->size() > 0)
+					{
+						//attack or evade(if enabled)
+						if (activeAttackers->find(target) != activeAttackers->end() || !EVADE_STATE_ENABLED)
 						{
-							writeState(*state, MentalState_Fighter::ATTACK, memory);
+							writeState(*state, MentalState_Fighter::ATTACK_FIGHTER, memory);
 						}
-						else
+						else if (EVADE_STATE_ENABLED)
 						{
 							writeState(*state, MentalState_Fighter::EVADE, memory);
 						}
 					}
 					else
 					{
-						writeState(*state, MentalState_Fighter::ATTACK, memory);
+						writeState(*state, MentalState_Fighter::ATTACK_FIGHTER, memory);
 					}
 				}
 				else //no target
 				{
-					if (activeAttackers->size() > 0)
+					if (activeAttackers->size() > 0 && EVADE_STATE_ENABLED)
 					{
 						writeState(*state, MentalState_Fighter::EVADE, memory);
 					}
@@ -983,6 +1007,11 @@ namespace SA
 			{
 				log(__FUNCTION__, LogLevel::LOG_ERROR, "Required data for state setting is not available");
 			}
+		}
+
+		bool Decorator_FighterStateSetter::targetIsAnObjective(const TargetType& target) const
+		{
+			return dynamic_cast<const ShipPlacementEntity*>(&target) != nullptr;
 		}
 
 		void Decorator_FighterStateSetter::writeState(MentalState_Fighter currentState, MentalState_Fighter newState, Memory& memory)
@@ -1701,7 +1730,7 @@ namespace SA
 					debugColor *= 0.75f;
 				}
 			}
-			else /* out of appropriate arrangment*/
+			else /* out of appropriate arrangement*/
 			{
 				float turnLimit = (basePOD.timeInWrongPhase + 0.001f) / wrongPhaseTimeout;
 
@@ -1842,7 +1871,7 @@ namespace SA
 			Task_TickingTaskBase::beginTask();
 
 			accumulatedTime_sec = 0.f;
-			fireData = FireData();
+			fireData = FireLaserAbilityData();
 
 			using namespace BehaviorTree;
 			Memory& memory = getMemory();
@@ -1893,21 +1922,21 @@ namespace SA
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// Handle movement
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				const TargetDirection arrangment = calculateShipArangement(myTarget, myShip);
-				if (arrangment == TargetDirection::FACING)
+				const TargetDirection arrangement = calculateShipArangement(myTarget, myShip);
+				if (arrangement == TargetDirection::FACING)
 				{
 					if (!comboProcessor.hasActiveCombo())
 					{
 						generateFacingCombo();
 					}
 				}
-				//else if (arrangment == TargetDirection::BEHIND) {}
-				//else if (arrangment == TargetArrangement::OPPOSING){}
-				//else if (arrangment == TargetArrangement::INFRONT){}
+				//else if (arrangement == TargetDirection::BEHIND) {}
+				//else if (arrangement == TargetArrangement::OPPOSING){}
+				//else if (arrangement == TargetArrangement::INFRONT){}
 
 				/*DF_ComboStepFlags*/ uint8_t flags;
 				flags |= bTargetIsPlayer ? uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) : 0;
-				DogfightNodeTickData tickData{ dt_sec, myTarget, myShip, arrangment, flags, *this };
+				DogfightNodeTickData tickData{ dt_sec, myTarget, myShip, arrangement, flags, *this };
 
 				if (comboProcessor.hasActiveCombo())
 				{
@@ -1918,40 +1947,42 @@ namespace SA
 					defaultBehavior(tickData);
 				}
 
-				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				// Handle firing projectiles
-				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-				static const uint8_t fireArrangement = (uint8_t(TargetDirection::FACING) | uint8_t(TargetDirection::INFRONT));
-				if (uint8_t(arrangment) & fireArrangement)
-				{
-					float fireCooldown = fireData.state == FireState::BURST ? fireData.MIN_TIME_BETWEEN_BURST_SHOTS() : fireData.MIN_TIME_BETWEEN_NORMAL_SHOTS();
-					bool bCooldownUp = accumulatedTime_sec - fireData.lastFire_TimeStamp > fireCooldown;
-					if (bCooldownUp)
-					{
-						myShip.fireProjectileAtShip(myTarget);
-						fireData.lastFire_TimeStamp = accumulatedTime_sec;
-						fireData.currentShotInBurst += fireData.state == FireState::BURST ? 1 : 0;
-					}
-				}
+				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				//// Handle firing projectiles
+				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				//static const uint8_t fireArrangement = (uint8_t(TargetDirection::FACING) | uint8_t(TargetDirection::INFRONT));
+				//if (uint8_t(arrangement) & fireArrangement)
+				//{
+				//	float fireCooldown = fireData.state == FireState::BURST ? fireData.MIN_TIME_BETWEEN_BURST_SHOTS() : fireData.MIN_TIME_BETWEEN_NORMAL_SHOTS();
+				//	bool bCooldownUp = accumulatedTime_sec - fireData.lastFire_TimeStamp > fireCooldown;
+				//	if (bCooldownUp)
+				//	{
+				//		myShip.fireProjectileAtShip(myTarget);
+				//		fireData.lastFire_TimeStamp = accumulatedTime_sec;
+				//		fireData.currentShotInBurst += fireData.state == FireState::BURST ? 1 : 0;
+				//	}
+				//}
 
-				//post firing state update - update regardless if firing so se can switch between burst/normal fire states
-				if (fireData.state == FireState::BURST)
-				{
-					if (fireData.currentShotInBurst >= fireData.burstShotsNum)
-					{
-						fireData.currentShotInBurst = 0;
-						fireData.lastBurst_TimeStamp = accumulatedTime_sec;
-						fireData.state = FireState::NORMAL;
-						fireData.randomizeControllingParameters(*rng);
-					}
-				}
-				else //normal fire state
-				{
-					if (accumulatedTime_sec - fireData.lastBurst_TimeStamp > fireData.burstTimeoutDuration)
-					{
-						fireData.state = FireState::BURST;
-					}
-				}
+				////post firing state update - update regardless if firing so se can switch between burst/normal fire states
+				//if (fireData.state == FireState::BURST)
+				//{
+				//	if (fireData.currentShotInBurst >= fireData.burstShotsNum)
+				//	{
+				//		fireData.currentShotInBurst = 0;
+				//		fireData.lastBurst_TimeStamp = accumulatedTime_sec;
+				//		fireData.state = FireState::NORMAL;
+				//		fireData.randomizeControllingParameters(*rng);
+				//	}
+				//}
+				//else //normal fire state
+				//{
+				//	if (accumulatedTime_sec - fireData.lastBurst_TimeStamp > fireData.burstTimeoutDuration)
+				//	{
+				//		fireData.state = FireState::BURST;
+				//	}
+				//}
+
+				fireData.tick(dt_sec, myShip, myTarget, arrangement, accumulatedTime_sec, *rng);
 			}
 			return true;
 		}
@@ -2062,11 +2093,11 @@ namespace SA
 			}
 		}
 
-		TargetDirection Task_DogfightNode::calculateShipArangement(Ship& myTarget, Ship& myShip)
+		TargetDirection calculateShipArangement(Ship& myTarget, Ship& myShip)
 		{
 			using namespace glm;
 
-			TargetDirection arrangment = TargetDirection::FAILURE;
+			TargetDirection arrangement = TargetDirection::FAILURE;
 			vec3 tForward_n = vec3(myTarget.getForwardDir());
 			vec3 mForward_n = vec3(myShip.getForwardDir());
 			vec3 tarPos = myTarget.getWorldPosition();
@@ -2083,32 +2114,105 @@ namespace SA
 			{
 				if (targetBehindMe) //  <t ------- m>
 				{
-					arrangment = TargetDirection::OPPOSING;
+					arrangement = TargetDirection::OPPOSING;
 				}
 				else				// <t ------- <m
 				{
-					arrangment = TargetDirection::INFRONT;
+					arrangement = TargetDirection::INFRONT;
 				}
 			}
 			else //target is facing me
 			{
 				if (targetBehindMe) // t> ------ m>
 				{
-					arrangment = TargetDirection::BEHIND;
+					arrangement = TargetDirection::BEHIND;
 				}
 				else				// t> ------- <m
 				{
-					arrangment = TargetDirection::FACING;
+					arrangement = TargetDirection::FACING;
 				}
 			}
-			return arrangment;
+			return arrangement;
 		}
 
-		void Task_DogfightNode::FireData::randomizeControllingParameters(RNG& rng)
+		SA::BehaviorTree::TargetDirection getArrangementWithGenericTarget(Ship& myShip, TargetType& myTarget)
+		{
+			using namespace glm;
+
+			TargetDirection arrangement = TargetDirection::FAILURE;
+			vec3 mForward_n = vec3(myShip.getForwardDir());
+			vec3 tarPos = myTarget.getWorldPosition();
+			vec3 myPos = myShip.getWorldPosition();
+
+			//no need to normalize as we only care about sign of dot products
+			vec3 toMe = myPos - tarPos;
+			vec3 toTarget = -(toMe);
+
+			bool targetBehindMe = glm::dot(toTarget, mForward_n) < 0.f;
+			if (targetBehindMe) // t ------ m>
+			{
+				arrangement = TargetDirection::BEHIND;
+			}
+			else				// t ------- <m
+			{
+				arrangement = TargetDirection::FACING;
+			}
+			return arrangement;
+		}
+
+		void FireLaserAbilityData::randomizeControllingParameters(RNG& rng)
 		{
 			burstShotsNum = rng.getInt<uint16_t>(MIN_BURST_SHOT_RANDOMIZATION(), MAX_BURST_SHOT_RANDOMIZATION());
 			burstTimeoutDuration = rng.getFloat<float>(MIN_BURST_TIMEOUT_RANDOMIZATION(), MAX_BURST_TIMEOUT_RANDOMIZATION());
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// firing ability since this is now shared
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		void FireLaserAbilityData::tick(
+			float dt_sec, 
+			Ship& myShip, 
+			TargetType& myTarget, 
+			TargetDirection arrangement,
+			float accumulatedTime_sec, 
+			RNG& rng)
+		{
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// Handle firing projectiles
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			static const uint8_t fireArrangement = (uint8_t(TargetDirection::FACING) | uint8_t(TargetDirection::INFRONT));
+			if (uint8_t(arrangement) & fireArrangement)
+			{
+				float fireCooldown = state == FireState::BURST ? MIN_TIME_BETWEEN_BURST_SHOTS() : MIN_TIME_BETWEEN_NORMAL_SHOTS();
+				bool bCooldownUp = accumulatedTime_sec - lastFire_TimeStamp > fireCooldown;
+				if (bCooldownUp)
+				{
+					myShip.fireProjectileAtShip(myTarget);
+					lastFire_TimeStamp = accumulatedTime_sec;
+					currentShotInBurst += state == FireState::BURST ? 1 : 0;
+				}
+			}
+
+			//post firing state update - update regardless if firing so se can switch between burst/normal fire states
+			if (state == FireState::BURST)
+			{
+				if (currentShotInBurst >= burstShotsNum)
+				{
+					currentShotInBurst = 0;
+					lastBurst_TimeStamp = accumulatedTime_sec;
+					state = FireState::NORMAL;
+					randomizeControllingParameters(rng);
+				}
+			}
+			else //normal fire state
+			{
+				if (accumulatedTime_sec - lastBurst_TimeStamp > burstTimeoutDuration)
+				{
+					state = FireState::BURST;
+				}
+			}
+		}
+
 
 		const SA::BehaviorTree::DogfightNodeTickData::TargetStats& DogfightNodeTickData::targetStats()
 		{
@@ -2122,6 +2226,167 @@ namespace SA
 
 			return *_targetStats;
 		}
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Task_AttackObject
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		void Task_AttackObjective::notifyTreeEstablished()
+		{
+			rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
+
+			//Memory& memory = getMemory();
+			//memory.getReplacedDelegate(target_key).addWeakObj(sp_this(), &Task_AttackObject::handleTargetReplaced);
+		}
+
+		void Task_AttackObjective::beginTask()
+		{
+			Task_TickingTaskBase::beginTask();
+
+			accumulatedTime_sec = 0.f;
+
+			state = State::SET_UP_RUN;
+
+			//accumulatedTime_sec = 0.f;
+			fireData = FireLaserAbilityData();
+
+			using namespace BehaviorTree;
+			Memory& memory = getMemory();
+			{
+				ScopedUpdateNotifier<ShipAIBrain> brain_writable;
+				ScopedUpdateNotifier<TargetType> target_writable;
+				if (
+					memory.getWriteValueAs(brain_key, brain_writable) &&
+					memory.getWriteValueAs(target_key, target_writable)
+					)
+				{
+					ShipAIBrain& brain = brain_writable.get();
+					TargetType& targetBase = target_writable.get();
+
+					wp<GameEntity> weakTarget = targetBase.requestReference();
+					if (!weakTarget.expired())
+					{
+						myTarget_Cache = std::dynamic_pointer_cast<ShipPlacementEntity>(weakTarget.lock());
+						assert(myTarget_Cache);
+						//refreshCachedTargetState();
+					}
+
+					if (Ship* myShipRaw = brain.getControlledTarget())
+					{
+						myShip_Cache = myShipRaw->requestTypedReference_Nonsafe<Ship>();
+						assert(myShip_Cache);
+					}
+				}
+				else
+				{
+					log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get required memory from keys.");
+				}
+			}
+		}
+
+		bool Task_AttackObjective::tick(float dt_sec)
+		{
+			using namespace glm;
+
+			accumulatedTime_sec += dt_sec;
+			if (myShip_Cache && myTarget_Cache)
+			{
+				//keep in mind that target reference can be invalidated if target is somehow destroyed within this process. v2 of engine will not allow this to be possible
+				TargetType& myTarget = *myTarget_Cache;
+				Ship& myShip = *myShip_Cache;
+
+				vec3 targPos = myTarget_Cache->getWorldPosition();
+				vec3 myPos = myShip.getWorldPosition();
+
+				if (myTarget.isPendingDestroy())
+				{
+					getMemory().replaceValue(target_key, sp<TargetType>(nullptr)); //this will invalidate target references
+					//myTarget_Cache = nullptr; //doing this will prevent us from seeing debug lines and knowing if we're still looking at ship in this state
+					return true; 
+				}
+				else
+				{
+					if (state == State::SET_UP_RUN)
+					{
+						//should only stay in the state for a single frame, so not too worried about dynamic cast.
+						if (ShipPlacementEntity* targetObjective = dynamic_cast<ShipPlacementEntity*>(&myTarget))
+						{
+							targetData.parentLocation_p = glm::vec3(targetObjective->getParentXform() * glm::vec4(0,0,0,1.f));
+							targetData.parentToObjective_v = targPos - targetData.parentLocation_p;
+							vec3 bombRunOffset_n = normalize(targetData.parentToObjective_v);
+							targetData.bombRunStartOffset_v = bombRunOffset_n * c.attackFromDistance;
+
+							//adjust bomb run offset based on ship velocity; so there is some variability for hard-to-reach corners
+							vec3 shipVel_n = myShip.getVelocityDir();
+							vec3 rotAxis_n = glm::cross(shipVel_n, bombRunOffset_n);
+							float cosTheta = glm::dot(shipVel_n, bombRunOffset_n);
+							cosTheta = cosTheta < -1.f ? -cosTheta : cosTheta; //adhoc reflect projection into positive [-1,1] range, positive gives us small angle from out direction
+							bombRunOffset_n = normalize(bombRunOffset_n * glm::angleAxis(glm::acos(cosTheta), rotAxis_n));
+							if (!Utils::anyValueNAN(bombRunOffset_n))
+							{
+								targetData.bombRunStartOffset_v = bombRunOffset_n * c.attackFromDistance; //only update if we didn't hit Nan
+							}
+						}
+						else { STOP_DEBUGGER_HERE(); } //objective that isn't a ShipPlacementEntity? what should we do about setting up an attack-run?
+						state = State::MOVE_TO_SET_UP;
+					}
+					else if (state == State::MOVE_TO_SET_UP)
+					{
+						setupData.position = targPos + targetData.bombRunStartOffset_v;
+						setupData.toSetup = setupData.position - myPos;
+
+						if (bool bReadyForBombRun = glm::length2(setupData.toSetup) < Utils::square(c.acceptiableAttackRadius))
+						{
+							state = State::DIVE_BOMB;
+							timestamp_timoutDiveBomb = accumulatedTime_sec + c.diveBombTimeoutSec;
+						}
+
+						//move regardless if we change state, in next state we will move towards placement
+						const Ship::MoveTowardsPointArgs& args{setupData.position, dt_sec};
+						myShip_Cache->moveTowardsPoint(args);
+					}
+					else if (state == State::DIVE_BOMB)
+					{
+						bool bTooClose = glm::distance2(targPos, myPos) < Utils::square(c.disengageObjectiveDistance);
+						bool bTimedOut = accumulatedTime_sec > timestamp_timoutDiveBomb;
+						if (bTooClose || bTimedOut)
+						{
+							state = State::SET_UP_RUN;
+						}
+
+						const Ship::MoveTowardsPointArgs& args{ targPos, dt_sec };
+						myShip_Cache->moveTowardsPoint(args);
+					}
+
+					//always attempt to fire, regardless if we're setting up to do an attack run
+					TargetDirection arrangement = getArrangementWithGenericTarget(myShip, myTarget);
+					fireData.tick(dt_sec, myShip, myTarget, arrangement, accumulatedTime_sec, *rng);
+				}
+
+				//render debug even if we're aborting so that we can easily spot which state the ship is in.
+				if constexpr (ENABLE_DEBUG_LINES)
+				{
+					DebugRenderSystem& db = GameBase::get().getDebugRenderSystem();
+					db.renderLine(targPos, myPos, glm::vec3(1.f, 0, 0));
+
+					db.renderLine(targPos, setupData.position, glm::vec3(0.f, 1.f, 0));
+
+					db.renderLine(myPos, setupData.position, glm::vec3(0.f, 0.f, 1.f));
+
+					mat4 acceptableBombRunAreaXform = glm::translate(mat4(1.f), setupData.position);
+					acceptableBombRunAreaXform = glm::scale(acceptableBombRunAreaXform, vec3(c.acceptiableAttackRadius));
+					db.renderSphere(acceptableBombRunAreaXform, glm::vec3(0.f, 1.f, 0));
+
+					mat4 bombDisengageXform = glm::translate(mat4(1.f), targPos);
+					bombDisengageXform = glm::scale(bombDisengageXform, vec3(c.disengageObjectiveDistance));
+					db.renderSphere(bombDisengageXform, glm::vec3(0.f, 0.f, 1.f));
+				}
+			}
+			return true;
+		}
+		SA::BehaviorTree::Task_AttackObjective::Constants Task_AttackObjective::c = Task_AttackObjective::Constants{};
 
 	}
 

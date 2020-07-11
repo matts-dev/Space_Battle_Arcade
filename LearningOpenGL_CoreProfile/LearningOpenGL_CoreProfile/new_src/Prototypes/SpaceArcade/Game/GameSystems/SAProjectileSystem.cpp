@@ -11,6 +11,7 @@
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../AssetConfigs/SAProjectileConfig.h"
 #include "../../GameFramework/Components/CollisionComponent.h"
+#include "../../GameFramework/SAWorldEntity.h"
 
 namespace SA
 {
@@ -102,7 +103,7 @@ namespace SA
 			for (WorldEntity* entity : potentialCollisions)
 			{
 				CollisionComponent* collisionComp = entity->getGameComponent<CollisionComponent>();
-				if (collisionComp && entity != owner)
+				if (collisionComp && entity != owner.get())
 				{
 					const CollisionData* colisionData = collisionComp->getCollisionData();
 					const sp<const SAT::Shape>& OBBShape = colisionData->getOBBShape();

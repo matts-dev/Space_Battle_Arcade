@@ -15,7 +15,7 @@ namespace SA
 	class ActiveParticleGroup;
 	class RNG;
 
-	enum class PlacementType
+	enum class PlacementType : uint8_t
 	{
 		COMMUNICATIONS, DEFENSE, TURRET, INVALID
 	};

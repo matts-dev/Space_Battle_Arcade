@@ -24,8 +24,9 @@ namespace SA
 	enum class MentalState_Fighter : uint32_t
 	{
 		EVADE, 
-		ATTACK,
+		ATTACK_FIGHTER,
 		WANDER,
+		ATTACK_OBJECTIVE,
 	};
 
 	namespace BehaviorTree
@@ -229,9 +230,9 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			static const bool TARGET_ATTACKERS_FEATURE_ENABLED = true; //prevents cyclic targeting
 		public:
 			Service_TargetFinder(const std::string& name, float tickSecs, bool bLoop, 
-				const std::string& brainKey, const std::string& targetKey, const std::string& activeAttackersKey, const sp<NodeBase>& child)
+				const std::string& brainKey, const std::string& targetKey, const std::string& activeAttackersKey, const std::string& stateKey, const sp<NodeBase>& child)
 				: Service(name, tickSecs, bLoop, child),
-				brainKey(brainKey), targetKey(targetKey), activeAttackersKey(activeAttackersKey)
+				brainKey(brainKey), targetKey(targetKey), activeAttackersKey(activeAttackersKey), stateKey(stateKey)
 			{ }
 
 		protected:
@@ -243,6 +244,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			void handleTargetModified(const std::string& key, const GameEntity* value);
 			void handleActiveAttackersModified(const std::string& key, const GameEntity* value);
 			void handleTargetDestroyed(const sp<GameEntity>& entity);
+			void handleStateModified(const std::string& key, const GameEntity* value);
 
 			void resetSearchData();
 			void tickFindNewTarget_slow();
@@ -260,11 +262,13 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			const std::string brainKey;
 			const std::string targetKey;
 			const std::string activeAttackersKey;
+			const std::string stateKey;
 		private:
 			ShipAIBrain* owningBrain = nullptr;
 			ActiveAttackers* attackers = nullptr;
 			fwp<TargetType> attackerToTarget = nullptr;
 			sp<TargetType> currentTarget;
+			lp<const PrimitiveWrapper<MentalState_Fighter>> stateRef = nullptr;
 			float preferredTargetMaxDistance = 200.f;
 			bool bCommanderProvidedTarget = false;
 			bool bEvaluateActiveAttackersOnNextTick = false;
@@ -426,6 +430,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			void handleActiveAttackersModified(const std::string& key, const GameEntity* value);
 
 			void reevaluateState();
+			bool targetIsAnObjective(const TargetType& target) const;
 			void writeState(MentalState_Fighter currentState, MentalState_Fighter newState, Memory& memory);
 		private:
 			const float deferrStateTime = 0.25f;
@@ -825,6 +830,28 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			extern float AiVsPlayer_MaxSpeedBoost;
 		}
 
+		enum class FireState : uint8_t { NORMAL, BURST };
+		struct FireLaserAbilityData
+		{
+			float lastFire_TimeStamp = 0;
+			float burstTimeoutDuration = 1.0f;
+			float lastBurst_TimeStamp = 0.f;
+			uint16_t currentShotInBurst = 0;
+			uint16_t burstShotsNum = 3;
+			FireState state = FireState::BURST;
+
+			static inline float MIN_BURST_TIMEOUT_RANDOMIZATION() { return 1.f; }
+			static inline float MAX_BURST_TIMEOUT_RANDOMIZATION() { return 2.f; }
+			static inline uint16_t MIN_BURST_SHOT_RANDOMIZATION() { return 2; }
+			static inline uint16_t MAX_BURST_SHOT_RANDOMIZATION() { return 5; }
+			static inline float MIN_TIME_BETWEEN_NORMAL_SHOTS() { return 0.50f; }
+			static inline float MIN_TIME_BETWEEN_BURST_SHOTS() { return 0.10f; }
+			void randomizeControllingParameters(RNG& rng);
+			void tick(float dt_sec, Ship& myShip, TargetType& myTarget, TargetDirection arrangment, float accumulatedTime_sec, RNG& rng);
+		};
+
+		TargetDirection calculateShipArangement(Ship& myTarget, Ship& myShip);
+
 		class Task_DogfightNode : public Task_TickingTaskBase
 		{
 		public:
@@ -853,30 +880,11 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			void defaultBehavior(DogfightNodeTickData& tick);
 			void refreshCachedTargetState();
 		private:
-			TargetDirection calculateShipArangement(Ship& myTarget, Ship& myShip);
 		private:
 			float accumulatedTime_sec = 0;
 			sp<RNG> rng;
 		private: 
-			enum class FireState : uint8_t{ NORMAL, BURST };
-			struct FireData
-			{
-				float lastFire_TimeStamp = 0;
-				float burstTimeoutDuration = 1.0f;
-				float lastBurst_TimeStamp = 0.f;
-				uint16_t currentShotInBurst = 0;
-				uint16_t burstShotsNum = 3;
-				FireState state = FireState::BURST;
-
-				static inline float MIN_BURST_TIMEOUT_RANDOMIZATION()	{ return 1.f; }
-				static inline float MAX_BURST_TIMEOUT_RANDOMIZATION()	{ return 2.f; }
-				static inline uint16_t MIN_BURST_SHOT_RANDOMIZATION()	{ return 2; }
-				static inline uint16_t MAX_BURST_SHOT_RANDOMIZATION()	{ return 5; }
-				static inline float MIN_TIME_BETWEEN_NORMAL_SHOTS()		{ return 0.50f; }
-				static inline float MIN_TIME_BETWEEN_BURST_SHOTS()		{ return 0.10f; }
-				void randomizeControllingParameters(RNG& rng);
-			};
-			FireData fireData;
+			FireLaserAbilityData fireData;
 		private: //cached values
 			fwp<Ship> myTarget_Cache = nullptr;
 			fwp<Ship> myShip_Cache = nullptr;
@@ -887,6 +895,64 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			const std::string target_key;
 			const std::string secondaryTarget_key;
 			float variabilityIntervalSec = 3.0f;
+		};
+
+		TargetDirection getArrangementWithGenericTarget(Ship& myShip, TargetType& myTarget);
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// task for targeting and attacking carrier objectives
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		class Task_AttackObjective : public Task_TickingTaskBase
+		{
+			enum class State : uint8_t { MOVE_TO_SET_UP, SET_UP_RUN, DIVE_BOMB };
+		public:
+			Task_AttackObjective(const std::string& nodeName,
+				const std::string& brain_key,
+				const std::string& target_key
+			) : Task_TickingTaskBase(nodeName),
+				brain_key(brain_key),
+				target_key(target_key)
+			{	}
+		public:
+		protected:
+			virtual void notifyTreeEstablished() override;
+			virtual void beginTask() override;
+			virtual void taskCleanup() override { Task_TickingTaskBase::taskCleanup(); };
+			virtual bool tick(float dt_sec) override;
+		private:
+			
+			//void handleTargetReplaced(const std::string& key, const GameEntity* oldValue, const GameEntity* newValue);
+		public:
+			struct Constants
+			{
+				float attackFromDistance = 92.f;
+				float acceptiableAttackRadius = 25.f;
+				float disengageObjectiveDistance = 25.f;
+				float diveBombTimeoutSec = 5.f;
+			};
+			static Constants c; //non-const to allow runtime manipulation through tools
+		private: //transient data
+			fwp<class ShipPlacementEntity> myTarget_Cache = nullptr;
+			fwp<Ship> myShip_Cache = nullptr;
+			struct TargetDataCache
+			{
+				glm::vec3 parentLocation_p;
+				glm::vec3 parentToObjective_v;
+				glm::vec3 bombRunStartOffset_v;
+			} targetData;
+			struct SetupData
+			{
+				glm::vec3 position{ 0.f };
+				glm::vec3 toSetup{ 0.f };
+			} setupData;
+			FireLaserAbilityData fireData;
+			float accumulatedTime_sec = 0.f;
+			float timestamp_timoutDiveBomb = 0.f;
+			State state = State::SET_UP_RUN;
+		private: //node properties
+			const std::string brain_key;
+			const std::string target_key;
+			sp<RNG> rng = nullptr;
 		};
 
 	}

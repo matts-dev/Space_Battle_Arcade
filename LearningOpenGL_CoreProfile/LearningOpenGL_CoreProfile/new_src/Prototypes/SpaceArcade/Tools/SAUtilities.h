@@ -12,6 +12,8 @@
 #include "DataStructures/SATransform.h"
 #include <array> 
 #include <vector> //perhaps should break things out into "array utils" etc, so we don't have to include these everywhere that wants access to utils
+#include <optional>
+#include <functional>
 
 namespace SA
 {
@@ -116,6 +118,9 @@ if(SA::Utils::anyValueNAN(value))\
 		/** Rough implementation that may have issues*/
 		bool rayHitTest_FastAABB(const glm::vec3& boxLow, const glm::vec3& boxMax, const glm::vec3 rayStart, const glm::vec3 rayDir);
 
+		template<typename T>
+		inline T square(T val) { return val * val; }
+
 
 		////////////////////////////////////////////////////////
 		// Vector Utils
@@ -125,6 +130,28 @@ if(SA::Utils::anyValueNAN(value))\
 		{
 			return arr.size() > 0 && idx < arr.size();
 		}
+
+		template <typename T>
+		std::optional<size_t> FindValidIndexLoopingFromIndex(
+			size_t startIdx, const std::vector<T>& arr, std::function<bool(const T&)> predicate)
+		{
+			for (size_t i = startIdx; i < arr.size(); ++i)
+			{
+				if (predicate(arr[i]))
+				{
+					return i;
+				}
+			}
+			for (size_t i = 0; i < startIdx; ++i) //wrap around
+			{
+				if (predicate(arr[i]))
+				{
+					return i;
+				}
+			}
+			return std::nullopt;
+		}
+
 
 		template<typename T>
 		void swapAndPopback(std::vector<T>& arr, size_t idx)

@@ -67,6 +67,8 @@ namespace SA
 		/** WARNING: think twice before using this; if you're given a ref/rawptr then the API may be trying to prevent you from holding a reference
 		 * subclasses can deny this request by overriding the virtual method to return nullptr.*/
 		wp<GameEntity> requestReference() { return sp_this(); }
+		/** WARNING: raw pointers may be dangling. this is only safe in that it does a dynamic cast; but that will not catch dangling pointers.
+		   the functions should only be used when raw pointer was immediately obtained -- and not if raw pointer was set at some previous point in history*/
 		template<typename T> wp<T> requestTypedReference_Safe() { return std::dynamic_pointer_cast<T>(sp_this()); }
 		template<typename T> wp<T> requestTypedReference_Nonsafe() { return std::static_pointer_cast<T>(sp_this()); }
 

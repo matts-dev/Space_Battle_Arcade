@@ -472,7 +472,7 @@ namespace SA
 					-must provide PrimitiveWrapper<T> as argument for non gameentity values
 					-do not const-cast the result; doing so will bypass the modified/replaced delegates; instead get writeable reference if you need to call non-const functions
 				REFACTOR CONSIDERATION:
-					-it has become clear, through use, that reading/writing memory every frame is expensive. Perhaps there should be an interface where
+					-it has become clear, through use, that reading/writing memory every frame is expensive. Perhaps there should be a smart interface where
 						one can cache memory values (since I'm doing that anyways in space arcade through the backdoor or requesting a reference). Such an interface should expose a way to broadcast
 						that the memory value was updated or replaced. Perhaps a direct handle to the memory entry?
 

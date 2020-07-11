@@ -46,6 +46,7 @@
 		inline T* operator->()	const noexcept { return sharedPtr.get(); }
 		inline T& operator*()	const noexcept { return *sharedPtr; }
 		inline T* get()			const noexcept { return sharedPtr.get(); }
+		//inline operator std::nullptr_t()	const noexcept { return sharedPtr.get(); } //#TODO fix this when there's not other compile issues going on
 		inline operator sp<T>() const noexcept { return sharedPtr; }
 		inline operator wp<T>() const noexcept { return sharedPtr; }
 		inline const sp<T>& toSP() const noexcept { return sharedPtr; }

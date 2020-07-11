@@ -36,6 +36,7 @@
 #include "../Tools/DataStructures/AdvancedPtrs.h"
 #include "AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
 #include "GameModes/ServerGameMode_Base.h"
+#include "../Tools/PlatformUtils.h"
 
 namespace SA
 {
@@ -103,8 +104,8 @@ namespace SA
 					//spawned->spawnNewBrain<DogfightTestBrain_VerboseTree>();
 					//spawned->spawnNewBrain<WanderBrain>();
 					//spawned->spawnNewBrain<EvadeTestBrain>();
-					spawned->spawnNewBrain<DogfightTestBrain>();
-					//spawned->spawnNewBrain<FighterBrain>();
+					//spawned->spawnNewBrain<DogfightTestBrain>();
+					spawned->spawnNewBrain<FighterBrain>();
 				}
 			);
 		}
@@ -145,6 +146,8 @@ namespace SA
 		for (const sp<ShipPlacementEntity>& placement : turretEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
 
 		activeGenerators = generatorEntities.size();
+		activeTurrets =  turretEntities.size();
+		activeCommunications = communicationEntities.size();
 		
 		if (fighterSpawnComp)
 		{
@@ -435,7 +438,7 @@ namespace SA
 			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
-			spawnData.owner = this;
+			spawnData.owner = sp_this();
 
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
 		}
@@ -453,7 +456,7 @@ namespace SA
 			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
-			spawnData.owner = this;
+			spawnData.owner = sp_this();
 
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile);
 		}
@@ -489,7 +492,7 @@ namespace SA
 		moveTowardsPoint(args);
 	}
 
-	void Ship::moveTowardsPoint(const MoveTowardsPointArgs& p)
+	void Ship::moveTowardsPoint(const Ship::MoveTowardsPointArgs& p)
 	{
 		//#TODO #REFACTOR #cleancode #input_vector this should in influencing an input vector, rather than directly influencing the velocity; tick should do the visual updates and velocity changes based on input vector
 		using namespace glm;
@@ -670,7 +673,7 @@ namespace SA
 		// placements - must be handled after updates to position
 		//////////////////////////////////////////////////////////
 		//#todo #scenenodes no need to pass parent xforms if scene node hierarchy is used
-		if (generatorEntities.size() || communicationEntities.size() || turretEntities.size())
+		if (hasObjectives())
 		{
 			glm::mat4 configXform = collisionData->getRootXform();
 			fullParentXform = fullParentXform.has_value() ? fullParentXform : modelMatrix * configXform; //needs to be done after tick kinematic
@@ -795,6 +798,72 @@ namespace SA
 				ServerGameMode_Base::playersNeedingTarget.erase(newEndIter, ServerGameMode_Base::playersNeedingTarget.end());
 			}
 		}
+	}
+
+	bool Ship::isCarrierShip() const
+	{
+		//return getGameComponent<FighterSpawnComponent>() != nullptr;
+		return fighterSpawnComp != nullptr;
+	}
+
+	sp<SA::ShipPlacementEntity> Ship::getRandomObjective()
+	{
+		size_t containerChoice = rng->getInt<size_t>(0, 2);
+
+		decltype(generatorEntities)* targetContainer = nullptr; 
+
+		if (containerChoice == uint8_t(PlacementType::COMMUNICATIONS) && activeCommunications> 0)
+		{
+			targetContainer = &communicationEntities;
+		}
+		else if (containerChoice == uint8_t(PlacementType::DEFENSE) && activeGenerators > 0)
+		{
+			targetContainer = &generatorEntities;
+		}
+		else if (containerChoice == uint8_t(PlacementType::TURRET) && activeTurrets> 0)
+		{
+			targetContainer = &turretEntities;
+		}
+
+		//choice did not have any valid objectives, try to find one that does
+		if (targetContainer == nullptr)
+		{
+			if (activeCommunications > 0)
+			{
+				targetContainer = &communicationEntities;
+			}
+			else if (activeGenerators > 0)
+			{
+				targetContainer = &generatorEntities;
+			}
+			else
+			{
+				targetContainer = &turretEntities;
+			}
+		}
+
+		//if we still don't have a objective container, then carrier has no more objectives left to be destroyed
+		if (targetContainer)
+		{
+			size_t idx = rng->getInt<size_t>(0, targetContainer->size() - 1);
+			if (Utils::isValidIndex(*targetContainer, idx))
+			{
+				//walk all entities just in case the one we chose was nullptr. start at chosen idx and wrap around
+				for (size_t walkCount = 0; walkCount < targetContainer->size(); ++walkCount)
+				{
+					const sp<ShipPlacementEntity>& objective = (*targetContainer)[idx];
+					if (objective && !objective->isPendingDestroy())
+					{
+						return objective; //early out of the loop
+					}
+
+					idx = (idx + 1) % targetContainer->size(); //wrap around idx
+				}
+
+			} else {STOP_DEBUGGER_HERE(); } //this should never happen -- what happened?
+		}
+
+		return nullptr;
 	}
 
 	void Ship::tickKinematic(float dt_sec)
@@ -1097,6 +1166,15 @@ namespace SA
 					for (const sp<ShipPlacementEntity>& turretPlacement: turretEntities) { if (turretPlacement) turretPlacement->setHasGeneratorPower(false); }
 				}
 			}
+			else if (placement->getPlacementType() == PlacementType::TURRET)
+			{
+				--activeTurrets;
+			}
+			else if (placement->getPlacementType() == PlacementType::COMMUNICATIONS)
+			{
+				--activeCommunications;
+			}
+
 		}
 
 		activePlacements -= 1;

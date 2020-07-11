@@ -229,7 +229,7 @@ namespace SA
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_evade_state", stateKey, OP::EQUAL, MentalState_Fighter::EVADE, AbortPreference::ABORT_ON_MODIFY,
@@ -288,10 +288,10 @@ namespace SA
 		using namespace BehaviorTree;
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
-							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK_FIGHTER, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Loop>("dogfight_loop", 0, 
 									new_sp<Sequence>("Seq_Dogfight", MakeChildren{
 										new_sp<Task_CalculateTargetArrangment>("Task_CalculateTargetArrangment", positionArrangementKey, brainKey, targetKey),
@@ -332,7 +332,7 @@ namespace SA
 				),
 				MemoryInitializer
 				{
-					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::ATTACK)},
+					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::ATTACK_FIGHTER)},
 					{ brainKey, sp_this() },
 					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
@@ -375,10 +375,10 @@ namespace SA
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
 				new_sp<Service_AttackerSetter>("service_attacker_setter", 0.5f, true, activeAttackers_Key, targetKey, brainKey,
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
 						new_sp<Selector>("state_selector", MakeChildren{
-							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_fight_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK_FIGHTER, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Task_DogfightNode>("Task_Dogfight", brainKey, targetKey, secondaryTargetsKey)
 							),
 						})
@@ -386,7 +386,7 @@ namespace SA
 				)),
 				MemoryInitializer
 				{
-					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::ATTACK)},
+					{ stateKey, new_sp<PrimitiveWrapper<MentalState_Fighter>>(MentalState_Fighter::ATTACK_FIGHTER)},
 					{ brainKey, sp_this() },
 					{ originKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
 					{ wanderLocKey, new_sp<PrimitiveWrapper<glm::vec3>>(glm::vec3{0,0,0}) },
@@ -432,7 +432,7 @@ namespace SA
 		behaviorTree =
 			new_sp<Tree>("fighter-tree-root",
 				new_sp<Decorator_FighterStateSetter>("decor_state_setter", stateKey, targetKey, activeAttackers_Key,
-				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key,
+				new_sp<Service_TargetFinder>("service_targetFinder", 1.0f, true, brainKey, targetKey, activeAttackers_Key, stateKey,
 				new_sp<Service_AttackerSetter>("service_attacker_setter", 0.5f, true, activeAttackers_Key, targetKey, brainKey,
 				new_sp<Service_OpportunisiticShots>("service_opportunisiticShots", 0.1f, true, brainKey, targetKey, secondaryTargetsKey, stateKey,
 					new_sp<Loop>("fighter-inf-loop", 0,
@@ -454,8 +454,11 @@ namespace SA
 									)
 								})
 							),
-							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK, AbortPreference::ABORT_ON_MODIFY,
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK_FIGHTER, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Task_DogfightNode>("Task_Dogfight", brainKey, targetKey, secondaryTargetsKey)
+							),
+							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_attack_state", stateKey, OP::EQUAL, MentalState_Fighter::ATTACK_OBJECTIVE, AbortPreference::ABORT_ON_MODIFY,
+								new_sp<Task_AttackObjective>("Task_AttackObject", brainKey, targetKey)
 							),
 							new_sp<Decorator_Aborting_Is<MentalState_Fighter>>("dec_wander_state", stateKey, OP::EQUAL, MentalState_Fighter::WANDER, AbortPreference::ABORT_ON_MODIFY,
 								new_sp<Sequence>("Sequence_MoveToNewLocation", MakeChildren{

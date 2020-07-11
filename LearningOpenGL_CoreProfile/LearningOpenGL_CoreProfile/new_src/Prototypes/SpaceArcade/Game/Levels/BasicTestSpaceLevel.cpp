@@ -249,6 +249,7 @@ namespace SA
 
 							////////////////////////////////////////////////////////
 							// preferably change the brain we spawn fighters with, but you can change here for quick override. but any spawns from ship will not have the brain below
+							// NOTE: default brain now set in Ship::Ship when we construct a spawning component
 							////////////////////////////////////////////////////////
 							//fighter->spawnNewBrain<FlyInDirectionBrain>(); 
 							//fighter->spawnNewBrain<DogfightTestBrain_VerboseTree>();

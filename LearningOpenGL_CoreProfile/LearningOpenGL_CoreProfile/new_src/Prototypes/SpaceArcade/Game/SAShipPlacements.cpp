@@ -651,7 +651,7 @@ namespace SA
 				spawnData.start = barrelLocation_wp;// +spawnData.direction_n * 5.0f;
 				spawnData.color = teamData.color;
 				spawnData.team = teamData.team;
-				spawnData.owner = this;
+				spawnData.owner = sp_this();
 
 				const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
 				projectileSys->spawnProjectile(spawnData, *teamData.primaryProjectile);
@@ -732,7 +732,7 @@ namespace SA
 	{
 		bool bShouldSwitchTarget = false; 
 
-		if (myTarget && hitProjectile.owner && myTarget.fastGet() != hitProjectile.owner)
+		if (myTarget && hitProjectile.owner && myTarget.fastGet() != hitProjectile.owner.get())
 		{
 			glm::vec3 attackerPosition = hitProjectile.owner->getWorldPosition();
 			glm::vec3 targetPosition = myTarget->getWorldPosition();

@@ -13,6 +13,7 @@
 #include "../AssetConfigs/SASettingsProfileConfig.h"
 #include "../AssetConfigs/CampaignConfig.h"
 #include "../AssetConfigs/SaveGameConfig.h"
+#include "../AssetConfigs/DifficultyConfig.h"
 
 using json = nlohmann::json;
 
@@ -309,6 +310,7 @@ namespace SA
 		Parent::postConstruct();
 
 		saveGameData = new_sp<SaveGameConfig>(); //provide default save game in the event there isn't one loaded
+		difficulty = new_sp<DifficultyConfig>();
 
 		//create all settings profiles before they are serialized/deserialized
 		//for (size_t settingsProfileIdx = 0; settingsProfileIdx < NUM_SETTINGS_PROFILES; ++settingsProfileIdx)

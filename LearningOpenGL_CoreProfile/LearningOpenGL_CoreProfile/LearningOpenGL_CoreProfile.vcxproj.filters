@@ -870,6 +870,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\GlobalSpaceArcadeBehaviorTreeKeys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\AmortizeLoopTool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\DifficultyConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">

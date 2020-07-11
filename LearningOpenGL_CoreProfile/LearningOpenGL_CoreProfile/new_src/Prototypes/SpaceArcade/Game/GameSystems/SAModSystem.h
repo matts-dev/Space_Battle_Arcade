@@ -14,6 +14,7 @@ namespace SA
 	class SettingsProfileConfig;
 	class CampaignConfig;
 	class SaveGameConfig;
+	class DifficultyConfig;
 
 	////////////////////////////////////////////////////////////////////
 	// Constants
@@ -110,6 +111,12 @@ namespace SA
 		size_t getPlayerPreferredTeam() { return playerPreferredTeam; }
 		void setPlayerPreferredTeam(size_t team) { playerPreferredTeam = team; }
 
+		/////////////////////////////////////////////////////////////////////////////////////
+		// difficulty
+		/////////////////////////////////////////////////////////////////////////////////////
+		const sp<DifficultyConfig>& getDifficulty() {return difficulty;}
+
+
 		////////////////////////////////////////////////////////////////////
 		// Serialization
 		////////////////////////////////////////////////////////////////////
@@ -133,6 +140,7 @@ namespace SA
 		std::vector<sp<SettingsProfileConfig>> settingsProfiles;
 		std::vector<sp<CampaignConfig>> campaigns;
 		sp<SaveGameConfig> saveGameData;
+		sp<DifficultyConfig> difficulty;
 	};
 
 	////////////////////////////////////////////////////////////////////

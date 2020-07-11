@@ -178,6 +178,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAWorldEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\SAShipBehaviorTreeNodes.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\CampaignConfig.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\DifficultyConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\JsonUtils.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SAConfigBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASettingsProfileConfig.h" />
@@ -254,6 +255,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAShader.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAWindow.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\Algorithms.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\AmortizeLoopTool.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\SphereAvoidance\AvoidanceSphere.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ChoiceChoosingHelper.h" />

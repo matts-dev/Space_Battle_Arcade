@@ -38,7 +38,7 @@ namespace SA
 		float speed;
 		float lifetimeSec;
 		float timeAlive;
-		WorldEntity* owner;
+		sp<WorldEntity> owner;
 		int damage;
 		size_t team;
 		bool forceRelease;
@@ -86,7 +86,7 @@ namespace SA
 			glm::vec3 color = glm::vec3(0.8f, 0.8f, 0.f);
 			int damage = 25;
 			size_t team = 0;
-			WorldEntity* owner = nullptr;
+			sp<WorldEntity> owner = nullptr;
 		};
 		void spawnProjectile(const SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle);
 		void unspawnAllProjectiles();

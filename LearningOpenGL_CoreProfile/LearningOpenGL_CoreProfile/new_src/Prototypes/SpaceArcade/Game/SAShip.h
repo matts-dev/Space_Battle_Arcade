@@ -100,7 +100,7 @@ namespace SA
 			float viscosity = 0.f;
 			bool bRoll = true;
 		};
-		void moveTowardsPoint(const MoveTowardsPointArgs& args);
+		void moveTowardsPoint(const Ship::MoveTowardsPointArgs& args);
 		void moveTowardsPoint(const glm::vec3& location, float dt_sec, float speedFactor = 1.0f, bool bRoll = true, float rollAmplifier = 1.f, float viscosity = 0.f); //deprecated in favor of arg version
 		void roll(float rollspeed_rad, float dt_sec, float clamp_rad = 3.14f);
 		void adjustSpeedFraction(float targetSpeedFactor, float dt_sec);
@@ -166,6 +166,12 @@ namespace SA
 	public:
 		inline FighterSpawnComponent* getFighterComp() { return fighterSpawnComp; } //optimization to avoid getting gameplay component, 
 		void TryTargetPlayer();
+		bool isCarrierShip() const;
+		inline size_t activeObjectives() const { return activePlacements; }
+		inline size_t numObjectivesAtSpawn() const { return generatorEntities.size() + communicationEntities.size() + turretEntities.size(); }
+		inline bool hasObjectives() const { return numObjectivesAtSpawn() != 0; }
+		inline bool hasAliveObjectives() const { return activeObjectives() != 0; }
+		sp<ShipPlacementEntity> getRandomObjective();
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
@@ -223,6 +229,8 @@ namespace SA
 		std::vector<sp<ShipPlacementEntity>> communicationEntities;
 		size_t activePlacements = 0;
 		size_t activeGenerators = 0;
+		size_t activeTurrets = 0;
+		size_t activeCommunications = 0;
 
 		HitPointComponent* hpComp = nullptr;
 		ShipEnergyComponent* energyComp = nullptr;
