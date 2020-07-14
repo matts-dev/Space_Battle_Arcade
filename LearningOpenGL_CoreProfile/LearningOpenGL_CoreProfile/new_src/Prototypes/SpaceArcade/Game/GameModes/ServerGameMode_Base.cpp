@@ -305,25 +305,25 @@ namespace SA
 			}
 		}
 	}
-
-	static void setShipTarget(const sp<Ship>& ship, const lp<WorldEntity>& target)
-	{
-		if (BrainComponent* brainComp = ship ? ship->getGameComponent<BrainComponent>() : nullptr)
-		{
-			////////////////////////////////////////////////////////
-			// target objective
-			////////////////////////////////////////////////////////
-			if (const BehaviorTree::Tree* behaviorTree = brainComp->getTree())
-			{
-				using namespace BehaviorTree;
-				Memory& memory = behaviorTree->getMemory();
-				{
-					sp<WorldEntity> targetSP = target;
-					memory.replaceValue(BT_TargetKey, targetSP);
-				}
-			}
-		}
-	}
+		
+	//static void setShipTarget(const sp<Ship>& ship, const lp<WorldEntity>& target)
+	//{
+	//	if (BrainComponent* brainComp = ship ? ship->getGameComponent<BrainComponent>() : nullptr)
+	//	{
+	//		////////////////////////////////////////////////////////
+	//		// target objective
+	//		////////////////////////////////////////////////////////
+	//		if (const BehaviorTree::Tree* behaviorTree = brainComp->getTree())
+	//		{
+	//			using namespace BehaviorTree;
+	//			Memory& memory = behaviorTree->getMemory();
+	//			{
+	//				sp<WorldEntity> targetSP = target;
+	//				memory.replaceValue(BT_TargetKey, targetSP);
+	//			}
+	//		}
+	//	}
+	//}
 
 	bool isShipTargetingObjective(const lp<Ship>& ship)
 	{
@@ -506,7 +506,7 @@ namespace SA
 					else if (ship->getTeam() != pendingHit.objectiveTeam && pendingHit.objective && !isShipTargetingObjective(ship))
 					{
 						bValidShipForAssignment = true;
-						setShipTarget(ship, pendingHit.objective);
+						ShipUtilLibrary::setShipTarget(ship, pendingHit.objective);
 						removeIdx = objectiveHitIdx;
 					}
 

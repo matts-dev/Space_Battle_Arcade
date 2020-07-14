@@ -252,11 +252,13 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			void setTarget(const sp<WorldEntity>& target, bool bCommanderAssignment = false);
 		private: //utils
 			bool XisTargetingY(const sp<TargetType>& x, const lp<const TargetType>& y);
+			void clearPlayerSpecialCases();
+			void tryApplyPlayerSpecialCases();
 
 		private: //search data
 			size_t cachedTeamIdx;
 			float cachedPrefDist2;
-			lp<TargetType> myShip;
+			lp<Ship> myShip; //this should be easily refactorable to generic type if needed, ship reference can be kept too for ship specific details. changing type to worldentity->ship for avoidance
 			
 		private:
 			const std::string brainKey;
@@ -272,6 +274,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			float preferredTargetMaxDistance = 200.f;
 			bool bCommanderProvidedTarget = false;
 			bool bEvaluateActiveAttackersOnNextTick = false;
+			bool bTargetIsPlayer = false;
 			SearchMethod currentSearchMethod;
 			float timeTicked = 0;
 

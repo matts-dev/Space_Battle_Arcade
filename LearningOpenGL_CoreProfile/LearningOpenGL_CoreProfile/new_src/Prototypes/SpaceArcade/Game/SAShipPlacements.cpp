@@ -193,7 +193,7 @@ namespace SA
 			{
 				//we were hit by a non-team member, apply game logic!
 				notifyDamagingHit(hitProjectile, hitLoc);
-				adjustHP(-float(hitProjectile.damage));
+				adjustHP(-float(hitProjectile.damage), hitProjectile.owner);
 				//WARNING: anything after adjusting HP make cause this object to be destroyed, do not make calls after it. #nextengine all destroys happen 1 frame deferred
 			}
 			else
@@ -379,7 +379,7 @@ namespace SA
 		}
 	}
 
-	void ShipPlacementEntity::adjustHP(float amount)
+	void ShipPlacementEntity::adjustHP(float amount, const sp<WorldEntity>& optionalInstigator /*= nullptr*/)
 	{
 		if (HitPointComponent* hpComp = getGameComponent<HitPointComponent>())
 		{
@@ -399,6 +399,15 @@ namespace SA
 						destructionTickDelegate = new_sp<MultiDelegate<>>();
 						destructionTickDelegate->addWeakObj(sp_this(), &ShipPlacementEntity::tickDestroyingFX);
 						world->getWorldTimeManager()->createTimer(destructionTickDelegate, destructionTickFrequencySec, true);
+
+						//if player, have carrier send a ship after player
+						if (OwningPlayerComponent* owningPlayerComp = optionalInstigator ? optionalInstigator->getGameComponent<OwningPlayerComponent>() : nullptr)
+						{
+							if (owningPlayerComp->hasOwningPlayer() && weakOwner)
+							{
+								weakOwner->requestSpawnFighterAgainst(optionalInstigator);
+							}
+						}
 					}
 					else
 					{
@@ -534,6 +543,11 @@ namespace SA
 				throw std::logic_error("Attempting to configure ship placement but no world available");
 			}
 		}
+	}
+
+	void ShipPlacementEntity::setWeakOwner(const sp<Ship>& owner)
+	{
+		weakOwner = owner;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

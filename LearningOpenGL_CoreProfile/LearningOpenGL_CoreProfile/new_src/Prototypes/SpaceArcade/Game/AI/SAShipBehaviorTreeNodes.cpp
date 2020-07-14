@@ -247,7 +247,9 @@ namespace SA
 			assert(attackers); //there is not a race condition here; service removes callback from timer when stopping
 			assert(stateRef);
 
-			bool bShouldTargetAttackers = !stateRef || stateRef->value != MentalState_Fighter::ATTACK_OBJECTIVE;
+			bool bIsAttackingObjective = (stateRef && stateRef->value == MentalState_Fighter::ATTACK_OBJECTIVE);
+			bool bShouldTargetAttackers = !bTargetIsPlayer && !bIsAttackingObjective;
+
 			if (bEvaluateActiveAttackersOnNextTick && TARGET_ATTACKERS_FEATURE_ENABLED && bShouldTargetAttackers)
 			{
 				bEvaluateActiveAttackersOnNextTick = false;
@@ -354,6 +356,9 @@ namespace SA
 					}
 				}
 			}
+
+			//if we were already assigned a target at spawn/start, then run through the modified logic
+			tryApplyPlayerSpecialCases();
 		}
 
 		void Service_TargetFinder::stopService()
@@ -377,14 +382,18 @@ namespace SA
 
 		void Service_TargetFinder::handleTargetModified(const std::string& key, const GameEntity* value)
 		{
+
 			if (value == nullptr)
 			{
+				clearPlayerSpecialCases(); //only clear if modification was a replacement
 				currentTarget.reset();
 				resetSearchData();
 				tickFindNewTarget_slow();
 			}
 			else if (value != currentTarget.get())
 			{
+				clearPlayerSpecialCases(); //only clear if modification was a replacement
+
 				Memory& memory = getMemory();
 
 				ScopedUpdateNotifier<WorldEntity> outWriteAccess;
@@ -397,6 +406,10 @@ namespace SA
 					//note this will only happen when target was set from outside this node
 					//static cast is safe because above returned true, meaning it is at least the requested type
 					currentTarget = std::static_pointer_cast<WorldEntity>(outWriteAccess.get().requestReference().lock()); 
+
+					//avoiding doing this every tick
+					tryApplyPlayerSpecialCases();
+
 				}
 				else{log("Service_TargetFinder", LogLevel::LOG_ERROR, "detected target change from outside, but could not acquire handle to it.");}
 			}
@@ -423,6 +436,7 @@ namespace SA
 		{
 			setTarget(nullptr);
 			bEvaluateActiveAttackersOnNextTick = true;
+			clearPlayerSpecialCases();
 		}
 
 		void Service_TargetFinder::handleStateModified(const std::string& key, const GameEntity* value)
@@ -605,6 +619,35 @@ namespace SA
 			}
 
 			return false;
+		}
+
+		void Service_TargetFinder::clearPlayerSpecialCases()
+		{
+			//before we clear this flag, restore normal set up
+			if (bTargetIsPlayer)
+			{
+				if (myShip)
+				{
+					myShip->setAvoidanceSensitivity(1.f);
+				}
+			}
+			//clear flag after so we only do this if previously we were targeting player (makes debugging a lot easier, we're not tripping breakpoints unnecessarily)
+			bTargetIsPlayer = false; 
+		}
+
+		void Service_TargetFinder::tryApplyPlayerSpecialCases()
+		{
+			if (!bTargetIsPlayer && currentTarget)
+			{
+				if (const OwningPlayerComponent* playerComp = currentTarget->getGameComponent<OwningPlayerComponent>())
+				{
+					bTargetIsPlayer = playerComp->hasOwningPlayer();
+					if (bTargetIsPlayer && myShip)
+					{
+						myShip->setAvoidanceSensitivity(0.f);
+					}
+				}
+			}
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////

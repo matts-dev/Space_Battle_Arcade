@@ -141,6 +141,7 @@ namespace SA
 			updateTeamDataCache();
 		}
 
+		postctor_configureObjectivePlacements();
 		for (const sp<ShipPlacementEntity>& placement : communicationEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
 		for (const sp<ShipPlacementEntity>& placement : generatorEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
 		for (const sp<ShipPlacementEntity>& placement : turretEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
@@ -704,47 +705,7 @@ namespace SA
 			fighterSpawnComp->tick(dt_sec);
 		}
 
-		//shipTickBandwagon();
 	} 
-
-	//void Ship::shipTickBandwagon()
-	//{
-	//	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//	//
-	//	// I'm not a fan of this pattern, but doing for perf considerations. Ideally we would have the game mode do a 
-	//	// loop over all ships and have these checks. Things that care about finding a good ship would add to a gamemode/teamcommander
-	//	// delegate. 
-	//	//
-	//	// But right now delegates are not all that fast. So, rather, doing this within the ship's tick
-	//	// as that 1. limits to only ships and not all world entities 2. can set data directly rather than going through delegates
-	//	// 3. does not require any extra tracking/casting on gamemode end. I strongly want to refactor this, but also wanting 
-	//	// to complete this project in aa sensible time.
-	//	//
-	//	// Ideally in my next engine I will address the speed of delegates and try to come up with a fast-delegate that has near
-	//	// identical speed as calling raw functions.
-	//	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//	if(bool bIsServer = true) //#multiplayer
-	//	{
-	//		////////////////////////////////////////////////////////
-	//		// handle target player heartbeat
-	//		////////////////////////////////////////////////////////
-	//		//bool bIsCarrier = fighterSpawnComp != nullptr;
-	//		//if (Ship::playersNeedingTarget.size() > 0 && !bIsCarrier)
-	//		//{
-	//		//	TryTargetPlayer();
-	//		//}
-
-	//		////////////////////////////////////////////////////////
-	//		// handle offensive placements searching for target within range
-	//		////////////////////////////////////////////////////////
-
-	//		////////////////////////////////////////////////////////
-	//		// handle defensive placements looking for riendly target within range
-	//		////////////////////////////////////////////////////////
-
-
-	//	}
-	//}
 
 	void Ship::TryTargetPlayer()
 	{
@@ -864,6 +825,22 @@ namespace SA
 		}
 
 		return nullptr;
+	}
+
+	void Ship::requestSpawnFighterAgainst(const sp<WorldEntity>& attacker)
+	{
+		if (attacker && fighterSpawnComp)
+		{
+			if (sp<Ship> defenderShip = fighterSpawnComp->spawnEntity())
+			{
+				ShipUtilLibrary::setShipTarget(defenderShip, attacker);
+			}
+		}
+	}
+
+	void Ship::setAvoidanceSensitivity(float newValue)
+	{
+		avoidanceSensitivity = glm::clamp(newValue, 0.f, 1.f);
 	}
 
 	void Ship::tickKinematic(float dt_sec)
@@ -1107,6 +1084,8 @@ namespace SA
 						remappedRadiusFrac /= (1.0f - maxAvoidAtRadiusFrac); //bring this back to a [0,1] range
 						float avoidStrength = 1.f - remappedRadiusFrac;
 
+						avoidStrength *= avoidanceSensitivity; //some use cases (eg tareting player) require dapended avoidance with known cost of collision
+
 						if (avoidStrength > 0.01f)
 						{
 							////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1125,7 +1104,7 @@ namespace SA
 							{
 								adjustVel_n = normalize(dampenedVel_v);
 
-								//if this line below is flashing, it is likey we're generating zero vectors (not yet seen, but conciously putting this in branch so that can be indicated)
+								//if this line below is flashing, it is likely we're generating zero vectors (not yet seen, but consciously putting this in branch so that can be indicated)
 								if constexpr (constexpr bool bDebugToMeVec = false) { SpaceArcade::get().getDebugRenderSystem().renderLine(myXform.position, avoid->getWorldPosition(), 0.5f*color::metalicgold()); }
 							}
 
@@ -1408,6 +1387,26 @@ namespace SA
 		}
 	}
 
+	void Ship::postctor_configureObjectivePlacements()
+	{
+		sp<Ship> this_sp = sp_this();
+
+		auto processPlacements = [&](const std::vector<sp<ShipPlacementEntity>>& container)
+		{
+			for (const sp<ShipPlacementEntity>& placement : container)
+			{
+				if (placement)
+				{
+					placement->setWeakOwner(this_sp);
+				}
+			}
+		};
+
+		processPlacements(generatorEntities);
+		processPlacements(communicationEntities);
+		processPlacements(turretEntities);
+	}
+
 	void Ship::renderPercentageDebugWidget(float rightOffset, float percFrac) const
 	{
 		using namespace glm;
@@ -1447,5 +1446,24 @@ namespace SA
 		debugRenderer.renderCube(cubeModel, vec3(percFrac, 0, 1.f - percFrac));
 	}
 
+
+	void ShipUtilLibrary::setShipTarget(const sp<Ship>& ship, const lp<WorldEntity>& target)
+	{
+		if (BrainComponent* brainComp = ship ? ship->getGameComponent<BrainComponent>() : nullptr)
+		{
+			////////////////////////////////////////////////////////
+			// target objective
+			////////////////////////////////////////////////////////
+			if (const BehaviorTree::Tree* behaviorTree = brainComp->getTree())
+			{
+				using namespace BehaviorTree;
+				Memory& memory = behaviorTree->getMemory();
+				{
+					sp<WorldEntity> targetSP = target;
+					memory.replaceValue(BT_TargetKey, targetSP);
+				}
+			}
+		}
+	}
 
 }

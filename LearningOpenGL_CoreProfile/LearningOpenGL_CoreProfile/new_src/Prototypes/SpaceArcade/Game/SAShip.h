@@ -10,6 +10,7 @@
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../Tools/DataStructures/SATransform.h"
 #include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "../Tools/DataStructures/LifetimePointer.h"
 
 namespace SA
 {
@@ -39,6 +40,11 @@ namespace SA
 	class ShipCamera;
 	class ShipPlacementEntity;
 	class WorldEntity;
+
+	namespace ShipUtilLibrary
+	{
+		void setShipTarget(const sp<Ship>& ship, const lp<WorldEntity>& target);
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Ship Class
@@ -159,6 +165,7 @@ namespace SA
 		// objectives
 		////////////////////////////////////////////////////////
 		void ctor_configureObjectivePlacements();
+		void postctor_configureObjectivePlacements();
 		////////////////////////////////////////////////////////
 		// Debug
 		////////////////////////////////////////////////////////
@@ -172,10 +179,11 @@ namespace SA
 		inline bool hasObjectives() const { return numObjectivesAtSpawn() != 0; }
 		inline bool hasAliveObjectives() const { return activeObjectives() != 0; }
 		sp<ShipPlacementEntity> getRandomObjective();
+		void requestSpawnFighterAgainst(const sp<WorldEntity>& attacker);
+		void setAvoidanceSensitivity(float newValue);
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;
-		//void shipTickBandwagon(); 
 	private:
 		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
 		void tickKinematic(float dt_sec);
@@ -216,6 +224,7 @@ namespace SA
 		float engineSpeedChangeFactor = 1.0f; //somewhat like acceleration, but linear and gamified.
 		float fireCooldownSec = 0.15f;
 		float aiSkillLevel = 0.f; //[0,1], higher number means harder enemy
+		float avoidanceSensitivity = 1.f; //[0,1] may be reduced in cases where AI shouldn't do avoidance -- these are very niche cases (targeting player, etc)
 		sp<RNG> rng;
 		size_t cachedTeamIdx;
 		TeamData cachedTeamData;

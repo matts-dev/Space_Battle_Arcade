@@ -14,6 +14,7 @@ namespace SA
 	class ConfigBase;
 	class ActiveParticleGroup;
 	class RNG;
+	class Ship;
 
 	enum class PlacementType : uint8_t
 	{
@@ -77,7 +78,8 @@ namespace SA
 		/** returns the model matrix considering the parent's transform*/
 		const glm::mat4& getParentXLocalModelMatrix(){ return cachedModelMat_PxL; }
 		virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig);
-		void adjustHP(float amount);
+		void setWeakOwner(const sp<Ship>& owner);
+		void adjustHP(float amount, const sp<WorldEntity>& optionalInstigator = nullptr);
 		const TeamData& getTeamData() { return teamData; }
 		float getMaxTargetDistance2() { return targetingData.targetDistance2; };
 		void setHasGeneratorPower(bool bValue);
@@ -129,6 +131,7 @@ namespace SA
 		glm::vec3 up_ln = glm::vec3(0, 1, 0);
 		glm::vec3 right_ln{ 1,0,0 };
 		glm::vec3 shieldColor = glm::vec3(1.f);
+		fwp<Ship> weakOwner = nullptr;
 		TeamData teamData;
 	protected:
 		struct Targeting
