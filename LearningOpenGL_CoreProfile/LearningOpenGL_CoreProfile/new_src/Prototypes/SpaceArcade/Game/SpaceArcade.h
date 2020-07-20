@@ -103,6 +103,7 @@ namespace SA
 		bool bRenderDebugAvoidanceSphereCells = false;
 		bool bRenderProjectileOBBs = false;
 		bool bEnableDevConsoleFeature = true;
+		bool bEnableDebugEngineKeybinds = true;
 
 	////////////////////////////////////////////////////////
 	// custom tick groups

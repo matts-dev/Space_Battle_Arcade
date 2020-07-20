@@ -463,6 +463,25 @@ namespace SA
 		return *_frameRenderData;
 	}
 
+	void calculateHUDData3D(HUDData3D& _hudData3D, const CameraBase& gameCam, struct GameUIRenderData& uiData)
+	{
+		_hudData3D.camPos = gameCam.getPosition();
+		_hudData3D.camUp = gameCam.getUp();
+		_hudData3D.camRight = gameCam.getRight();
+		_hudData3D.camFront = gameCam.getFront();
+
+		float FOVy_deg = gameCam.getFOV() / 2.f;
+		float FOVy_rad = glm::radians(FOVy_deg);
+
+		//drawing out triangle with fovy, tan(theta) = y / z;
+		// y = tan(theta) * z
+		_hudData3D.savezoneMax_y = glm::tan(FOVy_rad) * _hudData3D.frontOffsetDist;
+		_hudData3D.savezoneMax_x = _hudData3D.savezoneMax_y * uiData.aspect();
+		_hudData3D.cameraNearPlane = gameCam.getNear();
+
+		_hudData3D.textScale = 0.1f * (_hudData3D.frontOffsetDist / 10.f); //0.1 works good at distance 10.f; scale recommend text scale based on relation to 10
+	}
+
 	const SA::HUDData3D& GameUIRenderData::getHUDData3D()
 	{
 		if (!_hudData3D)
@@ -471,27 +490,13 @@ namespace SA
 
 			if (SA::CameraBase* gameCam = camera())
 			{
-				_hudData3D->camPos = gameCam->getPosition();
-				_hudData3D->camUp = gameCam->getUp();
-				_hudData3D->camRight = gameCam->getRight();
-				_hudData3D->camFront = gameCam->getFront();
-
-				float FOVy_deg = gameCam->getFOV() / 2.f;
-				float FOVy_rad = glm::radians(FOVy_deg);
-
-				//drawing out triangle with fovy, tan(theta) = y / z;
-				// y = tan(theta) * z
-				_hudData3D->savezoneMax_y = glm::tan(FOVy_rad) * _hudData3D->frontOffsetDist;
-				_hudData3D->savezoneMax_x = _hudData3D->savezoneMax_y * aspect();
-				_hudData3D->cameraNearPlane = gameCam->getNear();
-
-				_hudData3D->textScale = 0.1f * (_hudData3D->frontOffsetDist / 10.f); //0.1 works good at distance 10.f; scale recommend text scale based on relation to 10
+				calculateHUDData3D(*_hudData3D, *gameCam, *this);
 			}
 
-			if (!_hudData3D)
-			{
-				_hudData3D = HUDData3D{};
-			}
+			//if (!_hudData3D)
+			//{
+			//	_hudData3D = HUDData3D{};
+			//}
 		}
 
 		return *_hudData3D;

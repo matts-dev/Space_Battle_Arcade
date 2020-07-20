@@ -86,6 +86,7 @@ namespace SA
 		float cameraNearPlane = 1.f;
 		float textScale = 1.f;
 	};
+	void calculateHUDData3D(HUDData3D& hud, const CameraBase& camera, struct GameUIRenderData& uiData);
 
 	struct GameUIRenderData
 	{

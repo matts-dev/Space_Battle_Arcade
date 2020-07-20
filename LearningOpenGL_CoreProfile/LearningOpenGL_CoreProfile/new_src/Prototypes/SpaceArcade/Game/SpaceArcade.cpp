@@ -106,6 +106,11 @@ namespace SA
 		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);
 
+		if (bEnableDebugEngineKeybinds)
+		{
+			log(__FUNCTION__, LogLevel::LOG_WARNING, "SpaceArcade::bEnableDebugEngineKeybinds is true, this should be false for shipping builds.");
+		}
+
 		return window;
 	}
 
@@ -318,16 +323,19 @@ namespace SA
 			}
 			 
 			//debug
-			if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) 
-			{ 
-				if(input.isKeyJustPressed(window, GLFW_KEY_C)) { bRenderDebugCells = !bRenderDebugCells; }
-				if (input.isKeyJustPressed(window, GLFW_KEY_V)) { bRenderProjectileOBBs = !bRenderProjectileOBBs; }
-				if (input.isKeyJustPressed(window, GLFW_KEY_U)) 
+			if (bEnableDebugEngineKeybinds)
+			{
+				if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
 				{
-					//sp<Level> currentLevel = getLevelSystem().getCurrentLevel();
-					//getLevelSystem().unloadLevel(currentLevel);
-					sp<LevelBase> projectileEditor = new_sp<ModelConfigurerEditor_Level>();
-					getLevelSystem().loadLevel(projectileEditor);
+					if (input.isKeyJustPressed(window, GLFW_KEY_C)) { bRenderDebugCells = !bRenderDebugCells; }
+					if (input.isKeyJustPressed(window, GLFW_KEY_V)) { bRenderProjectileOBBs = !bRenderProjectileOBBs; }
+					if (input.isKeyJustPressed(window, GLFW_KEY_U))
+					{
+						//sp<Level> currentLevel = getLevelSystem().getCurrentLevel();
+						//getLevelSystem().unloadLevel(currentLevel);
+						sp<LevelBase> projectileEditor = new_sp<ModelConfigurerEditor_Level>();
+						getLevelSystem().loadLevel(projectileEditor);
+					}
 				}
 			}
 		}

@@ -42,23 +42,25 @@ namespace SA
 		if (bRenderHUD)
 		{
 
-			const HUDData3D& hudData = rd_ui.getHUDData3D();
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// this is a bit of a hack. originally I anticipated a distance of 10.f in front of hud was a good amount
+			// but it isn't great because HUD widgets will clip into 3d structures. There's obvious two ways to fix 
+			// this, one lower the distance, or 2 always draw ui without consideration of depth. both are costly in that the
+			// laser system is largly independent and desigend to be drawn with 3D depth and that the main menu has scaled 
+			// elements based on a distance of 10.f. A simple fix is to just recalculate HUD data with a shorter distance only
+			// for the in game hud. So we copy the hud data and recalcualte it at a new distnace
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			HUDData3D hudData = rd_ui.getHUDData3D(); //make a copy
+			if (CameraBase* gameCam = rd_ui.camera())
+			{
+				hudData.frontOffsetDist = 1.f; //be careful, this must be beyond near clip plane!
+				calculateHUDData3D(hudData, *gameCam, rd_ui);
+			}
+			float distScaleCorrection = hudData.frontOffsetDist / 10.f; //10.f is the default distance for hudData
 
 			////////////////////////////////////////////////////////
-			// copy from respawn widget
+			// calculations
 			////////////////////////////////////////////////////////
-			const HUDData3D& hud_3d = rd_ui.getHUDData3D();
-			vec3 camPos = hud_3d.camPos;
-			vec3 camFront = hud_3d.camFront;
-			vec3 camRight = hud_3d.camRight;//test
-			vec3 camUp = hud_3d.camUp;
-			const float forwardDist = hud_3d.frontOffsetDist;
-			const float upOffset = hud_3d.savezoneMax_y * 0.9f;
-			Transform newXform;
-			newXform.position = camPos + (forwardDist * camFront) + (camUp * upOffset);
-			newXform.scale = vec3(0.1f);
-			newXform.rotQuat = rd_ui.camQuat();
-			////////////////////////////////////////////////
 
 			vec3 hudCenterPoint = hudData.camPos + (hudData.frontOffsetDist * hudData.camFront);
 			vec2 statusBarOffsetPerc{ 0.75f, -0.8f};
@@ -72,7 +74,7 @@ namespace SA
 			Transform healthBarXform;
 			healthBarXform.rotQuat = rd_ui.camQuat();
 			healthBarXform.position = healthBarLoc;
-			healthBarXform.scale = vec3(2.f,1.f,1.f);
+			healthBarXform.scale = vec3(2.f,1.f,1.f) * distScaleCorrection;
 			healthBar->setBarTransform(healthBarXform);
 			Transform healthBarTextXform = healthBarXform;
 			healthBarTextXform.scale = vec3(hudData.textScale);
@@ -112,7 +114,7 @@ namespace SA
 #if HUD_FONT_TEST 
 			fontTest->renderGameUI(rd_ui);
 #endif
-			if constexpr (constexpr bool bDebugHudPlacement = true)
+			if constexpr (constexpr bool bDebugHudPlacement = false)
 			{
 				DebugRenderSystem& db = GameBase::get().getDebugRenderSystem();
 				vec3 camNudge = vec3(0, 0.001f, 0);
@@ -124,7 +126,7 @@ namespace SA
 				float normScaleUp = 3.f;
 				if (bool bDebugCamera = false) 
 				{ 
-					db.renderSphere(hudData.camPos, vec3(0.1f), vec3(0, 0, 1)); 
+					db.renderSphere(hudData.camPos, vec3(0.05f), vec3(0, 0, 1)); 
 					db.renderLine(hudData.camPos + camNudge, hudData.camPos + camNudge + hudData.camRight*normScaleUp, vec3(1, 0, 0));
 					db.renderLine(hudData.camPos + camNudge, hudData.camPos + camNudge + hudData.camUp*normScaleUp, vec3(0, 1, 0));
 					db.renderLine(hudData.camPos + camNudge, hudData.camPos + camNudge + hudData.camFront*normScaleUp, vec3(0, 0, 1));
@@ -133,7 +135,7 @@ namespace SA
 				////////////////////////////////////////////////////////
 				// render placement data
 				////////////////////////////////////////////////////////
-				db.renderSphere(healthBarXform.position, vec3(0.1f), vec3(1, 0, 0));
+				db.renderSphere(healthBarXform.position, vec3(0.005f), vec3(1, 0, 0));
 				db.renderLine(hudData.camPos + camNudge, healthBarXform.position, vec3(1, 0, 0));
 				db.renderLine(hudData.camPos + camNudge, energyBarXform.position, vec3(0, 1, 0));
 			}
