@@ -556,6 +556,9 @@ namespace SA
 	void TurretPlacement::tick(float dt_sec)
 	{
 		using namespace glm;
+		
+		Parent::tick(dt_sec);
+
 		static DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
 
 		if (hasStartedDestructionPhase() || isPendingDestroy())

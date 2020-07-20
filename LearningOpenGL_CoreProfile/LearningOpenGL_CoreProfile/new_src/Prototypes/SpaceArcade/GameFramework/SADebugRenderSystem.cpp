@@ -184,6 +184,14 @@ namespace SA
 		writeFrame.sphereData.colors.push_back(glm::vec4(color, 1.f));
 	}
 
+	void DebugRenderSystem::renderSphere(const glm::vec3& position, const glm::vec3& scale, const glm::vec3& color)
+	{
+		Transform xform;
+		xform.position = position;
+		xform.scale = scale;
+		renderSphere(xform.getModelMatrix(), color);
+	}
+
 	void DebugRenderSystem::renderSphereOverTime(const glm::mat4& model, const glm::vec3& color, float secs)
 	{
 		sp<TimedRenderDatum> sphereData = new_sp<SphereTimedRenderDatum>(model, color, secs);

@@ -628,7 +628,7 @@ namespace SA
 			{
 				if (myShip)
 				{
-					myShip->setAvoidanceSensitivity(1.f);
+					myShip->setAvoidanceSensitivity(1.0f);
 				}
 			}
 			//clear flag after so we only do this if previously we were targeting player (makes debugging a lot easier, we're not tripping breakpoints unnecessarily)
@@ -644,7 +644,7 @@ namespace SA
 					bTargetIsPlayer = playerComp->hasOwningPlayer();
 					if (bTargetIsPlayer && myShip)
 					{
-						myShip->setAvoidanceSensitivity(0.f);
+						myShip->setAvoidanceSensitivity(0.0f);
 					}
 				}
 			}
@@ -2420,11 +2420,11 @@ namespace SA
 
 					mat4 acceptableBombRunAreaXform = glm::translate(mat4(1.f), setupData.position);
 					acceptableBombRunAreaXform = glm::scale(acceptableBombRunAreaXform, vec3(c.acceptiableAttackRadius));
-					db.renderSphere(acceptableBombRunAreaXform, glm::vec3(0.f, 1.f, 0));
+					db.renderSphere(acceptableBombRunAreaXform, glm::vec3(0.f, 0.5f, 0));
 
 					mat4 bombDisengageXform = glm::translate(mat4(1.f), targPos);
 					bombDisengageXform = glm::scale(bombDisengageXform, vec3(c.disengageObjectiveDistance));
-					db.renderSphere(bombDisengageXform, glm::vec3(0.f, 0.f, 1.f));
+					db.renderSphere(bombDisengageXform, glm::vec3(0.f, 0.f, 0.5f));
 				}
 			}
 			return true;

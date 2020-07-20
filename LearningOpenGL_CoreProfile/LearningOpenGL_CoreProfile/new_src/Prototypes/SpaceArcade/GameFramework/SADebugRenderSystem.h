@@ -264,6 +264,7 @@ namespace SA
 		void renderCubeOverTime(const glm::mat4& model, const glm::vec3& color, float secs);
 
 		void renderSphere(const glm::mat4& model, const glm::vec3& color);
+		void renderSphere(const glm::vec3& position, const glm::vec3& scale, const glm::vec3& color);
 		void renderSphereOverTime(const glm::mat4& model, const glm::vec3& color, float secs);
 
 		void renderCone(const glm::vec3& pos, const glm::vec3& dir_n, float halfAngle_rad, float length, const glm::vec3& color, uint32_t facets = 12);

@@ -484,6 +484,8 @@ namespace SA
 				_hudData3D->savezoneMax_y = glm::tan(FOVy_rad) * _hudData3D->frontOffsetDist;
 				_hudData3D->savezoneMax_x = _hudData3D->savezoneMax_y * aspect();
 				_hudData3D->cameraNearPlane = gameCam->getNear();
+
+				_hudData3D->textScale = 0.1f * (_hudData3D->frontOffsetDist / 10.f); //0.1 works good at distance 10.f; scale recommend text scale based on relation to 10
 			}
 
 			if (!_hudData3D)
@@ -501,6 +503,12 @@ namespace SA
 		{
 			glm::ivec2 fbSize = framebuffer_Size();
 			_aspect = fbSize.x / float(fbSize.y);
+
+			//early engine boot up may call this before true aspect is set up. //#nextengine perhaps have functions that handle these which are set up before anything can access
+			if (Utils::anyValueNAN(*_aspect))
+			{
+				_aspect = 1.f;
+			}
 		}
 
 		return *_aspect;

@@ -233,6 +233,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DigitalClockFontTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_GenericMouseHoverable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_LaserButton.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_ProgressBar.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Respawn.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Ship.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DiscreteSelector.h" />
@@ -306,6 +307,7 @@
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="new_src\Utilities\Transformable.h" />
     <ClInclude Include="Utilities.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\HUD\Widget3D_PlayerStatusBarBase.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="1.HelloWindow.cpp" />
@@ -559,6 +561,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DigitalClockFontTest.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_GenericMouseHoverable.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_LaserButton.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_ProgressBar.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Respawn.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Ship.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DiscreteSelector.cpp" />
@@ -719,6 +722,7 @@
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="new_src\Utilities\Transformable.cpp" />
     <ClCompile Include="Utilities.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\HUD\Widget3D_PlayerStatusBarBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="3.DFlippedVertexShader_Challenge1.glsl" />

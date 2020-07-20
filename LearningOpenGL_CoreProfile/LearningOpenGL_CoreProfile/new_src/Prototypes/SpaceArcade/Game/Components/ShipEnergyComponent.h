@@ -10,7 +10,8 @@ namespace SA
 	public:
 		float spendEnergy(float request);
 		float spendEnergyFractional(float energyRequest);
-		float getEnergy() { return energy; }
+		float getEnergy() const { return energy; }
+		float getMaxEnergy() const { return MAX_ENERGY; }
 
 		void notify_tick(float dt_sec);
 	public:

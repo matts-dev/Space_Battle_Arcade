@@ -42,8 +42,11 @@ namespace SA
 	public:
 		void animateStartTo(const glm::vec3& startPoint);
 		void animateEndTo(const glm::vec3& endPoint);
+		void animate(const glm::vec3& startPoint, const glm::vec3& endPoint);
+		void update_NoAnimReset(const glm::vec3& startPoint, const glm::vec3& endPoint);
 		void updateEnd_NoAnimReset(const glm::vec3& endPoint);
 		void updateStart_NoAnimReset(const glm::vec3& startPoint);
+		void multiplexedUpdate(bool bResetAnimation, const glm::vec3& startPoint, const glm::vec3& endPoint);
 		void randomizeAnimSpeed(float targetAnimDurationSecs = 1.0f, float randomDriftSecs = 0.25f);
 		void setAnimDurations(float startSpeedSec, float endSpeedSec);
 		void scaleAnimSpeeds(float startScale, float endScale);
@@ -72,6 +75,7 @@ namespace SA
 			float animDuration = 1.f;
 			float curTickTimeSec = 0.f;
 		};
+		bool bForceCameraRelative = false;
 	private:
 		AnimData anim_Start;
 		AnimData anim_End;

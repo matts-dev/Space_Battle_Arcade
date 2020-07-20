@@ -144,6 +144,9 @@ namespace SA
 
 			laser.setOffscreenMode(offMode);
 		}
+
+		//clear any user specific flags
+		laser.bForceCameraRelative = false;
 	}
 
 	void LaserUIPool::postConstruct()
@@ -256,16 +259,17 @@ namespace SA
 
 	bool LaserUIPool::tick(float dt_sec)
 	{
-		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
-		{
-			//use dilated world time, not system time
-			dt_sec = currentLevel->getWorldTimeManager()->getDeltaTimeSecs();
+		//if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		//{
+		//	//use dilated world time, not system time
+		//	dt_sec = currentLevel->getWorldTimeManager()->getDeltaTimeSecs();
+		//	//for (LaserUIObject* laser : activeLasers)
+		//	//{
+		//	//	laser->tick(dt_sec);
+		//	//}
+		//}
 
-			//for (LaserUIObject* laser : activeLasers)
-			//{
-			//	laser->tick(dt_sec);
-			//}
-		}
+		//see renderGameUI for laser updates
 		return true;
 	}
 
@@ -371,6 +375,18 @@ namespace SA
 		setupAnimDataHelper(anim_End, endPos, newEndPoint);
 	}
 
+	void LaserUIObject::animate(const glm::vec3& startPoint, const glm::vec3& endPoint)
+	{
+		animateStartTo(startPoint);
+		animateEndTo(endPoint);
+	}
+
+	void LaserUIObject::update_NoAnimReset(const glm::vec3& startPoint, const glm::vec3& endPoint)
+	{
+		updateStart_NoAnimReset(startPoint);
+		updateEnd_NoAnimReset(endPoint);
+	}
+
 	void LaserUIObject::updateEnd_NoAnimReset(const glm::vec3& endPoint)
 	{
 		//just update goal position, this will not reset the curve being applied. Need to manually update the camera offsets
@@ -382,6 +398,18 @@ namespace SA
 	{
 		anim_Start.end = startPoint;
 		setupCameraOffsets(anim_Start);
+	}
+
+	void LaserUIObject::multiplexedUpdate(bool bResetAnimation, const glm::vec3& startPoint, const glm::vec3& endPoint)
+	{
+		if (bResetAnimation)
+		{
+			animate(startPoint, endPoint);
+		}
+		else
+		{
+			update_NoAnimReset(startPoint, endPoint);
+		}
 	}
 
 	void LaserUIObject::randomizeAnimSpeed(float targetAnimDurationSecs /*= 1.0f*/, float randomDriftSecs /*= 0.25f*/)
@@ -459,7 +487,7 @@ namespace SA
 		//WARNING: be careful not to broadcast any events here! this should be separate from the game thread tick
 
 		//do additional any last minute additional transformations to the instance data
-		if (offscreenMode.has_value())
+		if (offscreenMode.has_value() || bForceCameraRelative)
 		{
 			if (CameraBase* cam = ui_rd.camera())
 			{
@@ -484,8 +512,6 @@ namespace SA
 		outInstanceData.endPnt = endPos;
 		outInstanceData.color = color;
 	}
-
-
 
 	void LaserUIObject::setOffscreenMode(const std::optional<ELaserOffscreenMode>& inOffscreenMode, bool bResetAnimProgress, GameUIRenderData& ui_rd)
 	{

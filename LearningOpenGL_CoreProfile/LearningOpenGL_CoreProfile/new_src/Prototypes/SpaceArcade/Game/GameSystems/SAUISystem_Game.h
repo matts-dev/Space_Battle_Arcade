@@ -84,6 +84,7 @@ namespace SA
 		float savezoneMax_y = 1.f;
 		float savezoneMax_x = 1.f;
 		float cameraNearPlane = 1.f;
+		float textScale = 1.f;
 	};
 
 	struct GameUIRenderData

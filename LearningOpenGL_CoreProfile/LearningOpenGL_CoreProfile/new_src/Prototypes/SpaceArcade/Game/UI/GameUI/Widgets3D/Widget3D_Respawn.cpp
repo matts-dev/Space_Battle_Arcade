@@ -54,7 +54,7 @@ namespace SA
 				
 				Transform newXform;
 				newXform.position = camPos + (forwardDist * camFront) + (camUp * upOffset);
-				newXform.scale = vec3(0.1f);
+				newXform.scale = vec3(hud_3d.textScale); // vec3(0.1f); for dist 10
 				newXform.rotQuat = ui_rd.camQuat();
 				textRenderer->setXform(newXform);
 

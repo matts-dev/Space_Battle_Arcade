@@ -82,7 +82,7 @@ namespace SA
 		HitPoints hp;
 	public:
 		void adjust(float delta);
-		const HitPoints& getHP() { return hp; }
+		const HitPoints& getHP() const { return hp; }
 		void overwriteHP(const HitPoints& newHP);
 		void setDamageReductionFactor(float reductionFactor);
 	public:
