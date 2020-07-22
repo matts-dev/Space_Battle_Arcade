@@ -35,7 +35,7 @@
 #include "UI/GameUI/Widgets3D/Widget3D_Ship.h"
 #include "../Tools/DataStructures/AdvancedPtrs.h"
 #include "AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
-#include "GameModes/ServerGameMode_Base.h"
+#include "GameModes/ServerGameMode_SpaceBase.h"
 #include "../Tools/PlatformUtils.h"
 
 namespace SA
@@ -713,9 +713,9 @@ namespace SA
 		{
 			bool bCleanNullPlayers = false;
 
-			for (size_t playerIdx = 0; playerIdx < ServerGameMode_Base::playersNeedingTarget.size(); ++playerIdx)
+			for (size_t playerIdx = 0; playerIdx < ServerGameMode_SpaceBase::playersNeedingTarget.size(); ++playerIdx)
 			{
-				if (const fwp<PlayerBase>& player = ServerGameMode_Base::playersNeedingTarget[playerIdx])
+				if (const fwp<PlayerBase>& player = ServerGameMode_SpaceBase::playersNeedingTarget[playerIdx])
 				{
 					//guessing that calling virtual to check distance will be faster than accessing team component and comparing teams
 					IControllable* controlTarget = player->getControlTarget();
@@ -738,7 +738,7 @@ namespace SA
 									memory.replaceValue(BT_TargetKey, playerWE);
 								}
 
-								ServerGameMode_Base::playersNeedingTarget[playerIdx] = nullptr; //null this since we don't want other ships to try and target player now that it has a target
+								ServerGameMode_SpaceBase::playersNeedingTarget[playerIdx] = nullptr; //null this since we don't want other ships to try and target player now that it has a target
 								bCleanNullPlayers = true;
 								break;
 							}
@@ -752,11 +752,11 @@ namespace SA
 			}
 			if (bCleanNullPlayers)
 			{
-				auto newEndIter = std::remove_if(ServerGameMode_Base::playersNeedingTarget.begin(), ServerGameMode_Base::playersNeedingTarget.end(),
+				auto newEndIter = std::remove_if(ServerGameMode_SpaceBase::playersNeedingTarget.begin(), ServerGameMode_SpaceBase::playersNeedingTarget.end(),
 					[this](const fwp<PlayerBase>& player){
 						return !bool(player); //if player is null, remove it.
 					});
-				ServerGameMode_Base::playersNeedingTarget.erase(newEndIter, ServerGameMode_Base::playersNeedingTarget.end());
+				ServerGameMode_SpaceBase::playersNeedingTarget.erase(newEndIter, ServerGameMode_SpaceBase::playersNeedingTarget.end());
 			}
 		}
 	}

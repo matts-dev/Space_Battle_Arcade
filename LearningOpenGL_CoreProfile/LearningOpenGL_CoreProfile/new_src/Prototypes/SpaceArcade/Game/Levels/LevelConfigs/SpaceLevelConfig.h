@@ -9,11 +9,11 @@ namespace SA
 {
 
 	class SpawnConfig;
-	class ServerGameMode_Base;
+	class ServerGameMode_SpaceBase;
 
 	const char* const TAG_GAMEMODE_CARRIER_TAKEDOWN = "Carrier Takedown";
 	const char* const TAG_GAMEMODE_EXPLORE = "Linear Explore";
-	sp<ServerGameMode_Base> createGamemodeFromTag(const std::string& tag);
+	sp<ServerGameMode_SpaceBase> createGamemodeFromTag(const std::string& tag);
 
 	struct EnvironmentalBodyData
 	{

@@ -79,7 +79,7 @@ namespace SA
 		virtual void renderGameUI(GameUIRenderData& renderData);
 	private:
 		size_t teamIdx;
-		fwp<class ServerGameMode_Base> cacheGM = nullptr;
+		fwp<class ServerGameMode_SpaceBase> cacheGM = nullptr;
 	};
 }
 

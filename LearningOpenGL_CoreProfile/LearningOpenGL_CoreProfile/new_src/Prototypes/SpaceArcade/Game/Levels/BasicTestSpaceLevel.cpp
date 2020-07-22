@@ -329,9 +329,9 @@ namespace SA
 				sp<ServerGameMode_CarrierTakedown> gamemodeSubclass = new_sp<ServerGameMode_CarrierTakedown>();
 				if (gamemodeSubclass)
 				{
-					gamemode = gamemodeSubclass;
-					gamemode->setOwningLevel(sp_this());
-					gamemode->initialize(ServerGameMode_Base::LevelKey{});
+					spaceGameMode = gamemodeSubclass;
+					spaceGameMode->setOwningLevel(sp_this());
+					spaceGameMode->initialize(ServerGameMode_SpaceBase::LevelKey{});
 					gamemodeSubclass->configureForTestLevel();
 				}
 			}

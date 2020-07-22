@@ -1,6 +1,7 @@
 #include "SALevel.h"
 #include "SAGameBase.h"
 #include "SALog.h"
+#include "GameMode/ServerGameMode_Base.h"
 
 namespace SA
 {
@@ -41,6 +42,11 @@ namespace SA
 
 		//start subclass specific behavior after base behavior (ctor/dtor pattern)
 		startLevel_v();
+
+		if (bool bIsServer = true) //#TODO #multiplayer
+		{
+			gameModeBase = onServerCreateGameMode();
+		}
 	}
 
 	void LevelBase::endLevel()
@@ -83,6 +89,11 @@ namespace SA
 
 	void LevelBase::onEntityUnspawned_v(const sp<WorldEntity>& unspawned)
 	{
+	}
+
+	sp<SA::ServerGameMode_Base> LevelBase::onServerCreateGameMode()
+	{
+		return new_sp<ServerGameMode_Base>();
 	}
 
 	void LevelBase::tick(float dt_sec)

@@ -13,6 +13,9 @@
 #include "../../SpaceArcade.h"
 #include "Widgets3D/HUD/Widget3D_PlayerStatusBarBase.h"
 #include "../../../GameFramework/SADebugRenderSystem.h"
+#include "../../../GameFramework/GameMode/ServerGameMode_Base.h"
+#include "../../../GameFramework/SALevel.h"
+#include "../../../GameFramework/SALevelSystem.h"
 
 using namespace glm;
 
@@ -41,8 +44,16 @@ namespace SA
 	{
 		//alternatively we could hook into level changed events and update, but there potentially is some data races. 
 		//so for now doing a check in a tick to hopefully get this project complete.
-		size_t numTeams = 2; //#TODO refactor gamemode to be part of framework and get number of teams
+		size_t numTeams = 2; 
 		
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		{
+			if (ServerGameMode_Base* GMBase = currentLevel->getGameModeBase())
+			{
+				numTeams = GMBase->getNumberOfCurrentTeams();
+			}
+		}
+
 		if (numTeams != teamHealthBars.size())
 		{
 			//grow array

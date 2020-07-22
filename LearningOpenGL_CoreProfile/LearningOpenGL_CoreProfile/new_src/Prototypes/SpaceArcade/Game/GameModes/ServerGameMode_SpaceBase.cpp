@@ -1,4 +1,4 @@
-#include "ServerGameMode_Base.h"
+#include "ServerGameMode_SpaceBase.h"
 #include "../Levels/SASpaceLevelBase.h"
 #include "../../Tools/PlatformUtils.h"
 #include "../SAShip.h"
@@ -21,7 +21,7 @@ namespace SA
 	using namespace glm;
 
 
-	/*static*/ std::vector<fwp<PlayerBase>> ServerGameMode_Base::playersNeedingTarget;
+	/*static*/ std::vector<fwp<PlayerBase>> ServerGameMode_SpaceBase::playersNeedingTarget;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// DEBUG_HITCH_NEVER_CLEAR_PLACEMENTS 
@@ -62,23 +62,28 @@ namespace SA
 	} gmConstants;
 
 
-	void ServerGameMode_Base::setOwningLevel(const sp<SpaceLevelBase>& level)
+	void ServerGameMode_SpaceBase::setOwningLevel(const sp<SpaceLevelBase>& level)
 	{
 		owningLevel = level;
 	}
 
 
-	void ServerGameMode_Base::addTurretNeedingTarget(const sp<ShipPlacementEntity>& turret)
+	void ServerGameMode_SpaceBase::addTurretNeedingTarget(const sp<ShipPlacementEntity>& turret)
 	{
 		turretsNeedingTarget.push_back(turret);
 	}
 
-	void ServerGameMode_Base::addHealerNeedingTarget(const sp<ShipPlacementEntity>& healer)
+	void ServerGameMode_SpaceBase::addHealerNeedingTarget(const sp<ShipPlacementEntity>& healer)
 	{
 		healersNeedingTarget.push_back(healer);
 	}
 
-	void ServerGameMode_Base::initialize(const LevelKey& key)
+	size_t ServerGameMode_SpaceBase::getNumberOfCurrentTeams() const
+	{
+		return teamData.size();
+	}
+
+	void ServerGameMode_SpaceBase::initialize(const LevelKey& key)
 	{
 		sp<SpaceLevelBase> level = owningLevel.expired() ? nullptr : owningLevel.lock();
 		onInitialize(level);
@@ -93,13 +98,13 @@ namespace SA
 		initialize_LogDebugWarnings();
 	}
 
-	void ServerGameMode_Base::onInitialize(const sp<SpaceLevelBase>& level)
+	void ServerGameMode_SpaceBase::onInitialize(const sp<SpaceLevelBase>& level)
 	{
 		bBaseInitialized = true;
 
 		if (level)
 		{
-			level->onSpawnedEntity.addWeakObj(sp_this(), &ServerGameMode_Base::handleEntitySpawned);
+			level->onSpawnedEntity.addWeakObj(sp_this(), &ServerGameMode_SpaceBase::handleEntitySpawned);
 
 			for (const sp<WorldEntity>& worldEntity : level->getWorldEntities())
 			{
@@ -109,7 +114,7 @@ namespace SA
 		}
 	}
 
-	void ServerGameMode_Base::tick(float dt_sec, const LevelKey& key)
+	void ServerGameMode_SpaceBase::tick(float dt_sec, const LevelKey& key)
 	{
 		accumulatedTimeSec += dt_sec;
 
@@ -119,7 +124,7 @@ namespace SA
 		tick_debug(dt_sec);;
 	}
 
-	void ServerGameMode_Base::endGame(const EndGameParameters& endParameters)
+	void ServerGameMode_SpaceBase::endGame(const EndGameParameters& endParameters)
 	{
 		//game mode acts on level because if client/server architecture is ever set up, clients will have access to level but not gamemode
 		if (sp<SpaceLevelBase> level = owningLevel.lock())
@@ -132,7 +137,7 @@ namespace SA
 		}
 	}
 
-	void ServerGameMode_Base::handleEntitySpawned(const sp<WorldEntity>& spawned)
+	void ServerGameMode_SpaceBase::handleEntitySpawned(const sp<WorldEntity>& spawned)
 	{
 		if (sp<Ship> spawnedShip = std::dynamic_pointer_cast<Ship>(spawned))
 		{
@@ -161,7 +166,7 @@ namespace SA
 		onWorldEntitySpawned(spawned);
 	}
 
-	void ServerGameMode_Base::tick_carrierObjectiveBalancing(float dt_sec)
+	void ServerGameMode_SpaceBase::tick_carrierObjectiveBalancing(float dt_sec)
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// notes about this function
@@ -351,7 +356,7 @@ namespace SA
 	}
 
 
-	void ServerGameMode_Base::tick_singleShipWalk(float dt_sec)
+	void ServerGameMode_SpaceBase::tick_singleShipWalk(float dt_sec)
 	{
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -421,7 +426,7 @@ namespace SA
 			////////////////////////////////////////////////////////
 			// handle target player heartbeat
 			////////////////////////////////////////////////////////
-			if (ServerGameMode_Base::playersNeedingTarget.size() > 0 && !bIsCarrier)
+			if (ServerGameMode_SpaceBase::playersNeedingTarget.size() > 0 && !bIsCarrier)
 			{
 				ship->TryTargetPlayer();
 			}
@@ -525,7 +530,7 @@ namespace SA
 	}
 
 
-	void ServerGameMode_Base::tick_debug(float dt_sec)
+	void ServerGameMode_SpaceBase::tick_debug(float dt_sec)
 	{
 		static DebugRenderSystem& db = GameBase::get().getDebugRenderSystem();
 
@@ -547,7 +552,7 @@ namespace SA
 
 	}
 
-	bool ServerGameMode_Base::tryGameModeHit(const UnfilledObjectiveHit& hit, const std::vector<sp<class PlayerBase>>& allPlayers)
+	bool ServerGameMode_SpaceBase::tryGameModeHit(const UnfilledObjectiveHit& hit, const std::vector<sp<class PlayerBase>>& allPlayers)
 	{
 		if (Utils::isValidIndex(teamData, hit.objectiveTeam))
 		{
@@ -591,7 +596,7 @@ namespace SA
 	}
 
 
-	void ServerGameMode_Base::initialize_LogDebugWarnings()
+	void ServerGameMode_SpaceBase::initialize_LogDebugWarnings()
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// logging for performance critical debug settings that should be turned off
@@ -618,7 +623,7 @@ namespace SA
 #endif
 	}
 
-	void ServerGameMode_Base::tick_amortizedObjectiveHitUpdate(float dt_sec)
+	void ServerGameMode_SpaceBase::tick_amortizedObjectiveHitUpdate(float dt_sec)
 	{
 		const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
 		

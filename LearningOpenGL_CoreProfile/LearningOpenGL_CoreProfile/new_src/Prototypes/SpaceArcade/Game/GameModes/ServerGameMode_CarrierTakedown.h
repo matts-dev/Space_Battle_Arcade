@@ -1,5 +1,5 @@
 #pragma once
-#include "ServerGameMode_Base.h"
+#include "ServerGameMode_SpaceBase.h"
 #include "../../Tools/DataStructures/LifetimePointer.h"
 
 constexpr bool bTargetHeartbeatEveryFrame = false;
@@ -9,7 +9,7 @@ namespace SA
 	class Ship;
 	class RNG;
 
-	class ServerGameMode_CarrierTakedown : public ServerGameMode_Base
+	class ServerGameMode_CarrierTakedown : public ServerGameMode_SpaceBase
 	{
 	public:
 		void configureForTestLevel();

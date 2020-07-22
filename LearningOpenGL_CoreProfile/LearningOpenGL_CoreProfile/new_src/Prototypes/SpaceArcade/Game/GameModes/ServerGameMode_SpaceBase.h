@@ -4,6 +4,7 @@
 #include "../../Tools/DataStructures/LifetimePointer.h"
 #include "../SAShip.h" //must include this to use lifetime pointers ATOW #nextengine don't let lifetime points screw up using forward declarations
 #include "../../Tools/Algorithms/AmortizeLoopTool.h"
+#include "../../GameFramework/GameMode/ServerGameMode_Base.h"
 
 namespace SA
 {
@@ -77,15 +78,15 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// The server game mode base class
 	//
-	// #TODO #refactor separate out _Base and _SpaceLevelBase. make this _SpaceLevelBase and move core functionality there
-	//	so that this framework can be easily used for other types of games. (owning level, teams, endGame(), etc.)
+	// #TODO #refactor started refactor to ServerGameMode_Base, but haven't moved common functionality like getting level
+	// there yet. leaving that as TODO
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	class ServerGameMode_Base : public GameEntity
+	class ServerGameMode_SpaceBase : public ServerGameMode_Base
 	{
 	public:
 		struct LevelKey : public RemoveMoves {friend SpaceLevelBase; friend BasicTestSpaceLevel; private: LevelKey() {}};
 	public: //statics
-		static std::vector<fwp<PlayerBase>> playersNeedingTarget;
+		static std::vector<fwp<PlayerBase>> playersNeedingTarget; //#TODO refactor this to be object oriented and not static
 	public:
 		void initialize(const LevelKey& key);
 		void tick(float dt_sec, const LevelKey& key);
@@ -95,6 +96,7 @@ namespace SA
 		void addTurretNeedingTarget(const sp<ShipPlacementEntity>& turret);
 		void addHealerNeedingTarget(const sp<ShipPlacementEntity>& healer);
 		const std::vector<GameModeTeamData>& getTeamData() { return teamData; }
+		size_t getNumberOfCurrentTeams() const override;
 	protected:
 		virtual void onInitialize(const sp<SpaceLevelBase>& level);
 		void endGame(const EndGameParameters& endParameters);

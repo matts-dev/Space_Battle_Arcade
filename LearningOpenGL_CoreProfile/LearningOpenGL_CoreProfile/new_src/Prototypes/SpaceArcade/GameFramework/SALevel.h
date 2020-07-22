@@ -20,6 +20,7 @@ namespace SA
 {
 	class LevelSystem;
 	class TimeManager;
+	class ServerGameMode_Base;
 	struct DirectionLight;
 
 	struct LevelInitializer
@@ -56,6 +57,9 @@ namespace SA
 		//#SUGGESTED refactor this to just return reference, a level should always have a valid time manager.
 		inline const sp<TimeManager>& getWorldTimeManager() { return worldTimeManager; }
 
+		/**only valid on server*/
+		ServerGameMode_Base* getGameModeBase() const { return gameModeBase.get(); }
+
 		/** returns const to prevent modification; use spawn and unspawn entity to add/remove. 
 			#concern this may be an encapsulation issue. Perhaps accessing entities should only be done through the world grid.*/
 		const std::set<sp<WorldEntity>>& getWorldEntities() { return worldEntities; }
@@ -70,6 +74,7 @@ namespace SA
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned);
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned);
 		virtual bool isLevelActive() { return bLevelActive; }
+		virtual sp<ServerGameMode_Base> onServerCreateGameMode();
 	protected:
 		virtual void tick_v(float dt_sec) {}
 	private: //virtuals; private indicates subclasses inherit when function called, but not how function is completed.
@@ -81,6 +86,7 @@ namespace SA
 		std::set<sp<RenderModelEntity>> renderEntities;
 		SH::SpatialHashGrid<WorldEntity> worldCollisionGrid;
 		sp<TimeManager> worldTimeManager;
+		sp<ServerGameMode_Base> gameModeBase = nullptr; //only valid on server
 		std::vector<DirectionLight> dirLights;
 		glm::vec3 ambientLight{0.f};
 	private:

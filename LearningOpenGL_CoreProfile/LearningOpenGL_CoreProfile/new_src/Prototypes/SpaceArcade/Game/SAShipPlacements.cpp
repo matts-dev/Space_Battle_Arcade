@@ -21,7 +21,7 @@
 #include "GameSystems/SAProjectileSystem.h"
 #include "../Tools/color_utils.h"
 #include "../Rendering/OpenGLHelpers.h"
-#include "GameModes/ServerGameMode_Base.h"
+#include "GameModes/ServerGameMode_SpaceBase.h"
 #include "Levels/SASpaceLevelBase.h"
 #include "../GameFramework/SALevelSystem.h"
 
@@ -702,7 +702,7 @@ namespace SA
 				{
 					if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
 					{
-						if (ServerGameMode_Base* gm = spaceLevel->getServerGameMode())
+						if (ServerGameMode_SpaceBase* gm = spaceLevel->getServerGameMode_SpaceBase())
 						{
 							gm->addTurretNeedingTarget(sp_this());
 						}
@@ -1017,7 +1017,7 @@ namespace SA
 				{
 					if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
 					{
-						if (ServerGameMode_Base* gm = spaceLevel->getServerGameMode())
+						if (ServerGameMode_SpaceBase* gm = spaceLevel->getServerGameMode_SpaceBase())
 						{
 							gm->addHealerNeedingTarget(sp_this());
 						}

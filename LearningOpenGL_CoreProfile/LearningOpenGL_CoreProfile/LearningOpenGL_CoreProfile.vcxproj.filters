@@ -855,9 +855,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_GenericMouseHoverable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_Base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_CarrierTakedown.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -880,6 +877,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\HUD\Widget3D_PlayerStatusBarBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_SpaceBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\GameMode\ServerGameMode_Base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2105,9 +2108,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_GenericMouseHoverable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_Base.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_CarrierTakedown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2121,6 +2121,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\HUD\Widget3D_PlayerStatusBarBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_SpaceBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\GameMode\ServerGameMode_Base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

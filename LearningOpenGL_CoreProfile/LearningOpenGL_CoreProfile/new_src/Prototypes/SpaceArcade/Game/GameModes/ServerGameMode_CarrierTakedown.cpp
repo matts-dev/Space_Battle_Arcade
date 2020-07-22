@@ -151,7 +151,7 @@ namespace SA
 
 	void ServerGameMode_CarrierTakedown::onInitialize(const sp<SpaceLevelBase>& level)
 	{
-		ServerGameMode_Base::onInitialize(level);
+		ServerGameMode_SpaceBase::onInitialize(level);
 
 		myRNG = GameBase::get().getRNGSystem().getSeededRNG(11);
 
@@ -387,7 +387,7 @@ namespace SA
 		{
 			const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
 
-			ServerGameMode_Base::playersNeedingTarget.clear();
+			ServerGameMode_SpaceBase::playersNeedingTarget.clear();
 
 			for (const sp<PlayerBase> player : allPlayers)
 			{
@@ -409,7 +409,7 @@ namespace SA
 
 										if (activeAttackers->size() == 0)
 										{
-											ServerGameMode_Base::playersNeedingTarget.push_back(player);
+											ServerGameMode_SpaceBase::playersNeedingTarget.push_back(player);
 										}
 									}
 								}

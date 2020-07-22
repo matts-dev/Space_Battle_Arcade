@@ -27,7 +27,7 @@
 #include "../GameSystems/SAModSystem.h"
 #include "../SpaceArcade.h"
 #include "../OptionalCompilationMacros.h"
-#include "../GameModes/ServerGameMode_Base.h"
+#include "../GameModes/ServerGameMode_SpaceBase.h"
 #include "MainMenuLevel.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../AssetConfigs/SaveGameConfig.h"
@@ -106,13 +106,12 @@ namespace SA
 		levelConfig = config; //store config for when level starts.
 	}
 
-	SA::ServerGameMode_Base* SpaceLevelBase::getServerGameMode()
+	SA::ServerGameMode_SpaceBase* SpaceLevelBase::getServerGameMode_SpaceBase()
 	{
 		if (bool bIsServer = true) //#multiplayer
 		{
-			return gamemode.get();
+			return spaceGameMode.get();
 		}
-
 		return nullptr;
 	}
 
@@ -258,20 +257,7 @@ namespace SA
 				starXform.position = starDir * starDist;
 				newStar->setXform(starXform);
 			}
-
-			////////////////////////////////////////////////////////
-			// game mode
-			////////////////////////////////////////////////////////
-			if (bool bIsServer = true) //#TODO #multiplayer
-			{
-				if (gamemode = createGamemodeFromTag(levelConfig->gamemodeTag))
-				{
-					gamemode->setOwningLevel(sp_this());
-					gamemode->initialize(ServerGameMode_Base::LevelKey{});
-				}
-			}
 		}
-
 	}
 
 	void SpaceLevelBase::transitionToMainMenu()
@@ -333,10 +319,26 @@ namespace SA
 			planet->tick(dt_sec);
 		}
 
-		if (gamemode)
+		if (spaceGameMode)
 		{
-			gamemode->tick(dt_sec, ServerGameMode_Base::LevelKey{});
+			spaceGameMode->tick(dt_sec, ServerGameMode_SpaceBase::LevelKey{});
 		}
+	}
+
+	sp<SA::ServerGameMode_Base> SpaceLevelBase::onServerCreateGameMode()
+	{
+		if (levelConfig)
+		{
+			if (bool bIsServer = true) //#TODO #multiplayer
+			{
+				if (spaceGameMode = createGamemodeFromTag(levelConfig->gamemodeTag))
+				{
+					spaceGameMode->setOwningLevel(sp_this());
+					spaceGameMode->initialize(ServerGameMode_SpaceBase::LevelKey{});
+				}
+			}
+		}
+		return spaceGameMode;
 	}
 
 	sp<SA::StarField> SpaceLevelBase::onCreateStarField()

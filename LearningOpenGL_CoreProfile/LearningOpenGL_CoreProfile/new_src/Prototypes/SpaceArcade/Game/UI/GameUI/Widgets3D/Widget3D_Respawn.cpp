@@ -50,7 +50,7 @@ namespace SA
 				vec3 camRight = hud_3d.camRight;//test
 				vec3 camUp = hud_3d.camUp;
 				const float forwardDist = hud_3d.frontOffsetDist;
-				const float upOffset = hud_3d.savezoneMax_y * 0.9f;
+				const float upOffset = hud_3d.savezoneMax_y * 0.85f;
 				
 				Transform newXform;
 				newXform.position = camPos + (forwardDist * camFront) + (camUp * upOffset);

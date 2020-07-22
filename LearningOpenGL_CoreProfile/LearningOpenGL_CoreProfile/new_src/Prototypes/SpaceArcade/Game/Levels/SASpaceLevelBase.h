@@ -9,7 +9,7 @@ namespace SA
 	class Star;
 	class Planet;
 	class SpaceLevelConfig;
-	class ServerGameMode_Base;
+	class ServerGameMode_SpaceBase;
 	class RNG;
 	struct EndGameParameters;
 
@@ -30,13 +30,14 @@ namespace SA
 		const sp<RNG>& getGenerationRNG() { return generationRNG; } //non-const as user is likely about to modify state of RNG
 		bool hasLevelConfig() { return levelConfig != nullptr; }
 		virtual bool isTestLevel() { return false; }
-		ServerGameMode_Base* getServerGameMode();
+		ServerGameMode_SpaceBase* getServerGameMode_SpaceBase();
 		void endGame(const EndGameParameters& endParameters);
 	protected:
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
 		virtual void postConstruct() override;
 		virtual void tick_v(float dt_sec) override;
+		virtual sp<ServerGameMode_Base> onServerCreateGameMode() override;
 	protected:
 		//#TODO this will need to be read from a saved config file or something instead. Same for local stars.
 		virtual void onCreateLocalPlanets() {};
@@ -57,7 +58,7 @@ namespace SA
 		std::vector<sp<Planet>> planets;
 		sp<SA::Shader> forwardShadedModelShader;
 	protected:
-		sp<ServerGameMode_Base> gamemode = nullptr;
+		sp<ServerGameMode_SpaceBase> spaceGameMode = nullptr;
 	private: //implementation helpers
 		bool bGeneratingLocalStars = false;
 		sp<RNG> generationRNG = nullptr;

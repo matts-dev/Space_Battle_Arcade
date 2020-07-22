@@ -15,7 +15,7 @@
 #include "../../../../../GameFramework/SALevel.h"
 #include "../../../../Levels/SASpaceLevelBase.h"
 #include "../../../../../GameFramework/SALevelSystem.h"
-#include "../../../../GameModes/ServerGameMode_Base.h"
+#include "../../../../GameModes/ServerGameMode_SpaceBase.h"
 #include "../../../../../Tools/SAUtilities.h"
 #include "../../../../GameSystems/SAModSystem.h"
 #include "../../../../SpaceArcade.h"
@@ -169,9 +169,9 @@ namespace SA
 				//dynamic cast will only happen until we get a gamemode, which should be first frame
 				if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
 				{
-					if (ServerGameMode_Base* serverGameMode = spaceLevel->getServerGameMode())
+					if (ServerGameMode_SpaceBase* serverGameMode = spaceLevel->getServerGameMode_SpaceBase())
 					{
-						cacheGM = serverGameMode->requestTypedReference_Nonsafe<ServerGameMode_Base>();
+						cacheGM = serverGameMode->requestTypedReference_Nonsafe<ServerGameMode_SpaceBase>();
 					}
 				}
 			}

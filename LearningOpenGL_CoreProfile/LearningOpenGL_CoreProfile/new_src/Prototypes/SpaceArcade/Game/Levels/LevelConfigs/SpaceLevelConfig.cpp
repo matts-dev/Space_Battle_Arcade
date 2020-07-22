@@ -330,9 +330,9 @@ namespace SA
 		}
 	}
 
-	sp<SA::ServerGameMode_Base> createGamemodeFromTag(const std::string& tag)
+	sp<SA::ServerGameMode_SpaceBase> createGamemodeFromTag(const std::string& tag)
 	{
-		sp<ServerGameMode_Base> newGamemode = nullptr;
+		sp<ServerGameMode_SpaceBase> newGamemode = nullptr;
 
 		if (tag == TAG_GAMEMODE_CARRIER_TAKEDOWN)
 		{

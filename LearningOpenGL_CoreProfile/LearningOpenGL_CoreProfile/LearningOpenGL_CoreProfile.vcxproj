@@ -148,6 +148,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\developer_console\DeveloperConsole.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\GameMode\ServerGameMode_Base.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SAIControllable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\mix_ins\CustomGrid_MixIn.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.h" />
@@ -191,7 +192,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_Base.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_SpaceBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_CarrierTakedown.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SAUISystem_Game.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SystemData\SATickGroups.h" />
@@ -505,6 +506,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\developer_console\DeveloperConsole.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\GameMode\ServerGameMode_Base.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\mix_ins\CustomGrid_MixIn.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.cpp" />
@@ -535,7 +537,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_Base.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_SpaceBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_CarrierTakedown.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SAUISystem_Game.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SystemData\SATickGroups.cpp" />
