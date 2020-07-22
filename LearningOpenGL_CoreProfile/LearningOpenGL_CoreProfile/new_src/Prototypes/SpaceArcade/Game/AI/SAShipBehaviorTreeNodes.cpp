@@ -283,8 +283,8 @@ namespace SA
 				}
 			}
 
-			//if someone is targeting, try to use them as a target if appropraite
-			if (attackerToTarget)
+			//if someone is targeting, try to use them as a target if appropriate
+			if (attackerToTarget && myShip)
 			{
 				//if our current target has engaged us, the handler for attackers changing will have cleared the staged attacker to target
 				vec3 toAttacker = attackerToTarget->getWorldPosition() - myShip->getWorldPosition();

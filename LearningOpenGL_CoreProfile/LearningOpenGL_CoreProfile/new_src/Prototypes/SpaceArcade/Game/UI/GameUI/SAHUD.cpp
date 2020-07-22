@@ -37,10 +37,34 @@ namespace SA
 #endif
 	}
 
+	void HUD::tryRegenerateTeamWidgets()
+	{
+		//alternatively we could hook into level changed events and update, but there potentially is some data races. 
+		//so for now doing a check in a tick to hopefully get this project complete.
+		size_t numTeams = 2; //#TODO refactor gamemode to be part of framework and get number of teams
+		
+		if (numTeams != teamHealthBars.size())
+		{
+			//grow array
+			for(size_t teamIdx = teamHealthBars.size(); teamIdx < numTeams; ++teamIdx)
+			{
+				teamHealthBars.push_back(new_sp<Widget3D_TeamProgressBar>(playerIdx, teamIdx));
+			}
+
+			//shrink array
+			if (numTeams < teamHealthBars.size())
+			{
+				teamHealthBars.resize(numTeams); 
+			}
+		}
+	}
+
 	void HUD::handleGameUIRender(GameUIRenderData& rd_ui)
 	{
 		if (bRenderHUD)
 		{
+			tryRegenerateTeamWidgets();
+
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// this is a bit of a hack. originally I anticipated a distance of 10.f in front of hud was a good amount
@@ -90,6 +114,35 @@ namespace SA
 			energyBarTextXform.position += statusBarTextOffset;
 			energyBar->setTextTransform(energyBarTextXform);
 			energyBar->renderGameUI(rd_ui); //must come after transform update
+
+			////////////////////////////////////////////////////////
+			// configure team bars
+			////////////////////////////////////////////////////////
+			if (teamHealthBars.size() > 0)
+			{
+				float teamTopPerc = 0.25f; //we're spacing them out within the top X% of the screen.
+				float percOffset = 1.f / float(teamHealthBars.size() - 1); //-1 because this works out for spacing for count of 2
+
+				vec3 layoutDirection_v = hudData.camRight * (2*hudData.savezoneMax_x) * teamTopPerc;
+				vec3 layoutStart_p = hudCenterPoint + (hudData.camUp * hudData.savezoneMax_y * 0.95f) - 0.5f*layoutDirection_v;
+				for (size_t teamIdx = 0; teamIdx < teamHealthBars.size(); ++teamIdx)
+				{
+					//bar xform
+					Transform xform;
+					xform.position = layoutStart_p + layoutDirection_v * (float(teamIdx) * percOffset);
+					float barScaleFactor = 0.25f;
+					xform.scale = vec3(barScaleFactor / float(teamHealthBars.size()), 0.1f, 1.f);
+					xform.rotQuat = rd_ui.camQuat();
+					teamHealthBars[teamIdx]->setBarTransform(xform);
+
+					//text xform
+					xform.position += hudData.camUp * hudData.savezoneMax_y * -0.05f;
+					xform.scale = vec3(hudData.textScale * 0.75f);
+					teamHealthBars[teamIdx]->setTextTransform(xform);
+
+					teamHealthBars[teamIdx]->renderGameUI(rd_ui);
+				}
+			}
 
 			if (spriteShader)
 			{

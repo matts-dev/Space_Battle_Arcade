@@ -111,6 +111,11 @@ namespace SA
 		size_t getPlayerPreferredTeam() { return playerPreferredTeam; }
 		void setPlayerPreferredTeam(size_t team) { playerPreferredTeam = team; }
 
+		bool teamHasName(size_t teamIdx) const;
+		std::string getTeamName(size_t teamIdx) const;
+		void setTeamName(size_t teamIdx, const std::string& newName);
+
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// difficulty
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +144,7 @@ namespace SA
 		std::map<std::string, sp<ProjectileConfig>> projectileConfigsByName;
 		std::vector<sp<SettingsProfileConfig>> settingsProfiles;
 		std::vector<sp<CampaignConfig>> campaigns;
+		std::vector<std::string> teamNames;
 		sp<SaveGameConfig> saveGameData;
 		sp<DifficultyConfig> difficulty;
 	};

@@ -895,8 +895,10 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		char strBuffer[256];
 		constexpr size_t strBufferSize = sizeof(strBuffer) / sizeof(strBuffer[0]);
 
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+
 		ImGui::Separator();
-		if (activeConfig)
+		if (activeConfig && activeMod)
 		{
 			////////////////////////////////////////////////////////
 			// controlling default configs for mod
@@ -935,7 +937,15 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			for (size_t teamIdx = 0; teamIdx < activeConfig->teamData.size(); ++teamIdx)
 			{
 				TeamData& teamData = activeConfig->teamData[teamIdx];
-				snprintf(strBuffer, strBufferSize, "Team %d", teamIdx);
+				if (activeMod->teamHasName(teamIdx))
+				{
+					std::string teamName = activeMod->getTeamName(teamIdx);
+					snprintf(strBuffer, strBufferSize, teamName.c_str(), teamIdx);
+				}
+				else
+				{
+					snprintf(strBuffer, strBufferSize, "Team %d", teamIdx);
+				}
 				if (ImGui::CollapsingHeader(strBuffer))
 				{
 					snprintf(strBuffer, strBufferSize, "Team Tint %d", teamIdx);
@@ -949,6 +959,14 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					snprintf(strBuffer, strBufferSize, "projectile Color %d", teamIdx);
 					ImGui::ColorPicker3(strBuffer, &teamData.projectileColor.r);
 					ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
+
+					static char inputNameBuffer[2048];
+					ImGui::InputText("Team Name", inputNameBuffer, sizeof(inputNameBuffer));
+					if (ImGui::Button("Commit Team Name"))
+					{
+						activeMod->setTeamName(teamIdx, inputNameBuffer);
+						activeMod->writeToFile();
+					}
 				}
 			}
 			ImGui::Separator();

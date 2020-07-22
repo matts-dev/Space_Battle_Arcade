@@ -14,6 +14,10 @@
 #include "../AssetConfigs/CampaignConfig.h"
 #include "../AssetConfigs/SaveGameConfig.h"
 #include "../AssetConfigs/DifficultyConfig.h"
+#include <stdio.h>
+#include "../AssetConfigs/JsonUtils.h"
+#include "../../Tools/SAUtilities.h"
+#include "../../Tools/PlatformUtils.h"
 
 using json = nlohmann::json;
 
@@ -246,6 +250,41 @@ namespace SA
 		return MODS_DIRECTORY + getModName() + std::string("/");
 	}
 
+	bool Mod::teamHasName(size_t teamIdx) const
+	{
+		return Utils::isValidIndex(teamNames, teamIdx) && teamNames[teamIdx].size() != 0;
+	}
+
+	std::string Mod::getTeamName(size_t teamIdx) const
+	{
+		if (teamHasName(teamIdx))
+		{
+			return teamNames[teamIdx];
+		}
+		else
+		{
+			char teamString[2048];
+			snprintf(teamString, sizeof(teamString), "Team %d", teamIdx + 1);
+			return teamString;
+		}
+	}
+
+	void Mod::setTeamName(size_t teamIdx, const std::string& newName)
+	{
+		while (teamNames.size() < (teamIdx+1))
+		{
+			teamNames.push_back(""); //push empty strings to signal this does not have a name
+		}
+		if (Utils::isValidIndex(teamNames, teamIdx))
+		{
+			teamNames[teamIdx] = newName;
+		}
+		else
+		{
+			STOP_DEBUGGER_HERE(); //logical error, this shouldn't have happend!
+		}
+	}
+
 	std::string Mod::serialize()
 	{
 		json teamDefaultCarrierData;
@@ -255,11 +294,18 @@ namespace SA
 			teamDefaultCarrierData.push_back(carrierName);
 		}
 
+		json j_teamNames;
+		for (const std::string& teamName : teamNames)
+		{
+			j_teamNames.push_back(teamName);
+		}
+
 		json j =
 		{
 			{"modName", modName},
 			{"bIsDeletable", bIsDeletable},
-			{"teamDefaultCarriers", teamDefaultCarrierData }
+			{"teamDefaultCarriers", teamDefaultCarrierData },
+			{ SYMBOL_TO_STR(teamNames), j_teamNames }
 		};
 
 		return j.dump(4);
@@ -282,6 +328,16 @@ namespace SA
 			for (size_t teamIdx = 0; teamIdx < teamCarrierData.size() && MAX_TEAM_NUM; ++teamIdx)
 			{
 				defaultCarrierSpawnConfigNamesByTeamIdx.push_back(teamCarrierData[teamIdx]);
+			}
+		}
+		if (JsonUtils::hasArray(j, SYMBOL_TO_STR(teamNames)))
+		{
+			const json& j_teamName = j[SYMBOL_TO_STR(teamNames)];
+
+			teamNames.clear();
+			for (size_t size = 0; size < j_teamName.size(); ++size)
+			{
+				teamNames.push_back(j_teamName[size]);
 			}
 		}
 	}

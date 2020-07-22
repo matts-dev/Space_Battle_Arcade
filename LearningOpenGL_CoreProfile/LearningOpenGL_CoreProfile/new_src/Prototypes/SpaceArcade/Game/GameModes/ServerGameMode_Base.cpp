@@ -551,7 +551,7 @@ namespace SA
 	{
 		if (Utils::isValidIndex(teamData, hit.objectiveTeam))
 		{
-			const GameModeTeamData& team = teamData[hit.objectiveTeam];
+			GameModeTeamData& team = teamData[hit.objectiveTeam];
 			size_t objectivesAboveGoal = team.numObjectivesAlive - team.goal_numObjectives;
 
 			if (bool bTryGamemodeHit = objectivesAboveGoal > team.discrepancyForGameModeHit)

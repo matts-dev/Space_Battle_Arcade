@@ -1,6 +1,7 @@
 #pragma once
 #include "../Widget3D_Base.h"
 #include "../../../../../Tools/DataStructures/AdvancedPtrs.h"
+#include <detail/setup.hpp>
 
 namespace SA
 {
@@ -62,6 +63,23 @@ namespace SA
 		virtual void renderGameUI(GameUIRenderData& renderData);
 	protected:
 		virtual void postConstruct() override;
+	};
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// team health bar
+	/////////////////////////////////////////////////////////////////////////////////////
+	class Widget3D_TeamProgressBar : public Widget3D_PlayerStatusBarBase
+	{
+		using Parent = Widget3D_PlayerStatusBarBase;
+	public:
+		Widget3D_TeamProgressBar(size_t playerIdx, size_t teamIdx);
+	protected:
+		virtual void postConstruct() override;
+	public:
+		virtual void renderGameUI(GameUIRenderData& renderData);
+	private:
+		size_t teamIdx;
+		fwp<class ServerGameMode_Base> cacheGM = nullptr;
 	};
 }
 

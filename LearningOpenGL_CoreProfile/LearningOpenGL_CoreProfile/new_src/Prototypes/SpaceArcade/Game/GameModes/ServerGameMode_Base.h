@@ -33,17 +33,17 @@ namespace SA
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//mutable data that is updated each frame for decision making
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		mutable float percentAlive_Carriers = 1.f;
-		mutable float percentAlive_Objectives = 1.f;
-		mutable size_t numObjectivesAtStart = 0;
-		mutable size_t numCarriersAlive = 0;
-		mutable size_t numObjectivesAlive = 0;
-		mutable size_t activeHitsAgainstTeam = 0;
-		mutable bool bIsPlayerTeam = false;
+		float percentAlive_Carriers = 1.f;
+		float percentAlive_Objectives = 1.f;
+		size_t numObjectivesAtStart = 0;
+		size_t numCarriersAlive = 0;
+		size_t numObjectivesAlive = 0;
+		size_t activeHitsAgainstTeam = 0;
+		bool bIsPlayerTeam = false;
 
 		//mutable data that is set to apply pressure to this team to match other teams
-		mutable size_t goal_numObjectives = 0;
-		mutable float lastGameModeHitSec = 0.f;
+		size_t goal_numObjectives = 0;
+		float lastGameModeHitSec = 0.f;
 	};
 
 	////////////////////////////////////////////////////////
@@ -94,6 +94,7 @@ namespace SA
 		size_t getNumTeams() const { return numTeams; }
 		void addTurretNeedingTarget(const sp<ShipPlacementEntity>& turret);
 		void addHealerNeedingTarget(const sp<ShipPlacementEntity>& healer);
+		const std::vector<GameModeTeamData>& getTeamData() { return teamData; }
 	protected:
 		virtual void onInitialize(const sp<SpaceLevelBase>& level);
 		void endGame(const EndGameParameters& endParameters);

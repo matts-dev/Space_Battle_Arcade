@@ -12,6 +12,13 @@
 #include "../../../../../GameFramework/SAWorldEntity.h"
 #include "../../../../../GameFramework/Components/GameplayComponents.h"
 #include "../../../../Components/ShipEnergyComponent.h"
+#include "../../../../../GameFramework/SALevel.h"
+#include "../../../../Levels/SASpaceLevelBase.h"
+#include "../../../../../GameFramework/SALevelSystem.h"
+#include "../../../../GameModes/ServerGameMode_Base.h"
+#include "../../../../../Tools/SAUtilities.h"
+#include "../../../../GameSystems/SAModSystem.h"
+#include "../../../../SpaceArcade.h"
 namespace SA
 {
 	Widget3D_PlayerStatusBarBase::Widget3D_PlayerStatusBarBase(size_t playerIdx)
@@ -87,7 +94,7 @@ namespace SA
 	{
 		Parent::postConstruct();
 		textProgressBar->myText->setText("Health");
-		textProgressBar->myProgressBar->setSlantRotation_rad(glm::radians<float>(HEALTH_BAR_SLANT_RAD));
+		textProgressBar->myProgressBar->setSlantRotation_rad(HEALTH_BAR_SLANT_RAD);
 		textProgressBar->myProgressBar->setLeftToRight(true);
 	}
 
@@ -121,7 +128,7 @@ namespace SA
 	{
 		Parent::postConstruct();
 		textProgressBar->myText->setText("Energy");
-		textProgressBar->myProgressBar->setSlantRotation_rad(glm::radians<float>(-HEALTH_BAR_SLANT_RAD));
+		textProgressBar->myProgressBar->setSlantRotation_rad(-HEALTH_BAR_SLANT_RAD);
 		textProgressBar->myProgressBar->setLeftToRight(false);
 	}
 
@@ -139,6 +146,75 @@ namespace SA
 		}
 
 		Parent::renderGameUI(rd);
+	}
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// team health/progress bar
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	Widget3D_TeamProgressBar::Widget3D_TeamProgressBar(size_t playerIdx, size_t inTeamIdx) : Parent(playerIdx), teamIdx(inTeamIdx)
+	{
+
+	}
+
+	void Widget3D_TeamProgressBar::postConstruct()
+	{
+		Parent::postConstruct();
+
+		//TODO_lookup_fighter_for_team_and_cache_color_for_lasers;
+		if (!cacheGM) //#multiplayer clients are currently reading from gamemode, need to refactor this to read from gamestate
+		{
+			if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+			{
+				//dynamic cast will only happen until we get a gamemode, which should be first frame
+				if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+				{
+					if (ServerGameMode_Base* serverGameMode = spaceLevel->getServerGameMode())
+					{
+						cacheGM = serverGameMode->requestTypedReference_Nonsafe<ServerGameMode_Base>();
+					}
+				}
+			}
+		}
+
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			if (activeMod->teamHasName(teamIdx))
+			{
+				textProgressBar->myText->setText(activeMod->getTeamName(teamIdx));
+			}
+			else
+			{
+				char teamString[2048];
+				snprintf(teamString, sizeof(teamString), "Team %d", teamIdx + 1);
+				textProgressBar->myText->setText(teamString);
+			}
+		}
+		textProgressBar->myProgressBar->setSlantRotation_rad(0.f);
+	}
+
+	void Widget3D_TeamProgressBar::renderGameUI(GameUIRenderData& renderData)
+	{
+		if (cacheGM)
+		{
+			const std::vector<GameModeTeamData> gmTeamData = cacheGM->getTeamData();
+			if (Utils::isValidIndex(gmTeamData, teamIdx))
+			{
+				const GameModeTeamData& td = gmTeamData[teamIdx];
+				textProgressBar->myProgressBar->setProgressNormalized(td.percentAlive_Objectives);
+			}
+			else
+			{
+				textProgressBar->myText->setText("Invalid team idx");
+				textProgressBar->myProgressBar->setProgressNormalized(0.f);
+			}
+		}
+		else
+		{
+			textProgressBar->myText->setText("no gamestate data");
+		}
+
+		Parent::renderGameUI(renderData);
 	}
 
 }

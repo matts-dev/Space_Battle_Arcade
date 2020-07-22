@@ -1,5 +1,6 @@
 #pragma once
 #include "../../../GameFramework/SAGameEntity.h"
+#include <vector>
 
 namespace SA
 {
@@ -9,6 +10,7 @@ namespace SA
 	class Shader;
 	class Widget3D_HealthBar;
 	class Widget3D_EnergyBar;
+	class Widget3D_TeamProgressBar;
 
 #define HUD_FONT_TEST 0
 
@@ -24,6 +26,8 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 	private:
+		void tryRegenerateTeamWidgets();
+	private:
 		bool bRenderHUD = true;
 		size_t playerIdx = 0; //#todo #splitscreen
 		sp<Texture_2D> reticleTexture;
@@ -33,6 +37,8 @@ namespace SA
 		sp<Widget3D_HealthBar> healthBar;
 		sp<Widget3D_EnergyBar> energyBar;
 
+		std::vector<sp<Widget3D_TeamProgressBar>> teamHealthBars;
+		
 #if HUD_FONT_TEST 
 		sp<class Widget3D_DigitalClockFontTest> fontTest = nullptr;
 #endif

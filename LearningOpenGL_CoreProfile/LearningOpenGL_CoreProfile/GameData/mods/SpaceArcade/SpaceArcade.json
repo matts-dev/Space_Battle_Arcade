@@ -7,5 +7,9 @@
         "Carrier",
         "Carrier",
         "Carrier"
+    ],
+    "teamNames": [
+        "Blue Team",
+        "Red Team"
     ]
 }
