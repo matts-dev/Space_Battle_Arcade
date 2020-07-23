@@ -67,6 +67,13 @@ namespace SA
 		return ret;
 	}
 
+	sp<SA::LaserUIObject> LaserUIPool::requestLaserObject(std::vector<sp<LaserUIObject>>& outContainer)
+	{
+		sp<SA::LaserUIObject> laser = requestLaserObject();
+		outContainer.push_back(laser);
+		return laser;
+	}
+
 	static const char* const laserShader_vs = R"(
 				#version 330 core
 

@@ -101,6 +101,8 @@ namespace SA
 		static glm::vec3 defaultColor;			//non const to allow changing of defaults
 		virtual ~LaserUIPool();
 		sp<LaserUIObject> requestLaserObject();
+		sp<LaserUIObject> requestLaserObject(std::vector<sp<LaserUIObject>>& outContainer); 
+		
 		void releaseLaser(sp<LaserUIObject>& out); //will null out shared pointer for you as a signal it was released
 		void assignRandomOffscreenMode(LaserUIObject& laser);
 

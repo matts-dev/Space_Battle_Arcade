@@ -1,6 +1,7 @@
 #pragma once
 #include "Widget3D_Base.h"
 #include "../../../../Tools/DataStructures/SATransform.h"
+#include "MainMenuScreens/Widget3D_ActivatableBase.h"
 
 
 namespace SA
@@ -19,7 +20,7 @@ namespace SA
 	//			relative to camera at custom configurations.
 	//		update slant rotation if you prefer a parallelogram to a box
 	/////////////////////////////////////////////////////////////////////////////////////
-	class Widget3D_ProgressBar : public Widget3D_Base
+	class Widget3D_ProgressBar : public Widget3D_ActivatableBase
 	{
 	public:
 		Widget3D_ProgressBar(bool bInCameraRelative = true) : bCameraRelative(bInCameraRelative)
@@ -32,8 +33,11 @@ namespace SA
 		void setSlantRotation_rad(float slantRot_rad) { barSlantRotation_rad = slantRot_rad; }
 		void setLeftToRight(bool bProgressFromLeft) { bLeftToRight = bProgressFromLeft; }
 		void setTransform(const Transform& inXform) { xform = inXform; }
+	protected:
+		virtual void onActivationChanged(bool bActive);
 	private:
 		void updateLasers(bool bResetAnimation);
+		bool hasLasers();
 	public:
 		float valueScale_visualAdjustment = 0.99f; //below zero values will cause maximum capacity to be slightly lower than 100% to communicate which direction is direction of progress
 	private:
@@ -49,6 +53,7 @@ namespace SA
 		sp<LaserUIObject> laser_boxLeft;
 		sp<LaserUIObject> laser_boxBottom;
 		sp<LaserUIObject> laser_boxRight;
+		std::vector<sp<LaserUIObject>> laserCollection;
 	};
 
 

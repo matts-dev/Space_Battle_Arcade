@@ -602,7 +602,8 @@ namespace SA
 			const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0);
 			player->setControlTarget(sp<IControllable>(nullptr));
 
-			if (ShipCamera* shipCamera = dynamic_cast<ShipCamera*>(player->getCamera().get()))
+			//default FPS camera does'nt handle quaternions really well and causes offscreen UI to be visible
+			//if (ShipCamera* shipCamera = dynamic_cast<ShipCamera*>(player->getCamera().get()))
 			{
 				//only set up new camera if player has started controlling a ship.
 				//set up a new camera so that the ship camera is cleared from player.

@@ -16,6 +16,8 @@
 #include "../../../GameFramework/GameMode/ServerGameMode_Base.h"
 #include "../../../GameFramework/SALevel.h"
 #include "../../../GameFramework/SALevelSystem.h"
+#include "../../../GameFramework/SAPlayerBase.h"
+#include "../../../GameFramework/SAPlayerSystem.h"
 
 using namespace glm;
 
@@ -97,6 +99,10 @@ namespace SA
 			// calculations
 			////////////////////////////////////////////////////////
 
+			const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(playerIdx);
+			IControllable* controlTarget = player ? player->getControlTarget() : nullptr;
+			bool bHasControlTarget = controlTarget != nullptr;
+
 			vec3 hudCenterPoint = hudData.camPos + (hudData.frontOffsetDist * hudData.camFront);
 			vec2 statusBarOffsetPerc{ 0.75f, -0.8f};
 			//vec3 healthBarLoc = hudCenterPoint;
@@ -106,10 +112,11 @@ namespace SA
 			vec3 energyBarLoc = hudCenterPoint + hudData.camRight * (statusBarOffsetPerc.x*hudData.savezoneMax_x) + hudData.camUp * (statusBarOffsetPerc.y *hudData.savezoneMax_y);
 			vec3 statusBarTextOffset = (hudData.camUp * hudData.savezoneMax_y * /*perc*/0.1f);
 			
+			//calculated out of control branch so debugging code can read these transforms
 			Transform healthBarXform;
 			healthBarXform.rotQuat = rd_ui.camQuat();
 			healthBarXform.position = healthBarLoc;
-			healthBarXform.scale = vec3(2.f,1.f,1.f) * distScaleCorrection;
+			healthBarXform.scale = vec3(2.f, 1.f, 1.f) * distScaleCorrection;
 			healthBar->setBarTransform(healthBarXform);
 			Transform healthBarTextXform = healthBarXform;
 			healthBarTextXform.scale = vec3(hudData.textScale);
@@ -127,9 +134,14 @@ namespace SA
 			energyBar->renderGameUI(rd_ui); //must come after transform update
 
 			////////////////////////////////////////////////////////
+			// respawn widget
+			////////////////////////////////////////////////////////
+			respawnWidget->renderGameUI(rd_ui);
+
+			////////////////////////////////////////////////////////
 			// configure team bars
 			////////////////////////////////////////////////////////
-			if (teamHealthBars.size() > 0)
+			if (teamHealthBars.size() > 0 && (bHasControlTarget || respawnWidget->isRespawning()))
 			{
 				float teamTopPerc = 0.25f; //we're spacing them out within the top X% of the screen.
 				float percOffset = 1.f / float(teamHealthBars.size() - 1); //-1 because this works out for spacing for count of 2
@@ -174,7 +186,6 @@ namespace SA
 				}
 			}
 
-			respawnWidget->renderGameUI(rd_ui);
 #if HUD_FONT_TEST 
 			fontTest->renderGameUI(rd_ui);
 #endif

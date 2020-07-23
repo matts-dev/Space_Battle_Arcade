@@ -1,5 +1,6 @@
 #pragma once
 #include "../Widget3D_Base.h"
+#include "../MainMenuScreens/Widget3D_ActivatableBase.h"
 #include "../../../../../Tools/DataStructures/AdvancedPtrs.h"
 #include <detail/setup.hpp>
 
@@ -14,16 +15,17 @@ namespace SA
 	/////////////////////////////////////////////////////////////////////////////////////
 	// player status bar base -- shared functionality between player status bars
 	/////////////////////////////////////////////////////////////////////////////////////
-	class Widget3D_PlayerStatusBarBase : public Widget3D_Base
+	class Widget3D_PlayerStatusBarBase : public Widget3D_ActivatableBase
 	{
-		using Parent = Widget3D_Base;
+		using Parent = Widget3D_ActivatableBase;
 	public:
 		Widget3D_PlayerStatusBarBase(size_t playerIdx);
 		void setBarTransform(const Transform& xform); //should be called before calling renderGameUI if there needs to be an update
-		virtual void renderGameUI(GameUIRenderData& renderData) override;
 		void setTextTransform(Transform xform);
+		virtual void renderGameUI(GameUIRenderData& renderData) override;
 	protected:
 		virtual void postConstruct() override;
+		virtual void onActivationChanged(bool bActive);
 		const fwp<PlayerBase>& getMyPlayer() { return myPlayer; }
 	private:
 		void registerPlayerEvents();

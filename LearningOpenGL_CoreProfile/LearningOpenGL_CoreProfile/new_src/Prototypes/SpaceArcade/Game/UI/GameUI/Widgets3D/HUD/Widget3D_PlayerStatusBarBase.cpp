@@ -46,6 +46,11 @@ namespace SA
 		registerPlayerEvents();
 	}
 
+	void Widget3D_PlayerStatusBarBase::onActivationChanged(bool bActive)
+	{
+		textProgressBar->myProgressBar->activate(bActive);
+	}
+
 	void Widget3D_PlayerStatusBarBase::registerPlayerEvents()
 	{
 		if (myPlayer)
@@ -65,10 +70,15 @@ namespace SA
 		if (WorldEntity* controlTarget_we = newTarget ? newTarget->asWorldEntity() : nullptr)
 		{
 			myControlTarget = controlTarget_we->requestTypedReference_Safe<WorldEntity>();
+			activate(true);
 		}
 		else
 		{
-			STOP_DEBUGGER_HERE(); //currently expecting all control targets to be world entities, did this change? feel free to remove this.
+			activate(false);
+			if (newTarget)
+			{
+				STOP_DEBUGGER_HERE(); //currently expecting all control targets to be world entities, did this change? feel free to remove this.
+			}
 		}
 
 	}
@@ -100,18 +110,19 @@ namespace SA
 
 	void Widget3D_HealthBar::renderGameUI(GameUIRenderData& rd)
 	{
-
-		if (const HitPointComponent* hpComp = myControlTarget ? myControlTarget->getGameComponent<HitPointComponent>() : nullptr)
+		if (myControlTarget)
 		{
-			const HitPoints& hp = hpComp->getHP();
-			textProgressBar->myProgressBar->setProgressOnRange(hp.current, 0, hp.max);
+			if (const HitPointComponent* hpComp = myControlTarget->getGameComponent<HitPointComponent>() )
+			{
+				const HitPoints& hp = hpComp->getHP();
+				textProgressBar->myProgressBar->setProgressOnRange(hp.current, 0, hp.max);
+			}
+			else
+			{
+				textProgressBar->myProgressBar->setProgressNormalized(0);//can't get health comp, show 0
+			}
+			Parent::renderGameUI(rd); //only render if we have a control target.
 		}
-		else
-		{
-			textProgressBar->myProgressBar->setProgressNormalized(0);//can't get health comp, show 0
-		}
-
-		Parent::renderGameUI(rd);
 	}
 
 
@@ -134,18 +145,20 @@ namespace SA
 
 	void Widget3D_EnergyBar::renderGameUI(GameUIRenderData& rd)
 	{
-		if (const ShipEnergyComponent* energyComp = myControlTarget ? myControlTarget->getGameComponent<ShipEnergyComponent>() : nullptr)
+		if (myControlTarget)
 		{
-			float energy = energyComp->getEnergy();
-			float maxEnergy = energyComp->getMaxEnergy();
-			textProgressBar->myProgressBar->setProgressOnRange(energy, 0, maxEnergy);
+			if (const ShipEnergyComponent* energyComp = myControlTarget->getGameComponent<ShipEnergyComponent>() )
+			{
+				float energy = energyComp->getEnergy();
+				float maxEnergy = energyComp->getMaxEnergy();
+				textProgressBar->myProgressBar->setProgressOnRange(energy, 0, maxEnergy);
+			}
+			else
+			{
+				textProgressBar->myProgressBar->setProgressNormalized(0);//can't get enegy component, show 0
+			}
+			Parent::renderGameUI(rd);
 		}
-		else
-		{
-			textProgressBar->myProgressBar->setProgressNormalized(0);//can't get enegy component, show 0
-		}
-
-		Parent::renderGameUI(rd);
 	}
 
 

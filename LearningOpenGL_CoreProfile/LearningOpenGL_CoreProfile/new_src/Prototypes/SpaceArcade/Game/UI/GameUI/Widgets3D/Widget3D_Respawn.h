@@ -15,6 +15,7 @@ namespace SA
 		virtual void postConstruct();
 	public:
 		virtual void renderGameUI(struct GameUIRenderData& renderData);
+		bool isRespawning() const { return bIsRespawning; }
 	private:
 		void handleRespawnStarted(float timeUntilRespawn);
 		void handleRespawnOver(bool bSuccess);
