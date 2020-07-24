@@ -87,7 +87,7 @@ namespace SA
 			for (const sp<RenderModelEntity>& entity : renderEntities) 
 			{
 				forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
-				entity->draw(*forwardShadedModelShader);
+				entity->render(*forwardShadedModelShader);
 			}
 		}
 		else

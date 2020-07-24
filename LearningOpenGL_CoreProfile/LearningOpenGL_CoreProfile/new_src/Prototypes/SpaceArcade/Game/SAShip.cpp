@@ -316,13 +316,13 @@ namespace SA
 		bRenderAvoidanceSpheres = bNewRenderAvoidance;
 	}
 
-	void Ship::draw(Shader& shader)
+	void Ship::render(Shader& shader)
 	{
 		glm::mat4 configuredModelXform = collisionData->getRootXform(); //#TODO #REFACTOR this ultimately comes from the spawn config, it is somewhat strange that we're reading this from collision data.But we need this to render models to scale.
 		glm::mat4 rawModel = getTransform().getModelMatrix();
 		shader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(rawModel * configuredModelXform)); //unfortunately the spacearcade game is setting this uniform, so we're hitting this hot code twice.
 		shader.setUniform3f("objectTint", cachedTeamData.teamTint);
-		RenderModelEntity::draw(shader);
+		RenderModelEntity::render(shader);
 
 		if (avoidanceSpheres.size() > 0 && Ship::bRenderAvoidanceSpheres)
 		{
@@ -339,7 +339,7 @@ namespace SA
 			{
 				if (placement)
 				{
-					placement->draw(shader);
+					placement->render(shader);
 				}
 			}
 		};

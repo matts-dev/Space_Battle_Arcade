@@ -65,7 +65,7 @@ namespace SA
 		virtual void postConstruct() override;
 		virtual void onDestroyed() override; 
 	public:
-		virtual void draw(Shader& shader) override;
+		virtual void render(Shader& shader) override;
 		virtual glm::vec3 getWorldPosition() const;
 		glm::vec3 getWorldForward_n() const;
 		glm::vec3 getLocalForward_n() const { return forward_ln; }
@@ -205,7 +205,7 @@ namespace SA
 		virtual void postConstruct() override;
 		virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig) override;
 		virtual void onDestroyed();
-		virtual void draw(Shader& shader) override;
+		virtual void render(Shader& shader) override;
 		virtual void onTargetSet(TargetType* rawTarget) override;
 	private:
 		static sp<Model3D> seekerModel;

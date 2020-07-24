@@ -16,7 +16,7 @@ namespace SA
 			constView(inModel)
 		{}
 		const sp<const Model3D>& getModel() const { return constView; }
-		virtual void draw(Shader& shader);
+		virtual void render(Shader& shader);
 
 	protected:
 		const sp<Model3D>& getMyModel() const { return model; }

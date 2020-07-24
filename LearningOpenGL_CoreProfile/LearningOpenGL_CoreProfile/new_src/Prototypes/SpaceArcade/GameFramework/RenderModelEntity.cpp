@@ -10,7 +10,7 @@ namespace SA
 		constView = newModel;
 	}
 
-	void RenderModelEntity::draw(Shader& shader)
+	void RenderModelEntity::render(Shader& shader)
 	{
 		getModel()->draw(shader);
 	}

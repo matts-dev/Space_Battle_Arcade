@@ -1419,7 +1419,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 								if (bModelXray) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
 
 								model3DShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(placement->getParentXLocalModelMatrix()));
-								placement->draw(*model3DShader);
+								placement->render(*model3DShader);
 
 								if (bModelXray) { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 							}

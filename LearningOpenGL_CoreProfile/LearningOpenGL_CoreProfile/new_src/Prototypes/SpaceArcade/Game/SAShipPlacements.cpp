@@ -107,14 +107,14 @@ namespace SA
 	//	Parent::tick(dt_sec);
 	//}
 
-	void ShipPlacementEntity::draw(Shader& shader)
+	void ShipPlacementEntity::render(Shader& shader)
 	{
 		if (!isPendingDestroy())
 		{
 			if (getModel())
 			{
 				shader.setUniformMatrix4fv(modelMatrixUniform.c_str(), 1, GL_FALSE, glm::value_ptr(cachedModelMat_PxL));
-				RenderModelEntity::draw(shader);
+				RenderModelEntity::render(shader);
 			}
 #if SA_RENDER_DEBUG_INFO
 			if (collisionData)
@@ -1058,9 +1058,9 @@ namespace SA
 		targetRequest.waitBeforeRequestSec += placementRNG->getFloat<float>(0, variabilityInTargetWaitSec);
 	}
 
-	void CommunicationPlacement::draw(Shader& shader)
+	void CommunicationPlacement::render(Shader& shader)
 	{
-		Parent::draw(shader);
+		Parent::render(shader);
 
 		using namespace glm;
 		if (activeSeeker)
