@@ -27,6 +27,7 @@ namespace SA
 	class UIRootWindow;
 	class HUD;
 	class DeveloperConsole;
+	class PlayerPilotAssistUI;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// The game implementation for the space arcade game.
@@ -132,6 +133,7 @@ namespace SA
 		sp<UIRootWindow> ui_root_editor;
 		sp<HUD> hud; //#TODO would like to move this to player class, but it will become very easy for circular references to become a thing, the HUDs needs to live external to player but be associated with player
 		sp<DeveloperConsole> console;
+		sp<PlayerPilotAssistUI> playerPilotAssistUI;
 	};
 
 }

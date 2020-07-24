@@ -78,18 +78,31 @@ namespace SA
 
 	void UISystem_Game::runGameUIPass() const
 	{
+
 		//start logic guard
 		bRenderingGameUI = true;
 
-		GameUIRenderData uiRenderData;
-		batchData = DCFont::BatchData{}; //clear batch data
-		onUIGameRender.broadcast(uiRenderData);
-
-		//commit any pending batch renders
-		if (const RenderData* renderData = uiRenderData.renderData())
+		const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
+		for (size_t playerIdx = 0; playerIdx < allPlayers.size(); ++playerIdx)
 		{
-			defaultTextBatcher->renderBatched(*renderData, batchData);
+			//only render UI for non-simulating players
+			if (!allPlayers[playerIdx]->isPlayerSimulation())
+			{
+				GameUIRenderData uiRenderData;
+				uiRenderData.playerIdx = playerIdx;
+
+				batchData = DCFont::BatchData{}; //clear batch data
+				onUIGameRender.broadcast(uiRenderData);
+
+				//commit any pending batch renders
+				if (const RenderData* renderData = uiRenderData.renderData())
+				{
+					defaultTextBatcher->renderBatched(*renderData, batchData);
+				}
+			}
 		}
+
+		onUIGameRenderComplete.broadcast();
 
 		//cleanup logic guard
 		bRenderingGameUI = true;
@@ -372,7 +385,7 @@ namespace SA
 		if (!_camera.has_value())
 		{
 			PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
-			if (const sp<PlayerBase>& player = playerSystem.getPlayer(0))
+			if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
 			{
 				_camera = player->getCamera();
 			}

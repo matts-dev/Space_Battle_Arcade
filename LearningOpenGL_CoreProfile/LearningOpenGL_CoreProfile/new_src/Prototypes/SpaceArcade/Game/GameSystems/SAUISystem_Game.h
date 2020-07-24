@@ -60,6 +60,7 @@ namespace SA
 		void handleMouseButtonPressed(int button, int action, int mods);
 	public:
 		mutable MultiDelegate<GameUIRenderData&> onUIGameRender;
+		mutable MultiDelegate<> onUIGameRenderComplete;
 		char textProcessingBuffer[16384];												//a shared temporary buffer for formatted processing, intended to be only used in game thread.
 	private:
 		SH::SpatialHashGrid<IMouseInteractable> spatialHashGrid{glm::vec3(10.f)};		//a grid for efficient button-mouse collision testing.
@@ -92,6 +93,7 @@ namespace SA
 	{
 		template<typename T> using optional = std::optional<T>;
 	public:
+		size_t				playerIdx = 0;
 		float				dt_sec();
 		glm::ivec2			framebuffer_Size();
 		int					frameBuffer_MinDimension();

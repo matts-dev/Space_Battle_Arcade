@@ -31,7 +31,7 @@ namespace SA
 
 	namespace BehaviorTree
 	{
-		constexpr bool ENABLE_DEBUG_LINES = true;
+		constexpr bool ENABLE_DEBUG_LINES = false;
 
 		using TargetType = WorldEntity;
 		using SecondaryTargetContainer = std::vector<lp<TargetType>>;

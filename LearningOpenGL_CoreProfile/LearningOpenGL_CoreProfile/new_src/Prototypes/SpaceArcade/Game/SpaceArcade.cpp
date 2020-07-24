@@ -47,6 +47,7 @@
 #include "Levels/MainMenuLevel.h"
 #include "Levels/EnigmaTutorials/EnigmaTutorialsLevel.h"
 #include "GameSystems/SystemData/SATickGroups.h"
+#include "UI/GameUI/Widgets3D/HUD/PlayerPilotAssistUI.h"
 
 namespace SA
 {
@@ -97,6 +98,7 @@ namespace SA
 		ui_root_editor = new_sp<UIRootWindow>();
 		hud = new_sp<HUD>();
 		console = new_sp<DeveloperConsole>();
+		playerPilotAssistUI = new_sp<PlayerPilotAssistUI>();
 
 		//make sure resources are loaded before the level starts
 		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
