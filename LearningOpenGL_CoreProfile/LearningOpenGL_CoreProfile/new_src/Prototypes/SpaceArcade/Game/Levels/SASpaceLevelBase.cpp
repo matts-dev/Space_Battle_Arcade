@@ -34,6 +34,11 @@
 #include "../AssetConfigs/CampaignConfig.h"
 #include "../SAPlayer.h"
 #include <xutility>
+#include "../Rendering/CustomGameShaders.h"
+#include "../AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
+#include "../AI/SAShipBehaviorTreeNodes.h"
+#include "../../GameFramework/RenderModelEntity.h"
+#include "../../GameFramework/SAWorldEntity.h"
 
 namespace SA
 {
@@ -43,7 +48,7 @@ namespace SA
 	{
 		using glm::vec3; using glm::mat4;
 
-		GameBase& game = GameBase::get();
+		SpaceArcade& game = SpaceArcade::get();
 
 		const sp<PlayerBase>& zeroPlayer = game.getPlayerSystem().getPlayer(0);
 		const RenderData* FRD = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber());
@@ -70,6 +75,48 @@ namespace SA
 			}
 			ec(glClear(GL_DEPTH_BUFFER_BIT));
 
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// prepare stencil highlight data
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			const std::vector<sp<PlayerBase>>& allPlayers = game.getPlayerSystem().getAllPlayers();
+			if (game.bEnableStencilHighlights)
+			{
+				for (const sp<PlayerBase>& player : allPlayers)
+				{
+					if (IControllable* controlTarget = player->getControlTarget())
+					{
+						if (WorldEntity* controlTarget_we = controlTarget->asWorldEntity())
+						{
+							if (const BrainComponent* brainComp = controlTarget_we->getGameComponent<BrainComponent>())
+							{
+								if (const BehaviorTree::Tree* tree = brainComp->getTree())
+								{
+									BehaviorTree::Memory& memory = tree->getMemory();
+									if (const BehaviorTree::ActiveAttackers* attackerMap = memory.getReadValueAs<BehaviorTree::ActiveAttackers>(BT_AttackersKey))
+									{
+										for (auto& iter : *attackerMap)
+										{
+											if (iter.second.attacker)
+											{
+												//dynamic cast sucks, but this will likely only be a few per frame. alternatively could set up a component for this. #nextengine in general, find a design to remove this issue of subclass casting
+												if (RenderModelEntity* attacker = dynamic_cast<RenderModelEntity*>(iter.second.attacker.fastGet()))
+												{
+													stencilHighlightEntities.push_back(attacker);
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+
+			CustomGameShaders& gameCustomShaders = SpaceArcade::get().getGameCustomShaders();
+			gameCustomShaders.forwardModelShader = forwardShadedModelShader;
+
 			//#todo a proper system for renderables should be set up; these uniforms only need to be set up front, not during each draw. It may also be advantageous to avoid virtual calls.
 			forwardShadedModelShader->use();
 			forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
@@ -84,10 +131,69 @@ namespace SA
 			}
 			forwardShadedModelShader->setUniform3f("cameraPosition", camera->getPosition());
 			forwardShadedModelShader->setUniform1i("material.shininess", 32);
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// custom target highlighting pass
+			//
+			// render ship again, but this time writing to stencil buffer
+			// render scaled up ship with highlight shader, but only if passes stencil and depth test.
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			uint32_t stencilHighlightBit = 1; //#stencil todo - define this in a global place so that all stencil bits can been seen in one location
+			if (stencilHighlightEntities.size() > 0)
+			{
+				//prepare_stencil_write;
+				ec(glEnable(GL_STENCIL_TEST));
+				ec(glStencilFunc(GL_ALWAYS, stencilHighlightBit, 0xFF)); //configure the bit to write/read
+				ec(glStencilMask(0xFF)); //enable writing to all bits of the stencil buffer
+				ec(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+				for (RenderModelEntity* highlightEntity : stencilHighlightEntities)
+				{
+					//render like normal, but writing to stencil buffer so that highlight will not overwrite object
+					forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(highlightEntity->getTransform().getModelMatrix()));
+					highlightEntity->render(*forwardShadedModelShader);
+				}
+				//clear_stencil_write;
+				ec(glStencilMask(0)); //disable writing to stencil buffer
+			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// regular rendering pass
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			for (const sp<RenderModelEntity>& entity : renderEntities) 
 			{
 				forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
 				entity->render(*forwardShadedModelShader);
+			}
+
+			if (stencilHighlightEntities.size() > 0)
+			{
+				ec(glStencilFunc(GL_NOTEQUAL, stencilHighlightBit, 0xFF)); //only render if we haven't stenciled this area
+
+				highlightForwardModelShader->use();
+
+				mat4 highlightScaleUp = glm::scale(mat4(1.f), vec3(2.f));
+				highlightForwardModelShader->setUniform1f("vertNormalOffsetScalar", 1.f);
+				highlightForwardModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
+				highlightForwardModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
+
+				/*vec3 highlightColor = vec3(0.8f);*/
+				vec3 highlightColor = vec3(0.5f,0,0);
+				highlightForwardModelShader->setUniform3f("color", highlightColor);
+
+				for (RenderModelEntity* highlightEntity : stencilHighlightEntities)
+				{
+					//set color to team color? will require component or something to get that information
+					highlightForwardModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(highlightEntity->getTransform().getModelMatrix()));
+					highlightEntity->render(*highlightForwardModelShader);
+				}
+				stencilHighlightEntities.clear(); //clear raw pointers so they will be regenerated next frame
+
+				//clean up stencil state so that other features can use stencil buffer
+				ec(glStencilMask(0xFF));
+				ec(glClear(GL_STENCIL_BUFFER_BIT)); 
+				ec(glStencilFunc(GL_ALWAYS, stencilHighlightBit, 0xFF)); //reset requirement that we haven't stenciled area
+				ec(glStencilMask(0x0)); //disable writes
+				ec(glDisable(GL_STENCIL_TEST));
 			}
 		}
 		else
@@ -272,6 +378,7 @@ namespace SA
 		LevelBase::startLevel_v();
 
 		forwardShadedModelShader = new_sp<SA::Shader>(spaceModelShader_forward_vs, spaceModelShader_forward_fs, false);
+		highlightForwardModelShader = new_sp<SA::Shader>(modelVertexOffsetShader_vs, fwdModelHighlightShader_fs, false);
 
 		//we don't know how many teams there will be after we load gamemode (in apply config), so make all teamcommands now
 		//#todo change this. this isn't great because we need team commanders to be around before spawning so they can be aware of when we spawn ships
@@ -290,6 +397,7 @@ namespace SA
 		//this can be avoided with static members or by some other mechanism, but I do not see 
 		//transitioning levels being a slow process currently, so each level gets its own shaders.
 		forwardShadedModelShader = nullptr;
+		highlightForwardModelShader = nullptr;
 
 		LevelBase::endLevel_v();
 	}
@@ -297,6 +405,8 @@ namespace SA
 	void SpaceLevelBase::postConstruct()
 	{
 		createTypedGrid<AvoidanceSphere>(glm::vec3(128));
+
+		stencilHighlightEntities.reserve(6);
 		
 		starField = onCreateStarField();
 		{ 

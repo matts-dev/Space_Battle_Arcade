@@ -57,6 +57,8 @@ namespace SA
 		std::vector<sp<Star>> localStars;
 		std::vector<sp<Planet>> planets;
 		sp<SA::Shader> forwardShadedModelShader;
+		sp<SA::Shader> highlightForwardModelShader;
+		std::vector<class RenderModelEntity*> stencilHighlightEntities;
 	protected:
 		sp<ServerGameMode_SpaceBase> spaceGameMode = nullptr;
 	private: //implementation helpers

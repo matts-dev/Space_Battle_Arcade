@@ -8,6 +8,7 @@
 #include "..\GameFramework\RenderModelEntity.h"
 #include "SAUniformResourceLocators.h"
 #include "OptionalCompilationMacros.h"
+#include "Rendering\CustomGameShaders.h"
 
 namespace SA
 {
@@ -87,6 +88,8 @@ namespace SA
 		void setEditorMainmenuFeatureEnabled(bool bEnabled) { bEditorMainMenuEnabled = bEnabled; }
 		void setClearColor(glm::vec3 inClearColor);
 		glm::vec3 getClearColor() const { return renderClearColor; }
+		const CustomGameShaders& getGameCustomShaders() const {return customShaders; }
+		CustomGameShaders& getGameCustomShaders(){ return customShaders; }
 	private:
 		bool bEditorMainMenuEnabled = true;
 		bool bEscapeShouldOpenEditorMenu = true;
@@ -105,6 +108,8 @@ namespace SA
 		bool bRenderProjectileOBBs = false;
 		bool bEnableDevConsoleFeature = true;
 		bool bEnableDebugEngineKeybinds = true;
+	public: //subclass engine config variables
+		bool bEnableStencilHighlights = true;
 
 	////////////////////////////////////////////////////////
 	// custom tick groups
@@ -126,6 +131,7 @@ namespace SA
 		sp<Shader> lampObjShader;
 		sp<Shader> forwardShaded_EmissiveModelShader;
 		sp<Shader> debugLineShader;
+		CustomGameShaders customShaders;
 
 		glm::vec3 renderClearColor{ 0.f };
 

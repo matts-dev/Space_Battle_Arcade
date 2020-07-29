@@ -512,8 +512,49 @@ namespace SA
 				}
 			)";
 
+			const char* const modelVertexOffsetShader_vs = R"(
+				#version 330 core
+				layout (location = 0) in vec3 position;			
+				layout (location = 1) in vec3 normal;	
+				layout (location = 2) in vec2 textureCoordinates;
+				
+				uniform float vertNormalOffsetScalar = 1.0f;
+				uniform mat4 model;
+				uniform mat4 view;
+				uniform mat4 projection;
 
+				out vec3 fragNormal;
+				out vec3 fragPosition;
+				out vec2 interpTextCoords;
 
+				void main(){
+					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
+					interpTextCoords = textureCoordinates;
+
+					vec3 normalOffset = normal*vertNormalOffsetScalar;
+					gl_Position = projection * view * model  * vec4(position + normalOffset, 1);
+					fragPosition = vec3(model * vec4(position + normalOffset, 1));
+				}
+			)";
+			const char* const fwdModelHighlightShader_fs = R"(
+				#version 330 core
+
+				out vec4 fragmentColor;
+
+				uniform vec3 color = vec3(1.f,1.f,1.f);
+
+				void main(){
+	
+					vec3 lightContribution = color;
+
+					#define TONE_MAP_FINAL_LIGHT 0
+					#if TONE_MAP_FINAL_LIGHT
+						lightContribution = (lightContribution) / (1 + lightContribution);
+					#endif
+
+					fragmentColor = vec4(lightContribution, 1.0f);
+				}
+			)";
 
 	const char* const lightLocationShader_VertSrc = R"(
 				#version 330 core

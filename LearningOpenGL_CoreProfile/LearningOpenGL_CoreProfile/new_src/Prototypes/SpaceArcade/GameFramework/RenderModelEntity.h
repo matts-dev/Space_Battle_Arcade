@@ -17,7 +17,7 @@ namespace SA
 		{}
 		const sp<const Model3D>& getModel() const { return constView; }
 		virtual void render(Shader& shader);
-
+		virtual void onLevelRender() {};
 	protected:
 		const sp<Model3D>& getMyModel() const { return model; }
 		void replaceModel(const sp<Model3D>& newModel);

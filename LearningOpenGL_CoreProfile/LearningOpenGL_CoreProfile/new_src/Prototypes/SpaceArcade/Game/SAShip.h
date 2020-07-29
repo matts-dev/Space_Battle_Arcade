@@ -68,6 +68,7 @@ namespace SA
 		// Interface and Virtuals
 		////////////////////////////////////////////////////////
 		virtual void render(Shader& shader) override;
+		//virtual void onLevelRender() override;
 		void onDestroyed() override;
 
 		////////////////////////////////////////////////////////

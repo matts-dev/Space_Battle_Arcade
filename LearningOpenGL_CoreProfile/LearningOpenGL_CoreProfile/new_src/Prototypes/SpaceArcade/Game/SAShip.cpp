@@ -51,7 +51,7 @@ namespace SA
 	// statics 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/*static*/ bool Ship::bRenderAvoidanceSpheres = false;
-	
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// methods
@@ -59,7 +59,7 @@ namespace SA
 
 	Ship::Ship(const SpawnData& spawnData)
 		: RenderModelEntity(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
-		collisionData(spawnData.spawnConfig->toCollisionInfo()), 
+		collisionData(spawnData.spawnConfig->toCollisionInfo()),
 		cachedTeamIdx(spawnData.team)
 	{
 		overlappingNodes_SH.reserve(10);
@@ -84,7 +84,7 @@ namespace SA
 			//only creating this if it will be used makes debugging easier
 			fighterSpawnComp = createGameComponent<FighterSpawnComponent>(); //perhaps shouldn't cache this? right now it is owned by shared ptr which will have some overhead for access; should be unique ptr once flow for postConstruct is defined there too (if possible)
 		}
-		
+
 		////////////////////////////////////////////////////////
 		// any extra component configuration
 		////////////////////////////////////////////////////////
@@ -147,9 +147,9 @@ namespace SA
 		for (const sp<ShipPlacementEntity>& placement : turretEntities) { placement->onDestroyedEvent->addWeakObj(sp_this(), &Ship::handlePlacementDestroyed); }
 
 		activeGenerators = generatorEntities.size();
-		activeTurrets =  turretEntities.size();
+		activeTurrets = turretEntities.size();
 		activeCommunications = communicationEntities.size();
-		
+
 		if (fighterSpawnComp)
 		{
 			fighterSpawnComp->onSpawnedEntity.addWeakObj(sp_this(), &Ship::handleSpawnedEntity);
@@ -168,7 +168,7 @@ namespace SA
 		SpaceArcadeCheatSystem& cheatSystem = static_cast<SpaceArcadeCheatSystem&>(GameBase::get().getCheatSystem());
 		cheatSystem.oneShotShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_oneShotPlacements);
 		cheatSystem.destroyAllShipObjectivesCheat.addWeakObj(sp_this(), &Ship::cheat_destroyAllShipPlacements);
-		if(turretEntities.size() > 0) cheatSystem.turretsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_turretsTargetPlayer);
+		if (turretEntities.size() > 0) cheatSystem.turretsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_turretsTargetPlayer);
 		if (generatorEntities.size() > 0) cheatSystem.destroyAllGeneratorsCheat.addWeakObj(sp_this(), &Ship::cheat_destroyAllGenerators);
 		if (communicationEntities.size() > 0) cheatSystem.commsTargetPlayerCheat.addWeakObj(sp_this(), &Ship::cheat_commsTargetPlayer);
 #endif //COMPILE_CHEATS
@@ -231,7 +231,7 @@ namespace SA
 	float Ship::getMaxTurnAngle_PerSec() const
 	{
 		//if speeds are slower than 1.0, we increase the max turn radius. eg 1/0.5  = 2;
-		return glm::pi<float>() * glm::clamp(1.f / (currentSpeedFactor+0.0001f), 0.f, 3.f);
+		return glm::pi<float>() * glm::clamp(1.f / (currentSpeedFactor + 0.0001f), 0.f, 3.f);
 	}
 
 	void Ship::setVelocityDir(glm::vec3 inVelocity)
@@ -248,7 +248,7 @@ namespace SA
 
 		return customVelocityDir_n
 			* currentSpeedFactor * getMaxSpeed() * speedGamifier
-			* highEnergyBoost 
+			* highEnergyBoost
 			* adjustedBoost;
 	}
 
@@ -276,14 +276,14 @@ namespace SA
 			cachedTeamIdx = teamComp->getTeam();
 			const std::vector<TeamData>& teams = shipConfigData->getTeams();
 
-			if (cachedTeamIdx >= teams.size()) { cachedTeamIdx = 0;}
-		
+			if (cachedTeamIdx >= teams.size()) { cachedTeamIdx = 0; }
+
 			if (teams.size() > 0)
 			{
 				assert(teams.size() > cachedTeamIdx);
 				cachedTeamData = teams[cachedTeamIdx];
 
-				static auto applyTeamToObjectives = [](const std::vector<sp<ShipPlacementEntity>>& objectives, size_t teamIdx) 
+				static auto applyTeamToObjectives = [](const std::vector<sp<ShipPlacementEntity>>& objectives, size_t teamIdx)
 				{
 					for (const sp<ShipPlacementEntity>& entity : objectives)
 					{
@@ -315,6 +315,15 @@ namespace SA
 	{
 		bRenderAvoidanceSpheres = bNewRenderAvoidance;
 	}
+
+	//void Ship::onLevelRender()
+	//{
+	//	CustomGameShaders& gameCustomShaders = SpaceArcade::get().getGameCustomShaders();
+	//	if (gameCustomShaders.forwardModelShader)
+	//	{
+	//		render(*gameCustomShaders.forwardModelShader);
+	//	}
+	//}
 
 	void Ship::render(Shader& shader)
 	{

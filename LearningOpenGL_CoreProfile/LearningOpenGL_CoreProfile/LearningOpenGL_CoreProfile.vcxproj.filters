@@ -888,6 +888,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\HUD\PlayerPilotAssistUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Rendering\CustomGameShaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
