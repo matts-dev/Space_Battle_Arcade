@@ -18,6 +18,7 @@
 #include "../AssetConfigs/JsonUtils.h"
 #include "../../Tools/SAUtilities.h"
 #include "../../Tools/PlatformUtils.h"
+#include "../SpaceArcade.h"
 
 using json = nlohmann::json;
 
@@ -26,6 +27,15 @@ namespace SA
 	std::string getModConfigFilePath()
 	{
 		return MODS_DIRECTORY + std::string("config.json");
+	}
+
+	std::string convertModRelativePathToAbsolute(const std::string& modRelativePath)
+	{
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			return activeMod->getModDirectoryPath() + std::string("/") + modRelativePath;
+		}
+		return modRelativePath;
 	}
 
 	void Mod::addSpawnConfig(const sp<SpawnConfig>& spawnConfig)

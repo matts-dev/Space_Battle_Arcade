@@ -32,6 +32,7 @@ namespace SA
 		const TickGroupDefinition PRE_CAMERA			= TickGroupDefinition("PRE_CAMERA", 70.f);
 		const TickGroupDefinition CAMERA				= TickGroupDefinition("CAMERA", 75.f);
 		const TickGroupDefinition POST_CAMERA			= TickGroupDefinition("POST_CAMERA", 80.f);
+		const TickGroupDefinition AUDIO					= TickGroupDefinition("AUDIO", 90.f);
 
 		static const TickGroups& get();
 	};

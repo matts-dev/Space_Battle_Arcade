@@ -24,6 +24,7 @@
             ]
         },
         "primaryProjectileConfigName": "FighterLaser",
+        "sfx_engineLoop_path": "Assets\\Sounds\\ship_engine_fx.wav",
         "shapes": [
             {
                 "modelFilePath": "",

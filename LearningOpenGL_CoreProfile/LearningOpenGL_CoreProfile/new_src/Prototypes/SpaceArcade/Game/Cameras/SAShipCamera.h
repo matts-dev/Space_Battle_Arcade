@@ -29,6 +29,7 @@ namespace SA
 		virtual void tickKeyboardInput(float dt_sec) override;
 		virtual void onActivated() override;
 		virtual void onDeactivated() override;
+		virtual glm::vec3 getVelocity() const override;
 		void handleShipTransformChanged(const Transform& xform);
 		void handleCollision();
 		void handleShootPressed(int state, int modifier_keys);

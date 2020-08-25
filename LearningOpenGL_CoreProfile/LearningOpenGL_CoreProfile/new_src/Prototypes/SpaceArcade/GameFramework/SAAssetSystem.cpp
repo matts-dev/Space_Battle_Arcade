@@ -7,6 +7,12 @@
 #include "../Tools/ModelLoading/SAModel.h"
 #include "../Rendering/OpenGLHelpers.h"
 #include "../Rendering/Camera/Texture_2D.h"
+#include <dr_lib/dr_wav.h>
+#include "Audio/SoundRawData.h"
+#include "Audio/OpenALUtilities.h"
+#include "SAAudioSystem.h"
+#include "SAGameBase.h"
+#include "SALog.h"
 
 namespace SA
 {
@@ -69,6 +75,56 @@ namespace SA
 		}
 	}
 
+	AssetHandle<SoundRawData> AssetSystem::loadSound(const std::string& relative_filepath)
+	{
+		SoundRawData loadedData;
+		drwav_int16* pSampleData = drwav_open_file_and_read_pcm_frames_s16(relative_filepath.c_str(), &loadedData.channels, &loadedData.sampleRate, &loadedData.totalPCMFrameCount, nullptr);
+
+		bool bSuccess = true;
+		if (pSampleData == nullptr)
+		{
+			std::cerr << "failed to load audio file" << std::endl;
+			bSuccess = false;
+		}
+		if (loadedData.getTotalSamples() > drwav_uint64(std::numeric_limits<size_t>::max()))
+		{
+			std::cerr << "too much data in file for 32bit addressed vector" << std::endl;
+			bSuccess = false;
+		}
+
+		sp<SoundRawData> loadedDataPtr = nullptr;
+
+		if (bSuccess)
+		{
+			loadedData.pcmData.resize(size_t(loadedData.getTotalSamples()));
+			std::memcpy(loadedData.pcmData.data(), pSampleData, loadedData.pcmData.size() * /*twobytes_in_s16*/2);
+			loadedDataPtr = new_sp<SoundRawData>(std::move(loadedData));
+
+			loadedSoundPcmData.insert({ relative_filepath, loadedDataPtr });
+		}
+		else
+		{
+			logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "Failed to load sound %s", relative_filepath.c_str());
+			STOP_DEBUGGER_HERE();
+		}
+
+		drwav_free(pSampleData, /*allocation callbacks*/nullptr);
+
+		return loadedDataPtr;
+	}
+
+	AssetHandle<SoundRawData> AssetSystem::getSound(const std::string& relative_filepath)
+	{
+		auto findIter = loadedSoundPcmData.find(relative_filepath);
+		if (findIter != loadedSoundPcmData.end())
+		{
+			const sp<SoundRawData>& foundResult = findIter->second;
+			return foundResult;
+		}
+
+		return nullptr;
+	}
+
 	sp<SA::Texture_2D> AssetSystem::getNullBlackTexture() const
 	{
 		static sp<Texture_2D> nullTexture = new_sp<Texture_2D>(glm::vec3(0.f));
@@ -124,6 +180,115 @@ namespace SA
 
 		return bSuccess;
 	}
+
+#ifdef USE_OPENAL_API
+	ALuint AssetSystem::loadOpenAlBuffer(const std::string& relative_filepath)
+	{
+		auto previousLoad = assetPathToloadedAlBuffers.find(relative_filepath);
+		if (previousLoad != assetPathToloadedAlBuffers.end())
+		{
+			return previousLoad->second;
+		}
+		else
+		{
+			AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+			if (audioSystem.hasValidOpenALDevice())
+			{
+				AssetHandle<SoundRawData> soundPcmAsset = loadSound(relative_filepath);
+				if (const SA::SoundRawData* soundData = soundPcmAsset.getAsset())
+				{
+					ALuint alBuffer = 0;
+
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					//clear previous errors so we can safely read if we had an error creating a buffer
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					constexpr size_t numAlErrorsBeforeGiveup = 100;
+					size_t errorNumber = 0;
+					ALenum error = alGetError(); //clear any error
+					while (error != AL_NO_ERROR && errorNumber < numAlErrorsBeforeGiveup)
+					{
+						//log that we had a previous error before we attempted to fill a buffer
+						std::string errorCode = std::to_string(error);
+						log(__FUNCTION__, LogLevel::LOG_WARNING, "previous OpenAL errors before attempting to create buffer!");
+						log(__FUNCTION__, LogLevel::LOG_WARNING, errorCode.c_str());
+
+						error = alGetError(); //clear any error
+						++errorNumber;
+					}
+
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					//create buffer
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					//manual error checking so we know if we created a buffer
+					alGenBuffers(1, &alBuffer);
+					error = alGetError(); //see if creating buffer threw an error
+
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					// fill buffer
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					if (error == AL_NO_ERROR)
+					{
+						alBufferData(alBuffer,
+							soundData->channels > 1 ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16,
+							soundData->pcmData.data(),
+							soundData->pcmData.size() * 2 /*two bytes per sample*/,
+							soundData->sampleRate
+						);
+						error = alGetError(); //see if we failed to fill the buffer
+						if (error == AL_NO_ERROR)
+						{
+							assetPathToloadedAlBuffers.insert({ relative_filepath, alBuffer });
+							return alBuffer;
+						}
+						else
+						{
+							//clean up buffer since we created it but couldn't populate it
+							alec(alDeleteBuffers(1, &alBuffer))
+							std::string errorCode = std::to_string(error);
+							log(__FUNCTION__, LogLevel::LOG_WARNING, "failed to populate AL buffer");
+							log(__FUNCTION__, LogLevel::LOG_WARNING, errorCode.c_str());
+						}
+					}
+					else
+					{
+						std::string errorCode = std::to_string(error);
+						log(__FUNCTION__, LogLevel::LOG_WARNING, "failed to create AL buffer");
+						log(__FUNCTION__, LogLevel::LOG_WARNING, errorCode.c_str());
+					}
+				}
+			}
+		}
+		return 0;
+	}
+
+	bool AssetSystem::unloadOpenALBuffer(const std::string& relative_filepath)
+	{
+		auto previousLoad = assetPathToloadedAlBuffers.find(relative_filepath);
+		if (previousLoad != assetPathToloadedAlBuffers.end())
+		{
+			ALuint alBuffer = previousLoad->second;
+			alec(alDeleteBuffers(1, &alBuffer))
+
+			assetPathToloadedAlBuffers.erase(relative_filepath);
+
+			return true;
+		}
+		return false;
+	}
+
+	void AssetSystem::unloadAllOpenALBuffers()
+	{
+		log(__FUNCTION__, LogLevel::LOG, "Cleaning up audio buffers from asset system");
+		for (auto& kv_pair : assetPathToloadedAlBuffers)
+		{
+			ALuint buffer = kv_pair.second;
+			alec(alDeleteBuffers(1, &buffer));
+		}
+		assetPathToloadedAlBuffers.clear();
+		log(__FUNCTION__, LogLevel::LOG, "complete");
+	}
+
+#endif //USE_OPENAL_API
 
 	bool AssetSystem::loadTexture_internal(unsigned char* textureData, int img_width, int img_height, int img_nrChannels, const char* relative_filepath, GLuint& outTexId, int texture_unit /*= -1*/, bool useGammaCorrection /*= false*/)
 	{

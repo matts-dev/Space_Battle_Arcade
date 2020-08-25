@@ -81,6 +81,7 @@ namespace SA
 		const std::vector<FighterSpawnPoint>& getSpawnPoints() const { return spawnPoints; };
 		const glm::vec3 getModelFacingDir_n() { return modelFacingDir; }
 		const glm::quat getModelDefaultRotation();
+		const std::string& getSfxEngineLoopAssetPath() const { return sfx_engineLoop_path; }
 		
 	protected:
 		virtual void onSerialize(json& outData) override;
@@ -110,9 +111,10 @@ namespace SA
 		std::vector<FighterSpawnPoint> spawnPoints;
 		std::vector<std::string> spawnableConfigsByName;
 
-		//color/material
-		//team
 		std::vector<TeamData> teamData;
+
+		std::string sfx_engineLoop_path;
+
 	};
 
 

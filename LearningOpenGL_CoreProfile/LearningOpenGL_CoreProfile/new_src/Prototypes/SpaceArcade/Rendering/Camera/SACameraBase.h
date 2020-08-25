@@ -48,6 +48,9 @@ namespace SA
 		virtual const glm::vec3 getRight() const;
 		virtual const glm::vec3 getUp() const;
 
+		//game specific cameras can overload this to query the velocity of their current follow target or track velocity for previous frames
+		virtual glm::vec3 getVelocity() const { return glm::vec3{ 0.f }; }
+
 		const glm::vec3 getWorldUp_n() const { return worldUp_n; }
 
 		void setFOV(float inFOV);

@@ -20,6 +20,7 @@ namespace SA
 	class DebugRenderSystem;
 	class RenderSystem;
 	class CurveSystem;
+	class AudioSystem;
 
 	class Window;
 	
@@ -126,11 +127,13 @@ namespace SA
 		inline AutomatedTestSystem& getAutomatedTestSystem() noexcept { return *automatedTestSystem;  };
 		inline CheatSystemBase& getCheatSystem() { return *cheatSystem; }
 		inline CurveSystem& getCurveSystem() { return *curveSystem; }
+		inline AudioSystem& getAudioSystem() { return *audioSystem; }
 	private:
 		void createEngineSystems();
 		/**polymorphic systems require virtual override to define class. If nullptr detected these systems should create a default instance.*/
 		virtual sp<CheatSystemBase> createCheatSystemSubclass(){ return nullptr;}
 		virtual sp<CurveSystem> createCurveSystemSubclass();
+		virtual sp<AudioSystem> createAudioSystemSubclass();
 	protected:
 		virtual void onRegisterCustomSystem() {};
 		void RegisterCustomSystem(const sp<SystemBase>& system);
@@ -151,6 +154,7 @@ namespace SA
 		sp<RenderSystem> renderSystem;
 		sp<CheatSystemBase> cheatSystem;
 		sp<CurveSystem> curveSystem;
+		sp<AudioSystem> audioSystem;
 
 		std::set< sp<SystemBase> > systems;
 		std::set< sp<SystemBase> > postRenderNotifys;

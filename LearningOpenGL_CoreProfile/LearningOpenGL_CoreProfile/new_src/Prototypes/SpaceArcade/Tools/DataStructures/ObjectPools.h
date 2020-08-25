@@ -1,5 +1,6 @@
 #pragma once
 #include "../../GameFramework/SAGameEntity.h"
+#include <optional>
 
 namespace SA
 {
@@ -35,6 +36,41 @@ namespace SA
 
 	private:
 		std::vector<sp<T>> pool;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// primitve pool
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template<typename T>
+	class Pool
+	{
+	public:
+		std::optional<T> getInstance()
+		{
+			if (pool.size() > 0)
+			{
+				T instance = pool.back();
+				pool.pop_back();
+				return instance;
+			}
+			else
+			{
+				return std::nullopt;
+			}
+		}
+
+		void releaseInstance(const T& object)
+		{
+			pool.push_back(object);
+		}
+
+		void reserve(size_t size)
+		{
+			pool.reserve(size);
+		}
+
+	private:
+		std::vector<T> pool;
 	};
 
 }

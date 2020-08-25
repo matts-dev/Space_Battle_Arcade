@@ -57,6 +57,7 @@ namespace SA
 		void renderUI_Team();
 		void renderUI_Objectives();
 		void renderUI_Spawning();
+		void renderUI_Sounds();
 
 	private: 
 		/** INVARIANT: filepath has been checked to be a valid model file path */
@@ -66,8 +67,8 @@ namespace SA
 		void tryLoadCollisionModel(const char* filePath);
 		void updateCameras();
 		void updateCameraSpeed();
-
-
+	private: //implementation details
+		char engineSoundPathName[4096] = {};
 	private: 
 		bool bRenderAABB = true;
 		bool bRenderCollisionShapes = true;

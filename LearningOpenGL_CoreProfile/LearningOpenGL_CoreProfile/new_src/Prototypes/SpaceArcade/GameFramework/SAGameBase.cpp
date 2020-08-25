@@ -19,6 +19,7 @@
 #include "CurveSystem.h"
 #include "TimeManagement/TickGroupManager.h"
 #include "../Tools/PlatformUtils.h"
+#include "SAAudioSystem.h"
 
 namespace SA
 {
@@ -185,6 +186,10 @@ namespace SA
 		curveSystem = curveSystem ? curveSystem : new_sp<CurveSystem>();
 		systems.insert(curveSystem);
 
+		audioSystem = createAudioSystemSubclass();
+		audioSystem = audioSystem ? audioSystem : new_sp<AudioSystem>();
+		systems.insert(audioSystem);
+
 		//initialize custom subclass systems; 
 		//ctor warning: this is not done in gamebase ctor because it systems may call gamebase virtuals
 		bCustomSystemRegistrationAllowedTimeWindow = true;
@@ -195,6 +200,11 @@ namespace SA
 	sp<SA::CurveSystem> GameBase::createCurveSystemSubclass()
 	{
 		return new_sp<CurveSystem>();
+	}
+
+	sp<SA::AudioSystem> GameBase::createAudioSystemSubclass()
+	{
+		return new_sp<AudioSystem>();
 	}
 
 	void GameBase::subscribePostRender(const sp<SystemBase>& system)

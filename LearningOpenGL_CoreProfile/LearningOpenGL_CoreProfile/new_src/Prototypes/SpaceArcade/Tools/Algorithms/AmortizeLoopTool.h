@@ -14,10 +14,11 @@ namespace
 	void tick(float dt_sec)
 	{
 		static AmortizeLoopTool AmortizeLoopTool; //don't actually use local statics as they have thread safety overhead in cpp11+
-		AmortizeLoopTool.updateTick(items);
+		//AmortizeLoopTool.updateTick(items); //NOTE: this is't necssary if you use "UpdateStart" within loop.
 
 		//need to re-query stop each time if you're going to modify array within loop
-		for (size_t i = AmortizeLoopTool.getStartIdx(); i < AmortizeLoopTool.getStopIdxSafe(items); ++i){
+		//for (size_t i = AmortizeLoopTool.getStartIdx(); i < AmortizeLoopTool.getStopIdxSafe(items); ++i){
+		for (size_t i = AmortizeLoopTool.UpdateStart(); i < AmortizeLoopTool.getStopIdxSafe(items); ++i){
 			std::cout << items[i] << std::endl;
 		}
 		std::cout << "end tick" << std::endl;

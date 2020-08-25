@@ -26,6 +26,7 @@ namespace SA
 	const char* const MODS_DIRECTORY = "GameData/mods/";
 	std::string getModConfigFilePath();
 
+	std::string convertModRelativePathToAbsolute(const std::string& modRelativePath);
 
 	////////////////////////////////////////////////////////////////////
 	// Mod Objects

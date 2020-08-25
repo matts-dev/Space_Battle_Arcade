@@ -10,6 +10,8 @@ namespace SA
 {
 	class PlayerBase;
 
+#define MAX_LOCAL_PLAYERS 2
+
 	class PlayerSystem : public SystemBase
 	{
 	public:

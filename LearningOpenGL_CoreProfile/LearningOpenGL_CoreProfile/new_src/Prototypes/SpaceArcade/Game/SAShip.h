@@ -40,6 +40,7 @@ namespace SA
 	class ShipCamera;
 	class ShipPlacementEntity;
 	class WorldEntity;
+	class AudioEmitter;
 
 	namespace ShipUtilLibrary
 	{
@@ -188,6 +189,7 @@ namespace SA
 	private:
 		friend class ShipCameraTweakerWidget; //allow camera tweaker widget to modify ship properties in real time.
 		void tickKinematic(float dt_sec);
+		void tickSounds();
 		std::optional<glm::vec3> updateAvoidance(float dt_sec);
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
@@ -263,6 +265,8 @@ namespace SA
 		bool bCollisionReflectForward:1;
 		bool bEnableAvoidanceFields = true;
 		bool bAwakeBrainAfterStasis = false;
+
+		sp<AudioEmitter> sfx_engine;
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;

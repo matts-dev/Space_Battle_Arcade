@@ -37,6 +37,7 @@
 #include "AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
 #include "GameModes/ServerGameMode_SpaceBase.h"
 #include "../Tools/PlatformUtils.h"
+#include "../GameFramework/SAAudioSystem.h"
 
 namespace SA
 {
@@ -109,6 +110,27 @@ namespace SA
 				}
 			);
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// AUDIO
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+		std::string engineSfxPath = shipConfigData->getSfxEngineLoopAssetPath();
+		if (engineSfxPath.length() != 0)
+		{
+			sfx_engine = audioSystem.createEmitter();
+			sfx_engine->setSoundAssetPath(convertModRelativePathToAbsolute(engineSfxPath));
+			sfx_engine->setLooping(true);
+			sfx_engine->setMaxRadius(10.f);
+			//wait to tick sounds so that we do that after we've already generated all sounds
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// activate sounds after we have configured them
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		tickSounds(); //do an initial tick to apply position data to sounds before we activate them, this way we don't hear a blip on spawn as they're in the location location
+		if (sfx_engine) { sfx_engine->activateSound(true); }
+		
 	}
 
 	void Ship::postConstruct()
@@ -659,6 +681,9 @@ namespace SA
 		////////////////////////////////////////////////////////
 		tickKinematic(dt_sec);
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// handle VFX
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		Transform xform = getTransform();
 		if (!activeShieldEffect.expired())
 		{
@@ -714,6 +739,8 @@ namespace SA
 			fighterSpawnComp->tick(dt_sec);
 		}
 
+
+		tickSounds();
 	} 
 
 	void Ship::TryTargetPlayer()
@@ -961,6 +988,18 @@ namespace SA
 				debug.renderCube(xform.getModelMatrix(), color::brightGreen());
 			}
 #endif
+		}
+	}
+
+	void Ship::tickSounds()
+	{
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// handle sound
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		if (sfx_engine)
+		{
+			sfx_engine->setPosition(getWorldPosition());
+			sfx_engine->setVelocity(getVelocity());
 		}
 	}
 

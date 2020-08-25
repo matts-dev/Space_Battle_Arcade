@@ -11,6 +11,7 @@
 #include "../../GameFramework/SAAssetSystem.h"
 #include "../../GameFramework/SACollisionUtils.h"
 #include "../../../../../Libraries/nlohmann/json.hpp"
+#include "JsonUtils.h"
 
 
 using json = nlohmann::json;
@@ -168,6 +169,8 @@ namespace SA
 		serializePlacements(communicationPlacements,spawnData);
 		serializePlacements(turretPlacements,spawnData);
 		serializePlacements(defensePlacements,spawnData);
+
+		spawnData[SYMBOL_TO_STR(sfx_engineLoop_path)] = sfx_engineLoop_path;
 
 		outData.push_back({ "SpawnConfig", spawnData });
 	}
@@ -391,6 +394,7 @@ namespace SA
 						}
 					}
 				}
+				READ_JSON_STRING_OPTIONAL(sfx_engineLoop_path, spawnData);
 			}
 			else
 			{

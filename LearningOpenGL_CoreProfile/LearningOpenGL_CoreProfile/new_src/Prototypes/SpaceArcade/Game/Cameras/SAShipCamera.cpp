@@ -152,6 +152,16 @@ namespace SA
 		}
 	}
 
+	glm::vec3 ShipCamera::getVelocity() const
+	{
+		if (myShip)
+		{
+			return myShip->getVelocity();
+		}
+
+		return QuaternionCamera::getVelocity();
+	}
+
 	void ShipCamera::onMouseWheelUpdate_v(double xOffset, double yOffset)
 	{
 		//don't dt_sec for zoom controls as we don't want it to slow down with time dilation

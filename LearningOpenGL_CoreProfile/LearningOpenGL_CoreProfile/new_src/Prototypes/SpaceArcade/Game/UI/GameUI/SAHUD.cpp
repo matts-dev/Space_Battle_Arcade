@@ -96,9 +96,32 @@ namespace SA
 			float distScaleCorrection = hudData.frontOffsetDist / 10.f; //10.f is the default distance for hudData
 
 			////////////////////////////////////////////////////////
+			// draw reticle
+			////////////////////////////////////////////////////////
+			if (spriteShader)
+			{
+				//draw reticle
+				if (quadShape && reticleTexture && reticleTexture->hasAcquiredResources() && spriteShader)
+				{
+					float reticalSize = 0.015f * float(rd_ui.frameBuffer_MinDimension()); //X% of smallest screen dimension 
+
+					mat4 model(1.f);
+					model = glm::scale(model, vec3(reticalSize));
+
+					spriteShader->use();
+					spriteShader->setUniform1i("textureData", 0);
+					spriteShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+					spriteShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(rd_ui.orthographicProjection_m()));
+					reticleTexture->bindTexture(GL_TEXTURE0);
+					quadShape->render();
+				}
+			}
+
+			////////////////////////////////////////////////////////
 			// calculations
 			////////////////////////////////////////////////////////
-
+#define RENDER_PLAYER_HUD_ELEMENTS 1
+#if RENDER_PLAYER_HUD_ELEMENTS
 			const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(playerIdx);
 			IControllable* controlTarget = player ? player->getControlTarget() : nullptr;
 			bool bHasControlTarget = controlTarget != nullptr;
@@ -167,24 +190,7 @@ namespace SA
 				}
 			}
 
-			if (spriteShader)
-			{
-				//draw reticle
-				if (quadShape && reticleTexture && reticleTexture->hasAcquiredResources() && spriteShader)
-				{
-					float reticalSize = 0.015f * float(rd_ui.frameBuffer_MinDimension()); //X% of smallest screen dimension 
-
-					mat4 model(1.f);
-					model = glm::scale(model, vec3(reticalSize));
-
-					spriteShader->use();
-					spriteShader->setUniform1i("textureData", 0); 
-					spriteShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-					spriteShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(rd_ui.orthographicProjection_m()));
-					reticleTexture->bindTexture(GL_TEXTURE0); 
-					quadShape->render();
-				}
-			}
+#endif //RENDER_PLAYER_HUD_ELEMENTS
 
 #if HUD_FONT_TEST 
 			fontTest->renderGameUI(rd_ui);
@@ -210,9 +216,11 @@ namespace SA
 				////////////////////////////////////////////////////////
 				// render placement data
 				////////////////////////////////////////////////////////
+#if RENDER_PLAYER_HUD_ELEMENTS
 				db.renderSphere(healthBarXform.position, vec3(0.005f), vec3(1, 0, 0));
 				db.renderLine(hudData.camPos + camNudge, healthBarXform.position, vec3(1, 0, 0));
 				db.renderLine(hudData.camPos + camNudge, energyBarXform.position, vec3(0, 1, 0));
+#endif
 			}
 		}
 	}

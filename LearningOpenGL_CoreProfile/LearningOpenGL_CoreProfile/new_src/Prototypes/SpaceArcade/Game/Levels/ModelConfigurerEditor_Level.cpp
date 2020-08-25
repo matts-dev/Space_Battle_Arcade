@@ -37,6 +37,7 @@
 #include "../../Tools/SAUtilities.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
 #include "../../Tools/color_utils.h"
+#include <string>
 
 
 namespace
@@ -285,6 +286,10 @@ namespace SA
 			if (ImGui::CollapsingHeader("SPAWNING"))
 			{
 				renderUI_Spawning();
+			}
+			if (ImGui::CollapsingHeader("SOUNDS"))
+			{
+				renderUI_Sounds();
 			}
 			if (ImGui::CollapsingHeader("VIEWPORT UI", ImGuiTreeNodeFlags_DefaultOpen))
 			{
@@ -1219,6 +1224,26 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 			ImGui::Text("Select a ship config");
 		}
 		ImGui::Dummy(ImVec2(0, 20));
+	}
+
+	void ModelConfigurerEditor_Level::renderUI_Sounds()
+	{
+		ImGui::Separator();
+
+		if (activeConfig)
+		{
+			const std::string& sfxEngineLoopAssetPath = activeConfig->getSfxEngineLoopAssetPath();
+			ImGui::Text("Engine Loop SFX:");
+			ImGui::SameLine();
+			ImGui::Text(sfxEngineLoopAssetPath.c_str());
+			ImGui::InputText("Engine Loop SFX Mod Relative Path", engineSoundPathName, sizeof(engineSoundPathName));
+			if (ImGui::Button("save engine sound"))
+			{
+				std::string soundPath = engineSoundPathName;
+				activeConfig->sfx_engineLoop_path = soundPath;
+				activeConfig->save();
+			}
+		}
 	}
 
 	void ModelConfigurerEditor_Level::createNewSpawnConfig(const std::string& configName, const std::string& fullModelPath)

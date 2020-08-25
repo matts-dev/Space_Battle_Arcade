@@ -139,9 +139,13 @@
     <ClInclude Include="new_src\OpenGLAdvancedLighting\4_NormalMapping\ModelWithNormalMaps\Model_NM.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\EngineTests\EngineTestSuite.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\0.TestsFiles\CompilationTests\LifetimePointerSyntaxTest.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AssetManagement\AssetHandle.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Audio\OpenALUtilities.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Audio\SoundRawData.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\SABehaviorTreeTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\AutomatedTests\TimerTest.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\BehaviorTree_ProvidedNodes.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\BuildConfiguration\SAPreprocessorDefines.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\CheatSystemBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\CollisionComponent.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\CurveSystem.h" />
@@ -154,6 +158,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Interfaces\SATickable.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAudioSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTreeHelpers.h" />
@@ -343,6 +348,7 @@
     <ClCompile Include="8.ColorsPt1.cpp" />
     <ClCompile Include="9.BasicLighting1.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Libraries\dr_wav_impl.c" />
     <ClCompile Include="Libraries\imgui.1.69.gl\EXAMPLE.cpp" />
     <ClCompile Include="Libraries\imgui.1.69.gl\imgui.cpp" />
     <ClCompile Include="Libraries\imgui.1.69.gl\imgui_demo.cpp" />
@@ -512,6 +518,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\mix_ins\CustomGrid_MixIn.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\RenderModelEntity.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAIBrainBase.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAudioSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SAAutomatedTestSystem.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTreeHelpers.cpp" />
@@ -815,12 +822,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(SolutionDir)OPEN_AL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(SolutionDir)OPEN_AL_REQUIREMENTS\lib\OpenAL;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(SolutionDir)OPEN_AL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)OPEN_GL_REQUIREMENTS\lib;$(SolutionDir)OPEN_AL_REQUIREMENTS\lib\OpenAL;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)OPEN_GL_REQUIREMENTS\include;$(IncludePath)</IncludePath>
@@ -841,7 +848,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenAL32.lib;assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -870,7 +877,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenAL32.lib;assimp-vc140-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
