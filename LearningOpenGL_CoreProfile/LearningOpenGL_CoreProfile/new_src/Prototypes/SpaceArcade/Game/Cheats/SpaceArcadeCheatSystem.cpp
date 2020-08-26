@@ -20,6 +20,7 @@
 #include <vcruntime_exception.h>
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
 #include "../../GameFramework/SAWindowSystem.h"
+#include "../../GameFramework/SAAudioSystem.h"
 
 using namespace glm;
 
@@ -45,6 +46,9 @@ namespace SA
 		REGISTER_CHEAT("make_json_template_savegame", SpaceArcadeCheatSystem::cheat_make_json_template_savegame);
 		REGISTER_CHEAT("levelCheat_transitionToMainMenuLevel", SpaceArcadeCheatSystem::cheat_mainMenuTransitionTest);
 		REGISTER_CHEAT("unlock_And_Complete_All_Levels_In_Campaign", SpaceArcadeCheatSystem::cheat_unlockAndCompleteAllLevelsInCampaign);
+#if COMPILE_AUDIO_DEBUG_RENDERING_CODE
+		REGISTER_CHEAT("debug_sound", SpaceArcadeCheatSystem::cheat_debugSound);
+#endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
 	}
 
 	void SpaceArcadeCheatSystem::cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs)
@@ -209,6 +213,15 @@ namespace SA
 			}
 		}
 	}
+
+	void SpaceArcadeCheatSystem::cheat_debugSound(const std::vector<std::string>& cheatArgs)
+	{
+#if COMPILE_AUDIO_DEBUG_RENDERING_CODE
+		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+		audioSystem.bRenderSoundLocations = !audioSystem.bRenderSoundLocations;
+#endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
+	}
+
 #endif
 
 	void CheatStatics::givePlayerQuaternionCamera()

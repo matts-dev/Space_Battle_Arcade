@@ -3,6 +3,7 @@
 #include "BuildConfiguration/SAPreprocessorDefines.h"
 #ifdef USE_OPENAL_API
 #include<AL/al.h>
+#include "Audio/ALBufferWrapper.h"
 #endif
 
 #include "SASystemBase.h"
@@ -37,7 +38,7 @@ namespace SA
 		bool loadTexture(glm::vec3 solidColor, GLuint& outTexId, int texture_unit = -1, bool useGammaCorrection = false);
 
 #ifdef USE_OPENAL_API
-		ALuint loadOpenAlBuffer(const std::string& relative_filepath);
+		ALBufferWrapper loadOpenAlBuffer(const std::string& relative_filepath);
 		bool unloadOpenALBuffer(const std::string& relative_filepath);
 		void unloadAllOpenALBuffers();
 #endif
@@ -51,7 +52,7 @@ namespace SA
 		std::map<std::string, GLuint> loadedTextureIds; //open question as to whether asset system should be managing API memory
 		std::map<std::string, sp<SoundRawData>> loadedSoundPcmData;
 #ifdef USE_OPENAL_API
-		std::map<std::string, ALuint> assetPathToloadedAlBuffers;
+		std::map<std::string, ALBufferWrapper> assetPathToloadedAlBuffers;
 #endif
 	};
 }

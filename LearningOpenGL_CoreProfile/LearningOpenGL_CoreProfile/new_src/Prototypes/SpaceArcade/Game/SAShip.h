@@ -151,6 +151,7 @@ namespace SA
 		// Projectiles 
 		////////////////////////////////////////////////////////
 		void setPrimaryProjectile(const sp<ProjectileConfig>& projectileConfig);
+		void playerMuzzleSFX();
 		////////////////////////////////////////////////////////
 		// teams
 		////////////////////////////////////////////////////////
@@ -267,6 +268,8 @@ namespace SA
 		bool bAwakeBrainAfterStasis = false;
 
 		sp<AudioEmitter> sfx_engine;
+		sp<AudioEmitter> sfx_muzzle;
+		sp<AudioEmitter> sfx_explosion;
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;

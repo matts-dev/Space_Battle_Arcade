@@ -26,6 +26,7 @@ namespace SA
 		void cheat_make_json_template_savegame(const std::vector<std::string>& cheatArgs);
 		void cheat_mainMenuTransitionTest(const std::vector<std::string>& cheatArgs);
 		void cheat_unlockAndCompleteAllLevelsInCampaign(const std::vector<std::string>& cheatArgs);
+		void cheat_debugSound(const std::vector<std::string>& cheatArgs);
 	};
 
 

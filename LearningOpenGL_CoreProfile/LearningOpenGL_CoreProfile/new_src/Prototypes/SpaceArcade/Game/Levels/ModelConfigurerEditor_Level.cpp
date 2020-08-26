@@ -1232,17 +1232,43 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 		if (activeConfig)
 		{
-			const std::string& sfxEngineLoopAssetPath = activeConfig->getSfxEngineLoopAssetPath();
-			ImGui::Text("Engine Loop SFX:");
-			ImGui::SameLine();
-			ImGui::Text(sfxEngineLoopAssetPath.c_str());
-			ImGui::InputText("Engine Loop SFX Mod Relative Path", engineSoundPathName, sizeof(engineSoundPathName));
-			if (ImGui::Button("save engine sound"))
-			{
-				std::string soundPath = engineSoundPathName;
-				activeConfig->sfx_engineLoop_path = soundPath;
-				activeConfig->save();
+
+#define SFX_UI(name_cstr, sfx_getter, sfx_setter, text_temp_buffer)\
+			{\
+				static SoundEffectSubConfig sfxConfig = activeConfig->sfx_getter(); /*make a copy and use this to track data*/\
+				static int oneTimeInit = [this](const SoundEffectSubConfig& sfxConfig){ snprintf(text_temp_buffer, sizeof(text_temp_buffer), "%s", sfxConfig.assetPath.c_str()); return 0;}(sfxConfig);\
+				ImGui::Text(name_cstr " SFX:");\
+				ImGui::SameLine();\
+				ImGui::Text(sfxConfig.assetPath.c_str());\
+				ImGui::InputText(name_cstr " SFX Mod Relative Path", text_temp_buffer, sizeof(text_temp_buffer));\
+				ImGui::InputFloat("maxDistance " name_cstr , &sfxConfig.maxDistance);\
+				ImGui::Checkbox("bLooping " name_cstr , &sfxConfig.bLooping);\
+				static bool bPlayWindowProxy = sfxConfig.oneshotTimeoutSec.has_value();\
+				ImGui::Checkbox("fail to play time window" name_cstr, &bPlayWindowProxy);\
+				if(bPlayWindowProxy)\
+				{\
+					float timeProxy = sfxConfig.oneshotTimeoutSec.has_value() ? *sfxConfig.oneshotTimeoutSec : 0.f;\
+					if (ImGui::InputFloat("try To Play For X Seconds " name_cstr, &timeProxy))\
+					{\
+						sfxConfig.oneshotTimeoutSec = timeProxy; \
+					}\
+				}\
+				if (ImGui::Button("save sound: " name_cstr ))\
+				{\
+					sfxConfig.assetPath = text_temp_buffer;\
+					activeConfig->sfx_setter(sfxConfig);\
+					sfxConfig = activeConfig->sfx_getter();/*refresh our static copy*/\
+					activeConfig->save();\
+				}\
+				ImGui::Separator();\
 			}
+
+			//NOTE: these must have unique names for IMGUI to work correctly!
+			SFX_UI("Engine Loop", getConfig_sfx_engineLoop, setConfig_sfx_engineLoop, engineSoundPathName);
+			SFX_UI("Projectile Loop", getConfig_sfx_projectileLoop, setConfig_sfx_projectileLoop, projectileSoundPathName);
+			SFX_UI("Explosion", getConfig_sfx_explosion, setConfig_sfx_explosion, explosionSoundPathName);
+			SFX_UI("Muzzle Sound", getConfig_sfx_muzzle, setConfig_sfx_muzzle, muzzleSoundPathName);
+
 		}
 	}
 

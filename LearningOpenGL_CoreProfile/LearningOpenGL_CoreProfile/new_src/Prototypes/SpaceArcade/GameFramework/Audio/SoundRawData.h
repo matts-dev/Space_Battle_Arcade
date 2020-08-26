@@ -10,7 +10,9 @@ namespace SA
 		unsigned int channels = 0;
 		unsigned int sampleRate = 0;
 		drwav_uint64 totalPCMFrameCount = 0;
-		std::vector<uint16_t> pcmData;
+		std::vector<uint16_t> pcmData = {};
+	public:
+		float durationSec = 0.f;
 	public:
 		drwav_uint64 getTotalSamples() { return totalPCMFrameCount * channels; }
 	};

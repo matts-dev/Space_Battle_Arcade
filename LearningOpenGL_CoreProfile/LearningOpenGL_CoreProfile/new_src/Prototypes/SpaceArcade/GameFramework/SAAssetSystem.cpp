@@ -99,6 +99,11 @@ namespace SA
 			loadedData.pcmData.resize(size_t(loadedData.getTotalSamples()));
 			std::memcpy(loadedData.pcmData.data(), pSampleData, loadedData.pcmData.size() * /*twobytes_in_s16*/2);
 			loadedDataPtr = new_sp<SoundRawData>(std::move(loadedData));
+			//loadedData should now be considered empty!
+
+			//sample rate is samples per sec (generally 44100 hz)
+			//total frame count should be the same regardless if it is mono,stereo, etc.
+			loadedDataPtr->durationSec = float(loadedDataPtr->sampleRate) * float(loadedDataPtr->totalPCMFrameCount);
 
 			loadedSoundPcmData.insert({ relative_filepath, loadedDataPtr });
 		}
@@ -182,7 +187,7 @@ namespace SA
 	}
 
 #ifdef USE_OPENAL_API
-	ALuint AssetSystem::loadOpenAlBuffer(const std::string& relative_filepath)
+	ALBufferWrapper AssetSystem::loadOpenAlBuffer(const std::string& relative_filepath)
 	{
 		auto previousLoad = assetPathToloadedAlBuffers.find(relative_filepath);
 		if (previousLoad != assetPathToloadedAlBuffers.end())
@@ -197,7 +202,8 @@ namespace SA
 				AssetHandle<SoundRawData> soundPcmAsset = loadSound(relative_filepath);
 				if (const SA::SoundRawData* soundData = soundPcmAsset.getAsset())
 				{
-					ALuint alBuffer = 0;
+					ALBufferWrapper alWrapper = {};
+					alWrapper.durationSec = soundData->durationSec;
 
 					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					//clear previous errors so we can safely read if we had an error creating a buffer
@@ -208,10 +214,7 @@ namespace SA
 					while (error != AL_NO_ERROR && errorNumber < numAlErrorsBeforeGiveup)
 					{
 						//log that we had a previous error before we attempted to fill a buffer
-						std::string errorCode = std::to_string(error);
-						log(__FUNCTION__, LogLevel::LOG_WARNING, "previous OpenAL errors before attempting to create buffer!");
-						log(__FUNCTION__, LogLevel::LOG_WARNING, errorCode.c_str());
-
+						logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "previous OpenAL errors before attempting to create buffer! %d", int(error));
 						error = alGetError(); //clear any error
 						++errorNumber;
 					}
@@ -220,7 +223,7 @@ namespace SA
 					//create buffer
 					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					//manual error checking so we know if we created a buffer
-					alGenBuffers(1, &alBuffer);
+					alGenBuffers(1, &alWrapper.buffer);
 					error = alGetError(); //see if creating buffer threw an error
 
 					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +231,7 @@ namespace SA
 					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					if (error == AL_NO_ERROR)
 					{
-						alBufferData(alBuffer,
+						alBufferData(alWrapper.buffer,
 							soundData->channels > 1 ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16,
 							soundData->pcmData.data(),
 							soundData->pcmData.size() * 2 /*two bytes per sample*/,
@@ -237,28 +240,25 @@ namespace SA
 						error = alGetError(); //see if we failed to fill the buffer
 						if (error == AL_NO_ERROR)
 						{
-							assetPathToloadedAlBuffers.insert({ relative_filepath, alBuffer });
-							return alBuffer;
+							assetPathToloadedAlBuffers.insert({ relative_filepath, alWrapper});
+							return alWrapper;
 						}
 						else
 						{
-							//clean up buffer since we created it but couldn't populate it
-							alec(alDeleteBuffers(1, &alBuffer))
-							std::string errorCode = std::to_string(error);
-							log(__FUNCTION__, LogLevel::LOG_WARNING, "failed to populate AL buffer");
-							log(__FUNCTION__, LogLevel::LOG_WARNING, errorCode.c_str());
+							alec(alDeleteBuffers(1, &alWrapper.buffer)); //clean up buffer since we created it but couldn't populate it
+							logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "failed to populate AL buffer %d", int(error));
 						}
 					}
 					else
 					{
-						std::string errorCode = std::to_string(error);
-						log(__FUNCTION__, LogLevel::LOG_WARNING, "failed to create AL buffer");
-						log(__FUNCTION__, LogLevel::LOG_WARNING, errorCode.c_str());
+						logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "failed to create AL buffer %d", int(error));
 					}
 				}
 			}
 		}
-		return 0;
+
+		ALBufferWrapper nullBuffer;
+		return nullBuffer;
 	}
 
 	bool AssetSystem::unloadOpenALBuffer(const std::string& relative_filepath)
@@ -266,7 +266,7 @@ namespace SA
 		auto previousLoad = assetPathToloadedAlBuffers.find(relative_filepath);
 		if (previousLoad != assetPathToloadedAlBuffers.end())
 		{
-			ALuint alBuffer = previousLoad->second;
+			ALuint alBuffer = previousLoad->second.buffer;
 			alec(alDeleteBuffers(1, &alBuffer))
 
 			assetPathToloadedAlBuffers.erase(relative_filepath);
@@ -281,7 +281,7 @@ namespace SA
 		log(__FUNCTION__, LogLevel::LOG, "Cleaning up audio buffers from asset system");
 		for (auto& kv_pair : assetPathToloadedAlBuffers)
 		{
-			ALuint buffer = kv_pair.second;
+			ALuint buffer = kv_pair.second.buffer;
 			alec(alDeleteBuffers(1, &buffer));
 		}
 		assetPathToloadedAlBuffers.clear();

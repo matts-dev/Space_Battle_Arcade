@@ -9,6 +9,7 @@
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/ObjectPools.h"
+#include "../AssetConfigs/SoundEffectSubConfig.h"
 
 namespace SA
 {
@@ -16,6 +17,9 @@ namespace SA
 	class ProjectileConfig;
 	class LevelBase;
 	class WorldEntity;
+	class AudioEmitter;
+
+	struct SoundEffectSubConfig;
 
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +48,7 @@ namespace SA
 		bool forceRelease;
 		bool bHit;
 		sp<const Model3D> model;
+		sp<AudioEmitter> soundEmitter = nullptr;
 
 		void tick(float dt_sec, LevelBase&);
 		void stretchToDistance(float distance, float bDoCollisionTest, LevelBase& currentLevel);
@@ -86,6 +91,7 @@ namespace SA
 			glm::vec3 color = glm::vec3(0.8f, 0.8f, 0.f);
 			int damage = 25;
 			size_t team = 0;
+			SoundEffectSubConfig sfx;
 			sp<WorldEntity> owner = nullptr;
 		};
 		void spawnProjectile(const SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle);
@@ -94,14 +100,18 @@ namespace SA
 		void renderProjectiles(Shader& projectileShader) const;
 		void renderProjectileBoundingBoxes(Shader& debugShader, const glm::vec3& color, const glm::mat4& view, const glm::mat4& perspective) const;
 
+		sp<AudioEmitter> spawnSfxEffect(const SoundEffectSubConfig& sfx, glm::vec3 position);
+
 	private:
+		virtual void initSystem() override;
 		virtual void tick(float dt_sec) override {};
 		void postGameLoopTick(float dt_sec);
-		virtual void initSystem() override;
+		void handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
 
 	private:
 		bool bAutomaticTickProjectiles = true;
 		SP_SimpleObjectPool<Projectile> objPool;
+		SP_SimpleObjectPool_RestrictedConstruction<AudioEmitter> sfxPool;
 
 		//this is not the most cache coherent design, but wanting to get working prototype before spending time on optimizations
 		//one potential cache friend optimization is to not use sp, and store in a large std::vector that does swap removes (with objects maintaing idices)

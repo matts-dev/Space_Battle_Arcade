@@ -68,7 +68,7 @@ namespace SA
 		inline float getDeltaTimeSecs() const {return dt_dilatedSecs; }
 		inline float getUndilatedTimeSecs() const { return dt_undilatedSecs; }
 		inline float getTimeDilationFactor() const { return timeDilationFactor; }
-		inline float getTimestampSecs() const { return timeSinceStartDilatedSecs; }
+		inline float getTimestampSecs() const { return timeSinceStartSecs_Dilated; }
 		inline int getRemaningFramesToStep() const { return framesToStep; }
 		inline bool isTimeFrozen() const { return bFreezeTime && framesToStep == 0; }
 		inline bool isFrameStepping() const { return bFreezeTime && framesToStep > 0; }
@@ -92,7 +92,7 @@ namespace SA
 		//next frame pattern prevents affects from happening mid-frame
 		float dt_undilatedSecs = 0.f;
 		float dt_dilatedSecs = 0.f;
-		float timeSinceStartDilatedSecs = 0.f;
+		float timeSinceStartSecs_Dilated = 0.f;
 
 		int framesToStep = 0;
 		int newFramesToStep = 0;

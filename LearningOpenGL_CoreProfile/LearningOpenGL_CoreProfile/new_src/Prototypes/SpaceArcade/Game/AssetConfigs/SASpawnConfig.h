@@ -51,6 +51,7 @@ namespace SA
 		glm::vec3 direction_ln = glm::vec3(1.f, 0, 0); //normalized when serialized
 	};
 
+
 	class SpawnConfig final : public ConfigBase
 	{
 		friend class ModelConfigurerEditor_Level;
@@ -81,7 +82,14 @@ namespace SA
 		const std::vector<FighterSpawnPoint>& getSpawnPoints() const { return spawnPoints; };
 		const glm::vec3 getModelFacingDir_n() { return modelFacingDir; }
 		const glm::quat getModelDefaultRotation();
-		const std::string& getSfxEngineLoopAssetPath() const { return sfx_engineLoop_path; }
+
+#define AUDIO_GETTER_SETTER(sfx_member)\
+		const SoundEffectSubConfig& getConfig_##sfx_member() const { return sfx_member; }\
+		void setConfig_##sfx_member(const SoundEffectSubConfig& inSfx) { sfx_member = inSfx; }
+		AUDIO_GETTER_SETTER(sfx_engineLoop);
+		AUDIO_GETTER_SETTER(sfx_projectileLoop);
+		AUDIO_GETTER_SETTER(sfx_explosion);
+		AUDIO_GETTER_SETTER(sfx_muzzle);
 		
 	protected:
 		virtual void onSerialize(json& outData) override;
@@ -113,7 +121,10 @@ namespace SA
 
 		std::vector<TeamData> teamData;
 
-		std::string sfx_engineLoop_path;
+		SoundEffectSubConfig sfx_engineLoop;
+		SoundEffectSubConfig sfx_projectileLoop;
+		SoundEffectSubConfig sfx_explosion;
+		SoundEffectSubConfig sfx_muzzle;
 
 	};
 

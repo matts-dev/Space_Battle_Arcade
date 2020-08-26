@@ -24,7 +24,26 @@
             ]
         },
         "primaryProjectileConfigName": "FighterLaser",
-        "sfx_engineLoop_path": "Assets\\Sounds\\ship_engine_fx.wav",
+        "sfx_engineLoop": {
+            "assetPath": "Assets/Sounds/ship_engine_fx.wav",
+            "bLooping": true,
+            "maxDistance": 10.0
+        },
+        "sfx_explosion": {
+            "assetPath": "Assets/Sounds/distant_explosion_fx.wav",
+            "bLooping": false,
+            "maxDistance": 30.0
+        },
+        "sfx_muzzle": {
+            "assetPath": "Assets/Sounds/muzzlefire_fxwav.wav",
+            "bLooping": false,
+            "maxDistance": 5.0
+        },
+        "sfx_projectileLoop": {
+            "assetPath": "Assets/Sounds/projectile_v2_loop_fx.wav",
+            "bLooping": true,
+            "maxDistance": 10.0
+        },
         "shapes": [
             {
                 "modelFilePath": "",

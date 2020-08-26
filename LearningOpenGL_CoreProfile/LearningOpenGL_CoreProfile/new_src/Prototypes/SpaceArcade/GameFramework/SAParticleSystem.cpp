@@ -130,7 +130,7 @@ namespace SA
 					EIData.vec4Data.reserve(EIData.numVec4PerInstance * effect->estimateMaxSimultaneousEffects);
 
 					EIData.numInstancesThisFrame = 0;
-
+					
 					//this is the first time we're using this effect, precalculate its value dependent state. (tweaking at runtime will require updating again)
 					effect->updateEffectDuration();
 				}

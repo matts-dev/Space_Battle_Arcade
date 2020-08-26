@@ -115,21 +115,29 @@ namespace SA
 		// AUDIO
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
-		std::string engineSfxPath = shipConfigData->getSfxEngineLoopAssetPath();
-		if (engineSfxPath.length() != 0)
+
+		auto configureSoundEmitter = [&audioSystem](sp<AudioEmitter>& emitter, const SoundEffectSubConfig& soundConfig, AudioEmitterPriority priority = AudioEmitterPriority::GAMEPLAY_AMBIENT)
 		{
-			sfx_engine = audioSystem.createEmitter();
-			sfx_engine->setSoundAssetPath(convertModRelativePathToAbsolute(engineSfxPath));
-			sfx_engine->setLooping(true);
-			sfx_engine->setMaxRadius(10.f);
-			//wait to tick sounds so that we do that after we've already generated all sounds
-		}
+			if (soundConfig.assetPath.size() > 0)
+			{
+				emitter = audioSystem.createEmitter();
+				soundConfig.configureEmitter(emitter);
+				emitter->setPriority(priority);
+			}
+		};
+
+		//wait to tick sounds so that we do that after we've already generated all sounds
+		configureSoundEmitter(sfx_engine, shipConfigData->getConfig_sfx_engineLoop());
+		configureSoundEmitter(sfx_muzzle, shipConfigData->getConfig_sfx_muzzle());
+		configureSoundEmitter(sfx_explosion, shipConfigData->getConfig_sfx_explosion(), AudioEmitterPriority::GAMEPLAY_COMBAT);
+
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// activate sounds after we have configured them
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		tickSounds(); //do an initial tick to apply position data to sounds before we activate them, this way we don't hear a blip on spawn as they're in the location location
-		if (sfx_engine) { sfx_engine->activateSound(true); }
+		auto activateSound = [](const sp<AudioEmitter>& emitter) { if (emitter) { emitter->play(); }};
+		activateSound(sfx_engine);
 		
 	}
 
@@ -289,6 +297,23 @@ namespace SA
 		primaryProjectile = projectileConfig;
 	}
 
+	void Ship::playerMuzzleSFX()
+	{
+		if (sfx_muzzle)
+		{
+			bool bIsPlayer = false;
+			if (OwningPlayerComponent* playerComp = getGameComponent<OwningPlayerComponent>())
+			{
+				bIsPlayer = playerComp->hasOwningPlayer();
+			}
+			sfx_muzzle->setPriority(bIsPlayer ? AudioEmitterPriority::GAMEPLAY_PLAYER : AudioEmitterPriority::GAMEPLAY_COMBAT); //make sure we can hear it if it is from player
+			sfx_muzzle->setPosition(getWorldPosition());
+			sfx_muzzle->setVelocity(getVelocity());
+			sfx_muzzle->stop(); //clear any previous muzzle sound; we may need have multiple emitters to handle this if it sounds bad
+			sfx_muzzle->play();
+		}
+	}
+
 	void Ship::updateTeamDataCache()
 	{
 		//#TODO perhaps just cache temp comp directly?
@@ -411,7 +436,11 @@ namespace SA
 			playerComp->setOwningPlayer(player);
 		}
 
-		bEnableAvoidanceFields = false || bForcePlayerAvoidance_debug;;
+		if (sfx_engine){sfx_engine->setPriority(AudioEmitterPriority::GAMEPLAY_PLAYER);}
+		if (sfx_explosion){sfx_explosion->setPriority(AudioEmitterPriority::GAMEPLAY_PLAYER);}
+		if (sfx_muzzle) {sfx_muzzle->setPriority(AudioEmitterPriority::GAMEPLAY_PLAYER); }
+
+		bEnableAvoidanceFields = false || bForcePlayerAvoidance_debug;
 		bAwakeBrainAfterStasis = false;
 	}
 
@@ -470,8 +499,10 @@ namespace SA
 			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
+			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
 			spawnData.owner = sp_this();
 
+			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
 		}
 	}
@@ -488,8 +519,10 @@ namespace SA
 			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
+			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
 			spawnData.owner = sp_this();
 
+			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile);
 		}
 	}
@@ -1234,13 +1267,13 @@ namespace SA
 				particleSpawnParams.velocity = getVelocity();
 
 				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+				if (sfx_explosion) { sfx_explosion->play(); }
+				if (sfx_engine) { sfx_engine->stop(); }
 
 				if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
 				{
 					brainComp->setNewBrain(sp<AIBrain>(nullptr));
 				}
-
-				
 			}
 
 			destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning

@@ -81,7 +81,7 @@ namespace SA
 
 		dt_undilatedSecs = timeSystem.getDeltaTimeSecs();
 		dt_dilatedSecs = dt_undilatedSecs * timeDilationFactor;
-		timeSinceStartDilatedSecs += dt_dilatedSecs;
+		timeSinceStartSecs_Dilated += dt_dilatedSecs;
 
 		////////////////////////////////////////////////////////
 		//tick timers

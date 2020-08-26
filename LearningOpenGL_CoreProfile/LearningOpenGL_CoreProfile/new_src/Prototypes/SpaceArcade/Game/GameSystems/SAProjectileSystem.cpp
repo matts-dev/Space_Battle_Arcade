@@ -12,6 +12,8 @@
 #include "../AssetConfigs/SAProjectileConfig.h"
 #include "../../GameFramework/Components/CollisionComponent.h"
 #include "../../GameFramework/SAWorldEntity.h"
+#include "../../GameFramework/SAAudioSystem.h"
+#include "../AssetConfigs/SASpawnConfig.h"
 
 namespace SA
 {
@@ -68,6 +70,12 @@ namespace SA
 		if (Utils::anyValueNAN(start)){__debugbreak();}
 		if (Utils::anyValueNAN(end)) {__debugbreak();}
 #endif //_WIN32
+
+		if (soundEmitter)
+		{
+			soundEmitter->setPosition(end);
+			soundEmitter->setVelocity(speed * direction_n);
+		}
 
 		//collision check
 		if (bDoCollisionTest && !bHit)
@@ -184,23 +192,35 @@ namespace SA
 
 					if (projectile->timeAlive > projectile->lifetimeSec || projectile->forceRelease)
 					{
+						if (projectile->soundEmitter)
+						{
+							projectile->soundEmitter->stop();
+							sfxPool.releaseInstance(projectile->soundEmitter);
+							projectile->soundEmitter = nullptr;
+						}
 				
 						//note: this projectile will keep any sp alive, so clear before release if needed
 						objPool.releaseInstance(projectile);
 
 						//removing iterator from set does not invalidate other iterators; 
 						//IMPORANT: this must after releasing to pool, otherwise the smart pointer will be deleted
-						activeProjectiles.erase(iterCopy);
+						activeProjectiles.erase(iterCopy); //#TODO #performance swap and pop will probably greatly speed this up; there might be a reason we need it in a set though
 					}
 				}
 			}
 		}
 	}
 
+	void ProjectileSystem::handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	{
+		sfxPool.clear();
+	}
+
 	void ProjectileSystem::initSystem()
 	{
 		//align projectiles with camera
 		GameBase::get().onPostGameloopTick.addStrongObj(sp_this(), &ProjectileSystem::postGameLoopTick);
+		GameBase::get().getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &ProjectileSystem::handlePostLevelChange);
 	}
 
 	void ProjectileSystem::spawnProjectile(const ProjectileSystem::SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle)
@@ -230,6 +250,8 @@ namespace SA
 		spawned->model = projectileTypeHandle.getModel();
 		spawned->lifetimeSec = projectileTypeHandle.getLifetimeSecs();
 		spawned->aabbSize = projectileTypeHandle.getAABBsize();
+
+		spawned->soundEmitter = spawnSfxEffect(spawnData.sfx, spawnData.start);
 
 		spawned->timeAlive = 0.f;
 #if _WIN32 && _DEBUG
@@ -267,6 +289,26 @@ namespace SA
 		{
 			Utils::renderDebugWireCube(debugShader, color, projectile->collisionXform, view, perspective);
 		}
+	}
+
+	sp<SA::AudioEmitter> ProjectileSystem::spawnSfxEffect(const SoundEffectSubConfig& sfx, glm::vec3 position)
+	{
+		if (sfx.assetPath.size() != 0)
+		{
+			sp<AudioEmitter> recycledEmitter = sfxPool.getInstance();
+			if (!recycledEmitter)
+			{
+				recycledEmitter = GameBase::get().getAudioSystem().createEmitter();
+			}
+			//clean up recycled emitter
+			recycledEmitter->stop();
+			sfx.configureEmitter(recycledEmitter);
+			recycledEmitter->setPriority(AudioEmitterPriority::GAMEPLAY_COMBAT);
+			recycledEmitter->setPosition(position);
+			recycledEmitter->play();
+			return recycledEmitter;
+		}
+		return nullptr;
 	}
 
 }

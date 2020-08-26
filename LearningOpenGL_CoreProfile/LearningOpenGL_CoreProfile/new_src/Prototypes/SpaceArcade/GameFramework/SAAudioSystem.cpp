@@ -14,6 +14,7 @@
 #include "SAPlayerBase.h"
 #include "../Tools/PlatformUtils.h"
 #include "TimeManagement/TickGroupManager.h"
+#include "SADebugRenderSystem.h"
 
 namespace SA
 {
@@ -21,7 +22,7 @@ namespace SA
 
 
 //defines whether extra logging should be compiled to debug resource management
-#define VERBOSE_AUDIO_RESOURCE_LOGGING 1
+#define VERBOSE_AUDIO_RESOURCE_LOGGING 0
 
 #if VERBOSE_AUDIO_RESOURCE_LOGGING
 #define CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE(msg, ...)\
@@ -43,14 +44,16 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 
 
 
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// audio emitter 3D
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void AudioEmitter::activateSound(bool bNewActivation)
-	{
-		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
-		audioSystem.activateEmitter(sp_this(), bNewActivation);
-	}
+	//void AudioEmitter::activateSound(bool bNewActivation)
+	//{
+	//	AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+	//	audioSystem.activateEmitter(sp_this(), bNewActivation);
+	//}
 
 	void AudioEmitter::setSoundAssetPath(const std::string& path)
 	{
@@ -61,13 +64,18 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 	void AudioEmitter::setPosition(const glm::vec3& inPosition)
 	{
 		this->userData.position = inPosition;
-		this->systemMetaData.dirty_bPosition = true;
+		this->systemMetaData.dirtyFlags.bPosition = true;
 	}
 	
 	void AudioEmitter::setVelocity(const glm::vec3& velocity)
 	{
 		this->userData.velocity = velocity;
-		this->systemMetaData.dirty_bVelocity = true;
+		this->systemMetaData.dirtyFlags.bVelocity = true;
+	}
+
+	void AudioEmitter::setPriority(AudioEmitterPriority priority)
+	{
+		userData.priority = priority;
 	}
 
 	void AudioEmitter::setLooping(bool bLooping)
@@ -135,7 +143,36 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 
 		//TODO Implement this correctly
 		systemMetaData.referenceDistance = userData.maxRadius * distFactor;
-		systemMetaData.dirty_bReferenceDistance = true;
+		systemMetaData.dirtyFlags.bReferenceDistance = true;
+	}
+
+	void AudioEmitter::setOneShotPlayTimeout(std::optional<float> timeoutAfterXSeconds)
+	{
+		userData.tryPlayWindowSeconds = timeoutAfterXSeconds;
+	}
+
+	void AudioEmitter::stop()
+	{
+		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+		audioSystem.activateEmitter(sp_this(), false);
+		audioSystem.stopEmitter(*this, AudioSystem::EmitterPrivateKey{});
+	}
+
+	void AudioEmitter::play()
+	{
+		//this will add sound to be activated; if it's priority is high enough and resources are available it will start playing
+		GameBase::get().getAudioSystem().activateEmitter(sp_this(), true);
+
+		//for non-looping sounds, the start time can be used to auto-deactivate sounds that never had the priority to play
+		systemMetaData.playStartTimeStamp.reset();
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		{
+			const sp<TimeManager>& worldTM = currentLevel->getWorldTimeManager();
+			systemMetaData.playStartTimeStamp = worldTM->getTimestampSecs();
+		}
+
+#if USE_OPENAL_API
+#endif //USE_OPENAL_API
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +197,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			if (emitter->systemMetaData.bActive)
 			{
 				emitter->systemMetaData.bActive = true;
-				list_pendingUserActivation.insert(emitter); //don't add directly to list because naive user code may call this multiple times
+				set_pendingUserActivation.insert(emitter); //don't add directly to list because naive user code may call this multiple times
 			}
 			else
 			{
@@ -175,30 +212,68 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 	{
 #if USE_OPENAL_API
 		const std::string& path = emitter.userData.sfxAssetPath;
-		ALuint bufferIdx = 0;
+
+		ALBufferWrapper bufferData;
 
 		auto findResult = audioBuffers.find(path);
 		if (findResult == audioBuffers.end())
 		{
-			bufferIdx = GameBase::get().getAssetSystem().loadOpenAlBuffer(path);
-			audioBuffers.insert({ path, bufferIdx });
+			//sync load
+			bufferData = GameBase::get().getAssetSystem().loadOpenAlBuffer(path);
+			audioBuffers.insert({ path, bufferData });
 		}
 		else
 		{
-			bufferIdx = findResult->second;
+			bufferData = findResult->second;
 		}
 
-		emitter.hardwareData.bufferIdx = bufferIdx;
+		emitter.hardwareData.bufferIdx = bufferData.buffer;
+		emitter.systemMetaData.audioDurationSec = bufferData.durationSec;
 
 		if (emitter.hardwareData.sourceIdx.has_value() && emitter.hardwareData.bufferIdx.has_value())
 		{
-			//we only need update listener if we have a listener and a valid buffer
-			//this will probably cause an abrupt change in sound; to fix that we should fade out and fade in new sound.
-			//not sure if changing sound on an emitter will be an active use case though as it will require probably tweaking all emitter properties
-			//so for now just setting source's value directly
+#define DIAGNOSTIC_SOURCE_BUFFER_SETTING 1
+#if DIAGNOSTIC_SOURCE_BUFFER_SETTING & VERBOSE_AUDIO_RESOURCE_LOGGING 
+			ALuint source = *emitter.hardwareData.sourceIdx;
+			ALint sourceState = 0;
+			alec(alGetSourcei(source, AL_SOURCE_STATE, &sourceState));
+			if (sourceState == AL_PLAYING)
+			{
+				CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("Switching buffer on a source still playing! source %d emitter %p", source, &emitter);
+			}
+			else if (sourceState == AL_PAUSED)
+			{
+				CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("Switching buffer on a paused source! source %d emitter %p", source, &emitter);
+			}
+#endif //DIAGNOSTIC_SOURCE_BUFFER_SETTING
+
+			// we only need update listener if we have a listener and a valid buffer
+			// this will probably cause an abrupt change in sound; to fix that we should fade out and fade in new sound.
+			// not sure if changing sound on an emitter will be an active use case though as it will require probably tweaking all emitter properties
+			// so for now just setting source's value directly
 			alec(alSourcei(*emitter.hardwareData.sourceIdx, AL_BUFFER, *emitter.hardwareData.bufferIdx)); //#audiothreads update to listener should happen in dedicated audio thread processing
 		}
 
+#endif //USE_OPENAL_API
+	}
+
+	void AudioSystem::stopEmitter(AudioEmitter& emitter, const EmitterPrivateKey&)
+	{
+#if USE_OPENAL_API
+		if (emitter.hardwareData.sourceIdx.has_value())
+		{
+			ALuint source = *emitter.hardwareData.sourceIdx;
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("stoping source %d", source);
+
+			//if user requested stop, then stop immediately; don't let system fade it out
+			alec(alSourceStop(source));
+
+			//if we stopped this source, then clear the resource so it will have to be given a new source to play again
+			sourcePool.releaseInstance(source);
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("releaseing source %d to free pool from emitter %p", source, &emitter);
+			emitter.hardwareData.sourceIdx = std::nullopt;
+
+		}
 #endif //USE_OPENAL_API
 	}
 
@@ -256,13 +331,13 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				md.bPreviousFrameListenerMapped = true;
 
 				//always dirty position/velocity if we're doing a remapping
-				md.dirty_bPosition = md.dirty_bVelocity = true;
+				md.dirtyFlags.bPosition = md.dirtyFlags.bVelocity = true;
 			}
 			else
 			{
 				//make dirty if we swapped from being mapped to no being mapped, also if we're already dirty then we need to refresh
-				md.dirty_bPosition |= md.bPreviousFrameListenerMapped;
-				md.dirty_bVelocity |= md.bPreviousFrameListenerMapped;
+				md.dirtyFlags.bPosition |= md.bPreviousFrameListenerMapped;
+				md.dirtyFlags.bVelocity |= md.bPreviousFrameListenerMapped;
 
 				//pass through the positioning data
 				md.position_listenerCorrected = ud.position;
@@ -273,25 +348,25 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// Update Audio API
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			if (md.dirty_bPosition)
+			if (md.dirtyFlags.bPosition)
 			{
 				glm::vec3& pos = md.position_listenerCorrected;
 				alec(alSource3f(src, AL_POSITION, pos.x, pos.y, pos.z)); //#TODO #scenenodes
-				md.dirty_bPosition = false;
+				md.dirtyFlags.bPosition = false;
 			}
-			if (md.dirty_bVelocity)
+			if (md.dirtyFlags.bVelocity)
 			{ 
 				glm::vec3& vel = md.velocity_listenerCorrected;
 				alec(alSource3f(src, AL_VELOCITY, vel.x, vel.y, vel.z));
-				md.dirty_bVelocity = false;
+				md.dirtyFlags.bVelocity = false;
 			}
-			if (md.dirty_bPitch || bDirtyAllPitch) 
+			if (md.dirtyFlags.bPitch || bDirtyAllPitch) 
 			{ 
 				float pitch = calculatePitch(ud.pitch);
 				alec(alSourcef(src, AL_PITCH, pitch));
-				md.dirty_bPosition = false;
+				md.dirtyFlags.bPosition = false;
 			}
-			if (md.dirty_bGain) 
+			if (md.dirtyFlags.bGain) 
 			{ 
 				float gain = glm::clamp(calculateGain(ud.volume, ud.bIsMusic) /** md.soundFadeModifier*/, 0.f, 1.f);
 #if !IGNORE_AUDIO_COMPILE_TODOS
@@ -299,18 +374,27 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 #endif
 
 				alec(alSourcef(src, AL_GAIN, gain));
-				md.dirty_bGain = false; 
+				md.dirtyFlags.bGain = false; 
 			}
-			if (md.dirty_bLooping) 
+			if (md.dirtyFlags.bLooping) 
 			{ 
 				alec(alSourcei(src, AL_LOOPING, ALint(ud.bLooping)));
-				md.dirty_bLooping = false; 
+				md.dirtyFlags.bLooping = false; 
 			}
-			if (md.dirty_bReferenceDistance)
+			if (md.dirtyFlags.bReferenceDistance)
 			{
 				alec(alSourcei(src, AL_REFERENCE_DISTANCE, ALuint(md.referenceDistance)));
-				md.dirty_bReferenceDistance = false;
+				md.dirtyFlags.bReferenceDistance = false;
 			}
+
+#if COMPILE_AUDIO_DEBUG_RENDERING_CODE
+			if (bRenderSoundLocations)
+			{
+				static DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
+				//debugRenderSystem.renderSphere(ud.position, glm::vec3(0.1f), glm::vec3(0.5, 0.5, 1.f));
+				debugRenderSystem.renderSphere(md.position_listenerCorrected, glm::vec3(0.1f), glm::vec3(0.5, 0.5, 1.f));
+			}
+#endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
 		}
 		else
 		{
@@ -318,6 +402,15 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			log(__FUNCTION__, LogLevel::LOG_ERROR, emitterSource.userData.sfxAssetPath.size() > 0 ? emitterSource.userData.sfxAssetPath.c_str() : "no asset path");
 		}
 	}
+
+	void AudioSystem::teardownALSource(ALuint source)
+	{
+		generatedSources.erase(source);
+		alec(alSourceStop(source));
+		alec(alSourcei(source, AL_BUFFER, 0));
+		alec(alDeleteSources(1, &source));
+	}
+
 #endif
 
 	void AudioSystem::initSystem()
@@ -329,6 +422,9 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		{
 			handlePreLevelChange(nullptr, currentLevel);
 		}
+
+		//note: if uesr is consistently making more than 10 emitters a frame, removal of stale emitters will fall behind creation.
+		amortizeGarbageCollectionCheck.chunkSize = 10; 
 
 #if !IGNORE_AUDIO_COMPILE_TODOS
 		TODO_need_to_change_emitter_to_be_handle_like_situation_so_we_can_tell_if_theres_no_users_and_we_can_gc;
@@ -410,7 +506,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		//!!! must come after we've queried how many sound sources we can use !!!
 		sourcePool.reserve(api_MaxMonoSources);
 		listenerData.reserve(MAX_LOCAL_PLAYERS);
-		list_HardwarePermitted.reserve(api_MaxMonoSources);
+		list_hardwarePermitted.reserve(api_MaxMonoSources);
 		list_pendingAssignHardwareSource.reserve(api_MaxMonoSources);
 		list_pendingRemoveHardwareSource.reserve(api_MaxMonoSources);
 		gcIndices.reserve(amortizeGarbageCollectionCheck.chunkSize);
@@ -426,21 +522,20 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		{
 			if (emitter && emitter->hardwareData.sourceIdx.has_value())
 			{
-				ALuint source = *emitter->hardwareData.sourceIdx;
-				alec(alDeleteSources(1, &source));
+				teardownALSource(*emitter->hardwareData.sourceIdx);
 			}
 		}
 
 		//drain the pool of sources that can be claimed
 		while (std::optional<ALuint> optionalSource= sourcePool.getInstance())
 		{
-			ALuint source = *optionalSource;
-			alec(alDeleteSources(1, &source));
+			teardownALSource(*optionalSource);
 		}
 		logf_sa(__FUNCTION__, LogLevel::LOG, "end cleaning up openal sources");
-
 		logf_sa(__FUNCTION__, LogLevel::LOG, "begin cleanup al buffers");
+
 		GameBase::get().getAssetSystem().unloadAllOpenALBuffers();
+
 		logf_sa(__FUNCTION__, LogLevel::LOG, "end cleanup al buffers");
 
 		alcMakeContextCurrent(nullptr);
@@ -465,6 +560,8 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 					cachedTimeDilation = timeDilationFactor;
 					bDirtyAllPitch = true;
 				}
+
+				currentTimeStampSec = worldTimeManager->getTimestampSecs();
 			}
 		}
 
@@ -514,15 +611,16 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//consume the pending activations before prioritization happens
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		for (const sp<AudioEmitter>& sound : list_pendingUserActivation)
+		for (const sp<AudioEmitter>& sound : set_pendingUserActivation)
 		{
-			//user code may have deactivated emitter between its addition to this set and this tick.
-			if (sound->systemMetaData.bActive)
+			//user code may have deactivated emitter between its addition to this set and this tick so use a set.
+			//additionally, the removal from active list may not happen before a recycled emitter is readded; so monitor it is in the active list
+			if (sound->systemMetaData.bActive && !sound->systemMetaData.bInActiveUserList)
 			{
-				list_userActivatedSounds.push_back(sound);
+				addToUserActiveList(sound);
 			}
 		}
-		list_pendingUserActivation.clear();
+		set_pendingUserActivation.clear();
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//walk the list backwards so we can do swap-and-pop on deactivated sounds
@@ -532,19 +630,60 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		constexpr size_t limit = std::numeric_limits<size_t>::max();
 		for (size_t idx = list_userActivatedSounds.size() - 1; idx < list_userActivatedSounds.size() && idx != limit; --idx)
 		{
-			const sp<AudioEmitter> emitter = list_userActivatedSounds[idx];
+			const AudioEmitterHandle& emitter = list_userActivatedSounds[idx];
 			if (emitter)
 			{
-				if (list_userActivatedSounds[idx]->systemMetaData.bActive)
+				if (emitter->systemMetaData.bActive)
 				{
-					EmitterAudioSystemMetaData& soundMetaData = list_userActivatedSounds[idx]->systemMetaData;
-					const EmitterUserData& soundUserData = list_userActivatedSounds[idx]->userData;
+					EmitterAudioSystemMetaData& soundMetaData = emitter->systemMetaData;
+					const EmitterUserData& soundUserData = emitter->userData;
 
 					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					// tick fade changes from previous frame prioritization
 					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					soundMetaData.soundFadeModifier -= dt_sec * soundMetaData.fadeDirection * soundMetaData.fadeRateSecs;
 					soundMetaData.soundFadeModifier = glm::clamp(soundMetaData.soundFadeModifier, 0.f, 1.f);
+
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					// stop oneshot sounds when they're over
+					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if USE_OPENAL_API
+					if (emitter->hardwareData.sourceIdx.has_value())
+					{
+						ALuint source = *emitter->hardwareData.sourceIdx;
+						ALint sourceState = 0;
+						alec(alGetSourcei(source, AL_SOURCE_STATE, &sourceState));
+
+						//this is assuming that when something is given a hardware source, then it will be played immediately
+						if (sourceState != AL_PLAYING)
+						{
+							CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("detected emitter is no longer playing, flagging for deactivation %p %s", emitter.get(), emitter->userData.sfxAssetPath.c_str());
+							emitter->systemMetaData.bActive = false;
+							//alec(alSourceStop(source)); //this may be redundant and unneeded; but getting exceptions on changing source buffer while playing
+						}
+					}
+					else  //if it doesn't have hardware resource yet, has it been too long to give it one?
+					{
+						if (emitter->isOneShotSample() || emitter->userData.tryPlayWindowSeconds.has_value())
+						{
+							bool bHasOneshotPlayLimit = emitter->userData.tryPlayWindowSeconds || emitter->systemMetaData.audioDurationSec.has_value();
+							if (emitter->systemMetaData.playStartTimeStamp.has_value() && bHasOneshotPlayLimit)
+							{
+								float startTime = *emitter->systemMetaData.playStartTimeStamp;
+								float giveupTimeSec = emitter->userData.tryPlayWindowSeconds.has_value() 
+									? (*emitter->userData.tryPlayWindowSeconds) 
+									: (*emitter->systemMetaData.audioDurationSec);
+								if (currentTimeStampSec > (startTime + giveupTimeSec))
+								{
+									//this will force the sound to be culled in the cull pass.
+									emitter->systemMetaData.bActive = false;
+								}
+							}
+						}
+					}
+#else
+					TODO_audio_api_needs_implementation_otherwise_oneshot_sounds_wont_autocull;
+#endif
 
 					////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					// Prioritize this sound so that it can be culled if resources are required for higher priority sounds
@@ -556,15 +695,15 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 					ListenerData* closestListener = nullptr;
 					float closestDist2 = std::numeric_limits<float>::infinity();
 					size_t closestListenerIdx = 0;
-					for (size_t idx = 0; idx < listenerData.size(); ++idx)
+					for (size_t listernIdx = 0; listernIdx < listenerData.size(); ++listernIdx)
 					{
-						ListenerData& listenerDatum = listenerData[idx];
+						ListenerData& listenerDatum = listenerData[listernIdx];
 						float length2 = glm::length2(listenerDatum.position - soundUserData.position);
 						if (length2 < closestDist2)
 						{
 							closestListener = &listenerDatum;
 							closestDist2 = length2;
-							closestListenerIdx = idx;
+							closestListenerIdx = listernIdx;
 						}
 					}
 
@@ -595,18 +734,18 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 						}
 					}
 					
-					soundMetaData.calculatedPriority += soundUserData.priority;
+					soundMetaData.calculatedPriority += float(soundUserData.priority);
 				}
 				else
 				{
-					Utils::swapAndPopback(list_userActivatedSounds, idx);
+					removeFromActiveList(idx);
 					--idx; //back up so that we process to item we just swapped into this position
 				}
 			}
 			else
 			{
-				log(__FUNCTION__, LogLevel::LOG_WARNING, "unexpected nullptr emitter in audio pipeline");
-				Utils::swapAndPopback(list_userActivatedSounds, idx);
+				//emitter may be nullptr if it has been removed from GC
+				removeFromActiveList(idx);
 			}
 		}
 
@@ -617,7 +756,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		std::sort(
 			list_userActivatedSounds.begin(),
 			list_userActivatedSounds.end(),
-			[](const sp<AudioEmitter>& first, const sp<AudioEmitter>& second) 
+			[](const AudioEmitterHandle& first, const AudioEmitterHandle& second)
 			{
 				//shouldn't hit nullptrs, but adding to reduce code fragility
 				if(!second)
@@ -639,40 +778,44 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 	{
 		size_t availableSources = api_MaxMonoSources;
 
-		list_HardwarePermitted.clear();
+		list_hardwarePermitted.clear();
 		list_pendingRemoveHardwareSource.clear();
 		list_pendingAssignHardwareSource.clear(); 
 
 		for (size_t idx = 0; idx < list_userActivatedSounds.size(); ++idx)
 		{
-			const sp<AudioEmitter>& sound = list_userActivatedSounds[idx];
+			const AudioEmitterHandle& sound = list_userActivatedSounds[idx];
 
-			//always reset fade state to fade up; we will fade out if needed. But this restores things that may haev filpped from a fade out to a fadein
-			sound->systemMetaData.fadeDirection = 1.f;
+			if (sound)
+			{
+				//always reset fade state to fade up; we will fade out if needed. But this restores things that may haev filpped from a fade out to a fadein
+				sound->systemMetaData.fadeDirection = 1.f;
 
-			bool bSoundSafeFromCull = idx < availableSources && !sound->systemMetaData.bOutOfRange || !sound->systemMetaData.bActive;
-			if (bSoundSafeFromCull)
-			{
-				//if this doesn't have a hardware source, then give it one
-				if (!sound->hardwareData.sourceIdx.has_value())
+				bool bSoundSafeFromCull = idx < availableSources && (!sound->systemMetaData.bOutOfRange || !sound->systemMetaData.bActive);
+				if (bSoundSafeFromCull)
 				{
-					list_pendingAssignHardwareSource.push_back(sound.get());
-					CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("sound requesting hardware resource %p", sound.get());
+
+					//if this doesn't have a hardware source, then give it one
+					if (!sound->hardwareData.sourceIdx.has_value())
+					{
+						list_pendingAssignHardwareSource.push_back(sound.get());
+						CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("sound requesting hardware resource %p", sound.get());
+					}
+					else
+					{
+						//since this has hardware resources, add it to the list that will have their sources updated
+						list_hardwarePermitted.push_back(sound.get());
+						CONDITIONAL_VERYVERBOSE_RESOURCE_LOG_MESSAGE("sound with resource adding to hardware list %p", sound.get());
+					}
 				}
-				else
+				else // cull this sound
 				{
-					//since this has hardware resources, add it to the list that will have their sources updated
-					list_HardwarePermitted.push_back(sound.get());
-					CONDITIONAL_VERYVERBOSE_RESOURCE_LOG_MESSAGE("sound with resource adding to hardware list %p", sound.get());
-				}
-			}
-			else // cull this sound
-			{
-				//if this sound has a hardware source, then we need to take it away and give it to a higher priority sound
-				if (sound->hardwareData.sourceIdx.has_value())
-				{
-					list_pendingRemoveHardwareSource.push_back(sound.get());
-					CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("culling sound with hardware resource %p", sound.get());
+					//if this sound has a hardware source, then we need to take it away and give it to a higher priority sound
+					if (sound->hardwareData.sourceIdx.has_value())
+					{
+						list_pendingRemoveHardwareSource.push_back(sound.get());
+						CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("culling sound with hardware resource %p", sound.get());
+					}
 				}
 			}
 		}
@@ -690,6 +833,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 					ALuint source = *emitter->hardwareData.sourceIdx;
 					emitter->hardwareData.sourceIdx.reset();
 
+					CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("releaseing source %d to free pool from emitter %p", source, emitter);
 					sourcePool.releaseInstance(source);
 
 					//make sure the source is no longer player, when this is pulled from the pool it will be played if necessary
@@ -704,12 +848,12 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 
 	void AudioSystem::audioTick_updateFadeIn()
 	{
-		if (bool bThereAreAvailableHardwareSources = list_HardwarePermitted.size() < api_MaxMonoSources)
+		size_t freeSources = api_MaxMonoSources - generatedSources.size() + sourcePool.size();
+		if (bool bThereAreAvailableHardwareSources = freeSources > 0)
 		{
 			for (AudioEmitter* emitter : list_pendingAssignHardwareSource)
 			{
-				size_t freeSources = api_MaxMonoSources - list_HardwarePermitted.size();
-
+				freeSources = (api_MaxMonoSources - generatedSources.size()) + sourcePool.size(); //update as this number changes with loop
 				if (freeSources > 0)
 				{
 #if USE_OPENAL_API
@@ -721,31 +865,40 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 						if (newSource)
 						{
 							instance = newSource;
+							generatedSources.insert(newSource);
 						}
+						CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade in generated new source %d for emitter %p", newSource, emitter);
 					}
 
 					if (instance.has_value() && emitter)
 					{
 						emitter->hardwareData.sourceIdx = instance;
 						ALuint source = *instance;
+						CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade in assigned hardware source %d to %p", source, emitter);
 
 						//for looping sounds, start them quiet and fade in
 						emitter->systemMetaData.soundFadeModifier = emitter->userData.bLooping ? 0.f : 1.f;
 
+						//alec(alSourceStop(source)); //extra check to stop any existing playing sources
+
 						trySetEmitterBuffer(*emitter, EmitterPrivateKey{});
+
+						//set all flags to dirty by writing 0xff to every byte
+						std::memset(reinterpret_cast<uint8_t*>(&emitter->systemMetaData.dirtyFlags), 0xFF, sizeof(decltype(emitter->systemMetaData.dirtyFlags)));
 
 						alec(alSourcePlay(source));
 
 						//this now has a hardware resource, add it to list of sources we will update at the end of the pipeline
-						list_HardwarePermitted.push_back(emitter);
+						list_hardwarePermitted.push_back(emitter);
 
-						CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade in assigned hardware source %d to %p", source, emitter);
 					}
+#else
+					Needs_audio_api_implementation;
 #endif
 				}
 				else
 				{
-					CONDITIONAL_VERYVERBOSE_RESOURCE_LOG_MESSAGE("fade in has no sources available. need %d", list_pendingAssignHardwareSource.size());
+					CONDITIONAL_VERYVERBOSE_RESOURCE_LOG_MESSAGE("fade in did not have enough sources available for all hardware requests. requesting %d sources", list_pendingAssignHardwareSource.size());
 					break; //we used up all the sources that were available
 				}
 			}
@@ -755,7 +908,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 	void AudioSystem::audioTick_updateEmittersWithHardwareResources()
 	{
 		//walk over the hardware permitted sounds list and update the sound buffers (platform and api specific)
-		for (AudioEmitter* emitterSource : list_HardwarePermitted)
+		for (AudioEmitter* emitterSource : list_hardwarePermitted)
 		{
 			if (emitterSource)
 			{
@@ -778,13 +931,31 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			if (allEmitters[idx].use_count() <= 1)
 			{
 				gcIndices.push_back(idx);
+
+				sp<AudioEmitter>& emitter = allEmitters[idx];
+				if (emitter->hardwareData.sourceIdx.has_value())
+				{
+					ALuint source = *emitter->hardwareData.sourceIdx;
+					teardownALSource(source);
+				}
+				emitter->hardwareData.sourceIdx.reset();
+				emitter->hardwareData.bufferIdx.reset();
+
 			}
 		}
 
+		//must process removal indices in reverse order so that we don't invalidate other indices
+		std::sort(gcIndices.begin(), gcIndices.end(), std::greater<>());
 		for (size_t idx : gcIndices)
 		{
-			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("Removing emitter with no users %p", allEmitters[idx].get());
-			Utils::swapAndPopback(allEmitters, idx);
+			const sp<AudioEmitter>& emitter = allEmitters[idx];
+			if ((emitter && emitter.use_count() == 1) || !emitter)
+			{
+				CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("Removing emitter with no users %p", emitter.get());
+				Utils::swapAndPopback(allEmitters, idx);
+
+				//emitter reference is now garbage
+			}
 		}
 
 	}
@@ -793,6 +964,43 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 	{
 		//if we were dirtying all pitch (because time dilation changed) then do not do that on next frame
 		bDirtyAllPitch = false;
+	}
+
+	void AudioSystem::addToUserActiveList(const sp<AudioEmitter>& emitter)
+	{
+		if (!emitter->systemMetaData.bInActiveUserList)
+		{
+			emitter->systemMetaData.bInActiveUserList = true;
+			list_userActivatedSounds.push_back(emitter);
+		}
+		else
+		{
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("Emitter already in active list being added to active list!");
+			STOP_DEBUGGER_HERE();
+		}
+	}
+
+	void AudioSystem::removeFromActiveList(size_t idx)
+	{
+		//this method forces us to track which emitters are in the list so we can use a raw vector for holding emitters
+
+		if (Utils::isValidIndex(list_userActivatedSounds, idx))
+		{
+			AudioEmitterHandle emitter = list_userActivatedSounds[idx];
+
+			//since emitter list is a list of handles, it is possible they could be null; though it is likely a broken state
+			if (emitter)
+			{
+				emitter->systemMetaData.bInActiveUserList = false;
+			}
+			
+			Utils::swapAndPopback(list_userActivatedSounds, idx);
+		}
+		else
+		{
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("invalid remove idx!");
+			STOP_DEBUGGER_HERE();
+		}
 	}
 
 	void AudioSystem::handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel)

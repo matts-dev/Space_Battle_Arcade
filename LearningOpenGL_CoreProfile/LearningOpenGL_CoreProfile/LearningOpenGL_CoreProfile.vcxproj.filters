@@ -906,6 +906,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Audio\OpenALUtilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SoundEffectSubConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Audio\ALBufferWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -2157,6 +2163,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Libraries\dr_wav_impl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SoundEffectSubConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

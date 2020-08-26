@@ -161,7 +161,7 @@
 					eventForwarder->release(*sharedPtr);
 				}
 
-				if (sharedPtr.use_count() == 1)
+				if (sharedPtr.use_count() == 1 && !GameBase::isEngineShutdown())
 				{
 					FrameDeferredEntityDeleter::get().deleteLater(sharedPtr);
 					sharedPtr = nullptr;

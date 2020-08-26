@@ -69,6 +69,9 @@ namespace SA
 		void updateCameraSpeed();
 	private: //implementation details
 		char engineSoundPathName[4096] = {};
+		char projectileSoundPathName[4096] = {};
+		char explosionSoundPathName[4096] = {};
+		char muzzleSoundPathName[4096] = {};
 	private: 
 		bool bRenderAABB = true;
 		bool bRenderCollisionShapes = true;

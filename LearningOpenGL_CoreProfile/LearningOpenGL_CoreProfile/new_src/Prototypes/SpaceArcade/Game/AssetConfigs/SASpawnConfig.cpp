@@ -170,7 +170,20 @@ namespace SA
 		serializePlacements(turretPlacements,spawnData);
 		serializePlacements(defensePlacements,spawnData);
 
-		spawnData[SYMBOL_TO_STR(sfx_engineLoop_path)] = sfx_engineLoop_path;
+#define SERIALIZE_AUDIO(sfx_member)\
+		{\
+			json sfxJson;\
+			sfx_member.onSerialize(sfxJson);\
+			spawnData[SYMBOL_TO_STR(sfx_member)] = sfxJson;\
+		}
+		SERIALIZE_AUDIO(sfx_engineLoop);
+		SERIALIZE_AUDIO(sfx_projectileLoop);
+		SERIALIZE_AUDIO(sfx_explosion);
+		SERIALIZE_AUDIO(sfx_muzzle);
+
+		json engineSfxJson;
+		sfx_engineLoop.onSerialize(engineSfxJson);
+		spawnData[SYMBOL_TO_STR(sfx_engineLoop)] = engineSfxJson;
 
 		outData.push_back({ "SpawnConfig", spawnData });
 	}
@@ -394,7 +407,19 @@ namespace SA
 						}
 					}
 				}
-				READ_JSON_STRING_OPTIONAL(sfx_engineLoop_path, spawnData);
+
+				//lambda so we can inspect values with debugger
+				auto deserializeAudio = [&](const std::string& member_name, SoundEffectSubConfig& audioConfig)
+				{
+					if (spawnData.contains(member_name))
+					{
+						audioConfig.onDeserialize(spawnData[member_name]);
+					}
+				};
+				deserializeAudio(SYMBOL_TO_STR(sfx_engineLoop), sfx_engineLoop);
+				deserializeAudio(SYMBOL_TO_STR(sfx_projectileLoop), sfx_projectileLoop);
+				deserializeAudio(SYMBOL_TO_STR(sfx_explosion), sfx_explosion);
+				deserializeAudio(SYMBOL_TO_STR(sfx_muzzle), sfx_muzzle);
 			}
 			else
 			{
@@ -435,6 +460,5 @@ namespace SA
 	{
 		return getRotQuatFromDegrees(modelRotationDegrees);
 	}
-
 }
 
