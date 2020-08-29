@@ -49,6 +49,7 @@ namespace SA
 #if COMPILE_AUDIO_DEBUG_RENDERING_CODE
 		REGISTER_CHEAT("debug_sound", SpaceArcadeCheatSystem::cheat_debugSound);
 #endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
+		REGISTER_CHEAT("debug_sound_log_dump", SpaceArcadeCheatSystem::cheat_debugSound_logDump);
 	}
 
 	void SpaceArcadeCheatSystem::cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs)
@@ -220,6 +221,11 @@ namespace SA
 		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
 		audioSystem.bRenderSoundLocations = !audioSystem.bRenderSoundLocations;
 #endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
+	}
+
+	void SpaceArcadeCheatSystem::cheat_debugSound_logDump(const std::vector<std::string>& cheatArgs)
+	{
+		GameBase::get().getAudioSystem().logDebugInformation();
 	}
 
 #endif

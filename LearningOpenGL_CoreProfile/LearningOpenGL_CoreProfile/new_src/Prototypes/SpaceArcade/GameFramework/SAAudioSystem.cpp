@@ -15,6 +15,7 @@
 #include "../Tools/PlatformUtils.h"
 #include "TimeManagement/TickGroupManager.h"
 #include "SADebugRenderSystem.h"
+#include "SARandomNumberGenerationSystem.h"
 
 namespace SA
 {
@@ -151,6 +152,11 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		userData.tryPlayWindowSeconds = timeoutAfterXSeconds;
 	}
 
+	void AudioEmitter::setPitchVariationRange(float pitchVariation)
+	{
+		userData.pitchVariationRange = pitchVariation;
+	}
+
 	void AudioEmitter::stop()
 	{
 		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
@@ -272,9 +278,65 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			sourcePool.releaseInstance(source);
 			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("releaseing source %d to free pool from emitter %p", source, &emitter);
 			emitter.hardwareData.sourceIdx = std::nullopt;
-
 		}
 #endif //USE_OPENAL_API
+	}
+
+	void AudioSystem::logDebugInformation()
+	{
+#if USE_OPENAL_API
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// log the existing hardware source data
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		size_t numSourcesPlaying = 0;
+		for (const ALSourceData& srcData : generatedSources)
+		{
+			AudioEmitter* assignedEmitter = nullptr;
+			std::string path = "null emitter or code compiled out";
+#if AUDIO_TRACK_SOURCES
+			if (!srcData.assignedEmitter.expired())
+			{
+				assignedEmitter = srcData.assignedEmitter.lock().get();
+				if (assignedEmitter)
+				{
+					path = assignedEmitter->userData.sfxAssetPath;
+				}
+			}
+#endif
+			ALint sourceState;
+			alec(alGetSourcei(srcData.source, AL_SOURCE_STATE, &sourceState));
+			numSourcesPlaying += (sourceState == AL_PLAYING);
+
+			logf_sa(__FUNCTION__, LogLevel::LOG, "HARDWARE SOURCES: source %d is assigned to emitter %p is playing %d with sound %s", srcData.source, assignedEmitter, (sourceState == AL_PLAYING), path.c_str());
+		}
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// log the emitters that are in user activated list
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		for (const AudioEmitterHandle& emitter : list_userActivatedSounds)
+		{
+			AudioEmitter* emitterRaw = emitter ? emitter.get() : nullptr;
+			ALuint sourceIdx = 0;
+			ALint sourceState = 0;
+			std::string path = "NA";
+			if (emitter)
+			{
+				sourceIdx = emitter->hardwareData.sourceIdx.value_or(0);
+				if (sourceIdx)
+				{
+					alec(alGetSourcei(sourceIdx, AL_SOURCE_STATE, &sourceState));
+				}
+				path = emitter->userData.sfxAssetPath;
+			}
+			logf_sa(__FUNCTION__, LogLevel::LOG, "USER LIST: emitter %p with source %d is playing %d with sound %s", emitterRaw, sourceIdx, (sourceState == AL_PLAYING), path.c_str());
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Stats
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		logf_sa(__FUNCTION__, LogLevel::LOG, "STATS: UserActiveList[%d] TotalEmitters[%d] TotalSources[%d], TotalPlayingSound[%d]", list_userActivatedSounds.size(), allEmitters.size(), generatedSources.size(), numSourcesPlaying);
+#else
+		AUDIO_API_NEEDS_DEBUG_IMPLEMENTATION;
+#endif 
 	}
 
 	void AudioSystem::tickAudioPipeline(float dt_sec)
@@ -282,11 +344,11 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		//trying out a pipelined approach to writing this function; primary goal is to communicate the highlevel via code not comments
 		audioTick_beginPipeline();
 		audioTick_updateListenerStates();
-		audioTick_updateEmitterStates(dt_sec);
+		audioTick_updateActiveUserEmitterStates(dt_sec);
 		audioTick_sortActivatedEmitters();				
 		audioTick_cullEmitters();							
-		audioTick_updateFadeOut();						
-		audioTick_updateFadeIn();						
+		audioTick_releaseHardwareResources();						
+		audioTick_assignHardwareResources();						
 		audioTick_updateEmittersWithHardwareResources();
 		audioTick_emitterGarbageCollection();
 		audioTick_endPipeline();
@@ -362,7 +424,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			}
 			if (md.dirtyFlags.bPitch || bDirtyAllPitch) 
 			{ 
-				float pitch = calculatePitch(ud.pitch);
+				float pitch = calculatePitch(ud.pitch + md.calculatedPitchVariation);
 				alec(alSourcef(src, AL_PITCH, pitch));
 				md.dirtyFlags.bPosition = false;
 			}
@@ -405,7 +467,10 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 
 	void AudioSystem::teardownALSource(ALuint source)
 	{
-		generatedSources.erase(source);
+		ALSourceData sourceData;
+		sourceData.source = source;
+		generatedSources.erase(sourceData);
+
 		alec(alSourceStop(source));
 		alec(alSourcei(source, AL_BUFFER, 0));
 		alec(alDeleteSources(1, &source));
@@ -422,6 +487,8 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		{
 			handlePreLevelChange(nullptr, currentLevel);
 		}
+
+		pitchVariabilityRNG = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
 
 		//note: if uesr is consistently making more than 10 emitters a frame, removal of stale emitters will fall behind creation.
 		amortizeGarbageCollectionCheck.chunkSize = 10; 
@@ -606,7 +673,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		}
 	}
 
-	void AudioSystem::audioTick_updateEmitterStates(float dt_sec)
+	void AudioSystem::audioTick_updateActiveUserEmitterStates(float dt_sec)
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//consume the pending activations before prioritization happens
@@ -659,7 +726,6 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 						{
 							CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("detected emitter is no longer playing, flagging for deactivation %p %s", emitter.get(), emitter->userData.sfxAssetPath.c_str());
 							emitter->systemMetaData.bActive = false;
-							//alec(alSourceStop(source)); //this may be redundant and unneeded; but getting exceptions on changing source buffer while playing
 						}
 					}
 					else  //if it doesn't have hardware resource yet, has it been too long to give it one?
@@ -677,6 +743,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 								{
 									//this will force the sound to be culled in the cull pass.
 									emitter->systemMetaData.bActive = false;
+									CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("deactivating emitter than never got resources %p %s", emitter.get(), emitter->userData.sfxAssetPath.c_str());
 								}
 							}
 						}
@@ -776,12 +843,20 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 
 	void AudioSystem::audioTick_cullEmitters()
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Changes to state should be done before this step in pipeline, emitters should be just moved to appropriate lists
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		size_t availableSources = api_MaxMonoSources;
 
 		list_hardwarePermitted.clear();
 		list_pendingRemoveHardwareSource.clear();
 		list_pendingAssignHardwareSource.clear(); 
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Walk over user list. 
+		// NOTE: this is not applied to all emitters, it is just the user activated list.
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		for (size_t idx = 0; idx < list_userActivatedSounds.size(); ++idx)
 		{
 			const AudioEmitterHandle& sound = list_userActivatedSounds[idx];
@@ -791,11 +866,14 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				//always reset fade state to fade up; we will fade out if needed. But this restores things that may haev filpped from a fade out to a fadein
 				sound->systemMetaData.fadeDirection = 1.f;
 
-				bool bSoundSafeFromCull = idx < availableSources && (!sound->systemMetaData.bOutOfRange || !sound->systemMetaData.bActive);
-				if (bSoundSafeFromCull)
+				//use ordering of priority to determine if a sound should be given/keep hardware resources
+				bool bSoundShouldPlay = //ie don't cull
+					idx < availableSources 
+					&& !sound->systemMetaData.bOutOfRange 
+					&& sound->systemMetaData.bActive;
+				if (bSoundShouldPlay)
 				{
-
-					//if this doesn't have a hardware source, then give it one
+					// if this doesn't have a hardware source, then give it one
 					if (!sound->hardwareData.sourceIdx.has_value())
 					{
 						list_pendingAssignHardwareSource.push_back(sound.get());
@@ -821,32 +899,30 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		}
 	}
 
-	void AudioSystem::audioTick_updateFadeOut()
+	void AudioSystem::audioTick_releaseHardwareResources()
 {
 		//these will have their fade percentage drained over time
+		//NOTE: currently deactivating a sound will cause it to be evicted immediately and bypass fade logic
 		for (AudioEmitter* emitter : list_pendingRemoveHardwareSource)
 		{
 			if (emitter && emitter->systemMetaData.soundFadeModifier <= 0.f)
 			{
-				if (emitter->hardwareData.sourceIdx.has_value())
+#if USE_OPENAL_API
+				if (!emitter->hardwareData.sourceIdx.has_value())
 				{
-					ALuint source = *emitter->hardwareData.sourceIdx;
-					emitter->hardwareData.sourceIdx.reset();
-
-					CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("releaseing source %d to free pool from emitter %p", source, emitter);
-					sourcePool.releaseInstance(source);
-
-					//make sure the source is no longer player, when this is pulled from the pool it will be played if necessary
-					alec(alSourceStop(source));
-
+					STOP_DEBUGGER_HERE(); //why is there a emitter fading out that doesn't have a source?
+				}
+				else
+#endif //USE_OPENAL_API
+				{
+					removeHardwareResources(*emitter);
 					CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade out complete %p", emitter);
 				}
-				else{STOP_DEBUGGER_HERE();} //why is there a emitter fading out that doesn't have a source?
 			}
 		}
 	}
 
-	void AudioSystem::audioTick_updateFadeIn()
+	void AudioSystem::audioTick_assignHardwareResources()
 	{
 		size_t freeSources = api_MaxMonoSources - generatedSources.size() + sourcePool.size();
 		if (bool bThereAreAvailableHardwareSources = freeSources > 0)
@@ -857,29 +933,45 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				if (freeSources > 0)
 				{
 #if USE_OPENAL_API
-					std::optional<ALuint> instance = sourcePool.getInstance();
-					if (!instance.has_value())
+					std::optional<ALuint> opt_source = sourcePool.getInstance();
+					if (!opt_source.has_value())
 					{
 						ALuint newSource = 0;
 						alec(alGenSources(1, &newSource));
 						if (newSource)
 						{
-							instance = newSource;
-							generatedSources.insert(newSource);
+							opt_source = newSource;
+
+							ALSourceData sourceData;
+							sourceData.source = newSource;
+							generatedSources.insert(sourceData);
 						}
 						CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade in generated new source %d for emitter %p", newSource, emitter);
 					}
 
-					if (instance.has_value() && emitter)
+					if (opt_source.has_value() && emitter)
 					{
-						emitter->hardwareData.sourceIdx = instance;
-						ALuint source = *instance;
+						emitter->hardwareData.sourceIdx = opt_source;
+						ALuint source = *opt_source;
 						CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade in assigned hardware source %d to %p", source, emitter);
 
 						//for looping sounds, start them quiet and fade in
 						emitter->systemMetaData.soundFadeModifier = emitter->userData.bLooping ? 0.f : 1.f;
 
-						//alec(alSourceStop(source)); //extra check to stop any existing playing sources
+						if (emitter->userData.pitchVariationRange != 0.f)
+						{
+							float halfRange = emitter->userData.pitchVariationRange / 2.f;
+							emitter->systemMetaData.calculatedPitchVariation = pitchVariabilityRNG->getFloat(-halfRange, halfRange);
+							emitter->systemMetaData.dirtyFlags.bPitch = true;
+						}
+
+#if AUDIO_TRACK_SOURCES
+						ALSourceData sourceData;
+						sourceData.source = source;
+						sourceData.assignedEmitter = emitter->requestTypedReference_Nonsafe<std::remove_pointer_t<decltype(emitter)>>();
+						generatedSources.erase(sourceData); //it will not update insertion with new data if it is already source is already there
+						generatedSources.insert(sourceData);
+#endif
 
 						trySetEmitterBuffer(*emitter, EmitterPrivateKey{});
 
@@ -928,19 +1020,32 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			idx < amortizeGarbageCollectionCheck.getStopIdxSafe(allEmitters);
 			++idx)
 		{
-			if (allEmitters[idx].use_count() <= 1)
+			sp<AudioEmitter>& emitter = allEmitters[idx];
+			if (!emitter)
 			{
+				logf_sa(__FUNCTION__, LogLevel::LOG_ERROR, "AllEmitters list contains a nullptr!"); STOP_DEBUGGER_HERE();
 				gcIndices.push_back(idx);
-
-				sp<AudioEmitter>& emitter = allEmitters[idx];
-				if (emitter->hardwareData.sourceIdx.has_value())
-				{
-					ALuint source = *emitter->hardwareData.sourceIdx;
-					teardownALSource(source);
+			}
+			else //emitter is valid
+			{
+				//do a systemic check to make sure system hasn't broken; we shouldn't have emitters not in user list that also have hardware resources!
+				if (emitter->hardwareData.sourceIdx.has_value() && !emitter->systemMetaData.bInActiveUserList)
+				{ 
+					logf_sa(__FUNCTION__, LogLevel::LOG_ERROR, "audio system found sound with hardware resources that is not in user playing list!");  STOP_DEBUGGER_HERE();
 				}
-				emitter->hardwareData.sourceIdx.reset();
-				emitter->hardwareData.bufferIdx.reset();
 
+				if (allEmitters[idx].use_count() <= 1)
+				{
+					gcIndices.push_back(idx);
+
+					if (emitter->hardwareData.sourceIdx.has_value())
+					{
+						ALuint source = *emitter->hardwareData.sourceIdx;
+						teardownALSource(source);
+					}
+					emitter->hardwareData.sourceIdx.reset();
+					emitter->hardwareData.bufferIdx.reset();
+				}
 			}
 		}
 
@@ -992,6 +1097,11 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			if (emitter)
 			{
 				emitter->systemMetaData.bInActiveUserList = false;
+
+				if (emitter->hardwareData.sourceIdx.has_value())
+				{
+					removeHardwareResources(*emitter);
+				}
 			}
 			
 			Utils::swapAndPopback(list_userActivatedSounds, idx);
@@ -1001,6 +1111,33 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("invalid remove idx!");
 			STOP_DEBUGGER_HERE();
 		}
+	}
+
+	void AudioSystem::removeHardwareResources(AudioEmitter& emitter)
+	{
+#if USE_OPENAL_API
+		if (emitter.hardwareData.sourceIdx.has_value())
+		{
+			ALuint source = *emitter.hardwareData.sourceIdx;
+			emitter.hardwareData.sourceIdx.reset();
+
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("releaseing source %d to free pool from emitter %p", source, emitter);
+			sourcePool.releaseInstance(source);
+
+			//make sure the source is no longer player, when this is pulled from the pool it will be played if necessary
+			alec(alSourceStop(source));
+
+#if AUDIO_TRACK_SOURCES
+			ALSourceData sourceData;
+			sourceData.source = source;
+			generatedSources.erase(sourceData); //clear previous entry (just inserting doesn't erase previous data)
+			generatedSources.insert(sourceData); //insert new empty entry
+#endif
+
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade out complete %p", emitter);
+		}
+		else { STOP_DEBUGGER_HERE(); } //why is there a emitter fading out that doesn't have a source?
+#endif //#if USE_OPENAL_API
 	}
 
 	void AudioSystem::handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel)

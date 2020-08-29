@@ -103,7 +103,7 @@ namespace SA
 
 			//sample rate is samples per sec (generally 44100 hz)
 			//total frame count should be the same regardless if it is mono,stereo, etc.
-			loadedDataPtr->durationSec = float(loadedDataPtr->sampleRate) * float(loadedDataPtr->totalPCMFrameCount);
+			loadedDataPtr->durationSec = float(loadedDataPtr->totalPCMFrameCount) / float(loadedDataPtr->sampleRate);
 
 			loadedSoundPcmData.insert({ relative_filepath, loadedDataPtr });
 		}

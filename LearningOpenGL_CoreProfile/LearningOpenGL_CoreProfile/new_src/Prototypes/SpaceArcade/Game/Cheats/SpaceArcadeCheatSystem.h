@@ -27,6 +27,7 @@ namespace SA
 		void cheat_mainMenuTransitionTest(const std::vector<std::string>& cheatArgs);
 		void cheat_unlockAndCompleteAllLevelsInCampaign(const std::vector<std::string>& cheatArgs);
 		void cheat_debugSound(const std::vector<std::string>& cheatArgs);
+		void cheat_debugSound_logDump(const std::vector<std::string>& cheatArgs);
 	};
 
 

@@ -45,6 +45,7 @@ namespace SA
 		float pitch = 1.f;
 		float volume = 1.f; 
 		float maxRadius = 10.f;
+		float pitchVariationRange = 0.f; //adds variability to sound
 		std::optional<float> tryPlayWindowSeconds = std::nullopt; //if audio can't play because of hardware contention, this is amount of time before it gives up because sound wouldn't make sense to play
 		bool bLooping = false;
 		bool bIsMusic = false;
@@ -67,6 +68,7 @@ namespace SA
 		float fadeDirection = 0.f; //-1=fade down; 0=nofade; 1=fade up
 		float fadeRateSecs = 0.25f;
 		float referenceDistance = 1.f;
+		float calculatedPitchVariation = 0.f;
 		std::optional<float> playStartTimeStamp = std::nullopt;
 		std::optional<float> audioDurationSec = std::nullopt; //optional because have to load to find this information
 		bool bActive = false;
@@ -107,6 +109,7 @@ namespace SA
 		void setLooping(bool bLooping);
 		void setMaxRadius(float soundRadius);
 		void setOneShotPlayTimeout(std::optional<float> timeoutAfterXSeconds); //if audio can't play because of hardware contention, this is amount of time before it gives up because sound wouldn't make sense to play
+		void setPitchVariationRange(float pitchVariation);
 		bool isOneShotSample() const { return !userData.bLooping; }
 	private:
 		EmitterUserData userData = {};
@@ -150,6 +153,20 @@ namespace SA
 		AudioEmitter* get() const { return emitter_Raw; }
 	};
 
+#define AUDIO_TRACK_SOURCES 1
+
+#if USE_OPENAL_API
+	struct ALSourceData
+	{
+		ALuint source;
+#if AUDIO_TRACK_SOURCES
+		wp<AudioEmitter> assignedEmitter;
+#endif 
+		//sort based on source id, all other data is for tracking purposes
+		bool operator< (const ALSourceData& other) const { return source < other.source; }
+	};
+
+#endif //USE_OPENAL_API
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// AudioSystem - Give access to wrapped game audio
@@ -166,7 +183,6 @@ namespace SA
 	public:
 		sp<AudioEmitter> createEmitter();
 		void activateEmitter(const sp<AudioEmitter>& emitter, bool bNewActivation);
-		void tickAudioPipeline(float dt_sec);
 #if USE_OPENAL_API
 		bool hasValidOpenALDevice();
 		void updateSourceProperties(AudioEmitter& emitterSource);
@@ -181,22 +197,28 @@ namespace SA
 		};
 		void trySetEmitterBuffer(AudioEmitter& emitter, const EmitterPrivateKey&);
 		void stopEmitter(AudioEmitter& emitter, const EmitterPrivateKey&);
-	private:
+	public://debug
+		void logDebugInformation();
+	private:	
 		virtual void initSystem() override;
 		virtual void shutdown() override;
+	public:
+		void tickAudioPipeline(float dt_sec);
+	private:
 		void audioTick_beginPipeline();
 		void audioTick_updateListenerStates();
-		void audioTick_updateEmitterStates(float dt_sec);
+		void audioTick_updateActiveUserEmitterStates(float dt_sec);
 		void audioTick_sortActivatedEmitters();
 		void audioTick_cullEmitters();
-		void audioTick_updateFadeOut();
-		void audioTick_updateFadeIn();
+		void audioTick_releaseHardwareResources();
+		void audioTick_assignHardwareResources();
 		void audioTick_updateEmittersWithHardwareResources();
 		void audioTick_emitterGarbageCollection();
 		void audioTick_endPipeline();
 	private:
 		void addToUserActiveList(const sp<AudioEmitter>& emitter);
 		void removeFromActiveList(size_t idx);
+		void removeHardwareResources(AudioEmitter& emitter);
 	private:
 		void handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel);
 	private:
@@ -209,9 +231,10 @@ namespace SA
 	private:
 		//note: lists of raw pointers are cleared and regenerated each frame
 		//note: do not create additional sp handles to emitters, otherwise cleanup will not detect that only reference is the allEmitters container. Follow precedent of other lists (eg handle or raw pointer if it set just within the pipeline)
-		std::vector<AudioEmitterHandle> list_userActivatedSounds;	//entire list of sounds the game wants playing, likely larger than what hardware can handle
-		std::set<sp<AudioEmitter>> set_pendingUserActivation;	//set of sounds that user just flagged to be activated
-		std::vector<AudioEmitter*> list_hardwarePermitted;		//sounds that can be played given hardware restrictions (in addition to of FadeIn and FadeOut lists)
+		//note: USER==programmer using system. 
+		std::vector<AudioEmitterHandle> list_userActivatedSounds;		//entire list of sounds the game wants playing, likely larger than what hardware can handle. 
+		std::set<sp<AudioEmitter>> set_pendingUserActivation;			//set of sounds that user just flagged to be activated
+		std::vector<AudioEmitter*> list_hardwarePermitted;				//sounds that can be played given hardware restrictions (in addition to of FadeIn and FadeOut lists)
 		std::vector<AudioEmitter*> list_pendingAssignHardwareSource;
 		std::vector<AudioEmitter*> list_pendingRemoveHardwareSource;
 		std::vector<sp<AudioEmitter>> allEmitters;					
@@ -222,9 +245,10 @@ namespace SA
 		ALCdevice* device = nullptr;
 		ALCcontext* context = nullptr; //for now, split screen will share context, and manual source fixup required; perahps multiple contexts
 		std::unordered_map</*filePath*/std::string, ALBufferWrapper> audioBuffers; 
-		std::set<ALuint> generatedSources;
+		std::set<ALSourceData> generatedSources;
 		PrimitivePool<ALuint> sourcePool;
 #endif //USE_OPENAL_API
+		sp<class RNG> pitchVariabilityRNG = nullptr;
 		float cachedTimeDilation = 1.f;
 		float systemWideVolume = 1.f;
 		float musicVolume = 1.f;

@@ -10,6 +10,7 @@ namespace SA
 		outData[SYMBOL_TO_STR(assetPath)] = assetPath;
 		outData[SYMBOL_TO_STR(bLooping)] = bLooping;
 		outData[SYMBOL_TO_STR(maxDistance)] = maxDistance;
+		outData[SYMBOL_TO_STR(pitchVariationRange)] = pitchVariationRange;
 	}
 
 	void SoundEffectSubConfig::onDeserialize(const nlohmann::json& inData)
@@ -17,6 +18,7 @@ namespace SA
 		READ_JSON_STRING_OPTIONAL(assetPath, inData);
 		READ_JSON_BOOL_OPTIONAL(bLooping, inData);
 		READ_JSON_FLOAT_OPTIONAL(maxDistance, inData);
+		READ_JSON_FLOAT_OPTIONAL(pitchVariationRange, inData);
 	}
 
 	void SoundEffectSubConfig::configureEmitter(const sp<AudioEmitter>& emitter) const
@@ -27,6 +29,8 @@ namespace SA
 			emitter->setLooping(bLooping);
 			emitter->setMaxRadius(maxDistance);
 			emitter->setOneShotPlayTimeout(oneshotTimeoutSec);
+			emitter->setPitchVariationRange(pitchVariationRange);
+
 		}
 	}
 

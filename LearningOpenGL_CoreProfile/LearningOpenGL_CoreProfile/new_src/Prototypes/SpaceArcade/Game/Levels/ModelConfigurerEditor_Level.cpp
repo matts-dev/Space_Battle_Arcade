@@ -1242,6 +1242,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				ImGui::Text(sfxConfig.assetPath.c_str());\
 				ImGui::InputText(name_cstr " SFX Mod Relative Path", text_temp_buffer, sizeof(text_temp_buffer));\
 				ImGui::InputFloat("maxDistance " name_cstr , &sfxConfig.maxDistance);\
+				ImGui::InputFloat("pitch varation" name_cstr , &sfxConfig.pitchVariationRange);\
 				ImGui::Checkbox("bLooping " name_cstr , &sfxConfig.bLooping);\
 				static bool bPlayWindowProxy = sfxConfig.oneshotTimeoutSec.has_value();\
 				ImGui::Checkbox("fail to play time window" name_cstr, &bPlayWindowProxy);\
