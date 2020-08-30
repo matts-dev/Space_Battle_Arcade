@@ -145,6 +145,8 @@ namespace SA
 		{
 			bToggled = !bToggled;
 		}
+
+		SpaceArcade::get().getGameUISystem()->doClickSound();
 	}
 
 	void SA::Widget3D_GenericMouseHoverable::renderGameUI(GameUIRenderData& ui_rd)
@@ -153,6 +155,7 @@ namespace SA
 		if ((bHoveredThisTick || bToggled) && isActive())
 		{
 			bHoveredThisTick = false; //consume this hover, it will be reset if still hovered on next frame
+			//SpaceArcade::get().getGameUISystem()->doHoverSound(); //don't do this, because toggled will cause it to play
 
 			if (lasers.size() == 0)
 			{

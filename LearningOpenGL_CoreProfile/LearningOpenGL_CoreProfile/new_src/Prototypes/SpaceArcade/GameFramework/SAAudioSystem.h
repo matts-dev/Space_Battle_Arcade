@@ -110,6 +110,9 @@ namespace SA
 		void setMaxRadius(float soundRadius);
 		void setOneShotPlayTimeout(std::optional<float> timeoutAfterXSeconds); //if audio can't play because of hardware contention, this is amount of time before it gives up because sound wouldn't make sense to play
 		void setPitchVariationRange(float pitchVariation);
+		void setPitch(float newPitch);
+		void setGain(float gain);
+		void setVolume(float gain);
 		bool isOneShotSample() const { return !userData.bLooping; }
 	private:
 		EmitterUserData userData = {};

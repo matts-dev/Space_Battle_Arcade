@@ -1267,7 +1267,12 @@ namespace SA
 				particleSpawnParams.velocity = getVelocity();
 
 				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-				if (sfx_explosion) { sfx_explosion->play(); }
+				if (sfx_explosion) 
+				{ 
+					sfx_explosion->setPosition(getWorldPosition());
+					sfx_explosion->setVelocity(getVelocity());
+					sfx_explosion->play(); 
+				}
 				if (sfx_engine) { sfx_engine->stop(); }
 
 				if (BrainComponent* brainComp = getGameComponent<BrainComponent>())

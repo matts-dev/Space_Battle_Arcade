@@ -24,6 +24,7 @@
 #include "GameModes/ServerGameMode_SpaceBase.h"
 #include "Levels/SASpaceLevelBase.h"
 #include "../GameFramework/SALevelSystem.h"
+#include "../GameFramework/SAAudioSystem.h"
 
 
 static constexpr bool bCOMPILE_DEBUG_TURRET = false;
@@ -270,6 +271,13 @@ namespace SA
 		};
 		auto sharedExplosionLogic = [this, makeDefaultExplosion](ParticleSystem& particleSys) 
 		{
+			if (sfx_explosionEmitter)
+			{
+				sfx_explosionEmitter->stop();
+				sfx_explosionEmitter->setPosition(getWorldPosition());
+				sfx_explosionEmitter->play();
+			}
+
 			ParticleSystem::SpawnParams particleSpawnParams = makeDefaultExplosion();
 			glm::vec4 perturbedUp = glm::vec4(0, 1, 0, 0);
 			float perturbDist = 1.f;
@@ -376,6 +384,32 @@ namespace SA
 		if (activeShieldEffect)
 		{
 			activeShieldEffect->parentXform_m = cachedModelMat_PxL; //use the complete transform as parent transform, add a little scale to the particle itself
+		}
+	}
+
+	void ShipPlacementEntity::onNewOwnerSet(const sp<Ship>& owner)
+	{
+		if (const sp<const SpawnConfig>& spawnConfig = owner->getSpawnConfig())
+		{
+			sfx_explosionConfig = spawnConfig->getConfig_sfx_explosion();
+
+			if (sfx_explosionConfig.assetPath.size() != 0)
+			{
+				if (!sfx_explosionEmitter)
+				{
+					sfx_explosionEmitter = GameBase::get().getAudioSystem().createEmitter();
+				}
+				sfx_explosionConfig.configureEmitter(sfx_explosionEmitter);
+				sfx_explosionEmitter->setPriority(AudioEmitterPriority::GAMEPLAY_PLAYER);
+			}
+			else
+			{
+				sfx_explosionEmitter = nullptr;
+			}
+		}
+		else
+		{
+			sfx_explosionConfig = SoundEffectSubConfig{};
 		}
 	}
 
@@ -548,6 +582,8 @@ namespace SA
 	void ShipPlacementEntity::setWeakOwner(const sp<Ship>& owner)
 	{
 		weakOwner = owner;
+
+		onNewOwnerSet(owner);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -668,6 +704,7 @@ namespace SA
 				spawnData.start = barrelLocation_wp;// +spawnData.direction_n * 5.0f;
 				spawnData.color = teamData.color;
 				spawnData.team = teamData.team;
+				spawnData.sfx = projectileSFX;
 				spawnData.owner = sp_this();
 
 				const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
@@ -781,6 +818,24 @@ namespace SA
 		}
 	}
 
+	void TurretPlacement::onNewOwnerSet(const sp<Ship>& owner)
+	{
+		ShipPlacementEntity::onNewOwnerSet(owner);
+
+		if (owner)
+		{
+			const sp<const SpawnConfig>& shipConfig = owner->getSpawnConfig();
+			if (shipConfig)
+			{
+				projectileSFX = shipConfig->getConfig_sfx_projectileLoop(); //probably will end up needing a unique sound per ship
+			}
+		}
+		else
+		{
+			projectileSFX = SoundEffectSubConfig{};
+		}
+	}
+
 	void TurretPlacement::postConstruct()
 	{
 		Parent::postConstruct();
@@ -796,6 +851,8 @@ namespace SA
 
 		sp<RNG> placementRNG = GameBase::get().getRNGSystem().getNamedRNG("placement");
 		targetRequest.waitBeforeRequestSec += placementRNG->getFloat<float>(0, variabilityInTargetWaitSec);
+
+
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////

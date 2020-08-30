@@ -90,6 +90,7 @@ namespace SA
 			{
 				bHoveredThisTick = false;
 				setSliderColor(hoverColor);
+				SpaceArcade::get().getGameUISystem()->doHoverSound();
 			}
 			else if (bDragging)
 			{

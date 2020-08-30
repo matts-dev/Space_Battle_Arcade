@@ -8,6 +8,7 @@
 #include "../GameFramework/RenderModelEntity.h"
 #include "../Tools/DataStructures/AdvancedPtrs.h"
 #include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "AssetConfigs/SoundEffectSubConfig.h"
 
 namespace SA
 {
@@ -91,6 +92,7 @@ namespace SA
 		void setForwardLocalSpace(glm::vec3 newForward_ls);
 		virtual void onTargetSet(TargetType* rawTarget) {}
 		virtual void updateModelMatrixCache();
+		virtual void onNewOwnerSet(const sp<Ship>& owner);
 		const glm::mat4& getSpawnXform() { return spawnXform; }
 		glm::vec3 getSpawnUp_wn();
 		glm::vec3 getSpawnRight_wn();
@@ -118,6 +120,8 @@ namespace SA
 		sp<CollisionData> collisionData = nullptr;
 		fwp<ActiveParticleGroup> activeShieldEffect;
 		PlacementSubConfig config;
+		sp<class AudioEmitter> sfx_explosionEmitter = nullptr;
+		SoundEffectSubConfig sfx_explosionConfig;
 		glm::mat4 cachedModelMat_PxL{ 1.f };
 		glm::mat4 parentXform{ 1.f };
 		glm::mat4 spawnXform{ 1.f };
@@ -165,11 +169,13 @@ namespace SA
 		virtual void updateModelMatrixCache() override;
 		virtual void onTargetSet(TargetType* rawTarget) override;
 		virtual void notifyDamagingHit(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
+		virtual void onNewOwnerSet(const sp<Ship>& owner) override;
 		//virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig) override;
 	private://cached
 		std::optional<glm::vec3> cache_worldStationaryForward_n;
 		bool bUseDefaultBarrelLocations = true; //specific to the turret model
 		size_t barrelIndex = 0;
+		SoundEffectSubConfig projectileSFX;
 		struct TargetRequest
 		{
 			float timeWithoutTargetSec = 0.f;

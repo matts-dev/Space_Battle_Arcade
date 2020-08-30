@@ -184,6 +184,7 @@ namespace SA
 		sp<ShipPlacementEntity> getRandomObjective();
 		void requestSpawnFighterAgainst(const sp<WorldEntity>& attacker);
 		void setAvoidanceSensitivity(float newValue);
+		const sp<const SpawnConfig>& getSpawnConfig() { return shipConfigData; }
 	protected:
 		virtual void postConstruct() override;
 		virtual void tick(float deltatime) override;

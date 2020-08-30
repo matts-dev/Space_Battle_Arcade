@@ -698,6 +698,30 @@
             }
         ],
         "primaryProjectileConfigName": "",
+        "sfx_engineLoop": {
+            "assetPath": "",
+            "bLooping": false,
+            "maxDistance": 10.0,
+            "pitchVariationRange": 0.0
+        },
+        "sfx_explosion": {
+            "assetPath": "Assets/Sounds/distant_explosion_fx.wav",
+            "bLooping": false,
+            "maxDistance": 30.0,
+            "pitchVariationRange": 0.20000000298023224
+        },
+        "sfx_muzzle": {
+            "assetPath": "",
+            "bLooping": false,
+            "maxDistance": 10.0,
+            "pitchVariationRange": 0.0
+        },
+        "sfx_projectileLoop": {
+            "assetPath": "Assets/Sounds/projectile_v2_loop_fx.wav",
+            "bLooping": true,
+            "maxDistance": 10.0,
+            "pitchVariationRange": 0.20000000298023224
+        },
         "shapes": [
             {
                 "modelFilePath": "/Assets/Models3D/Carrier/SGCarrier.coll.boxbetweenboosters.obj",

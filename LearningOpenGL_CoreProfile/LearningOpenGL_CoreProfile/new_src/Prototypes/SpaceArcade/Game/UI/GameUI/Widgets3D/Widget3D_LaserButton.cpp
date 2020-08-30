@@ -8,6 +8,11 @@
 #include "../../../../GameFramework/SAGameBase.h"
 #include "../../../SpaceArcade.h"
 #include "../../../../Tools/PlatformUtils.h"
+#include "../../../../GameFramework/SAAudioSystem.h"
+#include "../../../AssetConfigs/SoundEffectSubConfig.h"
+#include "../../../../GameFramework/SAPlayerBase.h"
+#include "../../../../Rendering/Camera/SACameraBase.h"
+#include "../../../../GameFramework/SAPlayerSystem.h"
 
 namespace SA
 {
@@ -114,6 +119,8 @@ namespace SA
 			//consume hover and set color
 			setFontColor(hoverColor);
 			bHoveredThisTick = false;
+
+			SpaceArcade::get().getGameUISystem()->doHoverSound();
 		}
 		else
 		{
@@ -126,6 +133,7 @@ namespace SA
 			bClickedThisTick = false;
 			lastButtonClickSec = accumulatedTickSec;
 			onClickedDelegate.broadcast();
+			SpaceArcade::get().getGameUISystem()->doClickSound();
 		}
 
 		//colorize the click
@@ -348,7 +356,6 @@ namespace SA
 			rightLaser->setColorImmediate(color);
 		}
 	}
-
 
 
 }

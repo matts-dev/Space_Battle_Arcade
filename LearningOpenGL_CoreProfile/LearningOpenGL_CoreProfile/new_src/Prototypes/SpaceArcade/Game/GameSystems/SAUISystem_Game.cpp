@@ -19,6 +19,7 @@
 #include "../../Tools/SAUtilities.h"
 #include "../../Tools/Geometry/Plane.h"
 #include "../../Tools/Geometry/GeometryMath.h"
+#include "../../GameFramework/SAAudioSystem.h"
 
 namespace SA
 {
@@ -41,6 +42,9 @@ namespace SA
 		//debug
 		glm::vec3 rayStart;
 		glm::vec3 rayEnd;
+
+		sp<AudioEmitter> hoverSound = nullptr;
+		sp<AudioEmitter> clickSound = nullptr;
 	};
 
 	static DCFont::BatchData batchData;
@@ -76,6 +80,64 @@ namespace SA
 		}
 	}
 
+	void UISystem_Game::doHoverSound()
+	{
+		if (!impl->hoverSound)
+		{
+			impl->hoverSound = GameBase::get().getAudioSystem().createEmitter();
+
+			impl->hoverSound->setSoundAssetPath("./GameData/engine_assets/sounds/ui_hover.wav");
+			impl->hoverSound->setLooping(false);
+			impl->hoverSound->setMaxRadius(100);
+			impl->hoverSound->setPitchVariationRange(0.1f);
+			impl->hoverSound->setPitch(3.0f);
+			impl->hoverSound->setGain(0.25f);
+			impl->hoverSound->setPriority(AudioEmitterPriority::MENU);
+
+		}
+
+		//play the sound at the players current position
+		const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
+		if (allPlayers.size() > 0)
+		{
+			if (sp<CameraBase> camera = allPlayers[0]->getCamera())
+			{
+				impl->hoverSound->setPosition(camera->getPosition());
+			}
+		}
+
+		impl->hoverSound->play();
+	}
+
+	void UISystem_Game::doClickSound()
+	{
+		if (!impl->clickSound)
+		{
+			impl->clickSound = GameBase::get().getAudioSystem().createEmitter();
+
+			impl->clickSound->setSoundAssetPath("./GameData/engine_assets/sounds/ui_hover.wav");
+			impl->clickSound->setLooping(false);
+			impl->clickSound->setMaxRadius(100);
+			impl->clickSound->setPitchVariationRange(0.1f);
+			impl->clickSound->setPitch(4.0f);
+			impl->clickSound->setGain(0.5f);
+			impl->clickSound->setPriority(AudioEmitterPriority::MENU);
+
+		}
+
+		//play the sound at the players current position
+		const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
+		if (allPlayers.size() > 0)
+		{
+			if (sp<CameraBase> camera = allPlayers[0]->getCamera())
+			{
+				impl->clickSound->setPosition(camera->getPosition());
+			}
+		}
+
+		impl->clickSound->play();
+	}
+	
 	void UISystem_Game::runGameUIPass() const
 	{
 
@@ -279,6 +341,10 @@ namespace SA
 		{
 			newCurrentLevel->getWorldTimeManager()->getEvent(TickGroups::get().POST_CAMERA).addWeakObj(sp_this(), &UISystem_Game::postCameraTick);
 		}
+
+		//clear sounds each time we do a level transition; audio system will abandon old level emitters
+		impl->clickSound = nullptr;
+		impl->hoverSound = nullptr;
 	}
 
 	void UISystem_Game::handlePrimaryWindowChanged(const sp<Window>& old_window, const sp<Window>& new_window)

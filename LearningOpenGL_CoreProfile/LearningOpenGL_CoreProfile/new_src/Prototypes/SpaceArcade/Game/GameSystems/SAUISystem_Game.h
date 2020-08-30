@@ -49,6 +49,9 @@ namespace SA
 	public:
 		void batchToDefaultText(DigitalClockFont& text, GameUIRenderData& ui_rd);
 		SH::SpatialHashGrid<IMouseInteractable>& getSpatialHash() { return spatialHashGrid; }
+	public://utilities
+		void doHoverSound(); //TODO perhaps separate these out into some other singleton
+		void doClickSound();
 	private:
 		friend class SpaceArcade;
 		void runGameUIPass() const;

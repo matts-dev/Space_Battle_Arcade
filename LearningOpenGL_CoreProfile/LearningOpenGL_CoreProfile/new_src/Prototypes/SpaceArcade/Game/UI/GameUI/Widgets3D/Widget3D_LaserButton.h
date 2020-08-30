@@ -74,6 +74,8 @@ namespace SA
 		std::string textCache;
 		sp<GlitchTextFont> myGlitchText;
 
+		sp<class AudioEmitter> hoverSound = nullptr;
+
 		up<SH::HashEntry<IMouseInteractable>> hashEntry = nullptr;
 		sp<LaserUIObject> topLaser = nullptr;
 		sp<LaserUIObject> bottomLaser = nullptr;

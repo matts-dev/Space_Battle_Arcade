@@ -157,6 +157,23 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		userData.pitchVariationRange = pitchVariation;
 	}
 
+	void AudioEmitter::setPitch(float newPitch)
+	{
+		userData.pitch = newPitch;
+		systemMetaData.dirtyFlags.bPitch = true;
+	}
+
+	void AudioEmitter::setGain(float gain)
+	{
+		userData.volume = gain;
+		systemMetaData.dirtyFlags.bGain = true;
+	}
+
+	void AudioEmitter::setVolume(float gain)
+	{
+		setGain(gain);
+	}
+
 	void AudioEmitter::stop()
 	{
 		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
