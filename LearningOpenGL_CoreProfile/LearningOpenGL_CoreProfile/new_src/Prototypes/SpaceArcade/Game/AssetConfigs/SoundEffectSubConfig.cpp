@@ -10,6 +10,7 @@ namespace SA
 		outData[SYMBOL_TO_STR(assetPath)] = assetPath;
 		outData[SYMBOL_TO_STR(bLooping)] = bLooping;
 		outData[SYMBOL_TO_STR(maxDistance)] = maxDistance;
+		outData[SYMBOL_TO_STR(gain)] = gain;
 		outData[SYMBOL_TO_STR(pitchVariationRange)] = pitchVariationRange;
 	}
 
@@ -19,6 +20,7 @@ namespace SA
 		READ_JSON_BOOL_OPTIONAL(bLooping, inData);
 		READ_JSON_FLOAT_OPTIONAL(maxDistance, inData);
 		READ_JSON_FLOAT_OPTIONAL(pitchVariationRange, inData);
+		READ_JSON_FLOAT_OPTIONAL(gain, inData);
 	}
 
 	void SoundEffectSubConfig::configureEmitter(const sp<AudioEmitter>& emitter) const
@@ -30,7 +32,7 @@ namespace SA
 			emitter->setMaxRadius(maxDistance);
 			emitter->setOneShotPlayTimeout(oneshotTimeoutSec);
 			emitter->setPitchVariationRange(pitchVariationRange);
-
+			emitter->setGain(gain);
 		}
 	}
 

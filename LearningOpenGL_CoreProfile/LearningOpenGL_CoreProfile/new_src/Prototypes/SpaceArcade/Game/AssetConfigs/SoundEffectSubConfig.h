@@ -12,6 +12,7 @@ namespace SA
 		std::string assetPath = "";
 		bool bLooping = false;
 		float maxDistance = 10.f;
+		float gain = 1.f;
 		float pitchVariationRange = 0.f;
 		std::optional<float> oneshotTimeoutSec;
 

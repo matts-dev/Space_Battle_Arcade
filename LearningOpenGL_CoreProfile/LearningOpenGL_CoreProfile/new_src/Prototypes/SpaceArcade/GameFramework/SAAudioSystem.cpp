@@ -795,7 +795,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 					float proximityValue = 0.f;
 					bool bOutOfRange = true;
 
-					//did we find any close listener?
+					//did we find any close listener? (basically always true unless we don't have a player)
 					if (closestListener)
 					{
 						const float radiusSquared = Utils::square(soundUserData.maxRadius);
@@ -806,15 +806,15 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 							float distance = glm::length(soundUserData.position - closestListener->position);
 							float distanceAlpha = 1.0f - glm::clamp(distance / soundUserData.maxRadius, 0.f, 1.f); 
 
-							//soundMetaData.bPreviousFrameListenerMapped = DO not set this here, we will detect we need remapping via index and use this to determine whether we need to remap; 
-
 							//may need to rethink this a bit, perhaps multiplying things by 10,100,1000 based on priority level.
 							soundMetaData.calculatedPriority += distanceAlpha; //[0,1] range already is in the tenths position
+							soundMetaData.bOutOfRange = false;
 						}
 						else
 						{
 							//change the distance max distance when trying to drop sounds so that sounds on border of radius do not flicker in/out
 							soundMetaData.bOutOfRange = closestDist2 * 1.01 < radiusSquared;
+							soundMetaData.calculatedPriority += 1.f; //max distance alpha
 						}
 					}
 					
@@ -830,6 +830,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			{
 				//emitter may be nullptr if it has been removed from GC
 				removeFromActiveList(idx);
+				--idx; //back up so that we process to item we just swapped into this position
 			}
 		}
 

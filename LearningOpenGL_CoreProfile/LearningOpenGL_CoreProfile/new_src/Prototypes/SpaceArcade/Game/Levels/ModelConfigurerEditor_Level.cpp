@@ -1242,6 +1242,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				ImGui::Text(sfxConfig.assetPath.c_str());\
 				ImGui::InputText(name_cstr " SFX Mod Relative Path", text_temp_buffer, sizeof(text_temp_buffer));\
 				ImGui::InputFloat("maxDistance " name_cstr , &sfxConfig.maxDistance);\
+				ImGui::InputFloat("volume " name_cstr , &sfxConfig.gain);\
 				ImGui::InputFloat("pitch varation" name_cstr , &sfxConfig.pitchVariationRange);\
 				ImGui::Checkbox("bLooping " name_cstr , &sfxConfig.bLooping);\
 				static bool bPlayWindowProxy = sfxConfig.oneshotTimeoutSec.has_value();\
@@ -1264,7 +1265,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				ImGui::Separator();\
 			}
 
-			//NOTE: these must have unique names for IMGUI to work correctly!
+			//NOTE: these must have unique names_cstr for IMGUI to work correctly!
 			SFX_UI("Engine Loop", getConfig_sfx_engineLoop, setConfig_sfx_engineLoop, engineSoundPathName);
 			SFX_UI("Projectile Loop", getConfig_sfx_projectileLoop, setConfig_sfx_projectileLoop, projectileSoundPathName);
 			SFX_UI("Explosion", getConfig_sfx_explosion, setConfig_sfx_explosion, explosionSoundPathName);
