@@ -648,14 +648,17 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				currentTimeStampSec = worldTimeManager->getTimestampSecs();
 			}
 		}
+	}
 
+	void AudioSystem::audioTick_updateListenerStates()
+	{
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//update player positioning
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
 		listenerData.clear();
 
-		for (const sp<PlayerBase>& player: allPlayers)
+		for (const sp<PlayerBase>& player : allPlayers)
 		{
 			if (sp<CameraBase> camera = player->getCamera())
 			{
@@ -670,10 +673,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				listenerData.push_back(listener);
 			}
 		}
-	}
 
-	void AudioSystem::audioTick_updateListenerStates()
-	{
 		if (listenerData.size() > 0)
 		{
 #if USE_OPENAL_API
@@ -822,15 +822,13 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				}
 				else
 				{
-					removeFromActiveList(idx);
-					--idx; //back up so that we process to item we just swapped into this position
+					removeFromActiveList(idx); //this is a backwards walk, no need to correct idx
 				}
 			}
 			else
 			{
 				//emitter may be nullptr if it has been removed from GC
-				removeFromActiveList(idx);
-				--idx; //back up so that we process to item we just swapped into this position
+				removeFromActiveList(idx); //this is a backwards walk, no need to correct idx
 			}
 		}
 
