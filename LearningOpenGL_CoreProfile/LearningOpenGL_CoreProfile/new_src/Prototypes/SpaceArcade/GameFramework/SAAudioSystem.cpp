@@ -507,7 +507,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 
 		pitchVariabilityRNG = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
 
-		//note: if uesr is consistently making more than 10 emitters a frame, removal of stale emitters will fall behind creation.
+		//note: if user is consistently making more than 10 emitters a frame, removal of stale emitters will fall behind creation.
 		amortizeGarbageCollectionCheck.chunkSize = 10; 
 
 #if !IGNORE_AUDIO_COMPILE_TODOS
@@ -1020,8 +1020,12 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		{
 			if (emitterSource)
 			{
+#if USE_OPENAL_API
 				updateSourceProperties(*emitterSource);
 			}
+#else
+				TODO_other_audio_api_implementation;
+#endif
 		}
 	}
 
@@ -1137,7 +1141,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			ALuint source = *emitter.hardwareData.sourceIdx;
 			emitter.hardwareData.sourceIdx.reset();
 
-			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("releaseing source %d to free pool from emitter %p", source, emitter);
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("releaseing source %d to free pool from emitter %p", source, &emitter);
 			sourcePool.releaseInstance(source);
 
 			//make sure the source is no longer player, when this is pulled from the pool it will be played if necessary
@@ -1150,7 +1154,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 			generatedSources.insert(sourceData); //insert new empty entry
 #endif
 
-			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade out complete %p", emitter);
+			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("fade out complete %p", &emitter);
 		}
 		else { STOP_DEBUGGER_HERE(); } //why is there a emitter fading out that doesn't have a source?
 #endif //#if USE_OPENAL_API
