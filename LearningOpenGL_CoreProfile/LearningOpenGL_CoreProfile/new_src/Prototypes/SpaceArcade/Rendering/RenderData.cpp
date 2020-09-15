@@ -20,6 +20,8 @@ namespace SA
 		view = glm::mat4{ 1.f };
 		projection = glm::mat4{ 1.f };
 		ambientLightIntensity = glm::vec3{ 0.f };
+		playerCamerasPositions.resize(1); //shrink to 1 player camera
+		playerCamerasPositions[0] = glm::vec3(0.f); //zero out the camera
 		dt_sec = 0.f;
 	}
 

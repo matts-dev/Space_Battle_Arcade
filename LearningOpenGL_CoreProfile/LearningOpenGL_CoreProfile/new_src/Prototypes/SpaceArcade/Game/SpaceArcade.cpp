@@ -48,6 +48,7 @@
 #include "Levels/EnigmaTutorials/EnigmaTutorialsLevel.h"
 #include "GameSystems/SystemData/SATickGroups.h"
 #include "UI/GameUI/Widgets3D/HUD/PlayerPilotAssistUI.h"
+#include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
 
 namespace SA
 {
@@ -69,7 +70,7 @@ namespace SA
 
 		litObjShader = new_sp<SA::Shader>(litObjectShader_VertSrc, litObjectShader_FragSrc, false);
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);
-		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
+		//forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
 		debugLineShader = new_sp<Shader>(SH::DebugLinesVertSrc, SH::DebugLinesFragSrc, false);
 
 		sp<SAPlayer> playerZero = getPlayerSystem().createPlayer<SAPlayer>();
@@ -112,6 +113,12 @@ namespace SA
 		{
 			log(__FUNCTION__, LogLevel::LOG_WARNING, "SpaceArcade::bEnableDebugEngineKeybinds is true, this should be false for shipping builds.");
 		}
+
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		todo_deferred_rendering_is_not_compelte___change_this_preprocessor_flag_to_find_remaining_work___then_debug;
+		todo_enabling_of_deferred_renderer_needs_to_happen_before_system_initalization___NOT_HERE____otherwise_some_early_bird_system_shader_initaliation_will_not_create_deferred_shaders_i_think;
+		getRenderSystem().enableDeferredRenderer(true);
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 
 		return window;
 	}
@@ -207,6 +214,10 @@ namespace SA
 			}
 			FRD.ambientLightIntensity = loadedLevel->getAmbientLight();
 
+			const std::vector<sp<PlayerBase>>& allPlayers = getPlayerSystem().getAllPlayers();
+			FRD.playerCamerasPositions.reserve(allPlayers.size());
+
+			//#todo #splitscreen
 			if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
 			{
 				if (const sp<CameraBase>& camera = player->getCamera())
@@ -214,12 +225,13 @@ namespace SA
 					FRD.view = camera->getView();
 					FRD.projection = camera->getPerspective();
 					FRD.projection_view = FRD.projection * FRD.view;
+					FRD.playerCamerasPositions[0] = camera->getPosition();
 				}
 			}
 		}
 	}
 
-	void SpaceArcade::renderLoop(float deltaTimeSecs)
+	void SpaceArcade::renderLoop_begin(float deltaTimeSecs)
 	{
 		using glm::vec3; using glm::vec4; using glm::mat4;
 
@@ -247,21 +259,48 @@ namespace SA
 		{
 			if (const RenderData* FRD = getRenderSystem().getFrameRenderData_Read(getFrameNumber()))
 			{
-				//render world entities
-				loadedLevel->render(deltaTimeSecs, FRD->view, FRD->projection);
+				//////////////////////// Deferred Rendering //////////////////////////////////////////
+				if (DeferredRendererStateMachine* deferredRenderer = getRenderSystem().getDeferredRenderer())
+				{
+					deferredRenderer->beginGeometryPass(renderClearColor);
 
-				//#TODO rendering this needs to be done more intelligently, perhaps sorted render order or something that is extensible.
-				forwardShaded_EmissiveModelShader->use();
-				forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
-				forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
-				forwardShaded_EmissiveModelShader->setUniform3f("lightColor", glm::vec3(0.8f, 0.8f, 0));
-				projectileSystem->renderProjectiles(*forwardShaded_EmissiveModelShader);
+					//render world entities
+					loadedLevel->render(deltaTimeSecs, FRD->view, FRD->projection);
+				}
+				//////////////////////// Forward Rendering //////////////////////////////////////////
+				else 
+				{
+					//render world entities
+					loadedLevel->render(deltaTimeSecs, FRD->view, FRD->projection);
 
-				renderDebug(FRD->view, FRD->projection);
+					renderDebug(FRD->view, FRD->projection);
+				}
+
+				//right now I believe game UI can be rendered at any time, forward or deferred; probably should have system hook into render dispatch
+				uiSystem_Game->runGameUIPass(); //render non-editor ui, like HUD and 3D widgets
 			}
 		}
+	}
 
-		uiSystem_Game->runGameUIPass(); //render non-editor ui, like HUD and 3D widgets
+	void SpaceArcade::renderLoop_end(float deltaTimeSecs)
+	{
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// start lighting pass if using a deferred renderer
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		if (DeferredRendererStateMachine* deferredRenderer = getRenderSystem().getDeferredRenderer())
+		{
+			deferredRenderer->beginLightPass();
+			deferredRenderer->beginPostProcessing();
+
+			//the legacy debug rendering still needs to use forward shading, so it should come after deferred post processing
+			if (const sp<LevelBase>& loadedLevel = getLevelSystem().getCurrentLevel())
+			{
+				if (const RenderData* FRD = getRenderSystem().getFrameRenderData_Read(getFrameNumber()))
+				{
+					renderDebug(FRD->view, FRD->projection);
+				}
+			}
+		}
 	}
 
 	void SpaceArcade::onRegisterCustomSystem()
@@ -347,6 +386,14 @@ namespace SA
 						getLevelSystem().loadLevel(projectileEditor);
 					}
 				}
+				if (DeferredRendererStateMachine* deferredRenderer = getRenderSystem().getDeferredRenderer())
+				{
+					if (input.isKeyJustPressed(window, GLFW_KEY_1)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::NORMAL); }
+					if (input.isKeyJustPressed(window, GLFW_KEY_2)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::POSITION); }
+					if (input.isKeyJustPressed(window, GLFW_KEY_3)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::ALBEDO_SPEC); }
+					if (input.isKeyJustPressed(window, GLFW_KEY_4)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::LIGHTING); }
+				}
+
 			}
 		}
 	}

@@ -27,7 +27,7 @@ namespace SA
 		}
 
 		GameBase& game = GameBase::get();
-		game.onRenderDispatchEnding.addWeakObj(sp_this(), &UISystem_Editor::handleRenderDispatchEnding);
+		game.onRenderDispatchEnded.addWeakObj(sp_this(), &UISystem_Editor::handleRenderDispatchEnding);
 	}
 
 	void UISystem_Editor::handleLosingOpenGLContext(const sp<Window>& window)

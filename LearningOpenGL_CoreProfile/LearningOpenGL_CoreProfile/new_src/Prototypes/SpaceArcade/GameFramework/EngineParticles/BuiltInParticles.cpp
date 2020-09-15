@@ -5,6 +5,7 @@
 #include "..\SAGameBase.h"
 #include "..\SALog.h"
 #include "..\SAAssetSystem.h"
+#include "..\SARenderSystem.h"
 
 
 namespace SA
@@ -114,6 +115,73 @@ namespace SA
 			}
 		)";
 
+
+		static char const* const ShieldShader_deferred_fs = R"(
+			#version 330 core
+
+			//framebuffer locations
+			layout (location = 0) out vec3 position;
+			layout (location = 1) out vec3 normal;
+			layout (location = 2) out vec4 albedo_spec;
+
+			uniform vec3 camPos;
+			uniform vec3 shieldColor;
+			uniform sampler2D tessellateTex;
+
+			//in vec3 fragNormal;
+			in vec3 fragPosition;
+			in vec2 uvCoords;
+			in float timeAlive;
+			in float fractionComplete;
+
+			void main(){
+
+				vec4 fragmentColor = vec4(0.f);
+
+				////////////////////////////////////////////
+				//get a grayscale tessellated pattern
+				////////////////////////////////////////////
+				vec2 preventAlignmentOffset = vec2(0.1, 0.2);
+				float medMove = 0.5f *fractionComplete;
+				float smallMove = 0.5f *fractionComplete;
+
+				vec2 baseEffectUV = uvCoords * vec2(5,5);
+				vec2 mediumTessUV_UR = uvCoords * vec2(10,10) + vec2(medMove, medMove) + preventAlignmentOffset;
+				vec2 mediumTessUV_UL = uvCoords * vec2(10,10) + vec2(medMove, -medMove);
+
+				vec2 smallTessUV_UR = uvCoords * vec2(20,20) + vec2(smallMove, smallMove) + preventAlignmentOffset;
+				vec2 smallTessUV_UL = uvCoords * vec2(20,20) + vec2(smallMove, -smallMove);
+
+				//invert textures so black is now white and white is black (1-color); 
+				vec4 small_ur = vec4(vec3(1.f),0.f) - texture(tessellateTex, smallTessUV_UR);
+				vec4 small_ul = vec4(vec3(1.f),0.f) - texture(tessellateTex, smallTessUV_UR);
+				vec4 med_ur = vec4(vec3(1.f),0.f) - texture(tessellateTex, mediumTessUV_UR);
+				vec4 med_ul = vec4(vec3(1.f),0.f) - texture(tessellateTex, mediumTessUV_UL);
+
+				vec4 grayScale = 0.25f*small_ur + 0.25f*small_ul + 0.25f*med_ur + 0.25f*med_ur;
+
+				////////////////////////////////////////////
+				// filter out some color
+				////////////////////////////////////////////
+				float cutoff = max(fractionComplete, 0.5f); //starts to disappear once fractionComplete takes over
+				if(grayScale.r < cutoff)
+				{
+					discard;
+				}
+				
+				////////////////////////////////////////////
+				// colorize grayscale
+				////////////////////////////////////////////
+				fragmentColor = grayScale * vec4(shieldColor, 1.f);
+				
+				position = fragPosition;
+				normal = vec3(0.f); //hopefully this will prevent lighting from being applied, since this is an emissive shader
+				albedo_spec.rgb = fragColor.rgb;
+				albedo_spec.a = 0.f;
+			}
+		)";
+
+
 		sp<ParticleConfig> ParticleCache::getEffect(const sp<Model3D>& model, const glm::vec3& color)
 		{
 			sp<ShieldParticleConfig> particle;
@@ -173,8 +241,16 @@ namespace SA
 
 				sp<Particle::Effect> shieldModelEffect = new_sp<Particle::Effect>();
 				{
-					sp<Shader> shieldShader= new_sp<Shader>(ShieldShaderVS_src, ShieldShaderFS_src, false);
-					shieldModelEffect->shader = shieldShader;
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+					sp<Shader> shieldShader = GameBase::get().getRenderSystem().usingDeferredRenderer() ?
+						new_sp<Shader>(ShieldShaderVS_src, ShieldShader_deferred_fs, false) : 
+						new_sp<Shader>(ShieldShaderVS_src, ShieldShaderFS_src, false);
+					TODO_above_will_have_problems_if_we_dont_set_up_deferred_very_early
+					TODO_update_projectile_healing_seeker_shader_to_be_deferred___this_is_somewhere_else__shipplacements_cpp_i_think; 
+#else
+					sp<Shader> shieldShader = new_sp<Shader>(ShieldShaderVS_src, ShieldShaderFS_src, false);
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+					shieldModelEffect->forwardShader = shieldShader;
 					shieldModelEffect->mesh = new_sp<Model3DWrapper>(model, shieldShader);
 
 					//material : 

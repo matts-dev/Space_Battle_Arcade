@@ -258,6 +258,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\BuiltInShaders.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SACameraFPS.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\DeferredRendering\DeferredRendererStateMachine.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\DeferredRendering\DeferredRenderingShaders.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\PointLight_Deferred.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SALightBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.h" />
@@ -583,6 +586,8 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Slider.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\DeferredRendering\DeferredRendererStateMachine.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\PointLight_Deferred.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SALightBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\RenderData.cpp" />

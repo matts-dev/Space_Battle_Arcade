@@ -1,18 +1,20 @@
-#include "SAParticleSystem.h"
-#include "SALevelSystem.h"
-#include "SAGameBase.h"
-#include "SALog.h"
-#include "SALevel.h"
-#include "../Tools/Geometry/SimpleShapes.h"
 #include <assert.h>
-#include "../Tools/SAUtilities.h"
-#include "SAPlayerSystem.h"
-#include "../Rendering/Camera/SACameraBase.h"
-#include "SAPlayerBase.h"
-#include "SAWindowSystem.h"
-#include "../Rendering/OpenGLHelpers.h"
 #include <stack>
 #include "SAAssetSystem.h"
+#include "SALevelSystem.h"
+#include "SALog.h"
+#include "SALevel.h"
+#include "SAGameBase.h"
+#include "SAParticleSystem.h"
+#include "SAPlayerSystem.h"
+#include "SAPlayerBase.h"
+#include "SAWindowSystem.h"
+#include "../Tools/Geometry/SimpleShapes.h"
+#include "../Tools/SAUtilities.h"
+#include "../Rendering/Camera/SACameraBase.h"
+#include "../Rendering/OpenGLHelpers.h"
+#include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
+#include "SARenderSystem.h"
 
 namespace SA
 {
@@ -94,7 +96,7 @@ namespace SA
 			//validate particle has all necessary data; early out if not
 			for (sp<Particle::Effect>& effect : params.particle->effects)
 			{
-				if (!effect->shader)
+				if (!effect->forwardShader)
 				{
 					log("Particle System", LogLevel::LOG_ERROR, "Particle spawned with no shader");
 					return spawnResult;
@@ -103,7 +105,7 @@ namespace SA
 
 			for (sp<Particle::Effect>& effect : params.particle->effects)
 			{
-				auto findIter = shaderToInstanceDataIndex.find(effect->shader);
+				auto findIter = shaderToInstanceDataIndex.find(effect->forwardShader);
 
 				/// generate effectShader-to-dataEntry if one doesn't exist 
 				if (findIter == shaderToInstanceDataIndex.end())
@@ -113,8 +115,8 @@ namespace SA
 					instancedEffectsData.emplace_back();
 					effect->assignedShaderIndex = nextId;
 
-					shaderToInstanceDataIndex[effect->shader] = nextId;
-					findIter = shaderToInstanceDataIndex.find(effect->shader);
+					shaderToInstanceDataIndex[effect->forwardShader] = nextId;
+					findIter = shaderToInstanceDataIndex.find(effect->forwardShader);
 
 					//set up the configured instance data to contain correct attributes and uniforms
 					// #suggested perhaps set this init in an "init/ctor" function on EffectInstanceData class
@@ -355,7 +357,7 @@ namespace SA
 					}
 
 					//activate shader
-					sp<Shader>& shader = eid.effectData->shader;
+					sp<Shader>& shader = eid.effectData->forwardShader;
 					shader->use();
 
 					//supply uniforms (important that we use uniforms for shared data and not attributes as we do not want run out of attribute space)
@@ -496,117 +498,245 @@ namespace SA
 	///////////////////////////////////////////////////////////////////////
 	// particle factory
 	///////////////////////////////////////////////////////////////////////
-	static char const* const SimpleExplosionVS_src = R"(
-				#version 330 core
-				layout (location = 0) in vec3 position;				
-				layout (location = 1) in vec3 normal;
-				layout (location = 2) in vec2 uv;
-                //layout (location = 3) in vec3 tangent;
-                //layout (location = 4) in vec3 bitangent; //may can get 1 more attribute back by calculating this cross(normal, tangent);
-					//layout (location = 5) in vec3 reserved;
-					//layout (location = 6) in vec3 reserved;
-				layout (location = 7) in vec4 effectData1; //x=timeAlive,y=fractionComplete
-				layout (location = 8) in mat4 model; //consumes attribute locations 8,9,10,11
-					//layout (location = 12) in vec3 reserved;
-					//layout (location = 13) in vec3 reserved;
-					//layout (location = 14) in vec3 reserved;
-					//layout (location = 15) in vec3 reserved;
+	static char const* const simpleExplosionVS_src = R"(
+		#version 330 core
+		layout (location = 0) in vec3 position;				
+		layout (location = 1) in vec3 normal;
+		layout (location = 2) in vec2 uv;
+        //layout (location = 3) in vec3 tangent;
+        //layout (location = 4) in vec3 bitangent; //may can get 1 more attribute back by calculating this cross(normal, tangent);
+			//layout (location = 5) in vec3 reserved;
+			//layout (location = 6) in vec3 reserved;
+		layout (location = 7) in vec4 effectData1; //x=timeAlive,y=fractionComplete
+		layout (location = 8) in mat4 model; //consumes attribute locations 8,9,10,11
+			//layout (location = 12) in vec3 reserved;
+			//layout (location = 13) in vec3 reserved;
+			//layout (location = 14) in vec3 reserved;
+			//layout (location = 15) in vec3 reserved;
 
-				uniform mat4 projection_view;
-				uniform vec3 camPos;
+		uniform mat4 projection_view;
+		uniform vec3 camPos;
 
-				out vec2 uvCoords;
-				out float timeAlive;
-				out float fractionComplete;
+		out vec2 uvCoords;
+		out float timeAlive;
+		out float fractionComplete;
 
-				void main(){
-					gl_Position = projection_view * model * vec4(position, 1.0f);
+		void main(){
+			gl_Position = projection_view * model * vec4(position, 1.0f);
 
-					timeAlive = effectData1.x;
-					float effectEndTime = effectData1.y;
-					fractionComplete = timeAlive / effectEndTime;
+			timeAlive = effectData1.x;
+			float effectEndTime = effectData1.y;
+			fractionComplete = timeAlive / effectEndTime;
 					
-					uvCoords = uv;
-				}
-			)";
-
-	static char const* const SimpleExplosionFS_src = R"(
-	#version 330 core
-	out vec4 fragColor;
-
-	in vec2 uvCoords;
-	in float timeAlive;
-	in float fractionComplete;
-
-	uniform vec3 debug_color = vec3(1.f, 0.f, 1.f);
-	uniform vec3 camPos;
-
-	uniform vec3 darkColor = vec3(1.f, 0.f, 1.f);
-	uniform vec3 medColor = vec3(1.f, 0.f, 1.f);
-	uniform vec3 brightColor = vec3(1.f, 0.f, 1.f);
-
-	uniform sampler2D tessellateTex;
-
-	void main(){
-		//----------------------------------------------
-		//render as a base color
-		//fragColor = vec4(debug_color, 1.f);
-
-		//----------------------------------------------
-		//debug render time variables
-		//fragColor = vec4(vec3(1.f - fractionComplete), 1.f);
-		//fragColor = vec4(vec3(fractionComplete), 1.f);
-
-		//----------------------------------------------
-		vec2 preventAlignmentOffset = vec2(0.1, 0.2);
-		float medMove = 0.5f *fractionComplete;
-		float smallMove = 0.5f *fractionComplete;
-
-		vec2 baseEffectUV = uvCoords * vec2(5,5);
-		vec2 mediumTessUV_UR = uvCoords * vec2(10,10) + vec2(medMove, medMove) + preventAlignmentOffset;
-		vec2 mediumTessUV_UL = uvCoords * vec2(10,10) + vec2(medMove, -medMove);
-
-		vec2 smallTessUV_UR = uvCoords * vec2(20,20) + vec2(smallMove, smallMove) + preventAlignmentOffset;
-		vec2 smallTessUV_UL = uvCoords * vec2(20,20) + vec2(smallMove, -smallMove);
-
-		///////////////////////////////////////////////////////////////
-		//at this point, rgb should all be matching values (white color)
-		///////////////////////////////////////////////////////////////
-		vec4 largeTesselations = texture(tessellateTex, baseEffectUV);
-		vec4 mediumTesselations = 0.5f * texture(tessellateTex, mediumTessUV_UR)
-									+ 0.5f * texture(tessellateTex, mediumTessUV_UL);
-		vec4 smallTesselations = 0.5f * texture(tessellateTex, smallTessUV_UR)
-								+ 0.5f * texture(tessellateTex, smallTessUV_UL);
-		smallTesselations = (smallTesselations * -1) + vec4(vec3(1), 0);			//flip pattern
-
-		///////////////////////////////////////////////////////////////
-		// discard fragment logic
-		///////////////////////////////////////////////////////////////			
-
-		//easily disable in debugging these by setting to false
-		float startDisappearing = 0.5f;										//point at which fading should start in the particles lifetime [0, 1]
-		float fadeRegion = 1.f - startDisappearing;
-		float fadeThreshold = ((fractionComplete - startDisappearing) / fadeRegion);	//[0, 1]
-	
-		bool bPassColorThreshold = largeTesselations.r > fadeThreshold;
-		if(!bPassColorThreshold)
-		{
-			discard;
+			uvCoords = uv;
 		}
+	)";
 
-		///////////////////////////////////////////////////////////////
-		//colorize white textures
-		///////////////////////////////////////////////////////////////
+	static char const* const simpleExplosionFS_src = R"(
+		#version 330 core
+		out vec4 fragColor;
+
+		in vec2 uvCoords;
+		in float timeAlive;
+		in float fractionComplete;
+
+		uniform vec3 debug_color = vec3(1.f, 0.f, 1.f);
+		uniform vec3 camPos;
+
+		uniform vec3 darkColor = vec3(1.f, 0.f, 1.f);
+		uniform vec3 medColor = vec3(1.f, 0.f, 1.f);
+		uniform vec3 brightColor = vec3(1.f, 0.f, 1.f);
+
+		uniform sampler2D tessellateTex;
+
+		void main(){
+			//----------------------------------------------
+			//render as a base color
+			//fragColor = vec4(debug_color, 1.f);
+
+			//----------------------------------------------
+			//debug render time variables
+			//fragColor = vec4(vec3(1.f - fractionComplete), 1.f);
+			//fragColor = vec4(vec3(fractionComplete), 1.f);
+
+			//----------------------------------------------
+			vec2 preventAlignmentOffset = vec2(0.1, 0.2);
+			float medMove = 0.5f *fractionComplete;
+			float smallMove = 0.5f *fractionComplete;
+
+			vec2 baseEffectUV = uvCoords * vec2(5,5);
+			vec2 mediumTessUV_UR = uvCoords * vec2(10,10) + vec2(medMove, medMove) + preventAlignmentOffset;
+			vec2 mediumTessUV_UL = uvCoords * vec2(10,10) + vec2(medMove, -medMove);
+
+			vec2 smallTessUV_UR = uvCoords * vec2(20,20) + vec2(smallMove, smallMove) + preventAlignmentOffset;
+			vec2 smallTessUV_UL = uvCoords * vec2(20,20) + vec2(smallMove, -smallMove);
+
+			///////////////////////////////////////////////////////////////
+			//at this point, rgb should all be matching values (white color)
+			///////////////////////////////////////////////////////////////
+			vec4 largeTesselations = texture(tessellateTex, baseEffectUV);
+			vec4 mediumTesselations = 0.5f * texture(tessellateTex, mediumTessUV_UR)
+										+ 0.5f * texture(tessellateTex, mediumTessUV_UL);
+			vec4 smallTesselations = 0.5f * texture(tessellateTex, smallTessUV_UR)
+									+ 0.5f * texture(tessellateTex, smallTessUV_UL);
+			smallTesselations = (smallTesselations * -1) + vec4(vec3(1), 0);			//flip pattern
+
+			///////////////////////////////////////////////////////////////
+			// discard fragment logic
+			///////////////////////////////////////////////////////////////			
+
+			//easily disable in debugging these by setting to false
+			float startDisappearing = 0.5f;										//point at which fading should start in the particles lifetime [0, 1]
+			float fadeRegion = 1.f - startDisappearing;
+			float fadeThreshold = ((fractionComplete - startDisappearing) / fadeRegion);	//[0, 1]
+	
+			bool bPassColorThreshold = largeTesselations.r > fadeThreshold;
+			if(!bPassColorThreshold)
+			{
+				discard;
+			}
+
+			///////////////////////////////////////////////////////////////
+			//colorize white textures
+			///////////////////////////////////////////////////////////////
 						
-		float colorGrowth = clamp(fractionComplete*4, 0, 1);
+			float colorGrowth = clamp(fractionComplete*4, 0, 1);
 
-		fragColor = vec4(0,0,0,1);
-		fragColor += (largeTesselations * 1.0) * vec4(darkColor, 0.f);
-		fragColor += (mediumTesselations * 1.0f) * vec4(medColor, 0.f);
-		fragColor = fragColor *= max(0.1f, colorGrowth);	
+			fragColor = vec4(0,0,0,1);
+			fragColor += (largeTesselations * 1.0) * vec4(darkColor, 0.f);
+			fragColor += (mediumTesselations * 1.0f) * vec4(medColor, 0.f);
+			fragColor = fragColor *= max(0.1f, colorGrowth);	
 		
-		fragColor += (smallTesselations * 0.3f) * vec4(brightColor, 0.f);
-	}
+			fragColor += (smallTesselations * 0.3f) * vec4(brightColor, 0.f);
+		}
+	)";
+
+
+	static char const* const simpleExplosion_deferred_vs = R"(
+		#version 330 core
+		layout (location = 0) in vec3 position;				
+		layout (location = 1) in vec3 normal;
+		layout (location = 2) in vec2 uv;
+
+        //layout (location = 3) in vec3 tangent;
+        //layout (location = 4) in vec3 bitangent; //may can get 1 more attribute back by calculating this cross(normal, tangent);
+			//layout (location = 5) in vec3 reserved;
+			//layout (location = 6) in vec3 reserved;
+		layout (location = 7) in vec4 effectData1; //x=timeAlive,y=fractionComplete
+		layout (location = 8) in mat4 model; //consumes attribute locations 8,9,10,11
+			//layout (location = 12) in vec3 reserved;
+			//layout (location = 13) in vec3 reserved;
+			//layout (location = 14) in vec3 reserved;
+			//layout (location = 15) in vec3 reserved;
+
+		uniform mat4 projection_view;
+		uniform vec3 camPos;
+
+		out vec2 uvCoords;
+		out float timeAlive;
+		out float fractionComplete;
+		out vec3 fragPosition;
+
+		void main(){
+			gl_Position = projection_view * model * vec4(position, 1.0f);
+
+			timeAlive = effectData1.x;
+			float effectEndTime = effectData1.y;
+			fractionComplete = timeAlive / effectEndTime;
+					
+			uvCoords = uv;
+
+			fragPosition = vec3(gl_Position);
+		}
+	)";
+
+
+	static char const* const simpleExplosion_deferred_fs = R"(
+		#version 330 core
+
+		//framebuffer locations 
+		layout (location = 0) out vec3 position;
+		layout (location = 1) out vec3 normal;
+		layout (location = 2) out vec4 albedo_spec;
+
+		in vec2 uvCoords;
+		in float timeAlive;
+		in float fractionComplete;
+		in vec3 fragPosition;
+
+		uniform vec3 debug_color = vec3(1.f, 0.f, 1.f);
+		uniform vec3 camPos;
+
+		uniform vec3 darkColor = vec3(1.f, 0.f, 1.f);
+		uniform vec3 medColor = vec3(1.f, 0.f, 1.f);
+		uniform vec3 brightColor = vec3(1.f, 0.f, 1.f);
+
+		uniform sampler2D tessellateTex;
+
+		void main(){
+			//----------------------------------------------
+			//render as a base color
+			//fragColor = vec4(debug_color, 1.f);
+
+			//----------------------------------------------
+			//debug render time variables
+			//fragColor = vec4(vec3(1.f - fractionComplete), 1.f);
+			//fragColor = vec4(vec3(fractionComplete), 1.f);
+
+			//----------------------------------------------
+			vec2 preventAlignmentOffset = vec2(0.1, 0.2);
+			float medMove = 0.5f *fractionComplete;
+			float smallMove = 0.5f *fractionComplete;
+
+			vec2 baseEffectUV = uvCoords * vec2(5,5);
+			vec2 mediumTessUV_UR = uvCoords * vec2(10,10) + vec2(medMove, medMove) + preventAlignmentOffset;
+			vec2 mediumTessUV_UL = uvCoords * vec2(10,10) + vec2(medMove, -medMove);
+
+			vec2 smallTessUV_UR = uvCoords * vec2(20,20) + vec2(smallMove, smallMove) + preventAlignmentOffset;
+			vec2 smallTessUV_UL = uvCoords * vec2(20,20) + vec2(smallMove, -smallMove);
+
+			///////////////////////////////////////////////////////////////
+			//at this point, rgb should all be matching values (white color)
+			///////////////////////////////////////////////////////////////
+			vec4 largeTesselations = texture(tessellateTex, baseEffectUV);
+			vec4 mediumTesselations = 0.5f * texture(tessellateTex, mediumTessUV_UR)
+										+ 0.5f * texture(tessellateTex, mediumTessUV_UL);
+			vec4 smallTesselations = 0.5f * texture(tessellateTex, smallTessUV_UR)
+									+ 0.5f * texture(tessellateTex, smallTessUV_UL);
+			smallTesselations = (smallTesselations * -1) + vec4(vec3(1), 0);			//flip pattern
+
+			///////////////////////////////////////////////////////////////
+			// discard fragment logic
+			///////////////////////////////////////////////////////////////			
+
+			//easily disable in debugging these by setting to false
+			float startDisappearing = 0.5f;										//point at which fading should start in the particles lifetime [0, 1]
+			float fadeRegion = 1.f - startDisappearing;
+			float fadeThreshold = ((fractionComplete - startDisappearing) / fadeRegion);	//[0, 1]
+	
+			bool bPassColorThreshold = largeTesselations.r > fadeThreshold;
+			if(!bPassColorThreshold)
+			{
+				discard;
+			}
+
+			///////////////////////////////////////////////////////////////
+			//colorize white textures
+			///////////////////////////////////////////////////////////////
+						
+			float colorGrowth = clamp(fractionComplete*4, 0, 1);
+
+			vec4 fragColor = vec4(0,0,0,1);
+			fragColor += (largeTesselations * 1.0) * vec4(darkColor, 0.f);
+			fragColor += (mediumTesselations * 1.0f) * vec4(medColor, 0.f);
+			fragColor = fragColor *= max(0.1f, colorGrowth);	
+			fragColor += (smallTesselations * 0.3f) * vec4(brightColor, 0.f);
+
+			albedo_spec.rgb = fragColor.rgb;
+			albedo_spec.a = 0.f;
+			normal.rgb = vec3(0.f); //perhaps zero normal will make this immue to lighting contributions?
+			position = fragPosition;
+		}
 	)";
 
 
@@ -614,6 +744,10 @@ namespace SA
 	{
 		//#TODO define a shader for each effect
 		//#TODO define number of mat4s expected
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		TODO_set_up_deferred_particle_rendering_shaders;
+		todo_sheild_particle_to_have_deferred_rendering_shader;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 
 		static sp<SphereMeshTextured> sphereMesh = new_sp<SphereMeshTextured>();
 		static sp<ParticleConfig> sphereEffect = []() -> sp<ParticleConfig> 
@@ -657,7 +791,12 @@ namespace SA
 
 					//new keyframe chain -- a series of things to animate sequentially
 					sphereEffect->keyFrameChains.emplace_back();
-					sphereEffect->shader = new_sp<Shader>(SimpleExplosionVS_src, SimpleExplosionFS_src, false);
+					sphereEffect->forwardShader = new_sp<Shader>(simpleExplosionVS_src, simpleExplosionFS_src, false);
+
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+					sphereEffect->deferredShader = new_sp<Shader>(simpleExplosion_deferred_vs, simpleExplosion_deferred_fs, false);
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
 					Particle::KeyFrameChain& scaleEffectChain = sphereEffect->keyFrameChains.back();
 					{
 						//new effect key frame -- a step in the series

@@ -18,6 +18,7 @@
 #include "../../../GameFramework/SAWindowSystem.h"
 #include "../../../Rendering/Camera/SAQuaternionCamera.h"
 #include "../../../Tools/PlatformUtils.h"
+#include "../../../GameFramework/SARenderSystem.h"
 
 namespace SA
 {
@@ -179,6 +180,10 @@ namespace SA
 		}
 
 		GameBase::get().getLevelSystem().onPreLevelChange.addWeakObj(sp_this(), &LaserUIPool::handlePreLevelChange);
+
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		todo_make_laser_shader_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 
 		laserShader = new_sp<Shader>(laserShader_vs, laserShader_fs, false);
 	}

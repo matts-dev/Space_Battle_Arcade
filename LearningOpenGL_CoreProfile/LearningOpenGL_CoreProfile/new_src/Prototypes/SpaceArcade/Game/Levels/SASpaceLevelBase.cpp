@@ -57,6 +57,12 @@ namespace SA
 		{
 			const sp<CameraBase>& camera = zeroPlayer->getCamera();
 
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+			todo_update_star_FIELD_shader_to_be_deferred;
+			todo_update_star_shader_to_be_deferred;
+			todo_update_planet_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
 			if (starField)
 			{
 				starField->render(dt_sec, FRD->view, FRD->projection);
@@ -114,6 +120,9 @@ namespace SA
 			}
 
 
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+			todo_update_model_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 			CustomGameShaders& gameCustomShaders = SpaceArcade::get().getGameCustomShaders();
 			gameCustomShaders.forwardModelShader = forwardShadedModelShader;
 
@@ -169,6 +178,9 @@ namespace SA
 			{
 				ec(glStencilFunc(GL_NOTEQUAL, stencilHighlightBit, 0xFF)); //only render if we haven't stenciled this area
 
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+				todo_update_highlight_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 				highlightForwardModelShader->use();
 
 				mat4 highlightScaleUp = glm::scale(mat4(1.f), vec3(2.f));

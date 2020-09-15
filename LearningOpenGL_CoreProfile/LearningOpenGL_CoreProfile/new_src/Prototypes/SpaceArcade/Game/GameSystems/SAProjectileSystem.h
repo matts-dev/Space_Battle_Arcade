@@ -10,6 +10,8 @@
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/ObjectPools.h"
 #include "../AssetConfigs/SoundEffectSubConfig.h"
+#include <optional>
+#include "../../Rendering/Lights/PointLight_Deferred.h"
 
 namespace SA
 {
@@ -18,6 +20,7 @@ namespace SA
 	class LevelBase;
 	class WorldEntity;
 	class AudioEmitter;
+	class PointLight_Deferred;
 
 	struct SoundEffectSubConfig;
 
@@ -49,6 +52,7 @@ namespace SA
 		bool bHit;
 		sp<const Model3D> model;
 		sp<AudioEmitter> soundEmitter = nullptr;
+		sp<PointLight_Deferred> pointLight = nullptr;
 
 		void tick(float dt_sec, LevelBase&);
 		void stretchToDistance(float distance, float bDoCollisionTest, LevelBase& currentLevel);
@@ -92,6 +96,7 @@ namespace SA
 			int damage = 25;
 			size_t team = 0;
 			SoundEffectSubConfig sfx;
+			std::optional<PointLight_Deferred::UserData> projectileLightData = std::nullopt;
 			sp<WorldEntity> owner = nullptr;
 		};
 		void spawnProjectile(const SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle);
@@ -101,17 +106,24 @@ namespace SA
 		void renderProjectileBoundingBoxes(Shader& debugShader, const glm::vec3& color, const glm::mat4& view, const glm::mat4& perspective) const;
 
 		sp<AudioEmitter> spawnSfxEffect(const SoundEffectSubConfig& sfx, glm::vec3 position);
+		sp<PointLight_Deferred> spawnPointLight(const ProjectileSystem::SpawnData& spawnData);
 
 	private:
 		virtual void initSystem() override;
 		virtual void tick(float dt_sec) override {};
 		void postGameLoopTick(float dt_sec);
 		void handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
+		void handleRenderDispatch(float dtSec);
 
 	private:
 		bool bAutomaticTickProjectiles = true;
+		bool bEnableProjectilePointLights = true;
 		SP_SimpleObjectPool<Projectile> objPool;
 		SP_SimpleObjectPool_RestrictedConstruction<AudioEmitter> sfxPool;
+		SP_SimpleObjectPool_RestrictedConstruction<PointLight_Deferred> lightPool;
+
+		sp<Shader> forwardShaded_EmissiveModelShader;
+		sp<Shader> deferedShaded_EmissiveModelShader;
 
 		//this is not the most cache coherent design, but wanting to get working prototype before spending time on optimizations
 		//one potential cache friend optimization is to not use sp, and store in a large std::vector that does swap removes (with objects maintaing idices)

@@ -130,7 +130,8 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		struct Effect
 		{
-			sp<Shader> shader;
+			sp<Shader> forwardShader;
+			sp<Shader> deferredShader;
 			sp<ShapeMesh> mesh;
 			std::vector<Material> materials;
 

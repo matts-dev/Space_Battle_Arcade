@@ -6,6 +6,7 @@
 #include "..\Tools\SAUtilities.h"
 #include "..\Rendering\BuiltInShaders.h"
 #include "..\Rendering\SAShader.h"
+#include "..\GameFramework\SARenderSystem.h"
 
 
 namespace SA
@@ -21,6 +22,10 @@ namespace SA
 
 	void PrimitiveShapeRenderer::renderUnitCube(const RenderParameters& params)
 	{
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		todo_update_simple_shape_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
 		simpleShader->use();
 		simpleShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(params.model));
 		simpleShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(params.view));

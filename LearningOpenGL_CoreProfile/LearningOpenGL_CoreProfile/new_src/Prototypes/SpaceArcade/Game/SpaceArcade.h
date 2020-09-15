@@ -42,7 +42,8 @@ namespace SA
 		virtual void onShutDown() override;
 		virtual void tickGameLoop(float deltaTimeSecs) override;
 		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) override;
-		virtual void renderLoop(float deltaTimeSecs) override;
+		virtual void renderLoop_begin(float deltaTimeSecs) override;
+		virtual void renderLoop_end(float deltaTimeSecs) override;
 		virtual void onRegisterCustomSystem() override;
 		virtual sp<CheatSystemBase> createCheatSystemSubclass() override;
 		virtual sp<TickGroups> onRegisterTickGroups();
@@ -129,7 +130,7 @@ namespace SA
 		//shaders
 		sp<Shader> litObjShader;
 		sp<Shader> lampObjShader;
-		sp<Shader> forwardShaded_EmissiveModelShader;
+		//sp<Shader> forwardShaded_EmissiveModelShader;
 		sp<Shader> debugLineShader;
 		CustomGameShaders customShaders;
 

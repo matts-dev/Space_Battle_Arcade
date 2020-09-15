@@ -173,12 +173,11 @@ namespace SA
 		star->setXform(newStarXform);
 	}
 
-	void MainMenuLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
-	{
-		Parent::render(dt_sec, view, projection);
+	//void MainMenuLevel::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
+	//{
+	//	Parent::render(dt_sec, view, projection);
 
-
-	}
+	//}
 
 	void MainMenuLevel::tick_v(float dt_sec)
 	{

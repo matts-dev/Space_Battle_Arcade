@@ -3,6 +3,7 @@
 #include "../../../../Rendering/SAShader.h"
 #include "../../../../Rendering/RenderData.h"
 #include "../../../../GameFramework/SALog.h"
+#include "../../../../GameFramework/SARenderSystem.h"
 
 namespace SA
 {
@@ -216,12 +217,22 @@ namespace SA
 	{
 		//sharing shader, no reason to duplicate this
 		static sp<Shader> shader = new_sp<Shader>(DigitalClockShader_uniformDrive_vs, DigitalClockShader_instanced_fs, false);
+
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		todo_update_uniform_text_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
 		return shader;
 	}
 	sp<Shader> getDefaultGlyphShader_instanceBased()
 	{
 		//sharing shader, no reason to duplicate this
 		static sp<Shader> shader = new_sp<Shader>(DigitalClockShader_instanced_vs, DigitalClockShader_instanced_fs, false);
+
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		todo_update_instance_text_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
 		return shader;
 	}
 

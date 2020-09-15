@@ -7,6 +7,7 @@
 #include "../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
 #include "SAPrimitiveShapeRenderer.h"
 #include "../GameFramework/SACollisionUtils.h"
+#include "../GameFramework/SARenderSystem.h"
 
 namespace SA
 {
@@ -64,6 +65,9 @@ namespace SA
 		ec(glPolygonMode(GL_FRONT_AND_BACK, polygonMode));
 		glm::mat4 model = entityXform * aabbLocalXform;
 
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		todo_make_collisionshapeshader_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 		collisionShapeShader->use();
 		collisionShapeShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 		collisionShapeShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));

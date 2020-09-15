@@ -1,6 +1,12 @@
 #include "SARenderSystem.h"
 #include "SAGameBase.h"
 #include "../Rendering/RenderData.h"
+#include "../Rendering/SAGPUResource.h"
+#include <algorithm>
+#include "../Tools/SAUtilities.h"
+#include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
+#include "../Rendering/SAShader.h"
+#include "../Rendering/Lights/PointLight_Deferred.h"
 
 namespace SA
 {
@@ -14,6 +20,8 @@ namespace SA
 		{
 			renderFrameCircularBuffer.push_back(new_sp<RenderData>());
 		}
+
+		amort_PointLight_GC.chunkSize = 10;
 	}
 
 	RenderData* RenderSystem::getFrameRenderData(uint64_t frameNumber)
@@ -36,6 +44,77 @@ namespace SA
 		//#TODO #frame_delayed_rendering note also, we're going to have to build a few frames data before rendering. Not sure where this will go.
 	}
 
+	void RenderSystem::enableDeferredRenderer(bool bEnable)
+	{
+		if (bEnable)
+		{
+			if (!deferredRenderer)
+			{
+				deferredRenderer = new_sp<DeferredRendererStateMachine>();
+			}
+		}
+		else
+		{
+			if (deferredRenderer)
+			{
+				deferredRenderer->cleanup();
+				deferredRenderer = nullptr;
+			}
+		}
+
+	}
+
+	void RenderSystem::tick(float dt_sec)
+	{
+		//SystemBase::tick(dt_sec);
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// pseudo garbage collection (doesn't clean circular refernences)
+		//
+		// right now just doing this because it is a simple way to solve the problem of letting users create pointlights 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		{
+			static std::vector<size_t> pointLight_gcIndices;
+			pointLight_gcIndices.reserve(amort_PointLight_GC.chunkSize);
+			pointLight_gcIndices.clear();
+
+			for (size_t idx = amort_PointLight_GC.updateStart(userPointLights);
+				idx < amort_PointLight_GC.getStopIdxSafe(userPointLights);
+				++idx)
+			{
+				const sp<PointLight_Deferred>& pointLight = userPointLights[idx];
+			
+				//determine if we should clear out the point light
+				if (!pointLight)
+				{
+					pointLight_gcIndices.push_back(idx);
+				}
+				else
+				{
+					if (pointLight.use_count() == 1)
+					{
+						pointLight_gcIndices.push_back(idx);
+					}
+				}
+			}
+
+			//must process removal indices in reverse order so that we don't invalidate other indices
+			std::sort(pointLight_gcIndices.begin(), pointLight_gcIndices.end(), std::greater<>());
+			for (size_t idx : pointLight_gcIndices)
+			{
+				Utils::swapAndPopback(userPointLights, idx);
+			}
+		}
+	}
+
+	const SA::sp<SA::PointLight_Deferred> RenderSystem::createPointLight()
+	{
+		sp<PointLight_Deferred> newPointLight = new_sp<PointLight_Deferred>(PointLight_Deferred::PrivateConstructionKey{});
+
+		userPointLights.push_back(newPointLight);
+
+		return newPointLight;
+	}
 
 }
 

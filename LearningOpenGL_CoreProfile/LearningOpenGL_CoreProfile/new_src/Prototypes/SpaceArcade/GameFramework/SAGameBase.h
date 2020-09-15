@@ -97,7 +97,7 @@ namespace SA
 		MultiDelegate<float /*deltaSec*/> onPreGameloopTick;
 		MultiDelegate<float /*deltaSec*/> onPostGameloopTick;
 		MultiDelegate<float /*deltaSec*/> onRenderDispatch;
-		MultiDelegate<float /*deltaSec*/> onRenderDispatchEnding;
+		MultiDelegate<float /*deltaSec*/> onRenderDispatchEnded;
 		MultiDelegate<uint64_t /*endingFrameNumber*/> onFrameOver;
 
 	private: 
@@ -105,7 +105,8 @@ namespace SA
 	protected:
 		virtual void tickGameLoop(float deltaTimeSecs) = 0;
 		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) = 0;
-		virtual void renderLoop(float deltaTimeSecs) = 0;
+		virtual void renderLoop_begin(float deltaTimeSecs) = 0;
+		virtual void renderLoop_end(float deltaTimeSecs) = 0;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	//  SYSTEMS 

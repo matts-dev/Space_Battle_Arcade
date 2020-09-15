@@ -4,6 +4,15 @@
 
 namespace SA
 {
+
+	void GPUResource::cleanup()
+	{
+		if (hasAcquiredResources())
+		{
+			onReleaseGPUResources();
+		}
+	}
+
 	void GPUResource::postConstruct()
 	{
 		GameBase& game = GameBase::get();

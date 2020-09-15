@@ -23,7 +23,7 @@ namespace SA
 		virtual void startLevel_v() override;
 		virtual void onCreateLocalPlanets() override;
 		virtual void onCreateLocalStars() override;
-		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
+		//virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
 		virtual void tick_v(float dt_sec) override;
 	private:
 		void handleGameUIRenderDispatch(GameUIRenderData& uiRenderData);

@@ -129,9 +129,10 @@ namespace SA
 			onPostGameloopTick.broadcast(deltaTimeSecs);
 
 			cacheRenderDataForCurrentFrame(*renderSystem->getFrameRenderData_Write(frameNumber, identityKey));
-			renderLoop(deltaTimeSecs); //#future perhaps this should just hook into the OnRenderDispatch below
+			renderLoop_begin(deltaTimeSecs);
 			onRenderDispatch.broadcast(deltaTimeSecs); //perhaps this needs to be a sorted structure with prioritizes; but that may get hard to maintain. Needs to be a systematic way for UI to come after other rendering.
-			onRenderDispatchEnding.broadcast(deltaTimeSecs);
+			renderLoop_end(deltaTimeSecs);
+			onRenderDispatchEnded.broadcast(deltaTimeSecs); 
 
 			//perhaps this should be a subscription service since few systems care about post render //TODO this sytem should probably be removed and instead just subscribe to delegate
 			for (const sp<SystemBase>& system : postRenderNotifys) { system->handlePostRender();}

@@ -31,6 +31,7 @@ namespace SA
 			else{assert(false); /*releasing nullptr to object pool*/}
 		}
 
+		void reserve(size_t size) { pool.reserve(size); }
 		void clear() {pool.clear();}
 	private:
 		std::vector<sp<T>> pool;
@@ -62,6 +63,7 @@ namespace SA
 			}
 			else{assert(false); /*releasing nullptr to object pool*/}
 		}
+		void reserve(size_t size) { pool.reserve(size); }
 		void clear() { pool.clear(); }
 	private:
 		std::vector<sp<T>> pool;
@@ -93,10 +95,8 @@ namespace SA
 			pool.push_back(object);
 		}
 
-		void reserve(size_t size)
-		{
-			pool.reserve(size);
-		}
+		void reserve(size_t size) { pool.reserve(size); }
+		void clear() { pool.clear(); }
 		size_t size() const { return pool.size(); }
 
 	private:

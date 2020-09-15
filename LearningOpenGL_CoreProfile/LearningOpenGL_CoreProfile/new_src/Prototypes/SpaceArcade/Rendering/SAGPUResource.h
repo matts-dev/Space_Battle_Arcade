@@ -12,6 +12,8 @@ namespace SA
 	{
 	public:
 		inline bool hasAcquiredResources() const { return bAcquiredGPUResource; }
+		//virtual ~GPUResource(); //thinking about adding this? cleaning up via virtual functions in dtor is probably not what you want
+		void cleanup();
 	protected:
 		virtual void postConstruct() override;
 	private:

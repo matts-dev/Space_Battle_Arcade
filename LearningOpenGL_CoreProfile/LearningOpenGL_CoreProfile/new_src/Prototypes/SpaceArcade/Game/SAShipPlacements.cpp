@@ -706,6 +706,9 @@ namespace SA
 				spawnData.team = teamData.team;
 				spawnData.sfx = projectileSFX;
 				spawnData.owner = sp_this();
+				PointLight_Deferred::UserData pointLightData;
+				pointLightData.diffuseIntensity = teamData.color;
+				spawnData.projectileLightData = pointLightData;
 
 				const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
 				projectileSys->spawnProjectile(spawnData, *teamData.primaryProjectile);
@@ -859,7 +862,7 @@ namespace SA
 	// Communications placement
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	static char const* const activeSeekerShader_vs = R"(
+	static char const* const activeSeekerShader_forward_vs = R"(
 		#version 330 core
 		layout (location = 0) in vec3 position;				
 		layout (location = 1) in vec3 normal;
@@ -878,7 +881,7 @@ namespace SA
 			uv = modelUV;
 		}
 	)";
-	static char const* const activeSeekerShader_fs = R"(
+	static char const* const activeSeekerShader_forward_fs = R"(
 		#version 330 core
 		out vec4 fragColor;
 
@@ -942,6 +945,76 @@ namespace SA
 		#endif
 		}
 	)";
+
+	static char const* const activeSeekerShader_deferred_fs = R"(
+		#version 330 core
+
+		//framebuffer locations 
+		layout (location = 0) out vec3 position;
+		layout (location = 1) out vec3 normal;
+		layout (location = 2) out vec4 albedo_spec;
+
+		in vec3 color;
+		in vec2 uv;
+
+		uniform vec3 uniformColor;
+		uniform sampler2D tessellateTex;
+
+		void main()
+		{
+			vec4 fragColor;
+
+			////////////////////////////////////////////
+			//This is all taken from shield effect, consult that shader for questions
+			////////////////////////////////////////////
+			float fractionComplete = 0.5f; //hard code time dependent values
+
+			////////////////////////////////////////////
+			//get a grayscale tessellated pattern
+
+			vec2 preventAlignmentOffset = vec2(0.1, 0.2);
+			float medMove = 0.5f *fractionComplete;
+			float smallMove = 0.5f *fractionComplete;
+
+			vec2 baseEffectUV = uv * vec2(5,5);
+			vec2 mediumTessUV_UR = uv * vec2(10,10) + vec2(medMove, medMove) + preventAlignmentOffset;
+			vec2 mediumTessUV_UL = uv * vec2(10,10) + vec2(medMove, -medMove);
+
+			vec2 smallTessUV_UR = uv * vec2(20,20) + vec2(smallMove, smallMove) + preventAlignmentOffset;
+			vec2 smallTessUV_UL = uv * vec2(20,20) + vec2(smallMove, -smallMove);
+
+			//invert textures so black is now white and white is black (1-color); 
+			vec4 small_ur = vec4(vec3(1.f),0.f) - texture(tessellateTex, smallTessUV_UR);
+			vec4 small_ul = vec4(vec3(1.f),0.f) - texture(tessellateTex, smallTessUV_UR);
+			vec4 med_ur = vec4(vec3(1.f),0.f) - texture(tessellateTex, mediumTessUV_UR);
+			vec4 med_ul = vec4(vec3(1.f),0.f) - texture(tessellateTex, mediumTessUV_UL);
+
+			vec4 grayScale = 0.25f*small_ur + 0.25f*small_ul + 0.25f*med_ur + 0.25f*med_ur;
+
+			////////////////////////////////////////////
+			// filter out some color
+			////////////////////////////////////////////
+			float cutoff = max(fractionComplete, 0.5f); //starts to disappear once fractionComplete takes over
+			if(grayScale.r < cutoff)
+			{
+				discard;
+			}
+				
+			////////////////////////////////////////////
+			// colorize grayscale
+			////////////////////////////////////////////
+			vec3 texColor = grayScale.rgb * uniformColor;
+			//vec3 texColor = texture(tessellateTex, uv).xyz;
+
+			fragColor = vec4(texColor, 1.0f);
+			
+			position = position;
+			albedo_spec.rgb = fragColor.rgb;
+			albedo_spec.a = 0.f;
+			normal = vec3(0.f); //this is an emissive object, don't render and lighting on it
+		}
+	)";
+
 
 	void CommunicationPlacement::tick(float dt_sec)
 	{
@@ -1099,7 +1172,9 @@ namespace SA
 		if (!seekerModel)
 		{
 			seekerModel = GameBase::get().getAssetSystem().loadModel("GameData/mods/SpaceArcade/Assets/Models3D/Planet/textured_planet.obj");
-			seekerShader = new_sp<Shader>(activeSeekerShader_vs, activeSeekerShader_fs, false);
+			seekerShader = GameBase::get().getRenderSystem().usingDeferredRenderer() ? 
+				new_sp<Shader>(activeSeekerShader_forward_vs, activeSeekerShader_deferred_fs, false) :
+				new_sp<Shader>(activeSeekerShader_forward_vs, activeSeekerShader_forward_fs, false);
 
 			if (GameBase::get().getAssetSystem().loadTexture("GameData/engine_assets/TessellatedShapeRadials.png", tessellatedTextureID))
 			{

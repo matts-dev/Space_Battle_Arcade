@@ -38,6 +38,7 @@
 #include "GameModes/ServerGameMode_SpaceBase.h"
 #include "../Tools/PlatformUtils.h"
 #include "../GameFramework/SAAudioSystem.h"
+#include "../Rendering/Lights/PointLight_Deferred.h"
 
 namespace SA
 {
@@ -486,6 +487,13 @@ namespace SA
 		return this;
 	}
 
+	PointLight_Deferred::UserData makeProjectileLightData(TeamData& cachedTeamData)
+	{
+		PointLight_Deferred::UserData data;
+		data.diffuseIntensity = cachedTeamData.projectileColor;
+		return data;
+	}
+
 	void Ship::fireProjectile(BrainKey privateKey)
 	{
 		//#optimize: set a default projectile config so this doesn't have to be checked every time a ship fires? reduce branch divergence
@@ -501,7 +509,7 @@ namespace SA
 			spawnData.team = cachedTeamIdx;
 			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
 			spawnData.owner = sp_this();
-
+			spawnData.projectileLightData = makeProjectileLightData(cachedTeamData);
 			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
 		}
@@ -512,7 +520,7 @@ namespace SA
 		if (primaryProjectile && length2(dir_n) > 0.001 && FIRE_PROJECTILE_ENABLED)
 		{
 			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
-
+			
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
 			spawnData.direction_n = glm::normalize(dir_n);
@@ -521,6 +529,7 @@ namespace SA
 			spawnData.team = cachedTeamIdx;
 			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
 			spawnData.owner = sp_this();
+			spawnData.projectileLightData = makeProjectileLightData(cachedTeamData);
 
 			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile);

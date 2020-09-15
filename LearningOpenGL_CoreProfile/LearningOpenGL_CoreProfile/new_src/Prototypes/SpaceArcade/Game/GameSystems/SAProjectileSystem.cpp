@@ -14,6 +14,12 @@
 #include "../../GameFramework/SAWorldEntity.h"
 #include "../../GameFramework/SAAudioSystem.h"
 #include "../AssetConfigs/SASpawnConfig.h"
+#include "../../Rendering/BuiltInShaders.h"
+#include "../../GameFramework/SARenderSystem.h"
+#include "../../Rendering/RenderData.h"
+#include "../../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
+#include "../../Tools/PlatformUtils.h"
+#include "../../Rendering/DeferredRendering/DeferredRenderingShaders.h"
 
 namespace SA
 {
@@ -75,6 +81,11 @@ namespace SA
 		{
 			soundEmitter->setPosition(end);
 			soundEmitter->setVelocity(speed * direction_n);
+		}
+
+		if (pointLight)
+		{
+			pointLight->setPosition(end);
 		}
 
 		//collision check
@@ -186,7 +197,7 @@ namespace SA
 					//affect our ability to get the next iterator
 					auto iterCopy = iter;
 					++iter; 
-
+					
 					const sp<Projectile>& projectile = *iterCopy;
 					projectile->tick(worldTM->getDeltaTimeSecs(), *currentLevel);
 
@@ -197,6 +208,12 @@ namespace SA
 							projectile->soundEmitter->stop();
 							sfxPool.releaseInstance(projectile->soundEmitter);
 							projectile->soundEmitter = nullptr;
+						}
+
+						if (projectile->pointLight)
+						{
+							lightPool.releaseInstance(projectile->pointLight);
+							projectile->pointLight = nullptr;
 						}
 				
 						//note: this projectile will keep any sp alive, so clear before release if needed
@@ -216,11 +233,52 @@ namespace SA
 		sfxPool.clear();
 	}
 
+	void ProjectileSystem::handleRenderDispatch(float dtSec)
+	{
+		RenderSystem& renderSystem = GameBase::get().getRenderSystem();
+		if (const RenderData* frd = renderSystem.getFrameRenderData_Read(GameBase::get().getFrameNumber()))
+		{
+			if (DeferredRendererStateMachine* deferredRenderer = renderSystem.getDeferredRenderer())
+			{
+				if (deferedShaded_EmissiveModelShader)
+				{
+					deferedShaded_EmissiveModelShader->use();
+					deferredRenderer->configureShaderForGBufferWrite(*deferedShaded_EmissiveModelShader);
+					renderProjectiles(*deferedShaded_EmissiveModelShader);
+				}
+				else { STOP_DEBUGGER_HERE(); }
+			}
+			else
+			{
+				//forward shading
+				if (forwardShaded_EmissiveModelShader)
+				{
+					forwardShaded_EmissiveModelShader->use();
+					forwardShaded_EmissiveModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(frd->view));
+					forwardShaded_EmissiveModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(frd->projection));
+					renderProjectiles(*forwardShaded_EmissiveModelShader);
+				}
+				else { STOP_DEBUGGER_HERE(); }
+			}
+		}
+	}
+
 	void ProjectileSystem::initSystem()
 	{
 		//align projectiles with camera
 		GameBase::get().onPostGameloopTick.addStrongObj(sp_this(), &ProjectileSystem::postGameLoopTick);
 		GameBase::get().getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &ProjectileSystem::handlePostLevelChange);
+
+		GameBase::get().onRenderDispatch.addWeakObj(sp_this(), &ProjectileSystem::handleRenderDispatch);
+
+		forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
+		deferedShaded_EmissiveModelShader = new_sp<SA::Shader>(gbufferShader_vs, gbufferShader_emissive_fs, false);
+
+		//have pools reserve underlying memory for estimates on how many we expect to be in pool concurrently
+		size_t estimateNumberConcurrentProjectiles = 300;
+		objPool.reserve(estimateNumberConcurrentProjectiles);
+		sfxPool.reserve(estimateNumberConcurrentProjectiles);
+		lightPool.reserve(estimateNumberConcurrentProjectiles);
 	}
 
 	void ProjectileSystem::spawnProjectile(const ProjectileSystem::SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle)
@@ -252,6 +310,7 @@ namespace SA
 		spawned->aabbSize = projectileTypeHandle.getAABBsize();
 
 		spawned->soundEmitter = spawnSfxEffect(spawnData.sfx, spawnData.start);
+		spawned->pointLight = spawnPointLight(spawnData);
 
 		spawned->timeAlive = 0.f;
 #if _WIN32 && _DEBUG
@@ -307,6 +366,32 @@ namespace SA
 			recycledEmitter->setPosition(position);
 			recycledEmitter->play();
 			return recycledEmitter;
+		}
+		return nullptr;
+	}
+
+	sp<PointLight_Deferred> ProjectileSystem::spawnPointLight(const ProjectileSystem::SpawnData& spawnData)
+	{
+#if IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		return nullptr;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
+		if (bEnableProjectilePointLights)
+		{
+			if (spawnData.projectileLightData.has_value())
+			{
+				sp<PointLight_Deferred> recycledLight = lightPool.getInstance();
+				if (!recycledLight)
+				{
+					recycledLight = GameBase::get().getRenderSystem().createPointLight();
+				}
+				PointLight_Deferred::UserData& mutableUserData = recycledLight->getMutableUserData();
+				mutableUserData = *spawnData.projectileLightData;
+				mutableUserData.position = spawnData.start;
+				mutableUserData.diffuseIntensity = spawnData.color; //TODO perhaps scale this up by some factor for blurring etc
+				mutableUserData.bActive = true;
+				return recycledLight;
+			}
 		}
 		return nullptr;
 	}

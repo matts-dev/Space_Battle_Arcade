@@ -10,6 +10,7 @@
 #include <detail/func_common.hpp>
 #include "../Tools/Geometry/SimpleShapes.h" //#TODO remove this once the sphereutils is mvoed to another file and include that.
 #include "../Tools/SAUtilities.h"
+#include "SARenderSystem.h"
 
 namespace SA
 {
@@ -179,6 +180,9 @@ namespace SA
 
 	void DebugRenderSystem::renderSphere(const glm::mat4& model, const glm::vec3& color)
 	{
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+		todo_update_debug_shaders_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 		FrameData_VisualDebugging& writeFrame = frameSwitcher.getWriteFrame();
 		writeFrame.sphereData.models.push_back(model);
 		writeFrame.sphereData.colors.push_back(glm::vec4(color, 1.f));

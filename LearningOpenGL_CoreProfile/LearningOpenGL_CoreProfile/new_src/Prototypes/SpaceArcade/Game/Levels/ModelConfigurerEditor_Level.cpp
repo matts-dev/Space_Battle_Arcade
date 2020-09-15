@@ -1421,6 +1421,10 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 				shapeRenderer->renderAxes(mat4(1.f), view, projection);
 				
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+				todo_update_model3d_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
 				{ //render model
 					model3DShader->use();
 					model3DShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
@@ -1517,7 +1521,10 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						xform.scale = shape.scale;
 						xform.rotQuat = getRotQuatFromDegrees(shape.rotationDegrees);
 						mat4 shapeModelMatrix = rootModelMat * xform.getModelMatrix();
-						
+
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+						todo_update_collision_shape_shader_to_be_deferred;
+#endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
 						vec3 color = shapeIdx == selectedShapeIdx ? vec3(1.f, 1.f, 0.25f) : vec3(1, 0, 0);
 						collisionShapeShader->use();
 						collisionShapeShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));

@@ -8,6 +8,7 @@
 
 #include "../Tools/SAUtilities.h"
 #include "OpenGLHelpers.h"
+#include "../Tools/PlatformUtils.h"
 
 
 namespace SA
@@ -401,6 +402,8 @@ namespace SA
 		{
 			ec(glGetShaderInfoLog(shaderID, 256, nullptr, infolog));
 			std::cerr << "shader compile fail, infolog:\n" << infolog << std::endl;
+
+			STOP_DEBUGGER_HERE();
 		}
 
 		return success != 0; //probably more efficient to just return success and allow implicit cast 
