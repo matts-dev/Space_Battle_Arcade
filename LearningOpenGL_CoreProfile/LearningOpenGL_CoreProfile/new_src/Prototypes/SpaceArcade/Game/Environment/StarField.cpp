@@ -7,6 +7,7 @@
 #include "../../Rendering/Camera/SACameraBase.h"
 #include "../../GameFramework/SAPlayerSystem.h"
 #include "../../GameFramework/SAPlayerBase.h"
+#include "../../GameFramework/SARenderSystem.h"
 
 namespace SA
 {
@@ -214,10 +215,10 @@ namespace SA
 			//stars are too bright after whitening, dim them down while still having adjusted colors to be more star-like
 			color *= 0.5f;
 
-			if (bUseHDR)
+			if (bUseHDR &&  GameBase::get().getRenderSystem().isUsingHDR())
 			{
 				//scale up color to make them variable HDR colors
-				color *= rng->getFloat(1.f, 100.f);
+				color *= rng->getFloat(1.51f, 3.f);  //@hdr_tweak
 			}
 
 			//load instance data

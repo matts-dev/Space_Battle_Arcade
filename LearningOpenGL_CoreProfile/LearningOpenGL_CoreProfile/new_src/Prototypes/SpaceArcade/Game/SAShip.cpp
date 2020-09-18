@@ -39,6 +39,7 @@
 #include "../Tools/PlatformUtils.h"
 #include "../GameFramework/SAAudioSystem.h"
 #include "../Rendering/Lights/PointLight_Deferred.h"
+#include "../GameFramework/SARenderSystem.h"
 
 namespace SA
 {
@@ -1100,8 +1101,10 @@ namespace SA
 		}
 		else
 		{
+			float hdrFactor = GameBase::get().getRenderSystem().isUsingHDR() ? 3.f : 1.f; //@hdr_tweak
+
 			ParticleSystem::SpawnParams particleSpawnParams;
-			particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(getMyModel(), cachedTeamData.shieldColor);
+			particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(getMyModel(), cachedTeamData.shieldColor * hdrFactor);
 			const Transform& shipXform = this->getTransform();
 			particleSpawnParams.xform.position = shipXform.position;
 			particleSpawnParams.xform.rotQuat = shipXform.rotQuat;

@@ -49,6 +49,7 @@
 #include "GameSystems/SystemData/SATickGroups.h"
 #include "UI/GameUI/Widgets3D/HUD/PlayerPilotAssistUI.h"
 #include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
+#include "../Rendering/ForwardRendering/ForwardRenderingStateMachine.h"
 
 namespace SA
 {
@@ -217,6 +218,8 @@ namespace SA
 			const std::vector<sp<PlayerBase>>& allPlayers = getPlayerSystem().getAllPlayers();
 			FRD.playerCamerasPositions.reserve(allPlayers.size());
 
+			FRD.renderClearColor = renderClearColor;
+
 			//#todo #splitscreen
 			if (const sp<PlayerBase>& player = getPlayerSystem().getPlayer(0))
 			{
@@ -241,9 +244,13 @@ namespace SA
 			return;
 		}
 
-		//prepare directional lights
-
+		if (ForwardRenderingStateMachine* forwardRenderer = getRenderSystem().getForwardRenderer())
+		{
+			//do nothing, the forward render stages will handle clearing
+		}
+		else
 		{//clear frame buffer
+			//#TODO remove this clear after rendering refactor is done
 			ec(glEnable(GL_DEPTH_TEST));
 			ec(glEnable(GL_STENCIL_TEST)); //enabling to ensure that we clear stencil every frame (may not be necessary)
 			ec(glStencilMask(0xff)); //enable complete stencil writing so that clear will clear stencil buffer (also, not tested if necessary)
@@ -259,25 +266,27 @@ namespace SA
 		{
 			if (const RenderData* FRD = getRenderSystem().getFrameRenderData_Read(getFrameNumber()))
 			{
-				//////////////////////// Deferred Rendering //////////////////////////////////////////
 				if (DeferredRendererStateMachine* deferredRenderer = getRenderSystem().getDeferredRenderer())
-				{
+				{ //////////////////////// Deferred Rendering //////////////////////////////////////////
 					deferredRenderer->beginGeometryPass(renderClearColor);
 
 					//render world entities
 					loadedLevel->render(deltaTimeSecs, FRD->view, FRD->projection);
 				}
-				//////////////////////// Forward Rendering //////////////////////////////////////////
 				else 
-				{
+				{ //////////////////////// Forward Rendering //////////////////////////////////////////
+					if (ForwardRenderingStateMachine* forwardRenderer = getRenderSystem().getForwardRenderer())
+					{
+						forwardRenderer->begin_HdrStage(FRD->renderClearColor);
+					}
+
 					//render world entities
 					loadedLevel->render(deltaTimeSecs, FRD->view, FRD->projection);
-
 					renderDebug(FRD->view, FRD->projection);
-				}
 
-				//right now I believe game UI can be rendered at any time, forward or deferred; probably should have system hook into render dispatch
-				uiSystem_Game->runGameUIPass(); //render non-editor ui, like HUD and 3D widgets
+					//rendering UI here will cause it to be tone mapped
+					//uiSystem_Game->runGameUIPass(); //render non-editor ui, like HUD and 3D widgets
+				}
 			}
 		}
 	}
@@ -300,6 +309,13 @@ namespace SA
 					renderDebug(FRD->view, FRD->projection);
 				}
 			}
+		}
+		else if (ForwardRenderingStateMachine* forwardRenderer = getRenderSystem().getForwardRenderer())
+		{
+			forwardRenderer->begin_ToneMappingStage(renderClearColor); //todo should use frame render data for clear color, but isn't that important atm
+
+			uiSystem_Game->runGameUIPass(); //render non-editor ui, like HUD and 3D widgets #TODO hook this into delegate below
+			onForwardToneMappingComplete.broadcast();
 		}
 	}
 
@@ -343,7 +359,7 @@ namespace SA
 			static InputTracker input;
 			input.updateState(window);
 
-			//moveing default input to player class
+			//moving default input to player class
 			//if (input.isKeyJustPressed(window, GLFW_KEY_ESCAPE))
 			//{
 			//	if (input.isKeyDown(window, GLFW_KEY_LEFT_SHIFT))

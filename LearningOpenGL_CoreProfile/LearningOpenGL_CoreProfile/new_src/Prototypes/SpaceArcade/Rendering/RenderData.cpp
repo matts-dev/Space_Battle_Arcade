@@ -23,6 +23,7 @@ namespace SA
 		playerCamerasPositions.resize(1); //shrink to 1 player camera
 		playerCamerasPositions[0] = glm::vec3(0.f); //zero out the camera
 		dt_sec = 0.f;
+		renderClearColor = glm::vec3(0.f);
 	}
 
 }

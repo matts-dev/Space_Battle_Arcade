@@ -67,19 +67,19 @@ namespace SA
 		{
 			if (failed = !SA::Utils::readFileToString(vertexShaderFilePath, vertShaderSrc))
 			{
-				std::cerr << "failed to load vertex shader from file" << std::endl;
+				std::cerr << "failed to load vertex shader from file" << std::endl; STOP_DEBUGGER_HERE();
 				return;
 			}
 			if (failed = !SA::Utils::readFileToString(fragmentShaderFilePath, fragShaderSrc))
 			{
-				std::cerr << "failed to load fragment shader from file" << std::endl;
+				std::cerr << "failed to load fragment shader from file" << std::endl; STOP_DEBUGGER_HERE();
 				return;
 			}
 			if (hasGeometryShader)
 			{
 				if (failed = !SA::Utils::readFileToString(geoShaderSrc, geoShaderSrc))
 				{
-					std::cerr << "failed to load fragment shader from file" << std::endl;
+					std::cerr << "failed to load fragment shader from file" << std::endl; STOP_DEBUGGER_HERE();
 					return;
 				}
 			}

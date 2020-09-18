@@ -7,6 +7,7 @@
 #include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
 #include "../Rendering/SAShader.h"
 #include "../Rendering/Lights/PointLight_Deferred.h"
+#include "../Rendering/ForwardRendering/ForwardRenderingStateMachine.h"
 
 namespace SA
 {
@@ -20,6 +21,8 @@ namespace SA
 		{
 			renderFrameCircularBuffer.push_back(new_sp<RenderData>());
 		}
+
+		forwardRenderer = new_sp<ForwardRenderingStateMachine>();
 
 		amort_PointLight_GC.chunkSize = 10;
 	}
@@ -114,6 +117,13 @@ namespace SA
 		userPointLights.push_back(newPointLight);
 
 		return newPointLight;
+	}
+
+	bool RenderSystem::isUsingHDR()
+	{
+		if (deferredRenderer) { return true; }
+		else if (forwardRenderer) { return forwardRenderer->IsUsingHDR(); }
+		else { return false; }
 	}
 
 }

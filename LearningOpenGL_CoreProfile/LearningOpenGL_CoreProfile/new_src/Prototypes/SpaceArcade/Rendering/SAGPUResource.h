@@ -21,8 +21,8 @@ namespace SA
 		void handleWindowAcquiredGPUContext(const sp<Window>& window);
 		void handlePostEngineShutdownTicksOver();
 	private: //subclass api provided
-		virtual void onReleaseGPUResources() = 0;
 		virtual void onAcquireGPUResources() = 0;
+		virtual void onReleaseGPUResources() = 0;
 	private:
 		bool bAcquiredGPUResource = false;
 	};

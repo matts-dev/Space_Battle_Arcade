@@ -921,6 +921,12 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\PointLight_Deferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\ForwardRendering\ForwardRenderingStateMachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\NdcQuad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">
@@ -2181,6 +2187,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\PointLight_Deferred.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\ForwardRendering\ForwardRenderingStateMachine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\NdcQuad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

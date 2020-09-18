@@ -38,7 +38,8 @@ namespace SA
 		void setXform(Transform& xform) { this->xform = xform; }
 		void setForceCentered(bool bInForceCentered) { bForceCentered = bInForceCentered; }
 		glm::vec3 getLightLDR() { return ldr_color; }
-		glm::vec3 getLightHDR() { return ldr_color * hdr_intensity; }
+		glm::vec3 getLightHDR() { return ldr_color * external_hdr_intensity; }
+		//glm::vec3 getLightHDR() { return ldr_color * hdr_intensity; }
 		void setLightLDR(glm::vec3 inLdrColor) { ldr_color = inLdrColor; }
 	protected:
 		virtual void postConstruct() override;
@@ -50,8 +51,9 @@ namespace SA
 	private: //instance variables
 		Transform xform;
 		glm::vec3 ldr_color = glm::vec3(1.0f);
-		float hdr_intensity = 1000.0f;
-		bool bUseHDR = false;
+		float hdr_intensity = 3.0f; //used for rendering the mesh with a blur //@hdr_tweak 
+		float external_hdr_intensity = 2.f; //used to drive lighting caculations of external objects; since this dir lights have no attenuation, this value need not be high //@hdr_tweak //#todo may not need to separate these HDR effects after all
+		bool bUseHDR = true;
 		bool bForceCentered = true;
 	};
 

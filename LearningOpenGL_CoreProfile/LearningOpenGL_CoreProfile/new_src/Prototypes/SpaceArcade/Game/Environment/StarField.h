@@ -45,7 +45,7 @@ namespace SA
 		sp<MultiDelegate<>> timerDelegate;
 		sp<Shader> starShader;
 
-		bool bUseHDR = false;
+		bool bUseHDR = true;
 		bool bGenerated = false;
 		bool bDataBuffered = false;
 		bool bForceCentered = true;

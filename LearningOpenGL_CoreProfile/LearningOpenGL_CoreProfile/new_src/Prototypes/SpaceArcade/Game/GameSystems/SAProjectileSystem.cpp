@@ -292,7 +292,7 @@ namespace SA
 		spawned->xform.rotQuat = spawnRotation;
 		spawned->xform.position = spawnData.start;
 		spawned->damage = spawnData.damage;
-		spawned->color = spawnData.color;
+		spawned->color = spawnData.color * (GameBase::get().getRenderSystem().isUsingHDR() ? 4.f : 1.f); //make color glow if using HDR //@hdr_tweak
 		spawned->team = spawnData.team;
 		spawned->owner = spawnData.owner;
 		spawned->direction_n = spawnData.direction_n;

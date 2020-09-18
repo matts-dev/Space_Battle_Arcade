@@ -222,8 +222,10 @@ namespace SA
 			{
 				if (const sp<Model3D>& myModel = getMyModel())
 				{
+					float hdrFactor = GameBase::get().getRenderSystem().isUsingHDR() ? 3.f : 1.f; //@hdr_tweak
+
 					ParticleSystem::SpawnParams particleSpawnParams;
-					particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(myModel, ShieldColor());
+					particleSpawnParams.particle = SharedGFX::get().shieldEffects_ModelToFX->getEffect(myModel, ShieldColor() * hdrFactor);
 
 					particleSpawnParams.parentXform = cachedModelMat_PxL;
 					particleSpawnParams.xform.scale;

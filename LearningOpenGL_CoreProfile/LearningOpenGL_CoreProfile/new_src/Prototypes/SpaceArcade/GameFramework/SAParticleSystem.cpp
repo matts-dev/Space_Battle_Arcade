@@ -546,6 +546,7 @@ namespace SA
 		uniform vec3 darkColor = vec3(1.f, 0.f, 1.f);
 		uniform vec3 medColor = vec3(1.f, 0.f, 1.f);
 		uniform vec3 brightColor = vec3(1.f, 0.f, 1.f);
+		uniform float hdrFactor = 1.f;
 
 		uniform sampler2D tessellateTex;
 
@@ -608,6 +609,8 @@ namespace SA
 			fragColor = fragColor *= max(0.1f, colorGrowth);	
 		
 			fragColor += (smallTesselations * 0.3f) * vec4(brightColor, 0.f);
+
+			fragColor.rgb = fragColor.rgb * hdrFactor;
 		}
 	)";
 
@@ -831,7 +834,8 @@ namespace SA
 					sphereEffect->vec3Uniforms.emplace_back("darkColor",	glm::vec3(0xBB / 255.f, 0x5C / 255.f, 0x2B / 255.f));
 					sphereEffect->vec3Uniforms.emplace_back("medColor",		glm::vec3(0xEC / 255.f, 0x93 / 255.f, 0x4A / 255.f));
 					sphereEffect->vec3Uniforms.emplace_back("brightColor",	glm::vec3(0xF6 / 255.f, 0xAB / 255.f, 0x65 / 255.f));
-				}
+					sphereEffect->floatUniforms.emplace_back("hdrFactor", GameBase::get().getRenderSystem().isUsingHDR() ? 3.f : 1.f);//@hdr_tweak
+				} 
 
 			}
 			return particle;

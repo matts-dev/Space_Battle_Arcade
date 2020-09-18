@@ -260,9 +260,11 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\DeferredRendering\DeferredRendererStateMachine.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\DeferredRendering\DeferredRenderingShaders.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\ForwardRendering\ForwardRenderingStateMachine.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\PointLight_Deferred.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SALightBase.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\NdcQuad.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\OpenGLHelpers.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\RenderData.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Rendering\SAGPUResource.h" />
@@ -587,9 +589,11 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\DeferredRendering\DeferredRendererStateMachine.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\ForwardRendering\ForwardRenderingStateMachine.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\PointLight_Deferred.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SADirectionLight.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Lights\SALightBase.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\NdcQuad.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\RenderData.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\SAGPUResource.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\SphereAvoidance\AvoidanceSphere.cpp" />

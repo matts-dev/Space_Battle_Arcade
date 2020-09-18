@@ -10,6 +10,7 @@ namespace SA
 	class GameBase;
 
 	class DeferredRendererStateMachine;
+	class ForwardRenderingStateMachine;
 	class PointLight_Deferred;
 	class Shader;
 
@@ -31,8 +32,10 @@ namespace SA
 		void enableDeferredRenderer(bool bEnable);
 		bool usingDeferredRenderer() { return deferredRenderer != nullptr; }
 		DeferredRendererStateMachine* getDeferredRenderer(){ return deferredRenderer.get(); };
+		ForwardRenderingStateMachine* getForwardRenderer() { return forwardRenderer.get(); }
 		const std::vector<sp<PointLight_Deferred>>& getFramePointLights() { return userPointLights; }
 		const sp<PointLight_Deferred> createPointLight();
+		bool isUsingHDR();
 	protected:
 		virtual void tick(float dt_sec) override;;
 	private:
@@ -45,5 +48,6 @@ namespace SA
 		std::vector<sp<RenderData>> renderFrameCircularBuffer;
 		std::vector<sp<PointLight_Deferred>> userPointLights; //#todo if end up saving previous frame data (ie the circular buffer) then these need their state saved each frame (ie just copy struct into RenderData struct)
 		sp<DeferredRendererStateMachine> deferredRenderer = nullptr;
+		sp<ForwardRenderingStateMachine> forwardRenderer = nullptr;
 	};
 }

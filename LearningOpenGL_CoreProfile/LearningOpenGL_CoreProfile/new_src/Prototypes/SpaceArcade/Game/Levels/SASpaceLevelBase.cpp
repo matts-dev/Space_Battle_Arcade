@@ -244,7 +244,11 @@ namespace SA
 			endTransitionTimerDelegate = new_sp<MultiDelegate<>>();
 			endTransitionTimerDelegate->addWeakObj(sp_this(), &SpaceLevelBase::transitionToMainMenu);
 		}
-		getWorldTimeManager()->createTimer(endTransitionTimerDelegate, endParameters.delayTransitionMainmenuSec);
+		if (const sp<TimeManager>& worldTimeManager = getWorldTimeManager())
+		{
+			//won't have a timer if we're ending the game
+			getWorldTimeManager()->createTimer(endTransitionTimerDelegate, endParameters.delayTransitionMainmenuSec);
+		}
 
 		bool bWonMatch = false;
 		if (SAPlayer* player = dynamic_cast<SAPlayer*>(SpaceArcade::get().getPlayerSystem().getPlayer(0).get()))
@@ -487,7 +491,8 @@ namespace SA
 					dirLights.push_back({});
 				}
 				dirLights[starIdx].direction_n = normalize(star->getLightDirection());
-				dirLights[starIdx].lightIntensity = star->getLightLDR(); //#TODO #HDR
+				//dirLights[starIdx].lightIntensity = star->getLightLDR(); //LDR instead of HDR because HDR color saturate image
+				dirLights[starIdx].lightIntensity = GameBase::get().getRenderSystem().isUsingHDR() ? star->getLightHDR(): star->getLightLDR(); 
 			}
 		}
 	}
@@ -496,7 +501,6 @@ namespace SA
 	{
 		Transform defaultStarXform;
 		defaultStarXform.position = glm::vec3(50, 50, 50);
-
 		sp<Star> defaultStar = new_sp<Star>();
 		defaultStar->setXform(defaultStarXform);
 		localStars.push_back(defaultStar);
