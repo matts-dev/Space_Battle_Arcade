@@ -15,7 +15,7 @@ namespace SA
 	public:
 		static SharedGFX& get();
 
-		/** Maps model to effect */
 		const sp<ShieldEffect::ParticleCache> shieldEffects_ModelToFX = new_sp<ShieldEffect::ParticleCache>();
+		const sp<EngineParticleCache> engineParticleCache = new_sp<EngineParticleCache>();
 	};
 }

@@ -141,6 +141,7 @@ namespace SA
 		auto activateSound = [](const sp<AudioEmitter>& emitter) { if (emitter) { emitter->play(); }};
 		activateSound(sfx_engine);
 		
+		//regenerateEngineVFX(); //initial spawn isn't spawning particle... hmm
 	}
 
 	void Ship::postConstruct()
@@ -191,6 +192,8 @@ namespace SA
 			hpComp->onHpChangedEvent.addWeakObj(sp_this(), &Ship::handleHpAdjusted);
 		}
 
+		regenerateEngineVFX(); //needs to come after updating team data cache if we're using team colors for fire
+
 #if COMPILE_SHIP_WIDGET
 		shipWidget = new_sp<Widget3D_Ship>();
 		shipWidget->setOwnerShip(sp_this());
@@ -214,6 +217,7 @@ namespace SA
 #if LOG_SHIP_DTOR 
 		log("logShip", LogLevel::LOG, "ship destroyed");
 #endif 
+		destroyEngineVFX();
 	}
 
 	glm::vec4 Ship::getForwardDir() const
@@ -421,6 +425,8 @@ namespace SA
 #endif //ENABLE_BANDAID_FIXES
 		//#TODO #BUG avoidance spheres still affecting AI after carrier ship destroyed
 		//#TODO #BUG cleanup placements after carrier is destroyed
+
+		destroyEngineVFX();
 	}
 
 	void Ship::onPlayerControlTaken(const sp<PlayerBase>& player)
@@ -535,6 +541,12 @@ namespace SA
 			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile);
 		}
+	}
+
+	void Ship::tickVFX()
+	{
+		tickShieldFX();
+		tickEngineFX();
 	}
 
 	void Ship::enterSpawnStasis()
@@ -727,14 +739,13 @@ namespace SA
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// handle VFX
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		Transform xform = getTransform();
-		if (!activeShieldEffect.expired())
-		{
-			//locking wp may be slow as it requires atomic reference count increment; may need to use soft-ptrs if I make that system
-			sp<ActiveParticleGroup> activeShield_sp = activeShieldEffect.lock();
-			activeShield_sp->xform.rotQuat = xform.rotQuat;
-			activeShield_sp->xform.position = xform.position;
-		}
+		const Transform& xform = getTransform();
+
+		tickVFX();
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// avoidance spheres
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//does not include the spawn config transform (ie the size up for carrier ships)
 		glm::mat4 modelMatrix = xform.getModelMatrix(); //this needs to be done after tick kinematic is complete so it reflects the new position
@@ -1119,6 +1130,18 @@ namespace SA
 		}
 	}
 
+	void Ship::tickShieldFX()
+	{
+		const Transform& xform = getTransform();
+		if (!activeShieldEffect.expired())
+		{
+			//locking wp may be slow as it requires atomic reference count increment; may need to use soft-ptrs if I make that system
+			sp<ActiveParticleGroup> activeShield_sp = activeShieldEffect.lock();
+			activeShield_sp->xform.rotQuat = xform.rotQuat;
+			activeShield_sp->xform.position = xform.position;
+		}
+	}
+
 	bool Ship::getAvoidanceDampenedVelocity(std::optional<glm::vec3>& adjustVel_n) const
 	{
 		using namespace glm;
@@ -1221,6 +1244,94 @@ namespace SA
 		#endif //COMPILE_AVOIDANCE_VECTORS
 
 		return adjustVel_n.has_value();
+	}
+
+	void Ship::regenerateEngineVFX()
+	{
+		destroyEngineVFX();
+
+		const std::vector<EngineEffectData>& fxData = shipConfigData->getEngineEffectData();
+		for (const EngineEffectData& fx : fxData)
+		{
+			const Transform& shipXform = this->getTransform();
+			sp<EngineParticleEffectConfig> particleCFG = nullptr;
+			
+			if (fx.bOverrideColorWithTeamColor)
+			{
+				EngineEffectData fxColorized = fx;
+				//fxColorized.color = cachedTeamData.shieldColor;
+				fxColorized.color = cachedTeamData.projectileColor;
+				particleCFG = SharedGFX::get().engineParticleCache->getParticle(fxColorized);
+			}
+			else
+			{
+				particleCFG = SharedGFX::get().engineParticleCache->getParticle(fx);
+			}
+
+			ParticleSystem::SpawnParams particleSpawnParams;
+			particleSpawnParams.particle = particleCFG;
+			particleSpawnParams.xform.position = shipXform.position;
+			particleSpawnParams.xform.rotQuat = shipXform.rotQuat;
+			particleSpawnParams.xform.scale = shipXform.scale;
+
+			//#TODO #REFACTOR hacky as only considering scale. particle perhaps should use matrices to avoid this, or have list of transform to apply.
+			//making the large ships show correct effect. Perhaps not even necessary.
+			Transform modelXform = shipConfigData->getModelXform();
+			particleSpawnParams.xform.scale *= modelXform.scale;
+
+			wp<ActiveParticleGroup> weakParticle = GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+			if (sp<ActiveParticleGroup> engineParticle = weakParticle.lock())
+			{
+				engineFireParticlesFX.push_back(engineParticle);
+			}
+		}
+
+		//make sure we correctly position engine fx
+		tickEngineFX();
+	}
+
+	void ShipUtilLibrary::setEngineParticleOffset(Transform& outParticleXform, const Transform& shipXform, const EngineEffectData& effectData)
+	{
+		glm::vec3 shipWorldPos = shipXform.position; //NOTE this may be different than xform is ship has a parent, but this is not planned right now #todo #scenenodes
+
+		//Transform shipConfigXform = shipConfigData->getModelXform();
+		outParticleXform.scale = effectData.localScale; //*shipConfigXform.scale; //#TODO #HACK using shipconfig xform to change scale for large ships
+		outParticleXform.position = shipXform.rotQuat*(effectData.localOffset /** shipConfigXform.scale*/) + shipWorldPos;
+	}
+
+	void Ship::tickEngineFX()
+	{
+		glm::vec3 shipWorldPos = getWorldPosition();
+		const Transform& shipXform = getTransform();
+
+		const std::vector<EngineEffectData>& engineEffectData = shipConfigData->getEngineEffectData();
+		for (size_t engineFxIdx = 0; engineFxIdx < engineEffectData.size() && engineFxIdx < engineFireParticlesFX.size(); ++engineFxIdx)
+		{
+			const EngineEffectData& effectData = engineEffectData[engineFxIdx];
+			const sp<ActiveParticleGroup>& engineParticle = engineFireParticlesFX[engineFxIdx];
+			if (engineParticle)
+			{
+				ShipUtilLibrary::setEngineParticleOffset(engineParticle->xform, shipXform, effectData);
+
+				//incrase engine size based on boost
+				if (bool bEnableBooseInfluenceOnEngineFX = true)
+				{
+					engineParticle->xform.scale *= adjustedBoost;
+				}
+			}else{ STOP_DEBUGGER_HERE(); /*what happened, we lost a particle O.o*/}
+		}
+	}
+
+	void Ship::destroyEngineVFX()
+	{
+		for (const sp<ActiveParticleGroup>& engineParticle : engineFireParticlesFX)
+		{
+			if (engineParticle)
+			{
+				engineParticle->killParticle();
+			}
+		}
+		engineFireParticlesFX.clear();
 	}
 
 	void Ship::handlePlacementDestroyed(const sp<GameEntity>& entity)
@@ -1563,5 +1674,7 @@ namespace SA
 			}
 		}
 	}
+
+
 
 }

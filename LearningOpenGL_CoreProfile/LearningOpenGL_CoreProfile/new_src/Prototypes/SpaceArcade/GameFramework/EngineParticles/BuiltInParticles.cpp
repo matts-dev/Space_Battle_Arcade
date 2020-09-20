@@ -6,6 +6,8 @@
 #include "..\SALog.h"
 #include "..\SAAssetSystem.h"
 #include "..\SARenderSystem.h"
+#include "..\..\Tools\SAUtilities.h"
+#include "..\..\Game\AssetConfigs\SASpawnConfig.h"
 
 
 namespace SA
@@ -290,5 +292,146 @@ namespace SA
 		}
 
 	}
+
+
+static char const* const engineFxShader_vs = R"(
+	#version 330 core
+	layout (location = 0) in vec3 position;			
+	layout (location = 1) in vec3 normal;	
+	layout (location = 2) in vec2 uv;
+		//layout (location = 3) in vec3 tangent;
+		//layout (location = 4) in vec3 bitangent; //may can get 1 more attribute back by calculating this cross(normal, tangent);
+		//layout (location = 5) in vec3 reserved;
+		//layout (location = 6) in vec3 reserved;
+	layout (location = 7) in vec4 effectData1; //x=timeAlive, y=fractionComplete
+	layout (location = 8) in mat4 model; //consumes attribute locations 8,9,10,11
+		//layout (location = 12) in vec3 reserved;
+		//layout (location = 13) in vec3 reserved;
+		//layout (location = 14) in vec3 reserved;
+		//layout (location = 15) in vec3 reserved;
+				
+	uniform mat4 projection_view;
+	uniform vec3 camPos;
+	uniform float normalOffsetDist = 0.01f;
+
+	//out vec3 fragNormal;
+	out vec3 fragPosition;
+	out vec2 uvCoords;
+	out float timeAlive;
+	out float fractionComplete;
+
+	void main(){
+		//offset the local space vert position by the normal, this is so the effect will surround the actual model.
+		vec4 offsetPosition_ls = vec4(position + (normalOffsetDist * normalize(normal)), 1);
+
+		gl_Position = projection_view * model * offsetPosition_ls;
+		fragPosition = vec3(model * offsetPosition_ls);
+
+		timeAlive = effectData1.x;
+		float effectEndTime = effectData1.y;
+		fractionComplete = timeAlive / effectEndTime;
+
+		//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
+		//fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
+
+		uvCoords = uv;
+	}	
+)";
+
+static char const* const engineFxShader_fs = R"(
+	#version 330 core
+
+	out vec4 fragmentColor;
+
+	uniform vec3 camPos;
+	uniform vec3 fireColor;
+	//uniform sampler2D tessellateTex;
+
+	//in vec3 fragNormal;
+	in vec3 fragPosition;
+	in vec2 uvCoords;
+	in float timeAlive;
+	in float fractionComplete;
+
+	void main()
+	{
+		fragmentColor = vec4(fireColor, 1.f);
+	}
+)";
+
+	sp<SA::EngineParticleEffectConfig> EngineParticleCache::getParticle(const EngineEffectData& fxData)
+	{
+		size_t hash = Utils::hashColor(fxData.color);
+		hash ^= std::hash<uint32_t>{}(static_cast<uint32_t>(fxData.colorHdrIntensity));
+		//hash ^= std::hash<uint32_t>{}(static_cast<uint32_t>(fxData.localScale.x)); //scale will be handled on spawned particle xform
+		//hash ^= std::hash<uint32_t>{}(static_cast<uint32_t>(fxData.localScale.y));
+		//hash ^= std::hash<uint32_t>{}(static_cast<uint32_t>(fxData.localScale.z));
+
+		using UMMIter = decltype(coloredParticles)::iterator;
+		std::pair<UMMIter, UMMIter> bucketRange = coloredParticles.equal_range(hash); //gets start_end iter pair
+
+		sp<SA::EngineParticleEffectConfig> particleCFG = nullptr;
+		for (UMMIter bucketIter = bucketRange.first; bucketIter != bucketRange.second; ++bucketIter)
+		{
+			sp<EngineParticleEffectConfig>& previousEngineParticle = bucketIter->second;
+			if (previousEngineParticle->getColor() == fxData.color 
+				&& previousEngineParticle->getHdrIntensity() == fxData.colorHdrIntensity)
+			{
+				particleCFG = previousEngineParticle;
+				break;
+			}
+		}
+
+		//if we didn't find a particle, then we need to create one!
+		if (!particleCFG)
+		{
+			//create effect
+			std::vector<sp<Particle::Effect>> effects;
+
+			sp<Particle::Effect> shieldModelEffect = new_sp<Particle::Effect>();
+			{
+				//do NOT make shaders static, this is how the particle system batches particles
+				/*static */sp<Shader> engineFireShader = new_sp<Shader>(engineFxShader_vs, engineFxShader_fs, false);
+				shieldModelEffect->forwardShader = engineFireShader;
+#if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE 
+				shieldModelEffect->deferredShader = TODO_a_deferred_shader_for_engine_fx;
+#endif 
+
+				static sp<SphereMeshTextured> engineFxSphere = new_sp<SphereMeshTextured>();
+				shieldModelEffect->mesh = engineFxSphere;
+
+				shieldModelEffect->keyFrameChains.emplace_back();
+				Particle::KeyFrameChain& scaleKFC = shieldModelEffect->keyFrameChains.back();
+
+				//need to animate something to give particle lifetime
+				scaleKFC.vec3KeyFrames.emplace_back();
+				Particle::KeyFrame<vec3>& scaleFrame = scaleKFC.vec3KeyFrames.back();
+				scaleFrame.startValue = vec3(1.f);
+				scaleFrame.endValue = vec3(1.f);
+				scaleFrame.durationSec = 1.0f;
+				scaleFrame.dataIdx = MutableEffectData::SCALE_VEC3_IDX;
+
+				//suggested could create a second kf in the kfc here that will vary scale
+
+				shieldModelEffect->vec3Uniforms.emplace_back("fireColor", fxData.color * fxData.colorHdrIntensity); //@hdr_tweak
+
+				effects.push_back(shieldModelEffect);
+			}
+			//create particle and set up its hash data.
+			particleCFG = new_sp<EngineParticleEffectConfig>(std::move(effects));
+			particleCFG->color = fxData.color;
+			particleCFG->colorHdrIntensity = fxData.colorHdrIntensity;
+
+			coloredParticles.emplace(hash, particleCFG);
+		}
+
+		return particleCFG;
+	}
+
+	void EngineParticleCache::resetCache()
+	{
+		coloredParticles.clear();
+	}
+
 }
 

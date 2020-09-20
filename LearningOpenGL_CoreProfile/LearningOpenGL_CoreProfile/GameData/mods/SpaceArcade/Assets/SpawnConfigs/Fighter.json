@@ -5,6 +5,27 @@
     },
     "SpawnConfig": {
         "bRequestsCollisionTests": false,
+        "engineEffectData": [
+            {
+                "engineFX.bOverrideColorWithTeamColor": true,
+                "engineFX.color": [
+                    0.8690463304519653,
+                    1.0,
+                    0.0
+                ],
+                "engineFX.colorHdrIntensity": 3.0,
+                "engineFX.localOffset": [
+                    0.0,
+                    -0.019999999552965164,
+                    -0.5
+                ],
+                "engineFX.localScale": [
+                    0.05000000074505806,
+                    0.05000000074505806,
+                    0.05000000074505806
+                ]
+            }
+        ],
         "fullModelFilePath": "GameData/mods/SpaceArcade/Assets/Models3D/Fighter/SGFighter.obj",
         "modelAABB": {
             "modelPosition": [
@@ -27,24 +48,28 @@
         "sfx_engineLoop": {
             "assetPath": "Assets/Sounds/ship_engine_fx.wav",
             "bLooping": true,
+            "gain": 1.0,
             "maxDistance": 10.0,
             "pitchVariationRange": 0.0
         },
         "sfx_explosion": {
             "assetPath": "Assets/Sounds/distant_explosion_fx.wav",
             "bLooping": false,
+            "gain": 1.0,
             "maxDistance": 30.0,
             "pitchVariationRange": 0.20000000298023224
         },
         "sfx_muzzle": {
             "assetPath": "Assets/Sounds/muzzlefire_fxwav.wav",
             "bLooping": false,
+            "gain": 1.0,
             "maxDistance": 5.0,
             "pitchVariationRange": 0.20000000298023224
         },
         "sfx_projectileLoop": {
             "assetPath": "Assets/Sounds/projectile_v2_loop_fx.wav",
             "bLooping": true,
+            "gain": 1.0,
             "maxDistance": 10.0,
             "pitchVariationRange": 0.20000000298023224
         },

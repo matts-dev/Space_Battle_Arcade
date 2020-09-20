@@ -58,6 +58,7 @@ namespace SA
 		void renderUI_Objectives();
 		void renderUI_Spawning();
 		void renderUI_Sounds();
+		void renderUI_Effects();
 
 	private: 
 		/** INVARIANT: filepath has been checked to be a valid model file path */

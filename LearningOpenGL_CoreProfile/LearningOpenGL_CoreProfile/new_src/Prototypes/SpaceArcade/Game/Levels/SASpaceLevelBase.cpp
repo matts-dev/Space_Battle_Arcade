@@ -190,6 +190,7 @@ namespace SA
 
 				/*vec3 highlightColor = vec3(0.8f);*/
 				vec3 highlightColor = vec3(0.5f,0,0);
+				highlightColor *= GameBase::get().getRenderSystem().isUsingHDR() ? 2.f : 1.f;//@hdr_tweak
 				highlightForwardModelShader->setUniform3f("color", highlightColor);
 
 				for (RenderModelEntity* highlightEntity : stencilHighlightEntities)

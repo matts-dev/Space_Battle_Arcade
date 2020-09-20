@@ -1208,7 +1208,7 @@ namespace SA
 
 				seekerShader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
 				seekerShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-				seekerShader->setUniform3f("uniformColor", color::green());
+				seekerShader->setUniform3f("uniformColor", color::green() * (GameBase::get().getRenderSystem().isUsingHDR() ? 3.f : 1.f)); //@hdr_tweak
 				
 				const uint32_t textureSlot = GL_TEXTURE0;
 				ec(glActiveTexture(textureSlot));

@@ -319,6 +319,35 @@ namespace SA
 			return x * y * z;
 		}
 
+		size_t hashColor(glm::vec3 color)
+		{
+			using namespace glm;
+			using byte = uint8_t;
+
+			//should not pass HDR colors to this function, stead pass the ldr equivalent as we need to clamp this and we don't want to sqrt to normalize color vector
+			vec3 normalizedColor = glm::clamp(color, vec3(0, 0, 0), vec3(1, 1, 1));
+			normalizedColor *= vec3(255);
+
+			byte colorBytes[3];
+			colorBytes[0] = static_cast<byte>(normalizedColor.r);
+			colorBytes[1] = static_cast<byte>(normalizedColor.g);
+			colorBytes[2] = static_cast<byte>(normalizedColor.b);
+
+			size_t hash = 0;
+
+			uint32_t packedColors = 0;
+			packedColors |= colorBytes[0];
+			packedColors <<= sizeof(byte)*8;
+			packedColors |= colorBytes[1];
+			packedColors <<= sizeof(byte)*8;
+			packedColors |= colorBytes[2];
+			packedColors <<= sizeof(byte)*8;
+
+			hash ^= std::hash<uint32_t>{}(packedColors);
+
+			return hash;
+		}
+
 		glm::vec3 findBoxLow(const std::array<glm::vec4, 8>& localAABB)
 		{
 			glm::vec3 min = glm::vec3(std::numeric_limits<float>::infinity());

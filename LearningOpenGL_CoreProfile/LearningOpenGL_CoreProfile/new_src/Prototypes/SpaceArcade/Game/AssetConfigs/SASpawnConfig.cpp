@@ -92,6 +92,7 @@ namespace SA
 			{"primaryProjectileConfigName", primaryFireProjectile ? primaryFireProjectile->getName() : primaryProjectileConfigName}, 
 			{ "shapes", {} },
 			{ "teamData", {} },
+			{ SYMBOL_TO_STR(engineEffectData), {} },
 			{ "spawnPoints", {} },
 			{ "spawnableConfigsByName", {} },
 			{ "bRequestsCollisionTests", bRequestsCollisionTests}
@@ -130,6 +131,18 @@ namespace SA
 				{ "projectileColor", {teamDatum.projectileColor.x, teamDatum.projectileColor.y, teamDatum.projectileColor.z} }
 			};
 			spawnData["teamData"].push_back(t);
+		}
+		for (const EngineEffectData& engineFX : engineEffectData)
+		{
+			json engineFX_json;
+
+			JSON_WRITE(engineFX.colorHdrIntensity, engineFX_json);
+			JSON_WRITE_VEC3(engineFX.color, engineFX_json);
+			JSON_WRITE_VEC3(engineFX.localOffset, engineFX_json);
+			JSON_WRITE_VEC3(engineFX.localScale, engineFX_json);
+			JSON_WRITE(engineFX.bOverrideColorWithTeamColor, engineFX_json);
+
+			spawnData[SYMBOL_TO_STR(engineEffectData)].push_back(engineFX_json);
 		}
 
 		for (const FighterSpawnPoint& spawnPoint : spawnPoints)
@@ -329,6 +342,29 @@ namespace SA
 					log(__FUNCTION__, SA::LogLevel::LOG_WARNING, "load spawn config to find team data"); 
 					teamData.push_back(TeamData{});
 				}
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// load engine FX
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				if (JsonUtils::hasArray(spawnData, SYMBOL_TO_STR(engineEffectData)))
+				{
+					engineEffectData.clear();
+
+					const json& engineEffectArrayJson = spawnData[SYMBOL_TO_STR(engineEffectData)];
+					for (size_t fxIdx = 0; fxIdx < engineEffectArrayJson.size(); ++fxIdx)
+					{
+						engineEffectData.push_back({});
+						EngineEffectData& engineFX = engineEffectData.back(); //this name MUST match serialization code to work
+
+						READ_JSON_VEC3_OPTIONAL(engineFX.color, engineEffectArrayJson[fxIdx]);
+						READ_JSON_FLOAT_OPTIONAL(engineFX.colorHdrIntensity, engineEffectArrayJson[fxIdx]);
+						READ_JSON_VEC3_OPTIONAL(engineFX.localOffset, engineEffectArrayJson[fxIdx]);
+						READ_JSON_VEC3_OPTIONAL(engineFX.localScale, engineEffectArrayJson[fxIdx]);
+						READ_JSON_BOOL_OPTIONAL(engineFX.bOverrideColorWithTeamColor, engineEffectArrayJson[fxIdx]);
+					}
+				}
+
 
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// load spawn points

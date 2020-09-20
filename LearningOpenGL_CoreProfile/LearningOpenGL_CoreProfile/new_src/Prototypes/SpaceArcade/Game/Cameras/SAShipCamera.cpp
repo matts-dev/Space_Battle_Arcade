@@ -410,6 +410,9 @@ namespace SA
 					myShip->roll(signedRollSpeed_rad, dt_sec, absRot_rad);
 				}
 
+				//player camera interaction happens after ship tick, so if we move the ship we will potentially displace the FX until next tick
+				myShip->tickVFX();
+
 				//DEBUG
 				constexpr bool bEnableDebugRoll = false; //DO NOT LEAVE AS TRUE, will be hard to track down what is doing this
 				if constexpr (bEnableDebugRoll) 

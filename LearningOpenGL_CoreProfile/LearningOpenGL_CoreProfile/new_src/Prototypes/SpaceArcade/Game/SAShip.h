@@ -45,6 +45,7 @@ namespace SA
 	namespace ShipUtilLibrary
 	{
 		void setShipTarget(const sp<Ship>& ship, const lp<WorldEntity>& target);
+		void setEngineParticleOffset(Transform& outParticleXform, const Transform& shipXform, const EngineEffectData& fx);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +120,8 @@ namespace SA
 		void fireProjectileInDirection(glm::vec3 dir_n); //#todo reconsider limiting this so only brains
 
 		inline float getAISkillLevel() { return aiSkillLevel; } //[0,1] 1 being the hardest enemy to face
+
+		void tickVFX(); //offsets VFX effects like shield and engine
 
 		////////////////////////////////////////////////////////
 		// Kinematics
@@ -195,7 +198,11 @@ namespace SA
 		std::optional<glm::vec3> updateAvoidance(float dt_sec);
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
+		void tickShieldFX();
 		bool getAvoidanceDampenedVelocity(std::optional<glm::vec3>& avoidVec) const;
+		void regenerateEngineVFX();
+		void tickEngineFX();
+		void destroyEngineVFX();
 	private:
 		void handlePlacementDestroyed(const sp<GameEntity>& placement);
 		void handleSpawnStasisOver();
@@ -274,6 +281,9 @@ namespace SA
 
 		sp<ProjectileConfig> primaryProjectile;
 		wp<ActiveParticleGroup> activeShieldEffect;
+
+		//some ships may have multiple engines, hence may have multiple fire particles
+		std::vector<sp<ActiveParticleGroup>> engineFireParticlesFX;
 	};
 }
 

@@ -189,11 +189,11 @@ namespace SA
 	protected:
 		virtual void onSerialize(json& outData) override;
 		virtual void onDeserialize(const json& inData) override;
-
-	private:
-		std::vector<sp<Particle::Effect>> effects;
+	protected:
 		bool bLoop = false;
+	private:
 		std::optional<int> numLoops;
+		std::vector<sp<Particle::Effect>> effects;
 		std::optional<float> totalTime;
 	};
 
@@ -219,6 +219,8 @@ namespace SA
 		
 	public:
 		void resetTimeAlive() { timeAlive = 0.f; }
+		//killing a particle will disable it and remove it from system, pointer should be discarded after doing this
+		void killParticle() { bAlive = false; } 
 
 		////////////////////////////////////////////////////////
 		// data
@@ -230,6 +232,7 @@ namespace SA
 		float timeAlive = 0.f;
 		float durationDilation = 1.0f;
 		int bLoopCount = 0;
+		bool bAlive = true;
 	public:  //spawner of particle is free to modify the transform
 		Transform xform{};
 		std::optional<glm::mat4> parentXform_m;
@@ -278,7 +281,7 @@ namespace SA
 	private: //utility functions
 	
 	private:
-		void handlePostLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& /*newCurrentLevel*/);
+		void handlePreLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& /*newCurrentLevel*/);
 		sp<LevelBase> currentLevel = nullptr;
 
 		void handleLosingOpenglContext(const sp<Window>& window);

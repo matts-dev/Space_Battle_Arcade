@@ -234,6 +234,11 @@ namespace SA
 
 		if (bAllEffectsDone)
 		{
+			if (!activeParticle.bAlive)
+			{ //user killed particle
+				bShouldRemove = true;
+			}
+
 			sp<ParticleConfig>& particleCFG = activeParticle.particle;
 			if (particleCFG->bLoop)
 			{
@@ -429,7 +434,8 @@ namespace SA
 	void ParticleSystem::initSystem()
 	{
 		LevelSystem& levelSystem = GameBase::get().getLevelSystem();
-		levelSystem.onPostLevelChange.addWeakObj(sp_this(), &ParticleSystem::handlePostLevelChange);
+		//use pre level change as start of level may spawn particles in world, we don't want to clean up those particles.
+		levelSystem.onPreLevelChange.addWeakObj(sp_this(), &ParticleSystem::handlePreLevelChange);
 
 		WindowSystem& windowSystem = GameBase::get().getWindowSystem();
 		windowSystem.onWindowAcquiredOpenglContext.addWeakObj(sp_this(), &ParticleSystem::handleAcquiredOpenglContext);
@@ -452,7 +458,7 @@ namespace SA
 		game.onRenderDispatch.removeStrong(sp_this(), &ParticleSystem::handleRenderDispatch);
 	}
 
-	void ParticleSystem::handlePostLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& newCurrentLevel)
+	void ParticleSystem::handlePreLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& newCurrentLevel)
 	{
 		log("ParticleSystem", LogLevel::LOG, "Detected level change, clearing particles");
 

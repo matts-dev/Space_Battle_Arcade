@@ -102,6 +102,8 @@ namespace SA
 			glm::bvec4 vec = glm::isnan(quat);
 			return vec.x || vec.y || vec.z || vec.w;
 		};
+
+		size_t hashColor(glm::vec3 color_ldr);
 #if _DEBUG | ERROR_CHECK_GL_RELEASE 
 #define NAN_BREAK(value)\
 if(SA::Utils::anyValueNAN(value))\

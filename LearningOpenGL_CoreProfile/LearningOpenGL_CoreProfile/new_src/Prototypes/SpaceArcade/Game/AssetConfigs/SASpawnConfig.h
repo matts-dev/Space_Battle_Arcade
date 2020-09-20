@@ -45,6 +45,15 @@ namespace SA
 		glm::vec3 projectileColor = glm::vec3(0.8f, 0.8f, 0);
 	};
 
+	struct EngineEffectData
+	{
+		glm::vec3 localOffset = glm::vec3(0.f);
+		glm::vec3 localScale = glm::vec3(1.f);;
+		glm::vec3 color = glm::vec3(1.f);
+		float colorHdrIntensity = 2.f;
+		bool bOverrideColorWithTeamColor = false;
+	};
+
 	struct FighterSpawnPoint final
 	{
 		glm::vec3 location_lp = glm::vec3(0.f);
@@ -75,6 +84,7 @@ namespace SA
 		bool requestCollisionTests() const {return bRequestsCollisionTests;};
 		bool getCollisionReflectForward() const { return bCollisionReflectForward; }
 		const std::vector<AvoidanceSphereSubConfig>& getAvoidanceSpheres() const { return avoidanceSpheres; }
+		const std::vector<EngineEffectData>& getEngineEffectData() const { return engineEffectData; }
 		const std::vector<PlacementSubConfig>& getCommuncationPlacements() const { return communicationPlacements; }
 		const std::vector<PlacementSubConfig>& getDefensePlacements() const { return defensePlacements; }
 		const std::vector<PlacementSubConfig>& getTurretPlacements() const { return turretPlacements; }
@@ -115,6 +125,8 @@ namespace SA
 		std::vector<PlacementSubConfig> communicationPlacements;
 		std::vector<PlacementSubConfig> defensePlacements;
 		std::vector<PlacementSubConfig> turretPlacements;
+		
+		std::vector<EngineEffectData> engineEffectData;
 
 		std::vector<FighterSpawnPoint> spawnPoints;
 		std::vector<std::string> spawnableConfigsByName;

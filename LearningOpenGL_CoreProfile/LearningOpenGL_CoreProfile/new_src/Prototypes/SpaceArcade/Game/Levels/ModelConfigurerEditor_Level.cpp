@@ -38,6 +38,7 @@
 #include "../../GameFramework/SADebugRenderSystem.h"
 #include "../../Tools/color_utils.h"
 #include <string>
+#include "../SAShip.h"
 
 
 namespace
@@ -290,6 +291,10 @@ namespace SA
 			if (ImGui::CollapsingHeader("SOUNDS"))
 			{
 				renderUI_Sounds();
+			}
+			if (ImGui::CollapsingHeader("EFFECTS"))
+			{
+				renderUI_Effects();
 			}
 			if (ImGui::CollapsingHeader("VIEWPORT UI", ImGuiTreeNodeFlags_DefaultOpen))
 			{
@@ -1274,6 +1279,93 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		}
 	}
 
+	void ModelConfigurerEditor_Level::renderUI_Effects()
+	{
+		if (activeConfig)
+		{
+			auto textWithIdx = [](const char* const text, size_t idx) {
+				snprintf(tempTextBuffer, sizeof(tempTextBuffer), text, idx);
+				return tempTextBuffer;
+			};
+
+			{//engine effects
+				if (ImGui::Button("Add Engine FX"))
+				{
+					activeConfig->engineEffectData.push_back({});
+				}
+				static int targetEngineFXIdx = 0;
+				if (ImGui::Button("Remove Engine Fx"))
+				{
+					size_t targetEngineFXIdxCast = size_t(targetEngineFXIdx);
+					if (Utils::isValidIndex(activeConfig->engineEffectData, targetEngineFXIdxCast))
+					{
+						activeConfig->engineEffectData.erase(activeConfig->engineEffectData.begin() + targetEngineFXIdxCast); //slow removal, but this is editor code anyways.
+					}
+				}
+				ImGui::SameLine();
+				ImGui::DragInt("engine fx idx", &targetEngineFXIdx, 1.f, 0, activeConfig->engineEffectData.size());
+				for (size_t fxIdx = 0; fxIdx < activeConfig->engineEffectData.size(); ++fxIdx)
+				{
+					snprintf(tempTextBuffer, sizeof(tempTextBuffer), "engine fx %d", fxIdx);
+
+					EngineEffectData& fx = activeConfig->engineEffectData[fxIdx];
+
+					ImGui::Checkbox(textWithIdx("use team (projectile) color", fxIdx), &fx.bOverrideColorWithTeamColor);
+					if (!fx.bOverrideColorWithTeamColor)
+					{
+						//only offer a color if we're not using team color, this will help communicate through UX what team color usage does
+						ImGui::ColorPicker3(textWithIdx("color %d", fxIdx), &fx.color.x);
+					}
+					ImGui::InputFloat(textWithIdx("hdr intensity %d", fxIdx), &fx.colorHdrIntensity);
+					ImGui::InputFloat3(textWithIdx("local offset %d", fxIdx), &fx.localOffset.x);
+					ImGui::InputFloat3(textWithIdx("local scale %d", fxIdx), &fx.localScale.x);
+				}
+
+				ImGui::Text("Don't forget to save the config to apply the engine fx");
+			}
+
+//
+//#define SFX_UI(name_cstr, sfx_getter, sfx_setter, text_temp_buffer)\
+//			{\
+//				static SoundEffectSubConfig sfxConfig = activeConfig->sfx_getter(); /*make a copy and use this to track data*/\
+//				static int oneTimeInit = [this](const SoundEffectSubConfig& sfxConfig){ snprintf(text_temp_buffer, sizeof(text_temp_buffer), "%s", sfxConfig.assetPath.c_str()); return 0;}(sfxConfig);\
+//				ImGui::Text(name_cstr " SFX:");\
+//				ImGui::SameLine();\
+//				ImGui::Text(sfxConfig.assetPath.c_str());\
+//				ImGui::InputText(name_cstr " SFX Mod Relative Path", text_temp_buffer, sizeof(text_temp_buffer));\
+//				ImGui::InputFloat("maxDistance " name_cstr , &sfxConfig.maxDistance);\
+//				ImGui::InputFloat("volume " name_cstr , &sfxConfig.gain);\
+//				ImGui::InputFloat("pitch varation" name_cstr , &sfxConfig.pitchVariationRange);\
+//				ImGui::Checkbox("bLooping " name_cstr , &sfxConfig.bLooping);\
+//				static bool bPlayWindowProxy = sfxConfig.oneshotTimeoutSec.has_value();\
+//				ImGui::Checkbox("fail to play time window" name_cstr, &bPlayWindowProxy);\
+//				if(bPlayWindowProxy)\
+//				{\
+//					float timeProxy = sfxConfig.oneshotTimeoutSec.has_value() ? *sfxConfig.oneshotTimeoutSec : 0.f;\
+//					if (ImGui::InputFloat("try To Play For X Seconds " name_cstr, &timeProxy))\
+//					{\
+//						sfxConfig.oneshotTimeoutSec = timeProxy; \
+//					}\
+//				}\
+//				if (ImGui::Button("save sound: " name_cstr ))\
+//				{\
+//					sfxConfig.assetPath = text_temp_buffer;\
+//					activeConfig->sfx_setter(sfxConfig);\
+//					sfxConfig = activeConfig->sfx_getter();/*refresh our static copy*/\
+//					activeConfig->save();\
+//				}\
+//				ImGui::Separator();\
+//			}
+//
+//			//NOTE: these must have unique names_cstr for IMGUI to work correctly!
+//			SFX_UI("Engine Loop", getConfig_sfx_engineLoop, setConfig_sfx_engineLoop, engineSoundPathName);
+//			SFX_UI("Projectile Loop", getConfig_sfx_projectileLoop, setConfig_sfx_projectileLoop, projectileSoundPathName);
+//			SFX_UI("Explosion", getConfig_sfx_explosion, setConfig_sfx_explosion, explosionSoundPathName);
+//			SFX_UI("Muzzle Sound", getConfig_sfx_muzzle, setConfig_sfx_muzzle, muzzleSoundPathName);
+//
+		}
+	}
+
 	void ModelConfigurerEditor_Level::createNewSpawnConfig(const std::string& configName, const std::string& fullModelPath)
 	{
 		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
@@ -1633,6 +1725,21 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
 						debugRenderSystem.renderCube(pnt_m,			spawnPointIdx == selectedSpawnPointIdx ? color::metalicgold() : color::lightOrange());
 						debugRenderSystem.renderRay(spawnDir_wn, spawnPnt_wp, spawnPointIdx == selectedSpawnPointIdx ? color::metalicgold() : color::lightOrange());
+					}
+				}
+				if (bool bRenderEngineParticleSpheres = true)
+				{
+					DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
+
+					const std::vector<EngineEffectData>& fxData = activeConfig->getEngineEffectData();
+					for (const EngineEffectData& fx : fxData)
+					{
+						Transform particleXform;
+						Transform& shipXform = rootXform;
+						ShipUtilLibrary::setEngineParticleOffset(particleXform, shipXform, fx);
+
+						rootXform; //this is this the current model xform;
+						debugRenderSystem.renderSphere(/*model*/ particleXform.getModelMatrix(), fx.color * fx.colorHdrIntensity);
 					}
 				}
 			}
