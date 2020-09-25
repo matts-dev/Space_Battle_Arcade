@@ -4,6 +4,8 @@
 #include <cstdint>
 #include "../SAUtilities.h"
 #include "../../Rendering/OpenGLHelpers.h"
+#include "../../GameFramework/SAAssetSystem.h"
+#include "../../GameFramework/SAGameBase.h"
 
 
 namespace SA
@@ -426,7 +428,17 @@ namespace SA
 		}
 	}
 
+	MaterialTexture generateDefaultNormalMapTextures()
+	{
+		AssetSystem& assetSystem = GameBase::get().getAssetSystem();
 
+		MaterialTexture normalMap;
+		normalMap.path = "GameData/engine_assets/NormalMap_Default.png";
+		normalMap.type = "texture_normalmap";
+		assetSystem.loadTexture(normalMap.path.c_str(), normalMap.id);
+
+		return normalMap;
+	}
 
 
 	Mesh3D Model3D::processMesh(aiMesh* mesh, const aiScene* scene, const aiNode* parentNode)
@@ -498,6 +510,10 @@ namespace SA
 			std::vector<MaterialTexture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 			std::vector<MaterialTexture> ambientMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_ambient");
 			std::vector<MaterialTexture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normalmap"); //aiTextureType seems to load normal maps from aiTextureType_HEIGHT, rather than aiTextureType_NORMAL
+			if (normalMaps.size() == 0) 
+			{
+				normalMaps = { generateDefaultNormalMapTextures() };
+			}
 
 			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
@@ -574,12 +590,12 @@ namespace SA
 			std::string filepath = directory + std::string("/") + relativePath;
 
 			bool bShouldSkip = false;
-			for (uint32_t j = 0; j < texturesLoaded.size(); ++j)
+			for (uint32_t textureIdx = 0; textureIdx < texturesLoaded.size(); ++textureIdx)
 			{
-				if (texturesLoaded[i].path == relativePath)
+				if (texturesLoaded[textureIdx].path == relativePath)
 				{
 					//already loaded this texture, just the cached texture information
-					textures.push_back(texturesLoaded[j]);
+					textures.push_back(texturesLoaded[textureIdx]);
 					bShouldSkip = true;
 					break;
 				}

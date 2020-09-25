@@ -392,6 +392,8 @@ namespace SA
 				layout (location = 0) in vec3 position;			
 				layout (location = 1) in vec3 normal;	
 				layout (location = 2) in vec2 textureCoordinates;
+				layout (location = 3) in vec3 tangent;
+				layout (location = 4) in vec3 bitangent;
 				
 				uniform mat4 model;
 				uniform mat4 view;
@@ -401,12 +403,21 @@ namespace SA
 				out vec3 fragPosition;
 				out vec2 interpTextCoords;
 
+				out VS_OUT {
+					mat3 TBN;
+				} vert_out;
+
 				void main(){
 					gl_Position = projection * view * model * vec4(position, 1);
 					fragPosition = vec3(model * vec4(position, 1));
 
-					//calculate the inverse_tranpose matrix on CPU in real applications; it's a very costly operation
-					fragNormal = normalize(mat3(transpose(inverse(model))) * normal); //must normalize before interpolation! Otherwise low-scaled models will be too bright!
+					//probably should calculate the inverse_tranpose matrix on CPU, it's a very costly operation
+					mat3 normalMatrix = mat3(transpose(inverse(model)));
+
+					fragNormal = normalize(normalMatrix * normal); //must normalize before interpolation! Otherwise models will be too bright!
+					vec3 T = normalize(normalMatrix * tangent);
+					vec3 B = normalize(normalMatrix * bitangent);
+					vert_out.TBN = mat3(T, B, fragNormal);
 
 					interpTextCoords = textureCoordinates;
 				}
@@ -419,6 +430,7 @@ namespace SA
 				struct Material {
 					sampler2D texture_diffuse0;   
 					sampler2D texture_specular0;   
+					sampler2D texture_normalmap0;	
 					int shininess; /*32 is good default, but cannot default struct members in glsl*/
 				};
 				uniform Material material;			
@@ -435,6 +447,8 @@ namespace SA
 				uniform vec3 directionalLightColor	= vec3(1, 1, 1);
 				uniform vec3 objectTint				= vec3(1,1,1);
 
+				uniform bool bUseNormalMapping = true;
+
 				struct DirectionLight
 				{
 					vec3 dir_n;
@@ -446,6 +460,9 @@ namespace SA
 				in vec3 fragNormal;
 				in vec3 fragPosition;
 				in vec2 interpTextCoords;
+				in VS_OUT {
+					mat3 TBN;
+				} vert_in;
 
 				vec3 CalculatePointLighting(vec3 normal, vec3 toView, vec3 fragPosition)
 				{ 
@@ -491,7 +508,31 @@ namespace SA
 				}
 
 				void main(){
-					vec3 normal = normalize(fragNormal);														
+					vec3 normal;
+					if(bUseNormalMapping)
+					{
+						normal = normalize(texture(material.texture_normalmap0, interpTextCoords).rgb); //unfortunately have to normalize what is stored in texture map
+						normal = 2.0f * normal - 1.0f;
+						normal = normalize(normal);
+
+						//check if drawing a mirrored fragment
+						vec3 tangent = vert_in.TBN[0];
+						vec3 bitangent = vert_in.TBN[1];
+						vec3 calcN = cross(tangent, bitangent);
+						float normalsAligned = dot(calcN, vert_in.TBN[2]);
+						if(normalsAligned < 0){
+							//flip handedness for mirrored texture coordinates
+							tangent = -tangent;
+							mat3 TBN_CORRECT = vert_in.TBN;
+							TBN_CORRECT[0] = tangent;
+							normal = normalize(TBN_CORRECT * normal);
+						} else {
+							normal = normalize(vert_in.TBN * normal);
+						}
+					} else {
+						normal = normalize(fragNormal);
+					}
+														
 					vec3 toView = normalize(cameraPosition - fragPosition);
 					vec3 lightContribution = vec3(0.f);
 
@@ -501,12 +542,6 @@ namespace SA
 					vec3 diffuseTexture = objectTint * vec3(texture(material.texture_diffuse0, interpTextCoords));
 					vec3 ambientLight = vec3(0.05f) * diffuseTexture;	
 					lightContribution += ambientLight;
-
-					//note: all other tone mapping should be disabled if this is enabled
-					#define TONE_MAP_FINAL_LIGHT 0
-					#if TONE_MAP_FINAL_LIGHT
-						lightContribution = (lightContribution) / (1 + lightContribution);
-					#endif
 
 					fragmentColor = vec4(lightContribution, 1.0f);
 				}

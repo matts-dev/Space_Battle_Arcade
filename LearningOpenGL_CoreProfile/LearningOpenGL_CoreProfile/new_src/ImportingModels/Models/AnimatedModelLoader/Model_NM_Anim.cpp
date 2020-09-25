@@ -534,7 +534,7 @@ std::vector<MaterialTexture> Model_NM_Anim::loadMaterialTextures(aiMaterial* mat
 		bool bShouldSkip = false;
 		for (uint32_t j = 0; j < texturesLoaded.size(); ++j)
 		{
-			if (texturesLoaded[i].path == relativePath)
+			if (texturesLoaded[j].path == relativePath)
 			{
 				//already loaded this texture, just the cached texture information
 				textures.push_back(texturesLoaded[j]);
