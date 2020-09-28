@@ -587,7 +587,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Ship.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_DiscreteSelector.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_Slider.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\AA\MSAA_OffScreenPassImplementation.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\SAQuaternionCamera.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\Camera\Texture_2D.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\DeferredRendering\DeferredRendererStateMachine.cpp" />
