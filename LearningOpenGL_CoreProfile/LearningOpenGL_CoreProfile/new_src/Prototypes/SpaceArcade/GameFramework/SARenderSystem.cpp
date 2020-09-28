@@ -122,7 +122,7 @@ namespace SA
 	bool RenderSystem::isUsingHDR()
 	{
 		if (deferredRenderer) { return true; }
-		else if (forwardRenderer) { return forwardRenderer->IsUsingHDR(); }
+		else if (forwardRenderer) { return forwardRenderer->isUsingHDR(); }
 		else { return false; }
 	}
 

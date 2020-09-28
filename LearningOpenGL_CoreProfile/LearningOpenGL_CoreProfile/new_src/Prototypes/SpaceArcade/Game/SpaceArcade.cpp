@@ -103,8 +103,8 @@ namespace SA
 		playerPilotAssistUI = new_sp<PlayerPilotAssistUI>();
 
 		//make sure resources are loaded before the level starts
-		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
-		sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
+		sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
+		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
 		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
@@ -277,7 +277,7 @@ namespace SA
 				{ //////////////////////// Forward Rendering //////////////////////////////////////////
 					if (ForwardRenderingStateMachine* forwardRenderer = getRenderSystem().getForwardRenderer())
 					{
-						forwardRenderer->begin_HdrStage(FRD->renderClearColor);
+						forwardRenderer->stage_HDR(FRD->renderClearColor);
 					}
 
 					//render world entities
@@ -312,10 +312,15 @@ namespace SA
 		}
 		else if (ForwardRenderingStateMachine* forwardRenderer = getRenderSystem().getForwardRenderer())
 		{
-			forwardRenderer->begin_ToneMappingStage(renderClearColor); //todo should use frame render data for clear color, but isn't that important atm
+			//tone map world rendering
+			forwardRenderer->stage_ToneMapping(renderClearColor); //todo should use frame render data for clear color, but isn't that important atm
 
+			//render UI and other things that do not need to be tone mapped
 			uiSystem_Game->runGameUIPass(); //render non-editor ui, like HUD and 3D widgets #TODO hook this into delegate below
 			onForwardToneMappingComplete.broadcast();
+
+			//as a last step, apply MSAA and render to default frame buffer.
+			forwardRenderer->stage_MSAA();
 		}
 	}
 
@@ -400,6 +405,13 @@ namespace SA
 						//getLevelSystem().unloadLevel(currentLevel);
 						sp<LevelBase> projectileEditor = new_sp<ModelConfigurerEditor_Level>();
 						getLevelSystem().loadLevel(projectileEditor);
+					}
+					if (input.isKeyJustPressed(window, GLFW_KEY_S))
+					{
+						if(ForwardRenderingStateMachine* forwardRenderer = getRenderSystem().getForwardRenderer())
+						{
+							forwardRenderer->setUseMultiSample(!forwardRenderer->isUsingMultiSample());
+						}
 					}
 				}
 				if (DeferredRendererStateMachine* deferredRenderer = getRenderSystem().getDeferredRenderer())

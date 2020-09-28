@@ -17,9 +17,13 @@ namespace SA
 	public:
 		using Parent = GPUResource;
 	public:
-		void begin_HdrStage(glm::vec3 clearColor);
-		void begin_ToneMappingStage(glm::vec3 clearColor);
-		bool IsUsingHDR() { return bEnableHDR; }
+		void stage_HDR(glm::vec3 clearColor);
+		void stage_ToneMapping(glm::vec3 clearColor);
+		void stage_MSAA();
+	public:
+		bool isUsingHDR() { return bEnableHDR; }
+		bool isUsingMultiSample() { return bMultisampleEnabled; }
+		void setUseMultiSample(bool bEnableMultiSample);
 	protected:
 		virtual void postConstruct() override;
 		virtual void onReleaseGPUResources();
@@ -35,6 +39,7 @@ namespace SA
 		int fb_height = 1;
 		bool bEnableHDR = true;
 		bool bEnableBloom = true;
+		bool bMultisampleEnabled = true;
 	private:
 		GLuint fbo_hdr = 0;
 		GLuint fbo_attachment_color_tex;
@@ -44,10 +49,16 @@ namespace SA
 		GLuint fbo_attachment_hdrExtractionColor;
 		GLuint fbo_pingPong[2]; //perhaps should make a framebuffer object
 		GLuint pingpongColorBuffers[2];
+		//msaa
+		GLuint fbo_multisample = 0;
+		GLuint fbo_multisample_color_attachment;
+		GLuint fbo_multisample_depthstencil_rbo;
+		const GLuint samples = 4; //note, this is hardcoded in offscreen msaa shaders, needs to be adjusted there too, one can not simply adjust this number
 
 		sp<Shader> hdrColorExtractionShader = nullptr;
 		sp<Shader> bloomShader = nullptr;
 		sp<Shader> toneMappingShader = nullptr;
+		sp<Shader> MSAA_Shader = nullptr;
 		sp<NdcQuad> ndcQuad = nullptr;
 	};
 }
