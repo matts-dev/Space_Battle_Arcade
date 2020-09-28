@@ -1384,6 +1384,14 @@ namespace SA
 		{
 			if (!isPendingDestroy())
 			{
+				if (!activeShieldEffect.expired())
+				{
+					sp<ActiveParticleGroup> shieldVFX = activeShieldEffect.lock();
+					shieldVFX->killParticle();
+					shieldVFX->xform.scale = glm::vec3(0.f); //particle isn't disappearing... 
+					activeShieldEffect.reset();
+				}
+
 				ParticleSystem::SpawnParams particleSpawnParams;
 				particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
 				particleSpawnParams.xform.position = this->getTransform().position;

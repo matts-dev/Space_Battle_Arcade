@@ -338,7 +338,7 @@ namespace SA
 											movingCamPos = testPos;
 										}
 
-										if constexpr (constexpr bool bDebugRectangel = true) { GameBase::get().getDebugRenderSystem().renderCube(cameraXform.getModelMatrix(), glm::vec3(0.5f, 0.f, 0.f)); }
+										if constexpr (constexpr bool bDebugRectangel = false) { GameBase::get().getDebugRenderSystem().renderCube(cameraXform.getModelMatrix(), glm::vec3(0.5f, 0.f, 0.f)); }
 									}
 
 									//we've completed binary searching, set up camera position for next round of collision tests

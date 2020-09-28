@@ -39,7 +39,7 @@ namespace SA
 		int fb_height = 1;
 		bool bEnableHDR = true;
 		bool bEnableBloom = true;
-		bool bMultisampleEnabled = true;
+		bool bMultisampleEnabled = false; //currently only works for UI and laser lines do not look as good IMO, disable by default.
 	private:
 		GLuint fbo_hdr = 0;
 		GLuint fbo_attachment_color_tex;

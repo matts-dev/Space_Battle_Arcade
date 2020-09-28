@@ -936,7 +936,7 @@ namespace SA
 			////////////////////////////////////////////
 			vec3 texColor = grayScale.rgb * uniformColor;
 
-			//vec3 texColor = texture(tessellateTex, uv).xyz;
+			 //texColor = texture(tessellateTex, uv).xyz;
 
 		#define TONE_MAP_HDR 0
 		#if TONE_MAP_HDR
@@ -1215,7 +1215,7 @@ namespace SA
 				ec(glBindTexture(GL_TEXTURE_2D, tessellatedTextureID));
 				seekerShader->setUniform1i("tessellateTex", textureSlot - GL_TEXTURE0);
 
-				seekerModel->draw(*seekerShader);
+				seekerModel->draw(*seekerShader, false);
 			}
 		}
 	}

@@ -74,7 +74,7 @@ namespace SA
 		}
 
 		//debug spawn locations
-		if constexpr (constexpr bool bDebugSpawnPoints = true)
+		if constexpr (constexpr bool bDebugSpawnPoints = false)
 		{
 			static DebugRenderSystem& debugRender = GameBase::get().getDebugRenderSystem();
 			for (FighterSpawnPoint& spawn : mySpawnPoints)
