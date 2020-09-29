@@ -253,6 +253,10 @@ namespace SA
 		size_t activeTurrets = 0;
 		size_t activeCommunications = 0;
 
+		//because health is done in a component, we need a way to track the projectile that hit the ship, so that we can get information off of projectile.
+		//this is cleared immediately to avoid lifetime issues
+		const Projectile* transientCollidingProjectile = nullptr; 
+
 		HitPointComponent* hpComp = nullptr;
 		ShipEnergyComponent* energyComp = nullptr;
 		FighterSpawnComponent* fighterSpawnComp = nullptr;

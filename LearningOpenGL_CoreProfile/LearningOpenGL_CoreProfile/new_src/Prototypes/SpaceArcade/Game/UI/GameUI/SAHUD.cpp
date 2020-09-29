@@ -18,6 +18,8 @@
 #include "../../../GameFramework/SALevelSystem.h"
 #include "../../../GameFramework/SAPlayerBase.h"
 #include "../../../GameFramework/SAPlayerSystem.h"
+#include "text/GlitchText.h"
+#include "../../SAPlayer.h"
 
 using namespace glm;
 
@@ -36,6 +38,13 @@ namespace SA
 
 		healthBar = new_sp<Widget3D_HealthBar>(playerIdx);
 		energyBar = new_sp<Widget3D_EnergyBar>(playerIdx);
+
+		DigitalClockFont::Data textInit;
+		textInit.text = "slowmo ready";
+		slowmoText = new_sp<GlitchTextFont>(textInit);
+		slowmoText->resetAnim();
+		slowmoText->play(true);
+		slowmoText->setAnimPlayForward(true);
 
 #if HUD_FONT_TEST 
 		fontTest = new_sp<class Widget3D_DigitalClockFontTest>();
@@ -78,6 +87,28 @@ namespace SA
 		{
 			tryRegenerateTeamWidgets();
 
+
+			bool bPlayerSlomoReady = false;
+			const sp<PlayerBase>& playerBase = GameBase::get().getPlayerSystem().getPlayer(playerIdx);
+			if (playerBase && slowmoText)
+			{
+				if (playerBase->hasControlTarget())
+				{
+					//sucks to dynamic cast here every frame, but I don't want to make a separate component just for this; we could static cast but that is dangerous territory as it creates a refactoring hidden bomb 
+					if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
+					{
+						bPlayerSlomoReady = player->canDilateTime();
+						//if (player->canDilateTime())
+						//{
+						//	//slowmoText->setAnimPlayForward(true); //will not show if doing this, will need to debug
+						//}
+						//else
+						//{
+						//	//slowmoText->setAnimPlayForward(false);
+						//}
+					}
+				}
+			}
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// this is a bit of a hack. originally I anticipated a distance of 10.f in front of hud was a good amount
@@ -155,6 +186,19 @@ namespace SA
 			energyBarTextXform.position += statusBarTextOffset;
 			energyBar->setTextTransform(energyBarTextXform);
 			energyBar->renderGameUI(rd_ui); //must come after transform update
+
+			Transform slowmoTextXform = energyBarXform; //copy previous xform and just change what we need
+			slowmoTextXform.scale = distScaleCorrection * vec3(0.075f);
+			slowmoTextXform.position = hudCenterPoint + hudData.camUp * ((0.1f + -statusBarOffsetPerc.y) *hudData.savezoneMax_y);
+			slowmoText->setXform(slowmoTextXform);
+			if (const RenderData* rd_game = rd_ui.renderData())
+			{
+				slowmoText->tick(rd_ui.dt_sec());
+				if (bPlayerSlomoReady)
+				{
+					slowmoText->render(*rd_game);
+				}
+			}
 
 			////////////////////////////////////////////////////////
 			// respawn widget

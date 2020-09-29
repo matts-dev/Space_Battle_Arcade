@@ -21,6 +21,7 @@
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../GameFramework/SAAudioSystem.h"
+#include "../SAPlayer.h"
 
 using namespace glm;
 
@@ -50,6 +51,7 @@ namespace SA
 		REGISTER_CHEAT("debug_sound", SpaceArcadeCheatSystem::cheat_debugSound);
 #endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
 		REGISTER_CHEAT("debug_sound_log_dump", SpaceArcadeCheatSystem::cheat_debugSound_logDump);
+		REGISTER_CHEAT("infinite_slowmo", SpaceArcadeCheatSystem::cheat_infiniteTimeDilation);
 	}
 
 	void SpaceArcadeCheatSystem::cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs)
@@ -226,6 +228,17 @@ namespace SA
 	void SpaceArcadeCheatSystem::cheat_debugSound_logDump(const std::vector<std::string>& cheatArgs)
 	{
 		GameBase::get().getAudioSystem().logDebugInformation();
+	}
+
+	void SpaceArcadeCheatSystem::cheat_infiniteTimeDilation(const std::vector<std::string>& cheatArgs)
+	{
+		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+		{
+			if (SAPlayer* shipPlayerCheat = dynamic_cast<SAPlayer*>(player.get()))
+			{
+				shipPlayerCheat->cheat_infiniteTimeDilation();
+			}
+		}
 	}
 
 #endif

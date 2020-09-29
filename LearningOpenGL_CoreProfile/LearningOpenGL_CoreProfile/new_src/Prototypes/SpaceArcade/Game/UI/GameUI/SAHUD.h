@@ -11,6 +11,7 @@ namespace SA
 	class Widget3D_HealthBar;
 	class Widget3D_EnergyBar;
 	class Widget3D_TeamProgressBar;
+	class GlitchTextFont;
 
 #define HUD_FONT_TEST 0
 
@@ -38,6 +39,7 @@ namespace SA
 		sp<Widget3D_EnergyBar> energyBar;
 
 		std::vector<sp<Widget3D_TeamProgressBar>> teamHealthBars;
+		sp<GlitchTextFont> slowmoText = nullptr;
 		
 #if HUD_FONT_TEST 
 		sp<class Widget3D_DigitalClockFontTest> fontTest = nullptr;

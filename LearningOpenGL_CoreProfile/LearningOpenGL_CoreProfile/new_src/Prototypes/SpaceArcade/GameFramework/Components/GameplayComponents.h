@@ -97,6 +97,7 @@ namespace SA
 	public:
 		bool hasOwningPlayer() const { return !owningPlayer.expired(); }
 		void setOwningPlayer(const sp<PlayerBase>& player);
+		const wp<PlayerBase>& getOwningPlayer() const { return owningPlayer; }
 	private:
 		wp<PlayerBase> owningPlayer;
 	};

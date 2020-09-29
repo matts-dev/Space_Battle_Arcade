@@ -20,7 +20,7 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// The encapsulated render system
 	//
-	// #todo #nextengine perhaps render system should be more first class rather than have GameBase controling things
+	// #todo #nextengine perhaps render system should be more first class rather than have GameBase controlling things
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class RenderSystem final : public SystemBase
 	{

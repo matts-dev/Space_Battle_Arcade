@@ -40,6 +40,7 @@
 #include "../GameFramework/SAAudioSystem.h"
 #include "../Rendering/Lights/PointLight_Deferred.h"
 #include "../GameFramework/SARenderSystem.h"
+#include "SAPlayer.h"
 
 namespace SA
 {
@@ -1092,7 +1093,9 @@ namespace SA
 			//only damage shield if all objective placements have been destroyed
 			if (activePlacements == 0)
 			{
+				transientCollidingProjectile = &hitProjectile; //todo, perahps a scoped updater so this is automatic and immune to refactor mistakes?
 				hpComp->adjust(-float(hitProjectile.damage));
+				transientCollidingProjectile = nullptr;
 
 				//ship::handleAdjustHp will play hp related effects!
 			}
@@ -1380,7 +1383,7 @@ namespace SA
 
 	void Ship::handleHpAdjusted(const HitPoints& old, const HitPoints& hp)
 	{
-		if (hp.current <= 0.f)
+		if (bool bDestroyed = hp.current <= 0.f)
 		{
 			if (!isPendingDestroy())
 			{
@@ -1409,6 +1412,22 @@ namespace SA
 				if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
 				{
 					brainComp->setNewBrain(sp<AIBrain>(nullptr));
+				}
+
+				if (transientCollidingProjectile)
+				{ //if you get a crash here, did we clean this up after being hit? this shoud always be cleaned up within the scope that the player is hit by a projectile!
+					if (OwningPlayerComponent* playerComp = transientCollidingProjectile->owner->getGameComponent<OwningPlayerComponent>())
+					{
+						if (playerComp->hasOwningPlayer())
+						{
+							//#todod #nextengine indexed dynamic casts with class header injected code? use index created at runtime to identify classes or something, this should let us use an index and then static cast if index is in an array of classes that are available or something (may need to tweak)
+							sp<PlayerBase> playerBase = playerComp->getOwningPlayer().lock();
+							if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
+							{
+								player->incrementKillCount(); //this could be virtual to avoid dynamic cast. but may be weird to put this in framework base. 
+							}
+						}
+					}
 				}
 			}
 

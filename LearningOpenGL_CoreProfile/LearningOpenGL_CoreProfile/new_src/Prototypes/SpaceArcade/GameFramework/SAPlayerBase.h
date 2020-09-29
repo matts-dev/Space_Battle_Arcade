@@ -39,6 +39,8 @@ namespace SA
 
 		bool isPlayerSimulation() const { return bIsPlayerSimulation; }
 		void setIsPlayerSimulation(bool val) { bIsPlayerSimulation = val; }
+
+		int32_t getPlayerIndex() { return myIndex; }
 	protected:
 		virtual sp<CameraBase> generateDefaultCamera() const = 0;
 		virtual void onNewControlTargetSet(IControllable* oldTarget, IControllable* newTarget) {}
