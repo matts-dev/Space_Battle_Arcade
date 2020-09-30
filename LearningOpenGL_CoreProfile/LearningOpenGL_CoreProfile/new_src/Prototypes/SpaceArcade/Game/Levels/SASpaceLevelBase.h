@@ -1,5 +1,6 @@
 #pragma once
 #include "../../GameFramework/SALevel.h"
+#include "../Environment/StarJumpData.h"
 
 namespace SA
 {
@@ -33,6 +34,8 @@ namespace SA
 		ServerGameMode_SpaceBase* getServerGameMode_SpaceBase();
 		const sp<StarField>& getStarField() { return starField; }
 		void endGame(const EndGameParameters& endParameters);
+		void enableStarJump(bool bEnable, bool bSkipTransition = false);
+		bool isStarJumping() const;
 	protected:
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
@@ -60,6 +63,7 @@ namespace SA
 		sp<SA::Shader> forwardShadedModelShader;
 		sp<SA::Shader> highlightForwardModelShader;
 		std::vector<class RenderModelEntity*> stencilHighlightEntities;
+		StarJumpData sj;
 	protected:
 		sp<ServerGameMode_SpaceBase> spaceGameMode = nullptr;
 	private: //implementation helpers

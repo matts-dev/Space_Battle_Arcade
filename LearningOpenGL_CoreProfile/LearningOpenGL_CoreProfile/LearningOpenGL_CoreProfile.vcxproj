@@ -198,6 +198,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Planet.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarJumpData.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_SpaceBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_CarrierTakedown.h" />

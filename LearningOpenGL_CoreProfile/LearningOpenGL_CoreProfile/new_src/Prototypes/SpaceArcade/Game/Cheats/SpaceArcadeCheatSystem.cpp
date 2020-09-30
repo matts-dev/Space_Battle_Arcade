@@ -249,11 +249,7 @@ namespace SA
 		{
 			if (SpaceLevelBase* level = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
 			{
-				if (const sp<StarField>& starField = level->getStarField())
-				{
-					bool bIsStarJumping = starField->isStartJumping();
-					starField->enableStarJump(!bIsStarJumping);
-				}
+				level->enableStarJump(!level->isStarJumping());
 			}
 		}
 	}

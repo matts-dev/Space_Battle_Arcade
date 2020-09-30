@@ -3,6 +3,7 @@
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
 #include "../../Tools/DataStructures/LifetimePointer.h"
 #include "../../Tools/DataStructures/AdvancedPtrs.h"
+#include "../Environment/StarJumpData.h"
 namespace SA
 {
 	class Ship;
@@ -20,6 +21,7 @@ namespace SA
 	public:
 		void followShip(const sp<Ship>& ship);
 		virtual glm::mat4 getView() const override;
+		void enableStarJump(bool bEnable, bool bSkipTransition = false);
 	protected:
 		virtual void postConstruct() override;
 	private:
@@ -62,6 +64,7 @@ namespace SA
 		bool bFireHeld = false;
 		bool bAltPressed = false;
 	private:
+		StarJumpData sj;
 		uint32_t owningPlayerIndex = 0;
 		sp<CollisionData> collisionData;
 		lp<Ship> myShip;

@@ -5,6 +5,7 @@
 #include <string>
 #include <optional>
 #include "../../GameFramework/Interfaces/SATickable.h"
+#include "StarJumpData.h"
 
 namespace SA
 {
@@ -58,8 +59,11 @@ namespace SA
 		void setRotationAxis(glm::vec3 rotAxis) { data.rotationAxis = glm::normalize(rotAxis); }
 		void setUseCameraAsLight(bool bUseCameraLight);
 		void setUseGrayScale(bool bShouldUseGrayScale) { bUseGrayScale = bShouldUseGrayScale; }
+		void enableStarJump(bool bEnable, bool bSkipTransition = false);
 	private:
 		void applySizeCorrections();
+	private: //implementation
+		StarJumpData sj;
 	private: //statics
 		static sp<Model3D> planetModel;
 		static sp<Shader> planetShader;

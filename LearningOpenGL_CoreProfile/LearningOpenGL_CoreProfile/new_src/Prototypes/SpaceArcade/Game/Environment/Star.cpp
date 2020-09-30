@@ -82,19 +82,32 @@ namespace SA
 		sceneStars.erase(newEndIter, sceneStars.end());
 	}
 
-	void Star::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) const
+	void Star::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		mat4 model = xform.getModelMatrix();
 		mat4 customView = view;
-		if (bForceCentered)
+		PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
+		const sp<PlayerBase>& player = playerSys.getPlayer(0);
+		if (const sp<CameraBase>& camera = player ? player->getCamera() : nullptr)
 		{
-			PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
-			const sp<PlayerBase>& player = playerSys.getPlayer(0);
-			if (const sp<CameraBase>& camera = player ? player->getCamera() : nullptr)
+			if (bForceCentered)
 			{
 				vec3 origin{ 0.f };
 				customView = glm::lookAt(origin, origin + camera->getFront(), camera->getUp());
 			}
+
+			sj.tick(dt_sec);
+			if (sj.isStarJumpInProgress())
+			{
+				glm::vec3 camFront_n = camera->getFront();
+
+				//slide the star along camera direction if we're doing a star jump
+				float slideFactor = 500.f;
+				Transform slideXform = xform;
+				slideXform.position += -camFront_n * sj.starJumpPerc * slideFactor;
+				model = slideXform.getModelMatrix();
+			}
+
 		}
 		mat4 projection_view = projection * customView;
 
@@ -120,6 +133,10 @@ namespace SA
 		return vec3(0, 0, 0) - xform.position;
 	}
 
+	void Star::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
+	{
+		sj.enableStarJump(bEnable, bSkipTransition);
+	}
 	
 
 }

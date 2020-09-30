@@ -8,6 +8,7 @@
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/AdvancedPtrs.h"
 #include "../../GameFramework/SAGameBase.h"
+#include "StarJumpData.h"
 
 
 namespace SA
@@ -33,7 +34,7 @@ namespace SA
 		Star();
 		~Star();
 	public:
-		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) const;
+		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
 		glm::vec3 getLightDirection() const;
 		void setXform(Transform& xform) { this->xform = xform; }
 		void setForceCentered(bool bInForceCentered) { bForceCentered = bInForceCentered; }
@@ -41,6 +42,7 @@ namespace SA
 		glm::vec3 getLightHDR() { return ldr_color * external_hdr_intensity; }
 		//glm::vec3 getLightHDR() { return ldr_color * hdr_intensity; }
 		void setLightLDR(glm::vec3 inLdrColor) { ldr_color = inLdrColor; }
+		void enableStarJump(bool bEnable, bool bSkipTransition = false);
 	protected:
 		virtual void postConstruct() override;
 	private: //statics
@@ -55,6 +57,7 @@ namespace SA
 		float external_hdr_intensity = 2.f; //used to drive lighting caculations of external objects; since this dir lights have no attenuation, this value need not be high //@hdr_tweak //#todo may not need to separate these HDR effects after all
 		bool bUseHDR = true;
 		bool bForceCentered = true;
+		StarJumpData sj;
 	};
 
 }

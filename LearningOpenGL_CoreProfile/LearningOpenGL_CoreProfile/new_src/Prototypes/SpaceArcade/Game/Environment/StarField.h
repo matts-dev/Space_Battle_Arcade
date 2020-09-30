@@ -7,6 +7,7 @@
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../Tools/color_utils.h"
 #include "../../Rendering/SAGPUResource.h"
+#include "StarJumpData.h"
 
 namespace SA
 {
@@ -32,7 +33,7 @@ namespace SA
 		bool getForceCentered() { return bForceCentered; }
 		void setForceCentered(bool bNewForceCentered) { bForceCentered = bNewForceCentered; }
 		void enableStarJump(bool bEnable, bool bSkipTransition = false);
-		bool isStartJumping() { return bStarJump; }
+		bool isStarJumping() { return sj.isStarJumpInProgress(); }
 	protected:
 		virtual void postConstruct() override;
 	private:
@@ -42,9 +43,7 @@ namespace SA
 		void bufferInstanceData();
 		void generateStarField();
 	private://impl
-		float starJumpCompletionSec = 3.f;
-		bool bStarJump = false;
-		float starJumpPerc = 0.f;
+		StarJumpData sj;
 	private:
 		sp<SphereMeshTextured> starMesh;
 		sp<MultiDelegate<>> timerDelegate;

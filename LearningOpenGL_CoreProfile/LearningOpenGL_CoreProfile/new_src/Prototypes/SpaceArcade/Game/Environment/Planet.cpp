@@ -167,6 +167,7 @@ namespace SA
 		//#SUGGESTED a lot of this code is similar to star.cpp, perhaps a base class "celestial body" can work. Depends on how planets map movement.
 		//#TODO perhaps slightly move the planet when moving towards it? will need to map large distances to small changes
 		mat4 model = data.xform.getModelMatrix();
+
 		mat4 customView = view;
 		vec3 camFront_n = vec3(1.f, 0.f, 0.f);
 		PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
@@ -179,6 +180,16 @@ namespace SA
 				customView = glm::lookAt(origin, origin + camera->getFront(), camera->getUp());
 			}
 			camFront_n = camera->getFront();
+
+			sj.tick(dt_sec);
+			if (sj.isStarJumpInProgress())
+			{
+				//slide the plant along camera direction if we're doing a star jump
+				float slideFactor = 4000.f; //balanced with LOCAL star slide factor so that planets move faster than local stars
+				Transform slideXform = data.xform;
+				slideXform.position += -camFront_n * sj.starJumpPerc * slideFactor;
+				model = slideXform.getModelMatrix();
+			}
 		}
 		mat4 projection_view = projection * customView;
 
@@ -270,6 +281,11 @@ namespace SA
 	void Planet::setUseCameraAsLight(bool bInUseCameraLight)
 	{
 		bUseCameraLight = bInUseCameraLight;
+	}
+
+	void Planet::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
+	{
+		sj.enableStarJump(bEnable, bSkipTransition);
 	}
 
 	sp<class Planet> makeRandomPlanet(RNG& rng)

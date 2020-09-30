@@ -39,6 +39,7 @@
 #include "../AI/SAShipBehaviorTreeNodes.h"
 #include "../../GameFramework/RenderModelEntity.h"
 #include "../../GameFramework/SAWorldEntity.h"
+#include "../Cameras/SAShipCamera.h"
 
 namespace SA
 {
@@ -49,6 +50,8 @@ namespace SA
 		using glm::vec3; using glm::mat4;
 
 		SpaceArcade& game = SpaceArcade::get();
+
+		sj.tick(dt_sec);
 
 		const sp<PlayerBase>& zeroPlayer = game.getPlayerSystem().getPlayer(0);
 		const RenderData* FRD = game.getRenderSystem().getFrameRenderData_Read(game.getFrameNumber());
@@ -141,72 +144,91 @@ namespace SA
 			forwardShadedModelShader->setUniform3f("cameraPosition", camera->getPosition());
 			forwardShadedModelShader->setUniform1i("material.shininess", 32);
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// custom target highlighting pass
-			//
-			// render ship again, but this time writing to stencil buffer
-			// render scaled up ship with highlight shader, but only if passes stencil and depth test.
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			uint32_t stencilHighlightBit = 1; //#stencil todo - define this in a global place so that all stencil bits can been seen in one location
-			if (stencilHighlightEntities.size() > 0)
+			bool bShouldRenderWorldUnits = true;
+			bShouldRenderWorldUnits &= !(sj.isStarJumpInProgress());
+			if(bShouldRenderWorldUnits)
 			{
-				//prepare_stencil_write;
-				ec(glEnable(GL_STENCIL_TEST));
-				ec(glStencilFunc(GL_ALWAYS, stencilHighlightBit, 0xFF)); //configure the bit to write/read
-				ec(glStencilMask(0xFF)); //enable writing to all bits of the stencil buffer
-				ec(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
-				for (RenderModelEntity* highlightEntity : stencilHighlightEntities)
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// custom target highlighting pass
+				//
+				// render ship again, but this time writing to stencil buffer
+				// render scaled up ship with highlight shader, but only if passes stencil and depth test.
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				uint32_t stencilHighlightBit = 1; //#stencil todo - define this in a global place so that all stencil bits can been seen in one location
+				if (stencilHighlightEntities.size() > 0)
 				{
-					//render like normal, but writing to stencil buffer so that highlight will not overwrite object
-					forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(highlightEntity->getTransform().getModelMatrix()));
-					highlightEntity->render(*forwardShadedModelShader);
+					//prepare_stencil_write;
+					ec(glEnable(GL_STENCIL_TEST));
+					ec(glStencilFunc(GL_ALWAYS, stencilHighlightBit, 0xFF)); //configure the bit to write/read
+					ec(glStencilMask(0xFF)); //enable writing to all bits of the stencil buffer
+					ec(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+					for (RenderModelEntity* highlightEntity : stencilHighlightEntities)
+					{
+						//render like normal, but writing to stencil buffer so that highlight will not overwrite object
+						forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(highlightEntity->getTransform().getModelMatrix()));
+						highlightEntity->render(*forwardShadedModelShader);
+					}
+					//clear_stencil_write;
+					ec(glStencilMask(0)); //disable writing to stencil buffer
 				}
-				//clear_stencil_write;
-				ec(glStencilMask(0)); //disable writing to stencil buffer
-			}
 
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// regular rendering pass
-			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			for (const sp<RenderModelEntity>& entity : renderEntities) 
-			{
-				forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
-				entity->render(*forwardShadedModelShader);
-			}
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// regular rendering pass
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				for (const sp<RenderModelEntity>& entity : renderEntities) 
+				{
+					forwardShadedModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
+					entity->render(*forwardShadedModelShader);
+				}
 
-			if (stencilHighlightEntities.size() > 0)
-			{
-				ec(glStencilFunc(GL_NOTEQUAL, stencilHighlightBit, 0xFF)); //only render if we haven't stenciled this area
+				if (stencilHighlightEntities.size() > 0)
+				{
+					ec(glStencilFunc(GL_NOTEQUAL, stencilHighlightBit, 0xFF)); //only render if we haven't stenciled this area
 
 #if !IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
-				todo_update_highlight_shader_to_be_deferred;
+					todo_update_highlight_shader_to_be_deferred;
 #endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
-				highlightForwardModelShader->use();
+					highlightForwardModelShader->use();
 
-				mat4 highlightScaleUp = glm::scale(mat4(1.f), vec3(2.f));
-				highlightForwardModelShader->setUniform1f("vertNormalOffsetScalar", 1.f);
-				highlightForwardModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
-				highlightForwardModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
+					mat4 highlightScaleUp = glm::scale(mat4(1.f), vec3(2.f));
+					highlightForwardModelShader->setUniform1f("vertNormalOffsetScalar", 1.f);
+					highlightForwardModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
+					highlightForwardModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
 
-				/*vec3 highlightColor = vec3(0.8f);*/
-				vec3 highlightColor = vec3(0.5f,0,0);
-				highlightColor *= GameBase::get().getRenderSystem().isUsingHDR() ? 2.f : 1.f;//@hdr_tweak
-				highlightForwardModelShader->setUniform3f("color", highlightColor);
+					/*vec3 highlightColor = vec3(0.8f);*/
+					vec3 highlightColor = vec3(0.5f, 0, 0);
+					highlightColor *= GameBase::get().getRenderSystem().isUsingHDR() ? 2.f : 1.f;//@hdr_tweak
+					highlightForwardModelShader->setUniform3f("color", highlightColor);
 
-				for (RenderModelEntity* highlightEntity : stencilHighlightEntities)
-				{
-					//set color to team color? will require component or something to get that information
-					highlightForwardModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(highlightEntity->getTransform().getModelMatrix()));
-					highlightEntity->render(*highlightForwardModelShader);
+					for (RenderModelEntity* highlightEntity : stencilHighlightEntities)
+					{
+						//set color to team color? will require component or something to get that information
+						highlightForwardModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(highlightEntity->getTransform().getModelMatrix()));
+						highlightEntity->render(*highlightForwardModelShader);
+					}
+					stencilHighlightEntities.clear(); //clear raw pointers so they will be regenerated next frame
+
+					//clean up stencil state so that other features can use stencil buffer
+					ec(glStencilMask(0xFF));
+					ec(glClear(GL_STENCIL_BUFFER_BIT));
+					ec(glStencilFunc(GL_ALWAYS, stencilHighlightBit, 0xFF)); //reset requirement that we haven't stenciled area
+					ec(glStencilMask(0x0)); //disable writes
+					ec(glDisable(GL_STENCIL_TEST));
 				}
-				stencilHighlightEntities.clear(); //clear raw pointers so they will be regenerated next frame
 
-				//clean up stencil state so that other features can use stencil buffer
-				ec(glStencilMask(0xFF));
-				ec(glClear(GL_STENCIL_BUFFER_BIT)); 
-				ec(glStencilFunc(GL_ALWAYS, stencilHighlightBit, 0xFF)); //reset requirement that we haven't stenciled area
-				ec(glStencilMask(0x0)); //disable writes
-				ec(glDisable(GL_STENCIL_TEST));
+			}
+			else
+			{
+				//special case, we want to still render the player while star jumping
+				const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
+				for (const sp<PlayerBase>& player : allPlayers)
+				{
+					if (RenderModelEntity* playerModel = dynamic_cast<RenderModelEntity*>(player->getControlTarget()))
+					{
+						playerModel->render(*forwardShadedModelShader);
+					}
+				}
 			}
 		}
 		else
@@ -297,6 +319,40 @@ namespace SA
 				player->setControlTarget(nullptr);
 			}
 		}
+	}
+
+	void SpaceLevelBase::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
+	{
+		sj.enableStarJump(bEnable, bSkipTransition);
+
+		starField->enableStarJump(bEnable, bSkipTransition);
+
+		for (const sp<Planet>& planet : planets)
+		{
+			planet->enableStarJump(bEnable, bSkipTransition);
+		}
+
+		for (const sp<Star>& star : localStars)
+		{
+			star->enableStarJump(bEnable, bSkipTransition);
+		}
+
+		const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();
+		for (const sp<PlayerBase>& player : allPlayers)
+		{
+			const sp<CameraBase>& camera = player ? player->getCamera() : nullptr;
+
+			if (ShipCamera* shipCamera = dynamic_cast<ShipCamera*>(camera.get()))
+			{
+				shipCamera->enableStarJump(bEnable, bSkipTransition);
+			}
+		}
+	}
+
+	bool SpaceLevelBase::isStarJumping() const
+	{
+		//just use the star jump data form the star field, all other things (stars, planets) should match
+		return sj.isStarJumpInProgress();
 	}
 
 	void SpaceLevelBase::applyLevelConfig()

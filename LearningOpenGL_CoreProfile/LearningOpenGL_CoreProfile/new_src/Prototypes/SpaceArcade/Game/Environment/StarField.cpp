@@ -67,8 +67,7 @@ namespace SA
 
 			starShader->use();
 
-			starJumpPerc += (bStarJump ? 1.f : -1.f) * dt_sec / starJumpCompletionSec;
-			starJumpPerc = clamp(starJumpPerc, 0.f, 1.f);
+			sj.tick(dt_sec);
 
 			mat4 customView = view;
 
@@ -83,14 +82,14 @@ namespace SA
 					customView = glm::lookAt(origin, origin + camDir_n, camera->getUp());
 				}
 
-				bool bStarJumpInProgress = bStarJump || (!bStarJump && starJumpPerc != 0.f);
+				bool bStarJumpInProgress = sj.bStarJump || (!sj.bStarJump && sj.starJumpPerc != 0.f);
 				glm::mat4 starJump_Displacement{ 1.f }; //start out as identity matrix
 				glm::mat4 starJump_Stretch{ 1.f };
 				if (bStarJumpInProgress)
 				{
 					//camera is always considered at 0,0,0 for star field, so we just need to shift and stretch stars in camera direction
 					const float maxStretchFactor = 100.f;
-					const float stretchThisFrame = maxStretchFactor * starJumpPerc;
+					const float stretchThisFrame = maxStretchFactor * sj.starJumpPerc;
 					vec3 stretchVec = stretchThisFrame * -camDir_n;//stretch stars opposite of camera direction (they're coming at you), put star in center of scale up
 					vec3 adjustedPosition = 0.5f * stretchVec; 
 
@@ -106,7 +105,7 @@ namespace SA
 				starShader->setUniformMatrix4fv("starJump_Displacement", 1, GL_FALSE, glm::value_ptr(starJump_Displacement));
 				starShader->setUniformMatrix4fv("starJump_Stretch", 1, GL_FALSE, glm::value_ptr(starJump_Stretch));
 				starShader->setUniform1i("bStarJump", int(bStarJumpInProgress)); //if we have disabled star jump, but are still ticking down, then consider this still enabled as we want the stretch to go away. 
-				starShader->setUniform1f("starJumpPerc", starJumpPerc);
+				starShader->setUniform1f("starJumpPerc", sj.starJumpPerc);
 			}
 
 			mat4 projection_view = projection * customView;
@@ -274,11 +273,7 @@ namespace SA
 
 	void StarField::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
 	{
-		bStarJump = bEnable;
-		if (bSkipTransition)
-		{
-			starJumpPerc = bEnable ? 1.f : 0.f;
-		}
+		sj.enableStarJump(bEnable, bSkipTransition);
 	}
 
 }

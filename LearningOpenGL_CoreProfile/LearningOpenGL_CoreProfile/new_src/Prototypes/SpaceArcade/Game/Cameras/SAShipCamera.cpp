@@ -53,6 +53,11 @@ namespace SA
 		return glm::lookAt(collisionAdjustedPosition, collisionAdjustedPosition + getFront(), getUp());
 	}
 
+	void ShipCamera::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
+	{
+		sj.enableStarJump(bEnable, bSkipTransition);
+	}
+
 	void ShipCamera::postConstruct()
 	{
 		QuaternionCamera::postConstruct();
@@ -65,6 +70,11 @@ namespace SA
 	{
 		static WindowSystem& windowSystem = GameBase::get().getWindowSystem();
 		static PlayerSystem& playerSystem = GameBase::get().getPlayerSystem();
+
+		if (sj.isStarJumpInProgress())
+		{
+			return; //don't allow input while star jumping between 
+		}
 
 		const sp<Window>& primaryWindow = windowSystem.getPrimaryWindow();
 		bool bInputSuspended = false;
@@ -171,6 +181,13 @@ namespace SA
 
 	void ShipCamera::onMouseMoved_v(double xpos, double ypos)
 	{
+		if (sj.isStarJumpInProgress())
+		{
+			//do not allow camera to move while star jumping
+			return;
+		}
+
+
 		QuaternionCamera::onMouseMoved_v(xpos, ypos);
 
 		updateRelativePositioning();
@@ -181,6 +198,8 @@ namespace SA
 	void ShipCamera::tick(float dt_sec)
 	{
 		QuaternionCamera::tick(dt_sec);
+
+		sj.tick(dt_sec);
 
 		if (disableCameraForCollisionTimeRemainingSec > 0.f)
 		{
