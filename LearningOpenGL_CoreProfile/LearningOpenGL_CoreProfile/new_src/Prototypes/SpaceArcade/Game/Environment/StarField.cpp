@@ -25,10 +25,13 @@ namespace SA
 
 		uniform mat4 projection_view;
 
+		uniform mat4 starJump_Displacement = mat4(1.f); //start out as identity matrix
+		uniform mat4 starJump_Stretch = mat4(1.f);
+
 		out vec3 color;
 
 		void main(){
-			gl_Position = projection_view * model * vec4(position, 1.0f);
+			gl_Position = projection_view * starJump_Displacement * model * starJump_Stretch * vec4(position, 1.0f);
 			color = starColor;
 		}
 	)";
@@ -37,16 +40,22 @@ namespace SA
 		#version 330 core
 		out vec4 fragColor;
 
+		uniform bool bStarJump = false;
+		uniform float starJumpPerc = 0.f; //[0,1]
+
 		in vec3 color;
 
 		void main(){
-		#define TONE_MAP_HDR 0
-		#if TONE_MAP_HDR
-			vec3 reinHardToneMapped = (color) / (1 + color);
-			fragColor = vec4(reinHardToneMapped, 1.0f);
-		#else
-			fragColor = vec4(color, 1.0f);
-		#endif
+
+			vec3 stretchColorMultiplier = vec3(1.f);
+			if(bStarJump)
+			{
+				float maxColorIntensity = 5.f; //#hdr_tweak
+				stretchColorMultiplier = vec3(1.f + starJumpPerc*maxColorIntensity);
+			}
+
+			fragColor = vec4(stretchColorMultiplier * color, 1.0f);
+
 		}
 	)";
 
@@ -56,19 +65,53 @@ namespace SA
 		{
 			ec(glClear(GL_DEPTH_BUFFER_BIT));
 
+			starShader->use();
+
+			starJumpPerc += (bStarJump ? 1.f : -1.f) * dt_sec / starJumpCompletionSec;
+			starJumpPerc = clamp(starJumpPerc, 0.f, 1.f);
+
 			mat4 customView = view;
 
 			static PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
 			const sp<CameraBase>& camera = playerSys.getPlayer(0)->getCamera();
-			if (camera && bForceCentered)
+			if (camera)
 			{
-				vec3 origin(0.f);
-				customView = glm::lookAt(origin, origin + camera->getFront(), camera->getUp());
+				vec3 camDir_n = camera->getFront();
+				if (bForceCentered)
+				{
+					vec3 origin(0.f);
+					customView = glm::lookAt(origin, origin + camDir_n, camera->getUp());
+				}
+
+				bool bStarJumpInProgress = bStarJump || (!bStarJump && starJumpPerc != 0.f);
+				glm::mat4 starJump_Displacement{ 1.f }; //start out as identity matrix
+				glm::mat4 starJump_Stretch{ 1.f };
+				if (bStarJumpInProgress)
+				{
+					//camera is always considered at 0,0,0 for star field, so we just need to shift and stretch stars in camera direction
+					const float maxStretchFactor = 100.f;
+					const float stretchThisFrame = maxStretchFactor * starJumpPerc;
+					vec3 stretchVec = stretchThisFrame * -camDir_n;//stretch stars opposite of camera direction (they're coming at you), put star in center of scale up
+					vec3 adjustedPosition = 0.5f * stretchVec; 
+
+					//stretch is applied before model
+ 					starJump_Stretch = starJump_Stretch * glm::toMat4(camera->getQuat()); //rotate
+					float stretchScaleUp = 1.f;
+					starJump_Stretch = glm::scale(starJump_Stretch, vec3(1.f, 1.f, glm::max(stretchThisFrame * stretchScaleUp, 1.f)));
+
+					//displacement is applied after model
+					starJump_Displacement = glm::translate(starJump_Displacement, adjustedPosition);
+
+				}
+				starShader->setUniformMatrix4fv("starJump_Displacement", 1, GL_FALSE, glm::value_ptr(starJump_Displacement));
+				starShader->setUniformMatrix4fv("starJump_Stretch", 1, GL_FALSE, glm::value_ptr(starJump_Stretch));
+				starShader->setUniform1i("bStarJump", int(bStarJumpInProgress)); //if we have disabled star jump, but are still ticking down, then consider this still enabled as we want the stretch to go away. 
+				starShader->setUniform1f("starJumpPerc", starJumpPerc);
 			}
 
 			mat4 projection_view = projection * customView;
 
-			starShader->use();
+
 			starShader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
 
 			starMesh->instanceRender(stars.xforms.size());
@@ -227,6 +270,15 @@ namespace SA
 		}
 
 		bGenerated = true;
+	}
+
+	void StarField::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
+	{
+		bStarJump = bEnable;
+		if (bSkipTransition)
+		{
+			starJumpPerc = bEnable ? 1.f : 0.f;
+		}
 	}
 
 }

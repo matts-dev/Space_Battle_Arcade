@@ -29,6 +29,7 @@ namespace SA
 		void cheat_debugSound(const std::vector<std::string>& cheatArgs);
 		void cheat_debugSound_logDump(const std::vector<std::string>& cheatArgs);
 		void cheat_infiniteTimeDilation(const std::vector<std::string>& cheatArgs);
+		void cheat_toggleStarJump(const std::vector<std::string>& cheatArgs);
 	};
 
 

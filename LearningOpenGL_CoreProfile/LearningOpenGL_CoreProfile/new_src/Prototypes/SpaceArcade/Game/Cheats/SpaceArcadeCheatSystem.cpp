@@ -22,6 +22,7 @@
 #include "../../GameFramework/SAWindowSystem.h"
 #include "../../GameFramework/SAAudioSystem.h"
 #include "../SAPlayer.h"
+#include "../Environment/StarField.h"
 
 using namespace glm;
 
@@ -52,6 +53,7 @@ namespace SA
 #endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
 		REGISTER_CHEAT("debug_sound_log_dump", SpaceArcadeCheatSystem::cheat_debugSound_logDump);
 		REGISTER_CHEAT("infinite_slowmo", SpaceArcadeCheatSystem::cheat_infiniteTimeDilation);
+		REGISTER_CHEAT("toggle_star_jump", SpaceArcadeCheatSystem::cheat_toggleStarJump);
 	}
 
 	void SpaceArcadeCheatSystem::cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs)
@@ -237,6 +239,21 @@ namespace SA
 			if (SAPlayer* shipPlayerCheat = dynamic_cast<SAPlayer*>(player.get()))
 			{
 				shipPlayerCheat->cheat_infiniteTimeDilation();
+			}
+		}
+	}
+
+	void SpaceArcadeCheatSystem::cheat_toggleStarJump(const std::vector<std::string>& cheatArgs)
+	{
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		{
+			if (SpaceLevelBase* level = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+			{
+				if (const sp<StarField>& starField = level->getStarField())
+				{
+					bool bIsStarJumping = starField->isStartJumping();
+					starField->enableStarJump(!bIsStarJumping);
+				}
 			}
 		}
 	}
