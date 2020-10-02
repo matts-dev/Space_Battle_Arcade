@@ -219,6 +219,11 @@ namespace SA
 		log("logShip", LogLevel::LOG, "ship destroyed");
 #endif 
 		destroyEngineVFX();
+
+		if (sfx_engine)
+		{
+			sfx_engine->stop();
+		}
 	}
 
 	glm::vec4 Ship::getForwardDir() const

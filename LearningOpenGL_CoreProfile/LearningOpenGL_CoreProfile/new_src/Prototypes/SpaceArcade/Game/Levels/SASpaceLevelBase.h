@@ -35,6 +35,7 @@ namespace SA
 		const sp<StarField>& getStarField() { return starField; }
 		void endGame(const EndGameParameters& endParameters);
 		void enableStarJump(bool bEnable, bool bSkipTransition = false);
+		static void staticEnableStarJump(bool bEnable, bool bSkipTransition = false);
 		bool isStarJumping() const;
 	protected:
 		virtual void startLevel_v() override;
@@ -81,6 +82,6 @@ namespace SA
 	{
 		std::vector<size_t> winningTeams;
 		std::vector<size_t> losingTeams;
-		float delayTransitionMainmenuSec = 2.5f;
+		float delayTransitionMainmenuSec = 6.0f;
 	};
 }

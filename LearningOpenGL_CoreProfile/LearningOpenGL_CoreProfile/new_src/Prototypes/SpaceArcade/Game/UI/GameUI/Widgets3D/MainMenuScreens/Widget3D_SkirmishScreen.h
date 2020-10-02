@@ -32,7 +32,7 @@ namespace SA
 		sp<Widget3D_LaserButton> backButton = nullptr;
 		sp<Widget3D_LaserButton> startButton = nullptr;
 		bool bTransitioningToLevel = false;
-		float transitionToLevelAnimationDurationSec = 3.f;
+		float transitionToLevelAnimationDurationSec = 6.f;
 
 		sp<Widget3D_DiscreteSelector<size_t>> selector_numPlanets = nullptr;
 		sp<Widget3D_DiscreteSelector<size_t>> selector_numStars = nullptr;

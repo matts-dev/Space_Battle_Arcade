@@ -24,12 +24,15 @@ namespace SA
 
 	bool BehaviorTreeBrain::onAwaken()
 	{
-		behaviorTree->start();
 
-		const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
-		currentLevel->getWorldTimeManager()->registerTicker(sp_this());
-		tickingOnLevel = currentLevel;
-		return true;
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		{
+			behaviorTree->start();
+			currentLevel->getWorldTimeManager()->registerTicker(sp_this());
+			tickingOnLevel = currentLevel;
+			return true;
+		}
+		return false;
 	}
 
 	void BehaviorTreeBrain::onSleep()

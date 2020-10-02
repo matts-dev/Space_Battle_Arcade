@@ -283,7 +283,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 	void AudioSystem::stopEmitter(AudioEmitter& emitter, const EmitterPrivateKey&)
 	{
 #if USE_OPENAL_API
-		if (emitter.hardwareData.sourceIdx.has_value())
+		if (emitter.hardwareData.sourceIdx.has_value() && context)
 		{
 			ALuint source = *emitter.hardwareData.sourceIdx;
 			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("stoping source %d", source);
@@ -625,6 +625,9 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		alcMakeContextCurrent(nullptr);
 		alcDestroyContext(context);
 		alcCloseDevice(device);
+
+		context = nullptr;
+		device = nullptr;
 #endif //USE_OPENAL_API
 #endif //ENABLE_AUDIO
 	}
@@ -1165,6 +1168,12 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 		if (currentLevel)
 		{
 			currentLevel->getWorldTimeManager()->getEvent(TickGroups::get().AUDIO).removeWeak(sp_this(), &AudioSystem::tickAudioPipeline);
+		}
+
+		for(const sp<AudioEmitter>& emitter : allEmitters)
+		{
+			//stop all emitters for level transition
+			emitter->stop();
 		}
 
 		if (newLevel)

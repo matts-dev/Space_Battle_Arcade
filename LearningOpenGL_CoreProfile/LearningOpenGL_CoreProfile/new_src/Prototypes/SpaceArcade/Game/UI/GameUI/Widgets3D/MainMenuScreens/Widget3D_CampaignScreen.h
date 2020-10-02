@@ -51,6 +51,7 @@ namespace SA
 		void handlePlanetClicked();
 		void handleStartClicked();
 		void handleLevelTransitionTimerUp();
+		void handleDelayStarJumpVfxTimerOver();
 	public:
 		MultiDelegate<const glm::vec3&> loadingPlanetAtUILocation;
 	private://animation data
@@ -63,8 +64,9 @@ namespace SA
 		float hoverCollisionScaleup = 1.5f;
 	private:
 		bool bLoadingLevel = false;
-		float levelTransitionDelaySec = 1.5f;
+		float levelTransitionDelaySec = 6.5f;
 		sp<MultiDelegate<>> levelTransitionTimerHandle = nullptr;
+		sp<MultiDelegate<>> starJumpVfxStartTimerHandle = nullptr;
 		sp<SpaceLevelConfig> cachedLevelConfig = nullptr;
 	private:
 		size_t activeCampaignIdx = 0;

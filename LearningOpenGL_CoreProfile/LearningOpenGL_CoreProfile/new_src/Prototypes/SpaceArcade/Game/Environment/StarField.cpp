@@ -508,24 +508,24 @@ namespace SA
 					sfx_starJumpWindDown->setPosition(worldPosition);
 					sfx_starJumpBoom->setPosition(worldPosition);
 
-					if (!bStarJumpBoomPlayed && sj.starJumpPerc == 1.f)
-					{
-						bStarJumpBoomPlayed = true;
-						sfx_starJumpBoom->play();
-					}
-
-					if (!bStarJumpSfxComplete && 
-							( (sj.starJumpPerc == 1.f && sj.bStarJump)
-							|| (sj.starJumpPerc == 0.f && !sj.bStarJump)
-							)
-						)
-					{
-						bStarJumpSfxComplete = true;
-						sfx_starJumpWindUp->stop();
-						sfx_starJumpWindDown->stop();
-					}
 				}
 			}
+		}
+		if (!bStarJumpBoomPlayed && sj.starJumpPerc == 1.f)
+		{
+			bStarJumpBoomPlayed = true;
+			sfx_starJumpBoom->play();
+		}
+
+		if (!bStarJumpSfxComplete && 
+				( (sj.starJumpPerc == 1.f && sj.bStarJump)
+				|| (sj.starJumpPerc == 0.f && !sj.bStarJump)
+				)
+			)
+		{
+			bStarJumpSfxComplete = true;
+			sfx_starJumpWindUp->stop();
+			sfx_starJumpWindDown->stop();
 		}
 	}
 

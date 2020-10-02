@@ -218,6 +218,7 @@ namespace SA
 				}
 				currentLevel->getWorldTimeManager()->createTimer(levelAnimTransitionTimerHandle, transitionToLevelAnimationDurationSec);
 
+				SpaceLevelBase::staticEnableStarJump(true);
 
 				backButton->activate(false);
 				startButton->activate(false);

@@ -271,6 +271,7 @@ namespace SA
 		{
 			//won't have a timer if we're ending the game
 			getWorldTimeManager()->createTimer(endTransitionTimerDelegate, endParameters.delayTransitionMainmenuSec);
+			enableStarJump(true);
 		}
 
 		bool bWonMatch = false;
@@ -310,15 +311,16 @@ namespace SA
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// detach all players from ships as we're about to do a level transition
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		PlayerSystem& playerSystem = SpaceArcade::get().getPlayerSystem();
-		for (size_t playerIdx = 0; playerIdx < playerSystem.numPlayers(); ++playerIdx)
-		{
-			if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
-			{
-				//clear out any ships the player may be piloting
-				player->setControlTarget(nullptr);
-			}
-		}
+		///detach players once the timer is up
+		//PlayerSystem& playerSystem = SpaceArcade::get().getPlayerSystem();
+		//for (size_t playerIdx = 0; playerIdx < playerSystem.numPlayers(); ++playerIdx)
+		//{
+		//	if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
+		//	{
+		//		//clear out any ships the player may be piloting
+		//		player->setControlTarget(nullptr);
+		//	}
+		//}
 	}
 
 	void SpaceLevelBase::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
@@ -346,6 +348,17 @@ namespace SA
 			{
 				shipCamera->enableStarJump(bEnable, bSkipTransition);
 			}
+		}
+	}
+
+	void SpaceLevelBase::staticEnableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
+	{
+		//star jump
+		LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+		const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel();
+		if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+		{
+			spaceLevel->enableStarJump(bEnable, bSkipTransition);
 		}
 	}
 
@@ -441,6 +454,21 @@ namespace SA
 
 	void SpaceLevelBase::transitionToMainMenu()
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// detach all players from ships as we're about to do a level transition
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		//don't cause bug in main menu letting player fly a ship
+		PlayerSystem& playerSystem = SpaceArcade::get().getPlayerSystem();
+		for (size_t playerIdx = 0; playerIdx < playerSystem.numPlayers(); ++playerIdx)
+		{
+			if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
+			{
+				//clear out any ships the player may be piloting
+				player->setControlTarget(nullptr);
+			}
+		}
+
 		LevelSystem& levelSystem = GameBase::get().getLevelSystem();
 		sp<LevelBase> mainMenuLevel = new_sp<MainMenuLevel>(); //this requires include of entire main menu level, which feels weird (this is mainmenus base). but I suppose it isn't that weird
 		levelSystem.loadLevel(mainMenuLevel);
@@ -462,6 +490,12 @@ namespace SA
 		}
 
 		applyLevelConfig();
+
+		enableStarJump(true, true); //skip to being in middle of star jump vfx
+
+		static bool bFirstLevelStarted = false; //don't show VFX on first level (ie main menu)
+		enableStarJump(false, !bFirstLevelStarted); //animate in stars vfx
+		bFirstLevelStarted = true;
 	}
 
 	void SpaceLevelBase::endLevel_v()

@@ -669,6 +669,10 @@ namespace SA
 						levelTransitionTimerHandle->addWeakObj(sp_this(), &Widget3D_CampaignScreen::handleLevelTransitionTimerUp);
 						timerManager->createTimer(levelTransitionTimerHandle, levelTransitionDelaySec);
 
+						starJumpVfxStartTimerHandle = new_sp<MultiDelegate<>>();
+						starJumpVfxStartTimerHandle->addWeakObj(sp_this(), &Widget3D_CampaignScreen::handleDelayStarJumpVfxTimerOver);
+						timerManager->createTimer(starJumpVfxStartTimerHandle, 1.f);
+
 						////////////////////////////////////////////////////////
 						// deactivate all but our target
 						////////////////////////////////////////////////////////
@@ -714,6 +718,19 @@ namespace SA
 		{
 			STOP_DEBUGGER_HERE();//level transition delay timer over, but level data is not available
 		}
+	}
+
+	void Widget3D_CampaignScreen::handleDelayStarJumpVfxTimerOver()
+	{
+		//if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		//{
+		//	if (SpaceLevelBase* currentSpaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+		//	{
+		//		currentSpaceLevel->enableStarJump(true, false);
+		//	}
+		//}
+
+		SpaceLevelBase::staticEnableStarJump(true, false);
 	}
 
 }
