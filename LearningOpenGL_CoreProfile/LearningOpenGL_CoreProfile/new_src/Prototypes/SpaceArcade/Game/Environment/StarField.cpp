@@ -12,6 +12,10 @@
 #include <detail/func_common.hpp>
 #include "../../Tools/color_utils.h"
 #include "../../GameFramework/SALog.h"
+#include "../../GameFramework/SAAudioSystem.h"
+#include "../AssetConfigs/SoundEffectSubConfig.h"
+#include "../../GameFramework/SAWorldEntity.h"
+#include "../../GameFramework/Interfaces/SAIControllable.h"
 
 namespace SA
 {
@@ -212,9 +216,9 @@ namespace SA
 				//ec(glBlendFunc(GL_ONE, GL_ONE)); //set source and destination factors, recall blending is color = source*sourceFactor + destination*destinationFactor;
 
 				//only show stars when not at end of star jump
-				float threshold_finalStartStartPerc = 0.5f;
+				float threshold_finalStartStartPerc = 0.99f;
 				float finalStagePerc = sj.starJumpPerc - threshold_finalStartStartPerc;
-				if (finalStagePerc > 0.f)
+				if (finalStagePerc >= 0.f)
 				{
 					starMesh->instanceRender(stars.xforms.size());
 
@@ -266,14 +270,19 @@ namespace SA
 					spiralShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(spiralXform.getModelMatrix()));
 					texturedQuad->render();
 
-					ec(glDisable(GL_BLEND));
+					//ec(glDisable(GL_BLEND));
 				}
 				else
 				{
 					starMesh->instanceRender(stars.xforms.size());
 				}
+
+				//update sfx for star jump (only when star jump is in progress)
 			}
-			
+			if (sj.isStarJumpInProgress() || !bStarJumpSfxComplete)
+			{
+				updateStarJumpSFX();
+			}
 
 			ec(glClear(GL_DEPTH_BUFFER_BIT));
 		}
@@ -291,9 +300,36 @@ namespace SA
 		timerDelegate = new_sp<MultiDelegate<>>();
 		timerDelegate->addWeakObj(sp_this(), &StarField::handleAcquireInstanceVBOOnNextTick);
 
+
+		AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+
+		AudioEmitterPriority sfxPriority = AudioEmitterPriority::GAMEPLAY_PLAYER;
+
+		sfx_starJumpWindUp = audioSystem.createEmitter();
+		sfx_starJumpWindUp->setPriority(sfxPriority);
+		sfx_starJumpWindUp->setGain(3.f);
+		SoundEffectSubConfig windUpSfxConfig;
+		windUpSfxConfig.assetPath = "Assets/Sounds/engine_ramp_up_fx.wav";
+		windUpSfxConfig.configureEmitter(sfx_starJumpWindUp);
+
+
+		sfx_starJumpWindDown = audioSystem.createEmitter();
+		sfx_starJumpWindDown->setPriority(sfxPriority);
+		sfx_starJumpWindDown->setGain(3.f);
+		SoundEffectSubConfig windDownSfxConfig;
+		windDownSfxConfig.assetPath = "Assets/Sounds/engine_ramp_down_fx.wav";
+		windDownSfxConfig.configureEmitter(sfx_starJumpWindDown);
+
+		sfx_starJumpBoom = audioSystem.createEmitter();
+		sfx_starJumpBoom->setPriority(sfxPriority);
+		sfx_starJumpBoom->setGain(3.f);
+		SoundEffectSubConfig jumpBoomSfxConfig;
+		jumpBoomSfxConfig.assetPath = "Assets/Sounds/space_jump_explosion_fx.wav";
+		jumpBoomSfxConfig.configureEmitter(sfx_starJumpBoom);
+
+
 		//generate star field before GPU resources are acquired
 		generateStarField();
-
 		GPUResource::postConstruct();
 	}
 
@@ -439,6 +475,58 @@ namespace SA
 	void StarField::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
 	{
 		sj.enableStarJump(bEnable, bSkipTransition);
+
+		if (!bSkipTransition)
+		{
+			if (bEnable)
+			{
+				sfx_starJumpWindUp->play();
+				bStarJumpBoomPlayed = false;
+			}
+			else
+			{
+				sfx_starJumpBoom->play();
+				sfx_starJumpWindDown->play();
+			}
+
+			bStarJumpSfxComplete = false;
+			updateStarJumpSFX();
+		}
+
+	}
+
+	void StarField::updateStarJumpSFX()
+	{
+		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+		{
+			if (IControllable* controlTarget = player->getControlTarget())
+			{
+				if (WorldEntity* ct_worldEntity = controlTarget->asWorldEntity())
+				{
+					glm::vec3 worldPosition = ct_worldEntity->getWorldPosition();
+					sfx_starJumpWindUp->setPosition(worldPosition);
+					sfx_starJumpWindDown->setPosition(worldPosition);
+					sfx_starJumpBoom->setPosition(worldPosition);
+
+					if (!bStarJumpBoomPlayed && sj.starJumpPerc == 1.f)
+					{
+						bStarJumpBoomPlayed = true;
+						sfx_starJumpBoom->play();
+					}
+
+					if (!bStarJumpSfxComplete && 
+							( (sj.starJumpPerc == 1.f && sj.bStarJump)
+							|| (sj.starJumpPerc == 0.f && !sj.bStarJump)
+							)
+						)
+					{
+						bStarJumpSfxComplete = true;
+						sfx_starJumpWindUp->stop();
+						sfx_starJumpWindDown->stop();
+					}
+				}
+			}
+		}
 	}
 
 }

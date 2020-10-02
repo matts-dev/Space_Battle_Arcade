@@ -314,7 +314,7 @@ namespace
 			//------------------ notice that this is NOT GL_TEXTURE_2D -------------------
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
-			glEnable(GL_DEPTH_TEST); //don't let depth buffer disrupt drawing
+			//glEnable(GL_DEPTH_TEST); //don't let depth buffer disrupt drawing
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();

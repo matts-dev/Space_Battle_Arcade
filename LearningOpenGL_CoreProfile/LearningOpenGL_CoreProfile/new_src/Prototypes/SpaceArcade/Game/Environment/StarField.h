@@ -15,6 +15,7 @@ namespace SA
 	class Shader;
 	class TexturedQuad;
 	class Texture_2D;
+	class AudioEmitter;
 
 	struct Stars
 	{
@@ -44,10 +45,16 @@ namespace SA
 		void handleAcquireInstanceVBOOnNextTick(); 
 		void bufferInstanceData();
 		void generateStarField();
+		void updateStarJumpSFX();
 	private://impl
 		StarJumpData sj;
+		bool bStarJumpBoomPlayed = false;
+		bool bStarJumpSfxComplete = false;
 		sp<TexturedQuad> texturedQuad = nullptr;
 		sp<Texture_2D> starJumpTexture;
+		sp<AudioEmitter> sfx_starJumpWindUp = nullptr;
+		sp<AudioEmitter> sfx_starJumpWindDown = nullptr;
+		sp<AudioEmitter> sfx_starJumpBoom = nullptr;
 	private:
 		sp<SphereMeshTextured> starMesh;
 		sp<MultiDelegate<>> timerDelegate;
