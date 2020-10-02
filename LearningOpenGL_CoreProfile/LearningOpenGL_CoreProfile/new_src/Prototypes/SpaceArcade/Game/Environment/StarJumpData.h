@@ -13,6 +13,7 @@ namespace SA
 		float starJumpCompletionSec = 3.f;
 		bool bStarJump = false;
 		float starJumpPerc = 0.f;
+		float totalTime = 0.f;
 
 	public:
 		void enableStarJump(bool bEnable, bool bSkipTransition = false)
@@ -28,6 +29,7 @@ namespace SA
 		{
 			starJumpPerc += (bStarJump ? 1.f : -1.f) * dt_sec / starJumpCompletionSec;
 			starJumpPerc = glm::clamp(starJumpPerc, 0.f, 1.f);
+			totalTime += dt_sec;
 		}
 
 		bool isStarJumpInProgress() const

@@ -13,6 +13,8 @@ namespace SA
 {
 	class SphereMeshTextured;
 	class Shader;
+	class TexturedQuad;
+	class Texture_2D;
 
 	struct Stars
 	{
@@ -44,11 +46,13 @@ namespace SA
 		void generateStarField();
 	private://impl
 		StarJumpData sj;
+		sp<TexturedQuad> texturedQuad = nullptr;
+		sp<Texture_2D> starJumpTexture;
 	private:
 		sp<SphereMeshTextured> starMesh;
 		sp<MultiDelegate<>> timerDelegate;
 		sp<Shader> starShader;
-
+		sp<Shader> spiralShader;
 		bool bUseHDR = true;
 		bool bGenerated = false;
 		bool bDataBuffered = false;
@@ -62,8 +66,6 @@ namespace SA
 	private: //gpu resources
 		uint32_t modelVBO;
 		uint32_t colorVBO;
-
-
 	};
 
 }

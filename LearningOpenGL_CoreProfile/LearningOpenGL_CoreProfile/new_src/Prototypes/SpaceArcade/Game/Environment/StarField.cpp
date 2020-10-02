@@ -8,6 +8,10 @@
 #include "../../GameFramework/SAPlayerSystem.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/SARenderSystem.h"
+#include "../../Rendering/Camera/Texture_2D.h"
+#include <detail/func_common.hpp>
+#include "../../Tools/color_utils.h"
+#include "../../GameFramework/SALog.h"
 
 namespace SA
 {
@@ -59,6 +63,85 @@ namespace SA
 		}
 	)";
 
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// sprite texture for star jumping final stage for us with a textured quad
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	char const* const spiralShader_vs = R"(
+		#version 330 core
+		layout (location = 0) in vec3 position;				
+		layout (location = 1) in vec2 inTexCoord;		
+				
+		out vec2 texCoord;
+
+		uniform mat4 model;
+		uniform mat4 projection;
+
+		void main(){
+			texCoord = inTexCoord;
+			gl_Position = projection * model * vec4(position, 1.f);
+		}
+	)";
+	char const* const spiralShader_fs = R"(
+		#version 330 core
+
+		out vec4 fragmentColor;
+
+		in vec2 texCoord;
+
+		uniform sampler2D textureData;   
+		uniform bool bgMode = false;
+		uniform vec3 uColor = vec3(1.f);
+		uniform float percComplete = 1.f; //expects [0,1] range
+
+		void main()
+		{
+			vec3 color = uColor;
+			float alphaInfluence = 1.f;
+
+			if(bgMode)
+			{
+				color *= 2.0f; //#hdr_tweak BG to spiral in star jump
+			}
+			else
+			{
+				color *= 3.0f; //#hdr_tweak spiral pattern during end of star jump
+
+				vec2 centered = texCoord - 0.5f;	//convert from [0,1] to [-.5,.5]
+				centered = abs(centered);			//[0,.5]
+				centered *= 2.f;					//convert [0,1]
+				//centered = vec2(1.f) - centered;	//[0,1] flipped
+								
+				float centerScaleFactor = max(centered.x, centered.y);
+				//vec2 centerScaleFactor = centered;
+				centerScaleFactor *= 2.f; //change influence of center by some amount
+				
+				float baseScaleUp = 100.f;
+				//vec2 uv = texCoord;
+				vec2 uv = centered;
+				uv *= baseScaleUp;
+				uv *= centerScaleFactor;
+
+				vec4 tex = texture(textureData, uv);
+				color *= tex.rgb;
+
+				float discardCenterValue = 0.2f;
+				if(tex.r < 0.75
+				 //|| centered.x < discardCenterValue || centered.y < discardCenterValue
+				)
+				{
+					discard;
+				}
+
+				alphaInfluence = 0.5f; //have texture be alpha blended
+			}
+
+			fragmentColor = vec4(color, min(percComplete, alphaInfluence)); 
+			//fragmentColor = vec4(color, 1.f);  //debug
+		}
+	)";
+
+
 	void StarField::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		if (hasAcquiredResources())
@@ -71,18 +154,20 @@ namespace SA
 
 			mat4 customView = view;
 
+			bool bStarJumpInProgress = sj.bStarJump || (!sj.bStarJump && sj.starJumpPerc != 0.f);
+
 			static PlayerSystem& playerSys = GameBase::get().getPlayerSystem();
 			const sp<CameraBase>& camera = playerSys.getPlayer(0)->getCamera();
+			vec3 camDir_n = glm::vec3(0, 0, -1);
 			if (camera)
 			{
-				vec3 camDir_n = camera->getFront();
+				camDir_n = camera->getFront();
 				if (bForceCentered)
 				{
 					vec3 origin(0.f);
 					customView = glm::lookAt(origin, origin + camDir_n, camera->getUp());
 				}
 
-				bool bStarJumpInProgress = sj.bStarJump || (!sj.bStarJump && sj.starJumpPerc != 0.f);
 				glm::mat4 starJump_Displacement{ 1.f }; //start out as identity matrix
 				glm::mat4 starJump_Stretch{ 1.f };
 				if (bStarJumpInProgress)
@@ -113,7 +198,82 @@ namespace SA
 
 			starShader->setUniformMatrix4fv("projection_view", 1, GL_FALSE, glm::value_ptr(projection_view));
 
-			starMesh->instanceRender(stars.xforms.size());
+			if (!bStarJumpInProgress)
+			{
+				starMesh->instanceRender(stars.xforms.size());
+			}
+			else
+			{
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// render star jump vfx
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				//ec(glEnable(GL_BLEND)); //blending is not working as expected, compromising as this already looks okay.
+				//ec(glBlendFunc(GL_ONE, GL_ONE)); //set source and destination factors, recall blending is color = source*sourceFactor + destination*destinationFactor;
+
+				//only show stars when not at end of star jump
+				float threshold_finalStartStartPerc = 0.5f;
+				float finalStagePerc = sj.starJumpPerc - threshold_finalStartStartPerc;
+				if (finalStagePerc > 0.f)
+				{
+					starMesh->instanceRender(stars.xforms.size());
+
+					float max = 1.f - threshold_finalStartStartPerc;
+					finalStagePerc /= max;
+					finalStagePerc = glm::clamp(finalStagePerc, 0.f, 1.f);
+					//logf_sa(__FUNCTION__, LogLevel::LOG, "perc %f", finalStagePerc);
+
+					float currentTime = sj.totalTime;
+					Transform spiralXform;
+
+					vec3 simulatedCamDir_n = vec3(0, 0, -1.f);
+					spiralXform.position = 2.f*simulatedCamDir_n;
+					//spiralXform.rotQuat = camQuat;
+					spiralXform.scale = vec3(10.f);
+
+					spiralShader->use();
+					spiralShader->setUniform1i("textureData", 0);
+					spiralShader->setUniform1f("percComplete", finalStagePerc);
+
+					spiralShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(spiralXform.getModelMatrix()));
+					spiralShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+					starJumpTexture->bindTexture(GL_TEXTURE0);
+
+					spiralShader->use();
+					spiralShader->setUniform1i("bgMode", 1);
+					spiralShader->setUniform3f("uColor", vec3(1.f));
+					texturedQuad->render();
+
+					spiralShader->use();
+					spiralShader->setUniform1i("bgMode", 0);
+					spiralXform.position -= 0.1f * simulatedCamDir_n; //make this closer to screen so we can see it
+					float rotationRate_radSec = 1.f;
+					static float first_rotation_rad = 0.f;
+					first_rotation_rad += rotationRate_radSec* dt_sec;
+					first_rotation_rad = first_rotation_rad > radians(360.f) ? first_rotation_rad - radians(360.f) : first_rotation_rad;
+					spiralXform.rotQuat = glm::angleAxis(first_rotation_rad, simulatedCamDir_n);
+					float secondaryColorStr = 0.6f;
+					spiralShader->setUniform3f("uColor", vec3(secondaryColorStr, secondaryColorStr,1.f));
+					spiralShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(spiralXform.getModelMatrix()));
+					texturedQuad->render();
+
+					spiralXform.position -= 0.1f * simulatedCamDir_n; //make this closer to screen so we can see it
+					static float second_rotation_rad = 0.f;
+					second_rotation_rad += -rotationRate_radSec * dt_sec * 1.1f;
+					second_rotation_rad = second_rotation_rad > radians(360.f) ? second_rotation_rad - radians(360.f) : second_rotation_rad;
+					spiralXform.rotQuat = glm::angleAxis(second_rotation_rad, simulatedCamDir_n);
+					spiralShader->setUniform3f("uColor", vec3(1.f, secondaryColorStr, secondaryColorStr));
+					spiralShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(spiralXform.getModelMatrix()));
+					texturedQuad->render();
+
+					ec(glDisable(GL_BLEND));
+				}
+				else
+				{
+					starMesh->instanceRender(stars.xforms.size());
+				}
+			}
+			
 
 			ec(glClear(GL_DEPTH_BUFFER_BIT));
 		}
@@ -122,6 +282,11 @@ namespace SA
 	void StarField::postConstruct()
 	{
 		starShader = new_sp<Shader>(starFieldShader_vs, starFieldShader_fs, false);
+		spiralShader = new_sp<Shader>(spiralShader_vs, spiralShader_fs, false);
+
+		texturedQuad = new_sp<TexturedQuad>();
+
+		starJumpTexture = new_sp<Texture_2D>("GameData/engine_assets/TessellatedShapeRadials.png");
 
 		timerDelegate = new_sp<MultiDelegate<>>();
 		timerDelegate->addWeakObj(sp_this(), &StarField::handleAcquireInstanceVBOOnNextTick);
