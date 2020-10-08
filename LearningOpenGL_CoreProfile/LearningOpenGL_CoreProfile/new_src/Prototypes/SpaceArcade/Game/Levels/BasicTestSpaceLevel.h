@@ -16,6 +16,7 @@ namespace SA
 	class AIDebuggerWidget;
 	class ParticleConfig;
 	class RNG;
+	class Asteroid;
 
 	class BasicTestSpaceLevel : public SpaceLevelBase
 	{

@@ -29,8 +29,9 @@ namespace SA
 		void setParentXform(const glm::mat4& newParentXform);
 		const fwp<GameEntity>& getOwner() { return owningEntity; }
 		glm::vec3 getWorldPosition() const;//#TODO_minor perhaps just use glm::vec4?
-		float getRadius() const { return radius; } //#TODO perhaps radius should be defined by transforms too (eg transforming a radius vector)
+		float getRadius() const { return radiusScaleCorrected; } //#TODO perhaps radius should be defined by transforms too (eg transforming a radius vector)
 		float getRadiusFractForMaxAvoidance() const { return radiusFractForMaxAvoidance; }
+		void setParentScalesRadius(bool bEnable);
 	private:
 		void handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel);
 		void handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
@@ -53,8 +54,9 @@ namespace SA
 		Transform localOOBXform;	//requires scale tweaking to make cube match radius of sphere
 		fwp<GameEntity> owningEntity;
 		float radius;
-		float radius2;
+		float radiusScaleCorrected; //will be equal to radius if local scale does not influence
 		float radiusFractForMaxAvoidance = 0.8f; // [0,1] - eg 0.66 means when something in 1/3 into the avoidance sphere, it exhibits the maximum force to get out of the sphere
+		bool bParentXformScalesRadius = false;
 		std::array<glm::vec4, 8> AABB;
 	};
 }

@@ -1,0 +1,110 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "asteroid_plain"
+    },
+    "SpawnConfig": {
+        "avoidanceSpheres": [
+            {
+                "localPosition": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "radius": 2.5
+            }
+        ],
+        "bRequestsCollisionTests": true,
+        "engineEffectData": null,
+        "fullModelFilePath": "GameData/mods/SpaceArcade/Assets/Models3D/asteroid/asteroid.obj",
+        "modelAABB": {
+            "modelPosition": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "modelRotationDegrees": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "modelScale": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "primaryProjectileConfigName": "",
+        "sfx_engineLoop": {
+            "assetPath": "",
+            "bLooping": false,
+            "gain": 1.0,
+            "maxDistance": 10.0,
+            "pitchVariationRange": 0.0
+        },
+        "sfx_explosion": {
+            "assetPath": "",
+            "bLooping": false,
+            "gain": 1.0,
+            "maxDistance": 10.0,
+            "pitchVariationRange": 0.0
+        },
+        "sfx_muzzle": {
+            "assetPath": "",
+            "bLooping": false,
+            "gain": 1.0,
+            "maxDistance": 10.0,
+            "pitchVariationRange": 0.0
+        },
+        "sfx_projectileLoop": {
+            "assetPath": "",
+            "bLooping": false,
+            "gain": 1.0,
+            "maxDistance": 10.0,
+            "pitchVariationRange": 0.0
+        },
+        "shapes": [
+            {
+                "modelFilePath": "",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    2.200000047683716,
+                    2.200000047683716,
+                    2.200000047683716
+                ],
+                "shape": 0
+            },
+            {
+                "modelFilePath": "",
+                "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotationDegrees": [
+                    45.0,
+                    45.0,
+                    0.0
+                ],
+                "scale": [
+                    2.0999999046325684,
+                    2.0999999046325684,
+                    2.0999999046325684
+                ],
+                "shape": 0
+            }
+        ],
+        "spawnPoints": null,
+        "spawnableConfigsByName": null,
+        "teamData": null
+    }
+}

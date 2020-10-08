@@ -435,7 +435,7 @@ namespace SA
 			for (const sp<WorldEntity>& worldEntity : worldEntities)
 			{
 				sp<Ship> asShip = std::dynamic_pointer_cast<Ship>(worldEntity);
-				if (bool bIsCarrier = asShip->getGameComponent<FighterSpawnComponent>() != nullptr)
+				if (bool bIsCarrier = asShip && asShip->getGameComponent<FighterSpawnComponent>() != nullptr)
 				{
 					size_t team = asShip->getTeam();
 					if (myTeamData.size() < team+1)

@@ -31,14 +31,14 @@ namespace SA
 
 	void AvoidanceSphere::render() const
 	{
-		glm::mat4 model = getWorldMat();
+		//glm::mat4 model = getWorldMat();
 
 		DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem();
 
 		//take care not to apply scale of parent
 		glm::mat4 model_m = glm::translate(glm::mat4(1.0f), cachedWorldPos);
-		model_m = glm::scale(model_m, glm::vec3(radius));
-		debugRenderSystem.renderSphere(model, debugColor);
+		model_m = glm::scale(model_m, glm::vec3(getRadius()));
+		debugRenderSystem.renderSphere(model_m, debugColor);
 
 		if constexpr (bCompileDebugDebugSpatialHashVisualizations)
 		{
@@ -70,9 +70,9 @@ namespace SA
 	void AvoidanceSphere::setRadius(float radius)
 	{
 		this->radius = radius;
-		this->radius2 = radius * radius;
+		//this->radius2 = radius * radius;
 		assert(!Utils::float_equals(radius, 0.f));
-		assert(!Utils::float_equals(radius2, 0.f));
+		//assert(!Utils::float_equals(radius2, 0.f));
 		applyXform();
 	}
 
@@ -86,6 +86,12 @@ namespace SA
 	{
 		//optmizing this with a cached value as it is a hot function that gets called frequently.
 		return cachedWorldPos;
+	}
+
+	void AvoidanceSphere::setParentScalesRadius(bool bEnable)
+	{
+		bParentXformScalesRadius = bEnable;
+		applyXform();
 	}
 
 	void AvoidanceSphere::handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel)
@@ -132,13 +138,28 @@ namespace SA
 
 	void AvoidanceSphere::applyXform()
 	{
-		constexpr float scaleUpFactor = 1.f / 0.5f; //unit cube has length of 0.5 from center to face
-		float cubeScaleUp = radius * scaleUpFactor; //unit cube
+		using glm::max;
+
+		//use the scale contained in the local xform before overwriting it.
+		float localScaleUp = 1.f;
+
+		if (bParentXformScalesRadius)
+		{
+			//this is going to be bad with nonuniform scales, but that shouldn't really be a real issue. 
+			//otherwise may need to choose max of a vector that points in all the basis vectors 
+			//(can be done with single matrix multiply where we make each column a x,y, or z radius vector)
+			localScaleUp = glm::length(parentXform * glm::vec4(1.f, 0.f, 0.f, 0.f));
+		}
+		radiusScaleCorrected = radius * localScaleUp; //will be 1.f if we're not scaling radius
+			
+		constexpr float cubeScaleUpFactor = 1.f / 0.5f; //unit cube has length of 0.5 from center to face
+		float cubeScaleUp = radiusScaleCorrected * cubeScaleUpFactor; //unit cube
+
 
 		localOOBXform = localXform;
 		localOOBXform.scale = glm::vec3(cubeScaleUp);
-
-		localXform.scale = glm::vec3(radius);
+		//localXform.scale = glm::vec3(radius);
+		localXform.scale = glm::vec3(radiusScaleCorrected); //not remembering why I set local scale to radius, but using scaled radius version 
 
 		glm::mat4 cubeModel_m = getOOBWorldMat();
 
@@ -151,6 +172,7 @@ namespace SA
 		{
 			cachedAvoidanceGrid->updateEntry(myGridEntry, getOBB());
 		}
+
 
 		cacheProperties(getWorldMat());
 	}

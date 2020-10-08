@@ -283,7 +283,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 	void AudioSystem::stopEmitter(AudioEmitter& emitter, const EmitterPrivateKey&)
 	{
 #if USE_OPENAL_API
-		if (emitter.hardwareData.sourceIdx.has_value() && context)
+		if (emitter.hardwareData.sourceIdx.has_value() && context && !GameBase::isEngineShutdown())
 		{
 			ALuint source = *emitter.hardwareData.sourceIdx;
 			CONDITIONAL_VERBOSE_RESOURCE_LOG_MESSAGE("stoping source %d", source);

@@ -1160,7 +1160,7 @@ namespace SA
 
 		#define COMPILE_AVOIDANCE_VECTORS 1
 		#if COMPILE_AVOIDANCE_VECTORS
-		if (bEnableAvoidanceFields && collisionData && !bNoVelocity)
+		if (bEnableAvoidanceFields && collisionData && !bNoVelocity )//&& !isCarrierShip())
 		{
 			static LevelSystem& levelSystem = GameBase::get().getLevelSystem();
 			if (const sp<LevelBase>& currentLevel = levelSystem.getCurrentLevel())
@@ -1208,7 +1208,7 @@ namespace SA
 						remappedRadiusFrac /= (1.0f - maxAvoidAtRadiusFrac); //bring this back to a [0,1] range
 						float avoidStrength = 1.f - remappedRadiusFrac;
 
-						avoidStrength *= avoidanceSensitivity; //some use cases (eg tareting player) require dapended avoidance with known cost of collision
+						avoidStrength *= avoidanceSensitivity; //some use cases (eg targeting player) require depended avoidance with known cost of collision
 
 						if (avoidStrength > 0.01f)
 						{

@@ -44,6 +44,7 @@
 #include "../Cameras/SAShipCamera.h"
 #include "../Components/FighterSpawnComponent.h"
 #include "../GameModes/ServerGameMode_CarrierTakedown.h"
+#include "../GameEntities/Asteroid.h"
 
 namespace SA
 {
@@ -68,6 +69,8 @@ namespace SA
 
 		testParticleConfig = ParticleFactory::getSimpleExplosionEffect();
 		testParticles.insert({ "simple explosion", testParticleConfig});
+
+
 	}
 
 	void BasicTestSpaceLevel::startLevel_v()
@@ -296,7 +299,7 @@ namespace SA
 
 
 				//follow a target from the start
-				size_t targetIdx = 0;
+				size_t targetIdx = 2;
 				size_t pickIdx = 0;
 				for (sp<WorldEntity> entity : worldEntities)
 				{
@@ -333,6 +336,31 @@ namespace SA
 					spaceGameMode->setOwningLevel(sp_this());
 					spaceGameMode->initialize(ServerGameMode_SpaceBase::LevelKey{});
 					gamemodeSubclass->configureForTestLevel();
+				}
+			}
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// test asteroid
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		if (const sp<ModSystem>& modSystem = game.getModSystem())
+		{
+			if (const sp<Mod>& activeMod = modSystem->getActiveMod())
+			{
+				const std::map<std::string, sp<SpawnConfig>>& spawnData = activeMod->getSpawnConfigs();
+				auto iter = spawnData.find("asteroid_plain");
+				if (iter != spawnData.end())
+				{
+					if (const sp<SpawnConfig>& asteroidDefaultConfig = iter->second)
+					{
+						Asteroid::SpawnData asteroidSpawn;
+						asteroidSpawn.spawnConfig = asteroidDefaultConfig;
+
+						//#todo set up asteroid spawn
+						asteroidSpawn.spawnTransform.position = glm::vec3(0.f);
+						asteroidSpawn.spawnTransform.scale = glm::vec3(10.f);
+						sp<Asteroid> testAsteroid = spawnEntity<Asteroid>(asteroidSpawn);
+					}
 				}
 			}
 		}
@@ -473,7 +501,11 @@ namespace SA
 				}
 
 				static bool bRenderAvoidanceSphereProxy = false;
-				if(ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSphereProxy)){Ship::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);}
+				if(ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSphereProxy))
+				{
+					Ship::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);
+					Asteroid::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);
+				}
 				ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
 
 				////////////////////////////////////////////////////////
