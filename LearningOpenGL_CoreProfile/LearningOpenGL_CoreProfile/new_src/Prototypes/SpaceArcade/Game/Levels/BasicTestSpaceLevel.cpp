@@ -343,23 +343,26 @@ namespace SA
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// test asteroid
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		if (const sp<ModSystem>& modSystem = game.getModSystem())
+		if (bool bEnableTestAsteroid = true)
 		{
-			if (const sp<Mod>& activeMod = modSystem->getActiveMod())
+			if (const sp<ModSystem>& modSystem = game.getModSystem())
 			{
-				const std::map<std::string, sp<SpawnConfig>>& spawnData = activeMod->getSpawnConfigs();
-				auto iter = spawnData.find("asteroid_plain");
-				if (iter != spawnData.end())
+				if (const sp<Mod>& activeMod = modSystem->getActiveMod())
 				{
-					if (const sp<SpawnConfig>& asteroidDefaultConfig = iter->second)
+					const std::map<std::string, sp<SpawnConfig>>& spawnData = activeMod->getSpawnConfigs();
+					auto iter = spawnData.find("asteroid_plain");
+					if (iter != spawnData.end())
 					{
-						Asteroid::SpawnData asteroidSpawn;
-						asteroidSpawn.spawnConfig = asteroidDefaultConfig;
+						if (const sp<SpawnConfig>& asteroidDefaultConfig = iter->second)
+						{
+							Asteroid::SpawnData asteroidSpawn;
+							asteroidSpawn.spawnConfig = asteroidDefaultConfig;
 
-						//#todo set up asteroid spawn
-						asteroidSpawn.spawnTransform.position = glm::vec3(0.f);
-						asteroidSpawn.spawnTransform.scale = glm::vec3(10.f);
-						sp<Asteroid> testAsteroid = spawnEntity<Asteroid>(asteroidSpawn);
+							//#todo set up asteroid spawn
+							asteroidSpawn.spawnTransform.position = glm::vec3(0.f);
+							asteroidSpawn.spawnTransform.scale = glm::vec3(10.f);
+							sp<Asteroid> testAsteroid = spawnEntity<Asteroid>(asteroidSpawn);
+						}
 					}
 				}
 			}

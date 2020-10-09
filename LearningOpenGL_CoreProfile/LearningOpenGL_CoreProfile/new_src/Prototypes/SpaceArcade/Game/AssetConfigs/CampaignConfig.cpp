@@ -1,6 +1,8 @@
 #include "CampaignConfig.h"
 #include "JsonUtils.h"
 #include "../Levels/LevelConfigs/SpaceLevelConfig.h"
+#include "../GameSystems/SAModSystem.h"
+#include "../SpaceArcade.h"
 
 namespace SA
 {
@@ -115,6 +117,39 @@ namespace SA
 	std::string CampaignConfig::getRepresentativeFilePath()
 	{
 		return owningModDir + std::string("Assets/Campaigns/") + getIndexedName() + std::string(".json");
+	}
+
+	void CampaignConfig::createTemplateCampaignForJsonSerialization()
+	{
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			owningModDir = activeMod->getModDirectoryPath();
+		}
+
+		LevelData level_1;
+		level_1.name = "level 1";
+		level_1.tier = 0;
+		level_1.outGoingPathIndices.push_back(1);
+		level_1.outGoingPathIndices.push_back(2);
+		level_1.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+		level_1.spaceLevelConfig->applyDemoDataIfEmpty();
+		levels.push_back(level_1);
+
+		LevelData level_2;
+		level_2.name = "level 2";
+		level_2.tier = 1;
+		level_2.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+		level_2.spaceLevelConfig->applyDemoDataIfEmpty();
+
+		LevelData level_3;
+		level_3.name = "level 3";
+		level_3.tier = 1;
+		level_3.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+		level_3.spaceLevelConfig->applyDemoDataIfEmpty();
+
+		levels.push_back(level_1);
+		levels.push_back(level_2);
+		levels.push_back(level_3);
 	}
 
 	std::string CampaignConfig::getIndexedName() const

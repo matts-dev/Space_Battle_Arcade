@@ -1,0 +1,361 @@
+{
+    "CampaignConfig": {
+        "levels": [
+            {
+                "SpaceLevelConfig": {
+                    "carrierGamemodeData": {
+                        "carrierGamemodeData.teams": [
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            },
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "gamemodeTag": "Carrier Takedown",
+                    "planets": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                1.0,
+                                0.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "planetData.bHasCivilization": false,
+                            "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_1.png"
+                        }
+                    ],
+                    "stars": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                -1.0,
+                                1.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "starData.color": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "userFacingName": "TEMPLATE_CONFIG"
+                },
+                "level.name": "level 1",
+                "level.optional_defaultPlanetIdx": -1,
+                "level.optional_ui_planetSizeFactor": 1.0,
+                "level.outGoingPathIndices": [
+                    1,
+                    2
+                ],
+                "level.tier": 0
+            },
+            {
+                "SpaceLevelConfig": {
+                    "carrierGamemodeData": {
+                        "carrierGamemodeData.teams": [
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            },
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "gamemodeTag": "Carrier Takedown",
+                    "planets": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                1.0,
+                                0.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "planetData.bHasCivilization": false,
+                            "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_1.png"
+                        }
+                    ],
+                    "stars": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                -1.0,
+                                1.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "starData.color": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "userFacingName": "TEMPLATE_CONFIG"
+                },
+                "level.name": "level 1",
+                "level.optional_defaultPlanetIdx": -1,
+                "level.optional_ui_planetSizeFactor": 1.0,
+                "level.outGoingPathIndices": [
+                    1,
+                    2
+                ],
+                "level.tier": 0
+            },
+            {
+                "SpaceLevelConfig": {
+                    "carrierGamemodeData": {
+                        "carrierGamemodeData.teams": [
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            },
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "gamemodeTag": "Carrier Takedown",
+                    "planets": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                1.0,
+                                0.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "planetData.bHasCivilization": false,
+                            "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_1.png"
+                        }
+                    ],
+                    "stars": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                -1.0,
+                                1.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "starData.color": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "userFacingName": "TEMPLATE_CONFIG"
+                },
+                "level.name": "level 2",
+                "level.optional_defaultPlanetIdx": -1,
+                "level.optional_ui_planetSizeFactor": 1.0,
+                "level.outGoingPathIndices": null,
+                "level.tier": 1
+            },
+            {
+                "SpaceLevelConfig": {
+                    "carrierGamemodeData": {
+                        "carrierGamemodeData.teams": [
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            },
+                            {
+                                "teamData.carrierSpawnData": [
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    },
+                                    {
+                                        "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                                        "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                                        "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                                        "carrierData.fighterSpawnData.respawnCooldownSec": 3.0,
+                                        "carrierData.numInitialFighters": 250,
+                                        "carrierData.position": null,
+                                        "carrierData.rotation_deg": null
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "gamemodeTag": "Carrier Takedown",
+                    "planets": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                1.0,
+                                0.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "planetData.bHasCivilization": false,
+                            "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_1.png"
+                        }
+                    ],
+                    "stars": [
+                        {
+                            "environmentBodyData.offsetDir": [
+                                -1.0,
+                                1.0,
+                                0.0
+                            ],
+                            "environmentBodyData.offsetDistance": 50.0,
+                            "starData.color": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    ],
+                    "userFacingName": "TEMPLATE_CONFIG"
+                },
+                "level.name": "level 3",
+                "level.optional_defaultPlanetIdx": -1,
+                "level.optional_ui_planetSizeFactor": 1.0,
+                "level.outGoingPathIndices": null,
+                "level.tier": 1
+            }
+        ],
+        "userFacingName": "Campaign"
+    },
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "CampaignConfig"
+    }
+}

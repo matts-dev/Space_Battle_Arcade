@@ -50,7 +50,8 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class SpaceLevelConfig : public ConfigBase
 	{
-		friend class SpaceLevelBase; friend class SpaceArcadeCheatSystem;
+		friend class SpaceLevelBase;
+		friend class SpaceArcadeCheatSystem;
 	public: //types
 		/** Only relevant is gamemode tag directs to TAG_GAMEMODE_CARRIER_TAKEDOWN*/
 		struct GameModeData_CarrierTakedown

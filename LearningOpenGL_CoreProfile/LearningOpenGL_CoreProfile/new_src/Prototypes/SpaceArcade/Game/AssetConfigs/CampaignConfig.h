@@ -11,6 +11,7 @@ namespace SA
 	class CampaignConfig : public ConfigBase
 	{
 		using Parent = ConfigBase;
+		friend class SpaceArcadeCheatSystem;
 	public:
 		struct LevelData
 		{
@@ -32,6 +33,8 @@ namespace SA
 		void requestSave();
 		const std::vector<LevelData>& getLevels() { return levels; }
 		virtual std::string getRepresentativeFilePath() override;
+	private:
+		void createTemplateCampaignForJsonSerialization();
 	public://serialized fields
 		//WARNING: refactoring these names will influence the out put json!
 		std::string userFacingName = "Campaign";

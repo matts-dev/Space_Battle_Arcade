@@ -46,6 +46,7 @@ namespace SA
 		REGISTER_CHEAT("kill_player", SpaceArcadeCheatSystem::cheat_killPlayer);
 		REGISTER_CHEAT("make_json_template_spacelevelconfig", SpaceArcadeCheatSystem::cheat_make_json_template_spacelevelconfig);
 		REGISTER_CHEAT("make_json_template_savegame", SpaceArcadeCheatSystem::cheat_make_json_template_savegame);
+		REGISTER_CHEAT("make_json_template_campaign", SpaceArcadeCheatSystem::cheat_make_json_template_campaign);
 		REGISTER_CHEAT("levelCheat_transitionToMainMenuLevel", SpaceArcadeCheatSystem::cheat_mainMenuTransitionTest);
 		REGISTER_CHEAT("unlock_And_Complete_All_Levels_In_Campaign", SpaceArcadeCheatSystem::cheat_unlockAndCompleteAllLevelsInCampaign);
 #if COMPILE_AUDIO_DEBUG_RENDERING_CODE
@@ -81,6 +82,36 @@ namespace SA
 		destroyAllGeneratorsCheat.broadcast();
 	}
 
+	void SpaceArcadeCheatSystem::cheat_make_json_template_campaign(const std::vector<std::string>& cheatArgs)
+	{
+
+
+#if COMPILE_CHEATS
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			sp<CampaignConfig> templateCampaign = new_sp<CampaignConfig>();
+			templateCampaign->createTemplateCampaignForJsonSerialization();
+			templateCampaign->save();
+
+			std::string representativeFilePath = templateCampaign->getRepresentativeFilePath();
+			sp<ConfigBase> baseConfig = ConfigBase::load(representativeFilePath, []() {return new_sp<SpaceLevelConfig>(); });
+			if (SpaceLevelConfig* reloadedConfig = dynamic_cast<SpaceLevelConfig*>(baseConfig.get()))
+			{
+				log(__FUNCTION__, LogLevel::LOG, "loaded template config just saved");	//use debug to inspect values
+			}
+			else
+			{
+				log(__FUNCTION__, LogLevel::LOG_WARNING, "failed to load template config just saved");
+			}
+		}
+		else
+		{
+			log(__FUNCTION__, LogLevel::LOG_ERROR, "Could not get active mod");
+		}
+#endif
+
+	}
+
 	void SpaceArcadeCheatSystem::cheat_killPlayer(const std::vector<std::string>& cheatArgs)
 	{
 #if COMPILE_CHEATS
@@ -108,7 +139,6 @@ namespace SA
 		{
 			sp<SpaceLevelConfig> spaceConfig = new_sp<SpaceLevelConfig>();
 			spaceConfig->applyDemoDataIfEmpty();
-
 			spaceConfig->save();
 
 			std::string representativeFilePath = spaceConfig->getRepresentativeFilePath();
