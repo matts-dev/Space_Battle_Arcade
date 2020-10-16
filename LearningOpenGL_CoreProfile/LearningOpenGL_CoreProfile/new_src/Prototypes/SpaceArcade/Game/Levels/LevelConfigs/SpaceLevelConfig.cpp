@@ -7,6 +7,7 @@
 #include "../../SpaceArcade.h"
 #include "../../Environment/Planet.h"
 #include "../../GameModes/ServerGameMode_CarrierTakedown.h"
+#include "../../../Tools/SAUtilities.h"
 
 namespace SA
 {
@@ -14,6 +15,8 @@ namespace SA
 	{
 		ConfigBase::postConstruct();
 		fileName = SYMBOL_TO_STR(SpaceLevelConfig);
+
+		bIsDeletable = false; //not wanting to support deleting more files right now, may change mind on this
 	}
 
 	void SpaceLevelConfig::applyDemoDataIfEmpty()
@@ -121,6 +124,16 @@ namespace SA
 		return false;
 	}
 
+	//bool SpaceLevelConfig::replaceAvoidMeshData(size_t index, const WorldAvoidanceMeshData& data)
+	//{
+	//	if (Utils::isValidIndex(avoidanceMeshes, index))
+	//	{
+	//		avoidanceMeshes[index] = data;
+	//		return true;
+	//	}
+	//	return false;
+	//}
+
 	std::string SpaceLevelConfig::getRepresentativeFilePath()
 	{
 		return owningModDir + std::string("Assets/Levels/") + fileName + std::string("_") + userFacingName+ std::string(".json");
@@ -177,6 +190,19 @@ namespace SA
 		spaceLevelData.push_back({ SYMBOL_TO_STR(stars), starArray });
 
 		////////////////////////////////////////////////////////
+		// avoidance mesh data (eg asteroids)
+		////////////////////////////////////////////////////////
+		json avoidanceArray;
+		for (const WorldAvoidanceMeshData& avoidanceDatum : avoidanceMeshes)
+		{
+			json avoidanceJson;
+			JSON_WRITE_TRANSFORM(avoidanceDatum.spawnTransform, avoidanceJson);
+			JSON_WRITE(avoidanceDatum.spawnConfigName, avoidanceJson);
+			avoidanceArray.push_back(avoidanceJson);
+		}
+		spaceLevelData[SYMBOL_TO_STR(avoidanceMeshes)] = avoidanceArray;
+
+		////////////////////////////////////////////////////////
 		// carrier game mode data
 		////////////////////////////////////////////////////////
 		json json_carrierGamemodeData;
@@ -216,6 +242,8 @@ namespace SA
 		if (JsonUtils::has(inData, fileName))
 		{
 			const json& spaceLevelConfigJson = inData[fileName];
+
+			READ_JSON_STRING_OPTIONAL(userFacingName, spaceLevelConfigJson);
 
 			////////////////////////////////////////////////////////
 			// helper lambdas
@@ -278,6 +306,25 @@ namespace SA
 					stars.push_back(StarData{});
 					StarData& starData = stars.back();
 					readStarData(starData, starJson);
+				}
+			}
+
+			////////////////////////////////////////////////////////
+			// read avoidance data
+			////////////////////////////////////////////////////////
+			if (JsonUtils::hasArray(spaceLevelConfigJson, SYMBOL_TO_STR(avoidanceMeshes)))
+			{
+				avoidanceMeshes.clear(); //clear so that we start with a fresh array
+				const json& avoidanceArray = spaceLevelConfigJson[SYMBOL_TO_STR(avoidanceMeshes)];
+
+				for (size_t meshIdx = 0; meshIdx < avoidanceArray.size(); ++meshIdx)
+				{
+					avoidanceMeshes.emplace_back();
+					WorldAvoidanceMeshData& avoidanceDatum = avoidanceMeshes.back();
+
+					json avoidanceJson = avoidanceArray[meshIdx];
+					READ_JSON_TRANSFORM_OPTIONAL(avoidanceDatum.spawnTransform, avoidanceJson);
+					READ_JSON_STRING_OPTIONAL(avoidanceDatum.spawnConfigName, avoidanceJson);
 				}
 			}
 

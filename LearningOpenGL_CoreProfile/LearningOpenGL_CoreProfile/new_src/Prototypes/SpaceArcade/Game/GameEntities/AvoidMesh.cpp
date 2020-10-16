@@ -1,4 +1,4 @@
-#include "Asteroid.h"
+#include "AvoidMesh.h"
 #include "../AssetConfigs/SASpawnConfig.h"
 #include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 #include "../../GameFramework/Components/CollisionComponent.h"
@@ -8,12 +8,12 @@
 namespace SA
 {
 	static bool bRenderAvoidanceSpheres = false;
-	void Asteroid::setRenderAvoidanceSpheres(bool bRender)
+	void AvoidMesh::setRenderAvoidanceSpheres(bool bRender)
 	{
 		bRenderAvoidanceSpheres = bRender;
 	}
 
-	Asteroid::Asteroid(const SpawnData& spawnData) :
+	AvoidMesh::AvoidMesh(const SpawnData& spawnData) :
 		Parent(spawnData.spawnConfig->getModel(), spawnData.spawnTransform),
 		collisionData(spawnData.spawnConfig->toCollisionInfo())
 	{
@@ -24,7 +24,7 @@ namespace SA
 		collisionComp->setKinematicCollision(spawnData.spawnConfig->requestCollisionTests());
 	}
 
-	void Asteroid::postConstruct()
+	void AvoidMesh::postConstruct()
 	{
 		Parent::postConstruct();
 
@@ -45,7 +45,7 @@ namespace SA
 		updateCollision();
 	}
 
-	void Asteroid::render(Shader& shader)
+	void AvoidMesh::render(Shader& shader)
 	{
 		const std::vector<TeamData>& teams = spawnConfig->getTeams();
 		glm::vec3 teamColor = teams.size() > 0 ? teams[0].teamTint : glm::vec3(1.f);
@@ -62,14 +62,14 @@ namespace SA
 		}
 	}
 
-	void Asteroid::setTransform(const Transform& inTransform)
+	void AvoidMesh::setTransform(const Transform& inTransform)
 	{
 		Parent::setTransform(inTransform);
 		updateAvoidanceSpheres();
 		updateCollision();
 	}
 
-	void Asteroid::updateAvoidanceSpheres()
+	void AvoidMesh::updateAvoidanceSpheres()
 	{
 		glm::mat4 astroidModelMat = getTransform().getModelMatrix();
 
@@ -79,7 +79,7 @@ namespace SA
 		}
 	}
 
-	void Asteroid::updateCollision()
+	void AvoidMesh::updateCollision()
 	{
 		Transform xform = getTransform();
 		collisionData->updateToNewWorldTransform(xform.getModelMatrix());

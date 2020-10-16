@@ -327,7 +327,6 @@ namespace SA
 		jumpBoomSfxConfig.assetPath = "Assets/Sounds/space_jump_explosion_fx.wav";
 		jumpBoomSfxConfig.configureEmitter(sfx_starJumpBoom);
 
-
 		//generate star field before GPU resources are acquired
 		generateStarField();
 		GPUResource::postConstruct();

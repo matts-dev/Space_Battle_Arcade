@@ -933,7 +933,10 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarJumpData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\Asteroid.h">
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\SpaceLevelEditor_Level.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\AvoidMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2204,7 +2207,10 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Rendering\NdcQuad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\Asteroid.cpp">
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SpaceLevelEditor_Level.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\AvoidMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

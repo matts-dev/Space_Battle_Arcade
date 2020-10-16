@@ -200,7 +200,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarJumpData.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\Asteroid.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\AvoidMesh.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_SpaceBase.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_CarrierTakedown.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SAUISystem_Game.h" />
@@ -209,6 +209,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialAnimationEntity.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialsLevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\LevelConfigs\SpaceLevelConfig.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\SpaceLevelEditor_Level.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\MainMenuLevel.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ModelConfigurerEditor_Level.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Levels\ProjectileEditor_Level.h" />
@@ -557,7 +558,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Star.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\StarField.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\FX\SharedGFX.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\Asteroid.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameEntities\AvoidMesh.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_SpaceBase.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameModes\ServerGameMode_CarrierTakedown.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\GameSystems\SAUISystem_Game.cpp" />
@@ -566,6 +567,7 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\EnigmaTutorials\EnigmaTutorialsLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\LevelConfigs\SpaceLevelConfig.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\MainMenuLevel.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SpaceLevelEditor_Level.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\StressTestLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.cpp" />

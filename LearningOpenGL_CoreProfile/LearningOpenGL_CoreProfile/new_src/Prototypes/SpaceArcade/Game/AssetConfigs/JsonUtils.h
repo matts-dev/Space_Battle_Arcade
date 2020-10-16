@@ -78,6 +78,47 @@ else\
 }\
 
 
+#define JSON_WRITE_VEC4(field_vec4, jsonObj)\
+{\
+	/*may be a more efficient way to do this.*/\
+	json valueArray;\
+	valueArray.push_back(field_vec4.x);\
+	valueArray.push_back(field_vec4.y);\
+	valueArray.push_back(field_vec4.z);\
+	valueArray.push_back(field_vec4.w);\
+	jsonObj[SYMBOL_TO_STR(field_vec4)] = valueArray;\
+}
+
+#define JSON_WRITE_QUAT(field_quat, jsonObj)\
+JSON_WRITE_VEC4(field_quat, jsonObj) //use same logic as vec4
+
+#define JSON_WRITE_OPTIONAL_VEC4(optional_field_vec4, jsonObj)\
+if (optional_field_vec4.has_value())\
+{\
+	json valueArray; \
+	valueArray.push_back(optional_field_vec4->x); \
+	valueArray.push_back(optional_field_vec4->y); \
+	valueArray.push_back(optional_field_vec4->z); \
+	valueArray.push_back(optional_field_vec4->w); \
+	jsonObj[SYMBOL_TO_STR(optional_field_vec4)] = valueArray; \
+}\
+else\
+{\
+	jsonObj[SYMBOL_TO_STR(optional_field_vec4)] = nullptr;\
+}\
+
+
+#define JSON_WRITE_TRANSFORM(transform, jsonObj)\
+{\
+	json transformJson;\
+	JSON_WRITE_VEC3(transform.position, transformJson);\
+	JSON_WRITE_VEC3(transform.scale, transformJson);\
+	JSON_WRITE_QUAT(transform.rotQuat, transformJson);\
+	jsonObj[SYMBOL_TO_STR(transform)] = transformJson;\
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // read macros that will stop debugger (if set above)  on read fails
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +175,66 @@ if (SA::JsonUtils::hasArray(jsonObj, SYMBOL_TO_STR(out)))\
 	}\
 }\
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// read vec4
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define READ_JSON_VEC4_OPTIONAL(out, jsonObj)\
+if (SA::JsonUtils::hasArray(jsonObj, SYMBOL_TO_STR(out)))\
+{\
+	const json& vec4Array = jsonObj[SYMBOL_TO_STR(out)];\
+	if(vec4Array.size() >= 4)\
+	{\
+		glm::vec4 proxy;\
+		proxy.x = vec4Array[0];\
+		proxy.y = vec4Array[1];\
+		proxy.z = vec4Array[2];\
+		proxy.w = vec4Array[3];\
+		out = proxy; /*proxy allows std::optional<vec3> too, as out.x should be out-> for optionals*/\
+	}\
+	else\
+	{\
+		/* Useing cstyle string concatenation in log category*/\
+		log(__FUNCTION__, LogLevel::LOG_ERROR, SYMBOL_TO_STR(out)":has array, but array does not have correct size");\
+	}\
+}\
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// read quat
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define READ_JSON_QUAT_OPTIONAL(out, jsonObj)\
+if (SA::JsonUtils::hasArray(jsonObj, SYMBOL_TO_STR(out)))\
+{\
+	const json& vec4Array = jsonObj[SYMBOL_TO_STR(out)];\
+	if(vec4Array.size() >= 4)\
+	{\
+		glm::quat proxy;\
+		proxy.x = vec4Array[0];\
+		proxy.y = vec4Array[1];\
+		proxy.z = vec4Array[2];\
+		proxy.w = vec4Array[3];\
+		out = proxy; /*proxy allows std::optional<vec3> too, as out.x should be out-> for optionals*/\
+	}\
+	else\
+	{\
+		/* Using cstyle string concatenation in log category*/\
+		log(__FUNCTION__, LogLevel::LOG_ERROR, SYMBOL_TO_STR(out)":has array, but array does not have correct size");\
+	}\
+}\
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// read transform
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define READ_JSON_TRANSFORM_OPTIONAL(transform, jsonObj)\
+if (SA::JsonUtils::has(jsonObj, SYMBOL_TO_STR(transform)))\
+{\
+	const json& transformJson = jsonObj[SYMBOL_TO_STR(transform)];\
+	READ_JSON_VEC3_OPTIONAL(transform.position, transformJson);\
+	READ_JSON_VEC3_OPTIONAL(transform.scale, transformJson);\
+	READ_JSON_QUAT_OPTIONAL(transform.rotQuat, transformJson)\
+}
+
 ////////////////////////////////////////////////////////
 // read string
 ////////////////////////////////////////////////////////
@@ -165,6 +266,12 @@ if (SA::JsonUtils::hasInt(jsonObj, SYMBOL_TO_STR(out)))\
 {\
 	out = jsonObj[SYMBOL_TO_STR(out)];\
 }\
+
+
+////////////////////////////////////////////////////////
+// read transform
+////////////////////////////////////////////////////////
+
 
 
 namespace SA

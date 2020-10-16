@@ -19,6 +19,7 @@
 #include "../../Tools/SAUtilities.h"
 #include "../../Tools/PlatformUtils.h"
 #include "../SpaceArcade.h"
+#include "../Levels/LevelConfigs/SpaceLevelConfig.h"
 
 using json = nlohmann::json;
 
@@ -90,6 +91,65 @@ namespace SA
 				}
 			}
 		}
+	}
+
+	void Mod::addLevelConfig(const sp<SpaceLevelConfig>& levelConfig)
+	{
+		if (levelConfigsByName.find(levelConfig->getName()) == levelConfigsByName.end())
+		{
+			const std::string& configName = levelConfig->getName() + std::string("-") + levelConfig->getUserFacingName();
+			sp<SpaceLevelConfig> copySpawnConfig = levelConfig;
+
+			levelConfig->owningModDir = getModDirectoryPath(); //#todo i keep forgetting to do this whenever making a new config... needs to be automatic set
+
+			levelConfigsByName.insert({ configName, copySpawnConfig });
+		}
+		else
+		{
+			log("Mod", LogLevel::LOG_ERROR, "Attempting to add duplicate level config");
+		}
+	}
+
+	void Mod::removeLevelConfig(sp<SpaceLevelConfig>& levelConfig)
+	{
+		std::string name = levelConfig->getName();
+		levelConfigsByName.erase(name);
+
+	}
+
+	void Mod::deleteLevelConfig(sp<SpaceLevelConfig>& levelConfig)
+	{
+		///right now level this blank, prefer user manually delete file, will need to change configs bIsDeletable too to enable this
+
+		//if (levelConfig)
+		//{
+		//	std::string filepath = levelConfig->getRepresentativeFilePath();
+
+		//	//validation before deleting a file
+		//	bool bContainslevelConfigs = filepath.find("levelConfigs") != std::string::npos;
+		//	bool bBeginsWithGameData = filepath.find("GameData") == 0;
+		//	bool bContainsModPath = filepath.find(getModDirectoryPath()) != std::string::npos;
+		//	bool bIsDeletable = levelConfig->isDeletable();
+
+		//	if (bContainslevelConfigs && bBeginsWithGameData && bContainsModPath)
+		//	{
+		//		removeLevelConfig(levelConfig);
+
+		//		char deleteMsg[1024];
+		//		//will clip files larger than 1024
+		//		snprintf(deleteMsg, 1024, "Deleting file %s", filepath.c_str());
+
+		//		log("Mod", LogLevel::LOG, deleteMsg);
+
+		//		std::error_code ec;
+		//		std::filesystem::remove(filepath, ec);
+
+		//		if (ec)
+		//		{
+		//			log("Mod", LogLevel::LOG_ERROR, "failed to remove file");
+		//		}
+		//	}
+		//}
 	}
 
 	void Mod::addProjectileConfig(const sp<ProjectileConfig>& projectileConfig)
@@ -769,6 +829,7 @@ namespace SA
 	void ModSystem::loadConfigs(sp<Mod>& mod)
 	{
 		loadConfig<SpawnConfig>(mod, "Assets/SpawnConfigs/", &Mod::addSpawnConfig, [](){ return new_sp<SpawnConfig>(); });
+		loadConfig<SpaceLevelConfig>(mod, "Assets/Levels/", &Mod::addLevelConfig, []() { return new_sp<SpaceLevelConfig>(); });
 		loadConfig<ProjectileConfig>(mod, "Assets/ProjectileConfigs/", &Mod::addProjectileConfig, []() { return new_sp<ProjectileConfig>(); });
 		loadConfig<SettingsProfileConfig>(mod, "Assets/Settings/", &Mod::addSettingsProfileConfig, []() { return new_sp<SettingsProfileConfig>(); });
 		loadConfig<CampaignConfig>(mod, "Assets/Campaigns/", &Mod::addCampaignConfig, []() { return new_sp<CampaignConfig>(); });

@@ -137,6 +137,15 @@ namespace SA
 	{
 		sj.enableStarJump(bEnable, bSkipTransition);
 	}
-	
+
+	void Star::updateXformForData(glm::vec3 starDir, float starDist)
+	{
+		starDir = glm::normalize(starDir);
+
+		Transform starXform = {};
+		starXform.position = starDir * starDist;
+		setXform(starXform);
+	}
+
 
 }

@@ -44,6 +44,11 @@ namespace SA
 		};
 		FighterSpawnData fighterSpawnData;
 	};
+	struct WorldAvoidanceMeshData
+	{
+		Transform spawnTransform;
+		std::string spawnConfigName;
+	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Class that holds the data for initializing a space level
@@ -52,6 +57,7 @@ namespace SA
 	{
 		friend class SpaceLevelBase;
 		friend class SpaceArcadeCheatSystem;
+		friend class SpaceLevelEditor_Level;
 	public: //types
 		/** Only relevant is gamemode tag directs to TAG_GAMEMODE_CARRIER_TAKEDOWN*/
 		struct GameModeData_CarrierTakedown
@@ -80,9 +86,15 @@ namespace SA
 		bool overrideStarData(size_t idx, const StarData& inData);
 		const std::vector<StarData>& getStars() const { return stars; }
 
+		const std::vector<WorldAvoidanceMeshData>& getAvoidanceMeshes() const { return avoidanceMeshes; }
+		//bool replaceAvoidMeshData(size_t index, const WorldAvoidanceMeshData& data);
+		void addAvoidanceMesh(const WorldAvoidanceMeshData& avoidanceMesh) { avoidanceMeshes.push_back(avoidanceMesh); }
+
 		const std::string& getGamemodeTag() const { return gamemodeTag; }
 		const GameModeData_CarrierTakedown& getGamemodeData_CarrierTakedown() const { return carrierGamemodeData; }
 		void setGamemodeData_CarrierTakedown(const GameModeData_CarrierTakedown& inData) { carrierGamemodeData = inData; }
+
+		std::string getUserFacingName() { return userFacingName; }
 	public:
 		virtual std::string getRepresentativeFilePath() override;
 		virtual void onSerialize(json& outData) override;
@@ -97,6 +109,9 @@ namespace SA
 		std::string userFacingName = "NoUserFacingName";
 
 		std::optional<size_t> seed;
+
+		//size_t numAvoidanceMeshs = 0;
+		std::vector<WorldAvoidanceMeshData> avoidanceMeshes;
 
 		size_t numPlanets = 0;
 		std::vector<PlanetData> planets;

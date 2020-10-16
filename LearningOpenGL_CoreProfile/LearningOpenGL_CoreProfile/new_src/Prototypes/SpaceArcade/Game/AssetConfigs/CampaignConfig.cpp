@@ -27,7 +27,8 @@ namespace SA
 		{
 			//create a dummy level t fill out json template
 			levels.push_back(LevelData{});
-			levels.back().spaceLevelConfig = new_sp<SpaceLevelConfig>(); //create dummy level to serialize as an example
+			//levels.back().spaceLevelConfig = new_sp<SpaceLevelConfig>(); //create dummy level to serialize as an example
+			levels.back().spaceLevelConfig = "NoLevelName";
 			levels.back().outGoingPathIndices.push_back(0);//create path to itself to fill out template
 		}
 
@@ -49,7 +50,8 @@ namespace SA
 				levelJson[SYMBOL_TO_STR(level.outGoingPathIndices)].push_back(outIndex);
 			}
 
-			if (level.spaceLevelConfig){level.spaceLevelConfig->onSerialize(levelJson);}
+			//if (level.spaceLevelConfig){level.spaceLevelConfig->onSerialize(levelJson);}
+			levelJson[SYMBOL_TO_STR(level.spaceLevelConfig)] = level.spaceLevelConfig;
 
 			//the order of this array is very important as level contain indices this array
 			levelArray.push_back(levelJson);
@@ -93,8 +95,10 @@ namespace SA
 						READ_JSON_INT_OPTIONAL(level.optional_defaultPlanetIdx, levelJson);
 						READ_JSON_FLOAT_OPTIONAL(level.optional_ui_planetSizeFactor, levelJson);
 
-						level.spaceLevelConfig = new_sp<SpaceLevelConfig>();
-						level.spaceLevelConfig->onDeserialize(levelJson);
+						//level.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+						//level.spaceLevelConfig->onDeserialize(levelJson);
+						//levelJson[SYMBOL_TO_STR(level.spaceLevelConfig)] = level.spaceLevelConfig;
+						READ_JSON_STRING_OPTIONAL(level.spaceLevelConfig, levelJson);
 
 						////////////////////////////////////////////////////////
 						// read outgoing levels
@@ -131,21 +135,26 @@ namespace SA
 		level_1.tier = 0;
 		level_1.outGoingPathIndices.push_back(1);
 		level_1.outGoingPathIndices.push_back(2);
-		level_1.spaceLevelConfig = new_sp<SpaceLevelConfig>();
-		level_1.spaceLevelConfig->applyDemoDataIfEmpty();
+		//level_1.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+		//level_1.spaceLevelConfig->applyDemoDataIfEmpty();
+		sp<SpaceLevelConfig> level1_SpaceLevel = new_sp<SpaceLevelConfig>();
+		level1_SpaceLevel->applyDemoDataIfEmpty();
+		level_1.spaceLevelConfig = level1_SpaceLevel->getName();
 		levels.push_back(level_1);
 
 		LevelData level_2;
 		level_2.name = "level 2";
 		level_2.tier = 1;
-		level_2.spaceLevelConfig = new_sp<SpaceLevelConfig>();
-		level_2.spaceLevelConfig->applyDemoDataIfEmpty();
+		//level_2.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+		//level_2.spaceLevelConfig->applyDemoDataIfEmpty();
+		level_2.spaceLevelConfig = level1_SpaceLevel->getName();
 
 		LevelData level_3;
 		level_3.name = "level 3";
 		level_3.tier = 1;
-		level_3.spaceLevelConfig = new_sp<SpaceLevelConfig>();
-		level_3.spaceLevelConfig->applyDemoDataIfEmpty();
+		//level_3.spaceLevelConfig = new_sp<SpaceLevelConfig>();
+		//level_3.spaceLevelConfig->applyDemoDataIfEmpty();
+		level_3.spaceLevelConfig = level1_SpaceLevel->getName();
 
 		levels.push_back(level_1);
 		levels.push_back(level_2);

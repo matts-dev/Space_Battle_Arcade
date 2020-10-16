@@ -35,6 +35,7 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class Planet : public GameEntity, public ITickable
 	{
+		friend class SpaceLevelEditor_Level;
 	public:
 		struct Data
 		{
@@ -60,8 +61,10 @@ namespace SA
 		void setUseCameraAsLight(bool bUseCameraLight);
 		void setUseGrayScale(bool bShouldUseGrayScale) { bUseGrayScale = bShouldUseGrayScale; }
 		void enableStarJump(bool bEnable, bool bSkipTransition = false);
+		void updateTransformForData(glm::vec3 offsetDir, float offsetDist);
 	private:
 		void applySizeCorrections();
+		void setOverrideData(Planet::Data& data);
 	private: //implementation
 		StarJumpData sj;
 	private: //statics

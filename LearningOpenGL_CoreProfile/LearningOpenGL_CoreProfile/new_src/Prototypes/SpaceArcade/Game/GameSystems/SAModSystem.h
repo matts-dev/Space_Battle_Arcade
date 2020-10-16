@@ -15,6 +15,7 @@ namespace SA
 	class CampaignConfig;
 	class SaveGameConfig;
 	class DifficultyConfig;
+	class SpaceLevelConfig;
 
 	////////////////////////////////////////////////////////////////////
 	// Constants
@@ -68,6 +69,17 @@ namespace SA
 
 		/** WARNING: this will delete the spawn config from the file system! */
 		void deleteSpawnConfig(sp<SpawnConfig>& spawnConfig);
+
+
+		////////////////////////////////////////////////////////
+		// Level Configs
+		////////////////////////////////////////////////////////
+		const std::map<std::string, sp<SpaceLevelConfig>>& getLevelConfigs() { return levelConfigsByName; }
+		void addLevelConfig(const sp<SpaceLevelConfig>& levelConfig);
+		void removeLevelConfig(sp<SpaceLevelConfig>& levelConfig);
+
+		/** WARNING: this will delete the spawn config from the file system! */
+		void deleteLevelConfig(sp<SpaceLevelConfig>& levelConfig);
 
 		////////////////////////////////////////////////////////
 		//PROJECTILE CONFIGS
@@ -142,6 +154,7 @@ namespace SA
 
 		std::vector<std::string> defaultCarrierSpawnConfigNamesByTeamIdx;
 		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;
+		std::map<std::string, sp<SpaceLevelConfig>> levelConfigsByName;
 		std::map<std::string, sp<ProjectileConfig>> projectileConfigsByName;
 		std::vector<sp<SettingsProfileConfig>> settingsProfiles;
 		std::vector<sp<CampaignConfig>> campaigns;

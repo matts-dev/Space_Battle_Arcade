@@ -368,6 +368,49 @@ namespace SA
 		return sj.isStarJumpInProgress();
 	}
 
+	void SpaceLevelBase::copyPlanetDataToInitData(const PlanetData& planet, Planet::Data& init)
+	{
+		assert(generationRNG);
+		auto makeRandomVec3 = [this]()
+		{
+			vec3 randomVec = vec3(generationRNG->getFloat());
+
+			//don't let zero vec occur
+			if (glm::length2(randomVec) < 0.0001f)
+			{
+				randomVec = vec3(1, 0, 0);
+			}
+
+			return randomVec;
+		};
+
+		glm::vec3 planetDir = normalize(planet.offsetDir.has_value() ? *planet.offsetDir : makeRandomVec3());
+		float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : generationRNG->getFloat(1.0f, 30.f);
+		bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (generationRNG->getInt(0, 8) == 0);
+
+		init.albedo1_filepath = planet.texturePath.has_value() ? *planet.texturePath : DefaultPlanetTexturesPaths::albedo_terrain; //only copy if there is a value; otherwise use whatever is init as default (prevent crashes in level editor)
+		init.xform.position = planetDist * planetDir;
+
+		if (bHasCivilization)
+		{
+			//if this was randomly generated, then be sure to use the earth-like planet
+			if (const bool bWasRandomized = !planet.bHasCivilization.has_value())
+			{
+				//use the multi-layer material example
+				init.albedo1_filepath = DefaultPlanetTexturesPaths::albedo_sea;
+				init.albedo2_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+				init.albedo3_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+			}
+			else
+			{
+				init.albedo2_filepath = init.albedo1_filepath; //this may not be necessary, but other code paths for nighttime lit planets set all albedos
+				init.albedo3_filepath = init.albedo1_filepath;
+			}
+			init.nightCityLightTex_filepath = DefaultPlanetTexturesPaths::albedo_nightlight;
+			init.colorMapTex_filepath = DefaultPlanetTexturesPaths::colorChanel;	//#future can make this a blend of a few textures for a random placeement effect
+		}
+	}
+
 	void SpaceLevelBase::applyLevelConfig()
 	{
 		if (levelConfig)
@@ -401,32 +444,8 @@ namespace SA
 			planets.clear();
 			for (const PlanetData& planet : levelConfig->getPlanets())
 			{
-				glm::vec3 planetDir = normalize(planet.offsetDir.has_value() ? *planet.offsetDir : makeRandomVec3());
-				float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : generationRNG->getFloat(1.0f, 30.f);
-				bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (generationRNG->getInt(0, 8) == 0);
-
 				Planet::Data init = {};
-				init.albedo1_filepath = planet.texturePath;
-				init.xform.position = planetDist * planetDir;
-
-				if (bHasCivilization)
-				{
-					//if this was randomly generated, then be sure to use the earth-like planet
-					if (const bool bWasRandomized = !planet.bHasCivilization.has_value())
-					{
-						//use the multi-layer material example
-						init.albedo1_filepath = DefaultPlanetTexturesPaths::albedo_sea;
-						init.albedo2_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
-						init.albedo3_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
-					}
-					else
-					{
-						init.albedo2_filepath = init.albedo1_filepath; //this may not be necessary, but other code paths for nighttime lit planets set all albedos
-						init.albedo3_filepath = init.albedo1_filepath;
-					}
-					init.nightCityLightTex_filepath = DefaultPlanetTexturesPaths::albedo_nightlight;
-					init.colorMapTex_filepath = DefaultPlanetTexturesPaths::colorChanel;	//#future can make this a blend of a few textures for a random placeement effect
-				}
+				copyPlanetDataToInitData(planet, init);
 
 				planets.push_back(new_sp<Planet>(init));
 			}
@@ -445,9 +464,7 @@ namespace SA
 				localStars.push_back(new_sp<Star>());
 				const sp<Star>& newStar = localStars.back();
 				newStar->setLightLDR(starColor);
-				Transform starXform = {};
-				starXform.position = starDir * starDist;
-				newStar->setXform(starXform);
+				newStar->updateXformForData(starDir, starDist);
 			}
 		}
 	}
@@ -477,6 +494,8 @@ namespace SA
 	void SpaceLevelBase::startLevel_v()
 	{
 		LevelBase::startLevel_v();
+
+		generationRNG = GameBase::get().getRNGSystem().getTimeInfluencedRNG(); //create a default
 
 		forwardShadedModelShader = new_sp<SA::Shader>(spaceModelShader_forward_vs, spaceModelShader_forward_fs, false);
 		highlightForwardModelShader = new_sp<SA::Shader>(modelVertexOffsetShader_vs, fwdModelHighlightShader_fs, false);
@@ -556,6 +575,22 @@ namespace SA
 			}
 		}
 		return spaceGameMode;
+	}
+
+	void SpaceLevelBase::onEntitySpawned_v(const sp<WorldEntity>& spawned)
+	{
+		if (spawned)
+		{
+			spawned->onDestroyedEvent->addWeakObj(sp_this(), &SpaceLevelBase::handleEntityDestroyed);
+		}
+	}
+
+	void SpaceLevelBase::handleEntityDestroyed(const sp<GameEntity>& entity)
+	{
+		if (sp<RenderModelEntity> renderEntity = std::dynamic_pointer_cast<RenderModelEntity>(entity))
+		{
+			unspawnEntity<RenderModelEntity>(renderEntity);
+		}
 	}
 
 	sp<SA::StarField> SpaceLevelBase::onCreateStarField()

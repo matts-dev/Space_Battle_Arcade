@@ -640,11 +640,16 @@ namespace SA
 				{
 					const CampaignConfig::LevelData& selectedCampaignLevelData = campaignLevels[uiSelectedLevelData.levelIndexNumberInCampaignConfig];
 
-					cachedLevelConfig = selectedCampaignLevelData.spaceLevelConfig;
-					cachedLevelConfig->transientData.levelIdx = uiSelectedLevelData.levelIndexNumberInCampaignConfig;
+					//cachedLevelConfig = selectedCampaignLevelData.spaceLevelConfig;
+					const std::map<std::string, sp<SpaceLevelConfig>>& levelConfigs = activeMod->getLevelConfigs();
+					if (auto foundLevelIter = levelConfigs.find(selectedCampaignLevelData.spaceLevelConfig); foundLevelIter != levelConfigs.end())
+					{
+						cachedLevelConfig = foundLevelIter->second;
+					}
 
 					if (cachedLevelConfig)
 					{
+						cachedLevelConfig->transientData.levelIdx = uiSelectedLevelData.levelIndexNumberInCampaignConfig;
 						cachedLevelConfig->applyDemoDataIfEmpty();
 
 						////////////////////////////////////////////////////////

@@ -27,6 +27,7 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class Star final : public GameEntity, public RemoveCopies
 	{
+		friend class SpaceLevelEditor_Level; //let user design level
 	public:
 		const uint32_t MAX_STAR_DIR_LIGHTS = GameBase::getConstants().MAX_DIR_LIGHTS;
 		static const StarContainer& getSceneStars() { return sceneStars; }
@@ -36,6 +37,7 @@ namespace SA
 	public:
 		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
 		glm::vec3 getLightDirection() const;
+		void updateXformForData(glm::vec3 starDir, float starDist);
 		void setXform(Transform& xform) { this->xform = xform; }
 		void setForceCentered(bool bInForceCentered) { bForceCentered = bInForceCentered; }
 		glm::vec3 getLightLDR() { return ldr_color; }
@@ -53,7 +55,7 @@ namespace SA
 	private: //instance variables
 		Transform xform;
 		glm::vec3 ldr_color = glm::vec3(1.0f);
-		float hdr_intensity = 3.0f; //used for rendering the mesh with a blur //@hdr_tweak 
+		float hdr_intensity = 5.5f; //used for rendering the mesh with a blur //@hdr_tweak 
 		float external_hdr_intensity = 2.f; //used to drive lighting caculations of external objects; since this dir lights have no attenuation, this value need not be high //@hdr_tweak //#todo may not need to separate these HDR effects after all
 		bool bUseHDR = true;
 		bool bForceCentered = true;

@@ -20,7 +20,8 @@ namespace SA
 			std::vector<size_t> outGoingPathIndices;
 			int64_t optional_defaultPlanetIdx = -1; //leave null to not use one of the default planets
 			float optional_ui_planetSizeFactor = 1.f; //valid on range [0.1,10]
-			sp<SpaceLevelConfig> spaceLevelConfig;
+			//sp<SpaceLevelConfig> spaceLevelConfig;
+			std::string spaceLevelConfig;
 		};
 	protected:
 		virtual void postConstruct() override;

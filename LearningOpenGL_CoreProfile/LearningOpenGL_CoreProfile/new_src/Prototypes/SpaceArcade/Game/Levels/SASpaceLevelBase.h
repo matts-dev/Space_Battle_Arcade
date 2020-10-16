@@ -2,16 +2,21 @@
 #include "../../GameFramework/SALevel.h"
 #include "../Environment/StarJumpData.h"
 
+
+#include "../Environment/Planet.h" //included for init data... probably should be refactored so we can forward declare
+
 namespace SA
 {
 	class ProjectileSystem;
 	class TeamCommander;
 	class StarField;
 	class Star;
-	class Planet;
+	//class Planet; //included for now so that we can functionify the init data part that takes Planet::Data (For space level editor)
+	//struct Planet::Data;
 	class SpaceLevelConfig;
 	class ServerGameMode_SpaceBase;
 	class RNG;
+	struct PlanetData;
 	struct EndGameParameters;
 
 	std::vector<sp<class Planet>> makeRandomizedPlanetArray(RNG& rng);
@@ -43,12 +48,16 @@ namespace SA
 		virtual void postConstruct() override;
 		virtual void tick_v(float dt_sec) override;
 		virtual sp<ServerGameMode_Base> onServerCreateGameMode() override;
+		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned) override;
+		void handleEntityDestroyed(const sp<GameEntity>& entity);
 	protected:
 		//#TODO this will need to be read from a saved config file or something instead. Same for local stars.
 		virtual void onCreateLocalPlanets() {};
 		virtual void onCreateLocalStars();
 		virtual sp<StarField> onCreateStarField();
 		void refreshStarLightMapping();
+	protected:
+		void copyPlanetDataToInitData(const PlanetData& editorData, Planet::Data& outInitData);
 	private:
 		virtual void applyLevelConfig();
 		void transitionToMainMenu();

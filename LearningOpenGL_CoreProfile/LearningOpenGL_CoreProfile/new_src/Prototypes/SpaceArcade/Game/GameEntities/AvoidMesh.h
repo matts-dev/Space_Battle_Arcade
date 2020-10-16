@@ -9,20 +9,22 @@ namespace SA
 	class SpawnConfig;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// represents a static asteroid that AI will avoid
+	// represents a static mesh in world that AI will avoid
+	// Can be used for asteroids, or just general space stations.
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	class Asteroid : public RenderModelEntity
+	class AvoidMesh : public RenderModelEntity
 	{
 	private:
 		using Parent = RenderModelEntity;
 	public:
 		static void setRenderAvoidanceSpheres(bool bRender);
+	public:
 		struct SpawnData
 		{
 			sp<SpawnConfig> spawnConfig;
 			Transform spawnTransform;
 		};
-		Asteroid(const SpawnData& spawnData);
+		AvoidMesh(const SpawnData& spawnData);
 	public:
 		virtual void postConstruct() override;
 		virtual void render(Shader& shader) override;

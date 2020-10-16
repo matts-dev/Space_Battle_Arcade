@@ -139,8 +139,12 @@ namespace SA
 		data.xform.scale *= 10;
 	}
 
-	void Planet::postConstruct()
+	void Planet::setOverrideData(Planet::Data& data)
 	{
+		this->data = data;
+
+		applySizeCorrections();
+
 		AssetSystem& assetSystem = GameBase::get().getAssetSystem();
 
 		planetModel = planetModel ? planetModel : assetSystem.loadModel("GameData/mods/SpaceArcade/Assets/Models3D/Planet/textured_planet.obj");
@@ -154,6 +158,11 @@ namespace SA
 		citylightTex = data.nightCityLightTex_filepath.has_value() ? new_sp<Texture_2D>(data.nightCityLightTex_filepath.value()) : nullptr;
 		colorMapTex = data.colorMapTex_filepath.has_value() ? new_sp<Texture_2D>(data.colorMapTex_filepath.value()) : nullptr;
 		nullBlackTex = assetSystem.getNullBlackTexture();
+	}
+
+	void Planet::postConstruct()
+	{
+		setOverrideData(data);
 	}
 
 	void Planet::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
@@ -286,6 +295,15 @@ namespace SA
 	void Planet::enableStarJump(bool bEnable, bool bSkipTransition /*= false*/)
 	{
 		sj.enableStarJump(bEnable, bSkipTransition);
+	}
+
+	void Planet::updateTransformForData(glm::vec3 offsetDir, float offsetDist)
+	{
+		offsetDir = glm::normalize(offsetDir);
+
+		Transform newXform = {};
+		newXform.position = offsetDir * offsetDist;
+		setTransform(newXform);
 	}
 
 	sp<class Planet> makeRandomPlanet(RNG& rng)

@@ -50,6 +50,7 @@
 #include "UI/GameUI/Widgets3D/HUD/PlayerPilotAssistUI.h"
 #include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
 #include "../Rendering/ForwardRendering/ForwardRenderingStateMachine.h"
+#include "Levels/SpaceLevelEditor_Level.h"
 
 namespace SA
 {
@@ -103,7 +104,8 @@ namespace SA
 		playerPilotAssistUI = new_sp<PlayerPilotAssistUI>();
 
 		//make sure resources are loaded before the level starts
-		sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
+		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
+		sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();
 		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();

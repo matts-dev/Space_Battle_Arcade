@@ -19,6 +19,7 @@ namespace SA
 		std::string serialize();
 		void deserialize(const std::string& fileAsStr);
 
+		void const setNewFileName(const std::string& newFileName) { fileName = newFileName; }
 		const std::string& getName() const { return fileName; }
 		bool isDeletable() const { return bIsDeletable; }
 		const std::string& getOwningModDir() const { return owningModDir; }

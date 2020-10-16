@@ -1,0 +1,38 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": false,
+        "name": "level1"
+    },
+    "level1": {
+        "avoidanceMeshes": [
+            {
+                "avoidanceDatum.spawnConfigName": "asteroid_plain",
+                "avoidanceDatum.spawnTransform": {
+                    "avoidanceDatum.spawnTransform.position": [
+                        1.0,
+                        2.0,
+                        3.0
+                    ],
+                    "avoidanceDatum.spawnTransform.rotQuat": [
+                        0.008265383541584015,
+                        0.01767415925860405,
+                        0.02601972036063671,
+                        0.9994710087776184
+                    ],
+                    "avoidanceDatum.spawnTransform.scale": [
+                        1.0,
+                        1.100000023841858,
+                        1.2000000476837158
+                    ]
+                }
+            }
+        ],
+        "carrierGamemodeData": {
+            "carrierGamemodeData.teams": null
+        },
+        "gamemodeTag": "",
+        "planets": null,
+        "stars": null,
+        "userFacingName": "levelname"
+    }
+}

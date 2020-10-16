@@ -570,13 +570,14 @@ namespace SA
 		}
 	}
 
-	void StressTestLevel::handleEntityDestroyed(const sp<GameEntity>& entity)
-	{
-		if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(entity))
-		{
-			unspawnEntity<Ship>(ship);
-		}
-	}
+	//void StressTestLevel::handleEntityDestroyed(const sp<GameEntity>& entity)
+	//{
+	//	//#todo this should hanlde more than just ships
+	//	//if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(entity))
+	//	//{
+	//	//	unspawnEntity<Ship>(ship);
+	//	//}
+	//}
 
 	void StressTestLevel::handleDebugCameraRequested(int state, int modifier_keys, int scancode)
 	{
@@ -766,11 +767,13 @@ namespace SA
 
 	void StressTestLevel::onEntitySpawned_v(const sp<WorldEntity>& spawned)
 	{
+		Parent::onEntitySpawned_v(spawned);
+
 		if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(spawned))
 		{
 			spawnedShips.insert(ship);
 
-			ship->onDestroyedEvent->addWeakObj(sp_this(), &StressTestLevel::handleEntityDestroyed);
+			//ship->onDestroyedEvent->addWeakObj(sp_this(), &StressTestLevel::handleEntityDestroyed);
 		}
 	}
 

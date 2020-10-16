@@ -44,7 +44,7 @@
 #include "../Cameras/SAShipCamera.h"
 #include "../Components/FighterSpawnComponent.h"
 #include "../GameModes/ServerGameMode_CarrierTakedown.h"
-#include "../GameEntities/Asteroid.h"
+#include "../GameEntities/AvoidMesh.h"
 
 namespace SA
 {
@@ -355,13 +355,13 @@ namespace SA
 					{
 						if (const sp<SpawnConfig>& asteroidDefaultConfig = iter->second)
 						{
-							Asteroid::SpawnData asteroidSpawn;
+							AvoidMesh::SpawnData asteroidSpawn;
 							asteroidSpawn.spawnConfig = asteroidDefaultConfig;
 
 							//#todo set up asteroid spawn
 							asteroidSpawn.spawnTransform.position = glm::vec3(0.f);
 							asteroidSpawn.spawnTransform.scale = glm::vec3(10.f);
-							sp<Asteroid> testAsteroid = spawnEntity<Asteroid>(asteroidSpawn);
+							sp<AvoidMesh> testAsteroid = spawnEntity<AvoidMesh>(asteroidSpawn);
 						}
 					}
 				}
@@ -507,7 +507,7 @@ namespace SA
 				if(ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSphereProxy))
 				{
 					Ship::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);
-					Asteroid::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);
+					AvoidMesh::setRenderAvoidanceSpheres(bRenderAvoidanceSphereProxy);
 				}
 				ImGui::Checkbox("Render Projectile OBBs", &game.bRenderProjectileOBBs);
 
@@ -638,13 +638,14 @@ namespace SA
 		}
 	}
 
-	void BasicTestSpaceLevel::handleEntityDestroyed(const sp<GameEntity>& entity)
-	{
-		if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(entity))
-		{
-			unspawnEntity<Ship>(ship);
-		}
-	}
+	//void BasicTestSpaceLevel::handleEntityDestroyed(const sp<GameEntity>& entity)
+	//{
+	//	//#todo this should hanlde more than just ships
+	//	//if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(entity))
+	//	//{
+	//	//	unspawnEntity<Ship>(ship);
+	//	//}
+	//}
 
 	void BasicTestSpaceLevel::handleDebugCameraRequested(int state, int modifier_keys, int scancode)
 	{
@@ -834,11 +835,13 @@ namespace SA
 
 	void BasicTestSpaceLevel::onEntitySpawned_v(const sp<WorldEntity>& spawned)
 	{
+		Parent::onEntitySpawned_v(spawned);
+
 		if (sp<Ship> ship = std::dynamic_pointer_cast<Ship>(spawned))
 		{
 			spawnedShips.insert(ship);
 
-			ship->onDestroyedEvent->addWeakObj(sp_this(), &BasicTestSpaceLevel::handleEntityDestroyed);
+			//ship->onDestroyedEvent->addWeakObj(sp_this(), &BasicTestSpaceLevel::handleEntityDestroyed);
 		}
 	}
 

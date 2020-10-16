@@ -10,6 +10,7 @@
 #include "../../GameSystems/SAModSystem.h"
 #include "../../../GameFramework/SACrossPlatformUtils.h"
 #include "../../Levels/StressTestLevel.h"
+#include "../../Levels/SpaceLevelEditor_Level.h"
 
 namespace SA
 {
@@ -117,6 +118,11 @@ namespace SA
 			{
 				sp<LevelBase> modelEditor = new_sp<ModelConfigurerEditor_Level>();
 				SpaceArcade::get().getLevelSystem().loadLevel(modelEditor);
+			}
+			if (ImGui::Button("Level Editor"))
+			{
+				sp<LevelBase> levelEditor = new_sp<SpaceLevelEditor_Level>();
+				SpaceArcade::get().getLevelSystem().loadLevel(levelEditor);
 			}
 			if (ImGui::Button("Projectile Editor"))
 			{

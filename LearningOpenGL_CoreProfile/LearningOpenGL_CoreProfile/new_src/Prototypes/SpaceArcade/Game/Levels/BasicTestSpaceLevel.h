@@ -16,10 +16,11 @@ namespace SA
 	class AIDebuggerWidget;
 	class ParticleConfig;
 	class RNG;
-	class Asteroid;
+	class AvoidMesh;
 
 	class BasicTestSpaceLevel : public SpaceLevelBase
 	{
+		using Parent = SpaceLevelBase;
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
 		virtual bool isTestLevel() override { return true; }
@@ -37,7 +38,7 @@ namespace SA
 		void handleRightMouseButton(int state, int modifier_keys);
 		void handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active);
 		void handleUIFrameStarted();
-		void handleEntityDestroyed(const sp<GameEntity>& entity);
+		//void handleEntityDestroyed(const sp<GameEntity>& entity);
 
 		void handleDebugCameraRequested(int state, int modifier_keys, int scancode);
 		void handleSpectateDetachPressed(int state, int modifier_keys, int scancode);
