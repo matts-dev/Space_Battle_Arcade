@@ -42,6 +42,7 @@
 #include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 #include "../Cameras/SAShipCamera.h"
 #include "../Components/FighterSpawnComponent.h"
+#include "../Environment/Nebula.h"
 
 namespace SA
 {
@@ -646,6 +647,11 @@ namespace SA
 			for (const sp<Planet>& planet : planets)
 			{
 				planet->setForceCentered(bNavigable); //#TODO probably a good idea at this point to create an "CelestialEnvironmentObj" base class for the shared functionality
+			}
+
+			for (const sp<Nebula>& nebulum : nebulae)
+			{
+				nebulum->setForceCentered(bNavigable);
 			}
 		}
 	}

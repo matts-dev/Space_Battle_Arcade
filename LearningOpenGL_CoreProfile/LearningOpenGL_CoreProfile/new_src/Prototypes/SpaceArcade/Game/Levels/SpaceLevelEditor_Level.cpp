@@ -15,6 +15,8 @@
 #include "../Environment/Star.h"
 #include "../Environment/Planet.h"
 #include "../Environment/StarField.h"
+#include "../Environment/Nebula.h"
+#include "../../Rendering/Camera/Texture_2D.h"
 
 namespace SA
 {
@@ -143,13 +145,9 @@ namespace SA
 					{
 						if (ImGui::Selectable(kvPair.first.c_str(), curConfigIdx == selectedLevelIndex))
 						{
-							//pressing button will fire this, but also if currIdx==selectedIdx. only update things if we're changing data
-							//if (selectedLevelIndex != curConfigIdx) 
-							//{
-								activeLevelConfig = kvPair.second;
-								selectedLevelIndex = curConfigIdx;
-								onActiveLevelConfigSet(activeLevelConfig);
-							//}
+							activeLevelConfig = kvPair.second;
+							selectedLevelIndex = curConfigIdx;
+							onActiveLevelConfigSet(activeLevelConfig);
 						}
 						++curConfigIdx;
 					}
@@ -379,6 +377,8 @@ namespace SA
 			// stars
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			{
+				ImGui::Dummy(ImVec2(0, 10));
+
 				bool bDirty_stars = false;
 				ImGui::Text("Local Stars");
 				static size_t selectedStarIdx = 0;
@@ -429,11 +429,15 @@ namespace SA
 					}
 				}
 			}
+			ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
+			ImGui::Separator();
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// planets
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			{
+				ImGui::Dummy(ImVec2(0, 10));
+
 				bool bDirty_Planet = false;
 				static size_t selectedPlanetIdx = 0;
 
@@ -441,7 +445,7 @@ namespace SA
 				if (planets_editor.size() > 0)
 				{
 					size_t planetIdx = 0;
-					for (const PlanetData& star : planets_editor)
+					for (const PlanetData& planet : planets_editor)
 					{
 						if (ImGui::Selectable(textWithIdx("planet [%d]", planetIdx), planetIdx == selectedPlanetIdx))
 						{
@@ -462,7 +466,7 @@ namespace SA
 					bDirty_Planet = true;
 				}
 
-				//modify selected star
+				//modify selected planet
 				if (Utils::isValidIndex(planets_editor, selectedPlanetIdx))
 				{
 					PlanetData& selectedPlanet = planets_editor[selectedPlanetIdx];
@@ -497,6 +501,127 @@ namespace SA
 					}
 				}
 			}
+			ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
+			ImGui::Separator();
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// nebula
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			{
+				ImGui::Dummy(ImVec2(0, 10));
+				bool bDirty_Nebula = false;
+				bool bSelectedNebulaThisFrame = false;
+				static size_t selectedNebulaIdx = 0;
+
+				//select a nebula
+				if (nebulaData_editor.size() > 0)
+				{
+					size_t nebulaIdx = 0;
+					for (const NebulaData& nebula : nebulaData_editor)
+					{
+						if (ImGui::Selectable(textWithIdx("nebula [%d]", nebulaIdx), nebulaIdx == selectedNebulaIdx))
+						{
+							if (selectedNebulaIdx != nebulaIdx) 
+							{ 
+								selectedNebulaIdx = nebulaIdx; 
+								bSelectedNebulaThisFrame = true;
+							}
+						}
+						++nebulaIdx;
+					}
+				}
+				if (ImGui::Button("Push nebula"))
+				{
+					nebulaData_editor.emplace_back();
+					nebulaData_editor.back().transform.position = glm::vec3(1.f);
+					bDirty_Nebula = true;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Pop nebula") && nebulaData_editor.size() > 0)
+				{
+					nebulaData_editor.pop_back();
+					bDirty_Nebula = true;
+				}
+
+				//modify selected nebula
+				if (Utils::isValidIndex(nebulaData_editor, selectedNebulaIdx))
+				{
+					NebulaData& selectedNebulaData = nebulaData_editor[selectedNebulaIdx];
+
+					float sliderBounds = 10.f;
+
+					bDirty_Nebula |= ImGui::ColorPicker3("nebula color", &selectedNebulaData.tintColor.r);
+					bDirty_Nebula |= ImGui::SliderFloat3("nebula position", &selectedNebulaData.transform.position.x, -sliderBounds, sliderBounds);
+					{ 
+						//glm::vec3 nebDirection = selectedNebulaData.transform.position; //relative to origin
+						//float nebDist = glm::length(nebDirection);
+						//const float small_number = 0.0001f;
+						//nebDirection = nebDist <= small_number ? glm::vec3(0.01f) : nebDirection;
+						//nebDist = nebDist <= 0.0001 ? 0.1f : nebDist; //zero check
+						//bDirty_Nebula |= ImGui::SliderFloat3("nebula direction", &nebDirection.x, -1.f, 1.f);
+						//bDirty_Nebula |= ImGui::SliderFloat("nebula dist", &nebDist, -sliderBounds, sliderBounds);
+					}
+					bDirty_Nebula |= ImGui::SliderFloat3("nebula scale", &selectedNebulaData.transform.scale.x, 0, 2*	sliderBounds);
+
+					//selectedNebula.offsetDir = selectedNebula.offsetDir.has_value() ? selectedNebula.offsetDir : glm::vec3(1.f); //make sure optional has value
+					//bDirty_Nebula |= ImGui::InputFloat3("nebula offsetDir", &selectedNebula.offsetDir->x);
+
+					//selectedNebula.offsetDistance = selectedNebula.offsetDistance.has_value() ? selectedNebula.offsetDistance : 1.f; //make sure optional has value
+					//bDirty_Nebula |= ImGui::InputFloat("nebula offset distance", &selectedNebula.offsetDistance.value());
+
+					static bool bUseDefaultNebulaTexture = true;
+					ImGui::Checkbox("use default nebula texture", &bUseDefaultNebulaTexture);
+					if (!bUseDefaultNebulaTexture)
+					{
+						static char texturePathBuffer[2046];
+						if (bSelectedNebulaThisFrame)
+						{
+							//copy previous string / clear out field
+							size_t savedStrSize = selectedNebulaData.texturePath.length() + 1;
+							std::memcpy(texturePathBuffer, selectedNebulaData.texturePath.c_str(), sizeof(texturePathBuffer) <= savedStrSize ? sizeof(texturePathBuffer) : savedStrSize);
+							texturePathBuffer[sizeof(texturePathBuffer) - 1] = 0; //make sure we always null terminate since we're using memcpy
+						}
+						if (ImGui::InputText("nebula texture file path", texturePathBuffer, sizeof(texturePathBuffer)))
+						{
+							selectedNebulaData.texturePath = texturePathBuffer;
+							bDirty_Nebula = true;
+						}
+					}
+					else 
+					{
+						std::string defaultTexturePath = /*activeMod->getModDirectoryPath() + */"Assets/Textures/nebula2.png";
+						//std::string defaultTexturePath = "GameData/mods/SpaceArcade/Assets/Textures/nebula2.png";
+						if (selectedNebulaData.texturePath != defaultTexturePath)
+						{
+							selectedNebulaData.texturePath = defaultTexturePath;
+							bDirty_Nebula = true;
+						}
+					}
+
+					if (Utils::isValidIndex(nebulae, selectedNebulaIdx))
+					{
+						if (sp<Nebula> selectedNebulaPtr = nebulae[selectedNebulaIdx])
+						{
+							const sp<Texture_2D>& texture = selectedNebulaPtr->getTexture();
+							if (texture && texture->isLoadedSuccessfully())	{ImGui::Text("Nebula texture loaded");}
+							else											{ImGui::Text("Nebula texture failed to load");}
+						}
+					}
+
+					if (bDirty_Nebula)
+					{
+						//convert direction * distance to regulard transform.
+						//if (Utils::isValidIndex(nebulaData_editor, selectedNebulaIdx))
+						//{
+						//	nebulaData_editor[selectedNebulaIdx].transform.position = nebDist * glm::normalize(nebDirection);
+						//}
+						
+						updateLevelData_Nebula();
+					}
+				}
+			}
+			ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
+			ImGui::Separator();
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// starfield
@@ -543,10 +668,14 @@ namespace SA
 
 			localStarData_editor = newConfig->stars;
 			planets_editor = newConfig->planets;
+			nebulaData_editor = newConfig->nebulaData;
 
 			//force refresh so we render correct things 
 			updateLevelData_Planets();
 			updateLevelData_Star();
+			updateLevelData_Nebula();
+			
+
 		}
 		else
 		{
@@ -578,7 +707,7 @@ namespace SA
 		return nullptr;
 	}
 
-	void SpaceLevelEditor_Level::updateConfigAvoidMeshes()
+	void SpaceLevelEditor_Level::writeConfigAvoidMeshes()
 	{
 		if (activeLevelConfig)
 		{
@@ -617,8 +746,8 @@ namespace SA
 				localStars[sunIdx]->updateXformForData(*localStarData_editor[sunIdx].offsetDir, *localStarData_editor[sunIdx].offsetDistance);
 
 				//copy this to config, so if we save the data gets serialized to json
-				activeLevelConfig->stars = localStarData_editor;
-				activeLevelConfig->numStars = localStarData_editor.size();
+				//activeLevelConfig->stars = localStarData_editor;
+				//activeLevelConfig->numStars = localStarData_editor.size();
 			}
 
 			refreshStarLightMapping();
@@ -649,18 +778,67 @@ namespace SA
 				planets[planetIdx]->setOverrideData(initData);
 				planets[planetIdx]->updateTransformForData(*planets_editor[planetIdx].offsetDir, *planets_editor[planetIdx].offsetDistance);
 
+				//don't do this naymore... doesn't make sense to read the data then write it back ... thae work flow is isn't good
 				//copy this to config, so if we save the data gets serialized to json
-				activeLevelConfig->planets = planets_editor;
-				activeLevelConfig->numPlanets = planets_editor.size();
+				//activeLevelConfig->planets = planets_editor;
+				//activeLevelConfig->numPlanets = planets_editor.size();
 			}
+		}
+	}
+
+	void SpaceLevelEditor_Level::updateLevelData_Nebula()
+	{
+		if (activeLevelConfig)
+		{
+			if (nebulae.size() > nebulaData_editor.size())
+			{
+				//trim off extra nebula, do not grow -- we will do that below to prevent null pointers
+				nebulae.resize(nebulaData_editor.size());
+			}
+
+			size_t nebulaIdx = 0;
+			for (const NebulaData& nebulaData : nebulaData_editor)
+			{
+				Nebula::Data overrideData;
+				overrideData.textureRelativePath = nebulaData.texturePath;
+				overrideData.tintColor = nebulaData.tintColor;
+
+				if (!Utils::isValidIndex(nebulae, nebulaIdx))
+				{
+					nebulae.push_back(new_sp<Nebula>(overrideData));
+				}
+
+				const sp<Nebula>& nebula = nebulae[nebulaIdx];
+				nebula->setXform(nebulaData.transform);
+				nebula->setOverrideData(overrideData);
+
+				++nebulaIdx;
+			}
+
+			//write data back
+			//activeLevelConfig->nebulaData = nebulaData_editor;
 		}
 	}
 
 	void SpaceLevelEditor_Level::saveActiveConfig()
 	{
-		updateConfigAvoidMeshes();
-		updateLevelData_Star();
-		updateLevelData_Planets();
+		//don't call updates here anymore... that is also reading the config
+		writeConfigAvoidMeshes();
+
+		//updateLevelData_Star();
+		//updateLevelData_Planets();
+		//updateLevelData_Nebula();
+
+		//write star data
+		activeLevelConfig->stars = localStarData_editor;
+		activeLevelConfig->numStars = localStarData_editor.size();
+
+		//write planet data
+		activeLevelConfig->planets = planets_editor;
+		activeLevelConfig->numPlanets = planets_editor.size();
+
+		//write nebula data
+		activeLevelConfig->nebulaData = nebulaData_editor;
 
 		activeLevelConfig->save();
 	}
@@ -734,6 +912,11 @@ namespace SA
 				for (const sp<Planet>& planet : planets)
 				{
 					planet->setForceCentered(bNavigable); //#TODO probably a good idea at this point to create an "CelestialEnvironmentObj" base class for the shared functionality
+				}
+
+				for (const sp<Nebula>& nebulum : nebulae)
+				{
+					nebulum->setForceCentered(bNavigable);
 				}
 			}
 		}

@@ -49,6 +49,12 @@ namespace SA
 		Transform spawnTransform;
 		std::string spawnConfigName;
 	};
+	struct NebulaData
+	{
+		std::string texturePath = "";
+		Transform transform{ }; //position, scale, and rotation data
+		glm::vec3 tintColor{ 1.f };
+	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Class that holds the data for initializing a space level
@@ -112,6 +118,7 @@ namespace SA
 
 		//size_t numAvoidanceMeshs = 0;
 		std::vector<WorldAvoidanceMeshData> avoidanceMeshes;
+		std::vector<NebulaData> nebulaData;
 
 		size_t numPlanets = 0;
 		std::vector<PlanetData> planets;

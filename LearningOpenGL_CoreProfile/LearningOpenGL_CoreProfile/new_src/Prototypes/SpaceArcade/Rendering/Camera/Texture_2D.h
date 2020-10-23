@@ -14,6 +14,7 @@ namespace SA
 	public:
 		unsigned int getTextureId() const { return textureId; }
 		void bindTexture(unsigned int textureSlot);
+		bool isLoadedSuccessfully() { return bLoadSuccess; }
 	private:
 		virtual void onAcquireGPUResources() override;
 		virtual void onReleaseGPUResources() override;

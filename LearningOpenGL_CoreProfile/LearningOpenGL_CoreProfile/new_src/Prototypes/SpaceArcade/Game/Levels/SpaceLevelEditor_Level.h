@@ -28,9 +28,10 @@ namespace SA
 	private:
 		void onActiveLevelConfigSet(const sp<SpaceLevelConfig>& newConfig);
 		sp<AvoidMesh> spawnEditorDemoAvoidanceMesh(const std::string& spawnConfigName, const Transform& xform);
-		void updateConfigAvoidMeshes();
+		void writeConfigAvoidMeshes();
 		void updateLevelData_Star();
 		void updateLevelData_Planets();
+		void updateLevelData_Nebula();
 		void saveActiveConfig();
 		void createNewLevel(const std::string& fileName, const std::string& userFacingName);
 		//void saveAvoidanceMesh(size_t index);
@@ -44,6 +45,7 @@ namespace SA
 		std::vector<AvoidMeshEditorData> avoidMeshData;
 		std::vector<PlanetData> planets_editor;
 		std::vector<StarData> localStarData_editor;
+		std::vector<NebulaData> nebulaData_editor;
 		sp<SpaceLevelConfig> activeLevelConfig = nullptr;
 	};
 }

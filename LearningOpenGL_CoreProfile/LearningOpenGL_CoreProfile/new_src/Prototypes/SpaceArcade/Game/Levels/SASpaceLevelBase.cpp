@@ -40,6 +40,7 @@
 #include "../../GameFramework/RenderModelEntity.h"
 #include "../../GameFramework/SAWorldEntity.h"
 #include "../Cameras/SAShipCamera.h"
+#include "../Environment/Nebula.h"
 
 namespace SA
 {
@@ -65,6 +66,18 @@ namespace SA
 			todo_update_star_shader_to_be_deferred;
 			todo_update_planet_shader_to_be_deferred;
 #endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
+
+			//render space clouds!
+			ec(glEnable(GL_BLEND));
+			ec(glDisable(GL_DEPTH_TEST)); //don't use depth testing while rendering nebula
+			ec(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+			for (const sp<Nebula>& nebulum : nebulae) 
+			{
+				nebulum->render(*FRD);
+			}
+			//ec(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+			ec(glEnable(GL_DEPTH_TEST));
+			ec(glDisable(GL_BLEND));
 
 			if (starField)
 			{
@@ -337,6 +350,11 @@ namespace SA
 		for (const sp<Star>& star : localStars)
 		{
 			star->enableStarJump(bEnable, bSkipTransition);
+		}
+
+		for (const sp<Nebula>& nebula : nebulae)
+		{
+			nebula->enableStarJump(bEnable, bSkipTransition);
 		}
 
 		const std::vector<sp<PlayerBase>>& allPlayers = GameBase::get().getPlayerSystem().getAllPlayers();

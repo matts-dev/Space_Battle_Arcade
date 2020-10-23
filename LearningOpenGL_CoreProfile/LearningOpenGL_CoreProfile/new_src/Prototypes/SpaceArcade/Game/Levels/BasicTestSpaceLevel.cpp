@@ -45,6 +45,7 @@
 #include "../Components/FighterSpawnComponent.h"
 #include "../GameModes/ServerGameMode_CarrierTakedown.h"
 #include "../GameEntities/AvoidMesh.h"
+#include "../Environment/Nebula.h"
 
 namespace SA
 {
@@ -705,7 +706,9 @@ namespace SA
 		{
 			//make the environment on a similar scale as the ships for debugging.
 			bool bNavigable = !starField->getForceCentered();
+
 			starField->setForceCentered(bNavigable);
+
 			for (const sp<Star>& star : localStars)
 			{
 				star->setForceCentered(bNavigable);
@@ -714,6 +717,11 @@ namespace SA
 			for (const sp<Planet>& planet : planets)
 			{
 				planet->setForceCentered(bNavigable); //#TODO probably a good idea at this point to create an "CelestialEnvironmentObj" base class for the shared functionality
+			}
+
+			for (const sp<Nebula>& nebulum : nebulae)
+			{
+				nebulum->setForceCentered(bNavigable);
 			}
 		}
 	}

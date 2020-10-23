@@ -203,6 +203,20 @@ namespace SA
 		spaceLevelData[SYMBOL_TO_STR(avoidanceMeshes)] = avoidanceArray;
 
 		////////////////////////////////////////////////////////
+		// nebula data
+		////////////////////////////////////////////////////////
+		json nebulaArrayJson;
+		for (const NebulaData& nebula : nebulaData)
+		{
+			json nebulaJson;
+			JSON_WRITE(nebula.texturePath, nebulaJson);
+			JSON_WRITE_VEC3(nebula.tintColor, nebulaJson);
+			JSON_WRITE_TRANSFORM(nebula.transform, nebulaJson);
+			nebulaArrayJson.push_back(nebulaJson);
+		}
+		spaceLevelData[SYMBOL_TO_STR(nebulaData)] = nebulaArrayJson;
+
+		////////////////////////////////////////////////////////
 		// carrier game mode data
 		////////////////////////////////////////////////////////
 		json json_carrierGamemodeData;
@@ -322,12 +336,31 @@ namespace SA
 					avoidanceMeshes.emplace_back();
 					WorldAvoidanceMeshData& avoidanceDatum = avoidanceMeshes.back();
 
-					json avoidanceJson = avoidanceArray[meshIdx];
+					const json& avoidanceJson = avoidanceArray[meshIdx];
 					READ_JSON_TRANSFORM_OPTIONAL(avoidanceDatum.spawnTransform, avoidanceJson);
 					READ_JSON_STRING_OPTIONAL(avoidanceDatum.spawnConfigName, avoidanceJson);
 				}
 			}
 
+			////////////////////////////////////////////////////////
+			// read nebula data
+			////////////////////////////////////////////////////////
+			if (JsonUtils::hasArray(spaceLevelConfigJson, SYMBOL_TO_STR(nebulaData)))
+			{
+				nebulaData.clear(); //reset all data and refresh it
+
+				const json& nebulumArray = spaceLevelConfigJson[SYMBOL_TO_STR(nebulaData)];
+				for (size_t nebIdx = 0; nebIdx < nebulumArray.size(); ++nebIdx)
+				{
+					nebulaData.emplace_back();
+					NebulaData& nebula = nebulaData.back();
+
+					const json& nebulaJson = nebulumArray[nebIdx];
+					READ_JSON_STRING_OPTIONAL(nebula.texturePath, nebulaJson);
+					READ_JSON_VEC3_OPTIONAL(nebula.tintColor, nebulaJson);
+					READ_JSON_TRANSFORM_OPTIONAL(nebula.transform, nebulaJson);
+				}
+			}
 
 			////////////////////////////////////////////////////////
 			// read carrier take down game data

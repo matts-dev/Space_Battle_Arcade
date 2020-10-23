@@ -31,8 +31,61 @@
             "carrierGamemodeData.teams": null
         },
         "gamemodeTag": "",
-        "planets": null,
-        "stars": null,
+        "nebulaData": [
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.9900332093238831,
+                    0.4506131410598755,
+                    0.4506131410598755
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        2.9670000076293945,
+                        1.0,
+                        1.0
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        2.197999954223633,
+                        2.4179999828338623,
+                        1.0
+                    ]
+                }
+            }
+        ],
+        "planets": [
+            {
+                "environmentBodyData.offsetDir": [
+                    -1.0,
+                    -1.0,
+                    1.0
+                ],
+                "environmentBodyData.offsetDistance": 10.0,
+                "planetData.bHasCivilization": false,
+                "planetData.texturePath": null
+            }
+        ],
+        "stars": [
+            {
+                "environmentBodyData.offsetDir": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "environmentBodyData.offsetDistance": 10.0,
+                "starData.color": [
+                    0.9875413179397583,
+                    1.0,
+                    0.8837209343910217
+                ]
+            }
+        ],
         "userFacingName": "levelname"
     }
 }
