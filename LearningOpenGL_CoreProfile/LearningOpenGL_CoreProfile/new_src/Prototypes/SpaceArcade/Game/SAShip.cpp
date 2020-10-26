@@ -66,9 +66,16 @@ namespace SA
 		collisionData(spawnData.spawnConfig->toCollisionInfo()),
 		cachedTeamIdx(spawnData.team)
 	{
+		if (spawnData.bEditorMode)
+		{
+			bEditorMode = true;
+			configureForEditorMode(spawnData);
+			return;
+		}
+
+		shipConfigData = spawnData.spawnConfig;
 		overlappingNodes_SH.reserve(10);
 		primaryProjectile = spawnData.spawnConfig->getPrimaryProjectileConfig();
-		shipConfigData = spawnData.spawnConfig;
 		bCollisionReflectForward = shipConfigData->getCollisionReflectForward();
 
 		ctor_configureObjectivePlacements();
@@ -147,6 +154,11 @@ namespace SA
 
 	void Ship::postConstruct()
 	{
+		if (bEditorMode)
+		{
+			return;
+		}
+
 		rng = GameBase::get().getRNGSystem().getTimeInfluencedRNG();
 
 		for (const AvoidanceSphereSubConfig& sphereConfig : shipConfigData->getAvoidanceSpheres())
@@ -714,6 +726,7 @@ namespace SA
 	void Ship::tick(float dt_sec)
 	{
 		using namespace glm;
+		if (bEditorMode) {return;}
 
 		energyComp->notify_tick(dt_sec);
 
@@ -1340,6 +1353,17 @@ namespace SA
 			}
 		}
 		engineFireParticlesFX.clear();
+	}
+
+	void Ship::configureForEditorMode(const SpawnData& spawnData)
+	{
+		shipConfigData = spawnData.spawnConfig;
+
+		if (TeamComponent* teamComp = !hasGameComponent<TeamComponent>() ? createGameComponent<TeamComponent>() : getGameComponent<TeamComponent>())
+		{
+			teamComp->setTeam(cachedTeamIdx);
+			updateTeamDataCache();
+		}
 	}
 
 	void Ship::handlePlacementDestroyed(const sp<GameEntity>& entity)

@@ -7,6 +7,7 @@ namespace SA
 	class PlayerBase;
 	class SpaceLevelConfig;
 	class AvoidMesh;
+	class Ship;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Level used to design campaign levels. 
@@ -23,6 +24,7 @@ namespace SA
 		void handlePlayerCreated(const sp<PlayerBase>& player, uint32_t playerIdx);
 		void handleKey(int key, int state, int modifier_keys, int scancode);
 		void renderUI_levelLoadingSaving();
+		void renderUI_gamemodeData();
 		void renderUI_avoidMeshPlacement();
 		void renderUI_environment();
 	private:
@@ -32,6 +34,9 @@ namespace SA
 		void updateLevelData_Star();
 		void updateLevelData_Planets();
 		void updateLevelData_Nebula();
+		void updateLevelData_Carriers(SpaceLevelConfig& newConfig);
+		void clearCarriers();
+		//void updateLevelData_StarField(); //we're modifying the config directly, no need to od this
 		void saveActiveConfig();
 		void createNewLevel(const std::string& fileName, const std::string& userFacingName);
 		//void saveAvoidanceMesh(size_t index);
@@ -46,6 +51,9 @@ namespace SA
 		std::vector<PlanetData> planets_editor;
 		std::vector<StarData> localStarData_editor;
 		std::vector<NebulaData> nebulaData_editor;
+		std::vector<std::vector<sp<Ship>>> teamPlaceholderCarriers;
 		sp<SpaceLevelConfig> activeLevelConfig = nullptr;
+
+		bool bForceCarrierTakedownGMDataRefresh = false;
 	};
 }

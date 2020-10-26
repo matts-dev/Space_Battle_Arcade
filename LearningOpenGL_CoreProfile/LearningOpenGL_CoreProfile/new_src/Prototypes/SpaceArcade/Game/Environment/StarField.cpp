@@ -146,6 +146,14 @@ namespace SA
 	)";
 
 
+	StarField::StarField(const StarField::InitData& init /*= InitData()*/)
+	{
+		if (init.colorScheme.has_value())
+		{
+			colorScheme = *init.colorScheme;
+		}
+	}
+
 	void StarField::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 	{
 		if (hasAcquiredResources())
@@ -527,6 +535,18 @@ namespace SA
 			sfx_starJumpWindDown->stop();
 		}
 	}
+
+	void StarField::regenerate()
+	{
+		bGenerated = false;
+
+		bool bGpuResourceAvailable = hasAcquiredResources();
+
+		if(bGpuResourceAvailable) onReleaseGPUResources();
+		generateStarField();
+		if (bGpuResourceAvailable) onAcquireGPUResources();
+	}
+
 
 }
 

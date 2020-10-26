@@ -4,6 +4,7 @@
 
 #include "../../AssetConfigs/SAConfigBase.h"
 #include "../../../Tools/DataStructures/SATransform.h"
+#include "../../../Tools/color_utils.h"
 
 namespace SA
 {
@@ -97,8 +98,11 @@ namespace SA
 		void addAvoidanceMesh(const WorldAvoidanceMeshData& avoidanceMesh) { avoidanceMeshes.push_back(avoidanceMesh); }
 
 		const std::string& getGamemodeTag() const { return gamemodeTag; }
+		void setGamemodeTag(const std::string tag) { gamemodeTag = tag; }
 		const GameModeData_CarrierTakedown& getGamemodeData_CarrierTakedown() const { return carrierGamemodeData; }
 		void setGamemodeData_CarrierTakedown(const GameModeData_CarrierTakedown& inData) { carrierGamemodeData = inData; }
+
+		std::array<glm::vec3, 3> getDistantStarColorScheme() const { return std::array<glm::vec3, 3>{distantStarColor1, distantStarColor2, distantStarColor3}; }
 
 		std::string getUserFacingName() { return userFacingName; }
 	public:
@@ -126,7 +130,11 @@ namespace SA
 		size_t numStars = 0;
 		std::vector<StarData> stars;
 
-		std::string gamemodeTag;
+		glm::vec3 distantStarColor1 = color::lightYellow();
+		glm::vec3 distantStarColor2 = color::red();
+		glm::vec3 distantStarColor3 = color::blue();
+
+		std::string gamemodeTag = TAG_GAMEMODE_CARRIER_TAKEDOWN;
 		GameModeData_CarrierTakedown carrierGamemodeData;
 
 	};

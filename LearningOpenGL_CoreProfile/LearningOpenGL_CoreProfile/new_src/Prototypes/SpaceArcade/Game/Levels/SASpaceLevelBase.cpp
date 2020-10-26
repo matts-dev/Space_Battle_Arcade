@@ -614,7 +614,12 @@ namespace SA
 	sp<SA::StarField> SpaceLevelBase::onCreateStarField()
 	{
 		//by default generate a star field, if no star field should be in the level return null in an override;
-		sp<StarField> defaultStarfield = new_sp<StarField>();
+		StarField::InitData initStarField;
+		if (levelConfig)
+		{
+			initStarField.colorScheme = levelConfig->getDistantStarColorScheme();;
+		}
+		sp<StarField> defaultStarfield = new_sp<StarField>(initStarField);
 		return defaultStarfield; 
 	}
 

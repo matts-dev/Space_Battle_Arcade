@@ -28,9 +28,67 @@
             }
         ],
         "carrierGamemodeData": {
-            "carrierGamemodeData.teams": null
+            "carrierGamemodeData.teams": [
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                -214.0,
+                                -75.0,
+                                -28.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                -60.0,
+                                9.0,
+                                0.0
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                -129.0,
+                                196.0,
+                                0.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                0.0,
+                                -46.0,
+                                0.0
+                            ]
+                        }
+                    ]
+                }
+            ]
         },
-        "gamemodeTag": "",
+        "distantStarColor1": [
+            1.0,
+            1.0,
+            0.4000000059604645
+        ],
+        "distantStarColor2": [
+            1.0,
+            0.0,
+            0.0
+        ],
+        "distantStarColor3": [
+            0.0,
+            0.0,
+            1.0
+        ],
+        "gamemodeTag": "Carrier Takedown",
         "nebulaData": [
             {
                 "nebula.texturePath": "Assets/Textures/nebula2.png",

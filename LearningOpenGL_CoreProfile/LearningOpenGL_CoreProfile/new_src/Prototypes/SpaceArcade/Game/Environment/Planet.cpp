@@ -134,16 +134,16 @@ namespace SA
 	// Instance Members
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void Planet::applySizeCorrections()
-	{
-		data.xform.scale *= 10;
-	}
+	//void Planet::applySizeCorrections()
+	//{
+	//	data.xform.scale *= 10;
+	//}
 
 	void Planet::setOverrideData(Planet::Data& data)
 	{
 		this->data = data;
 
-		applySizeCorrections();
+		//applySizeCorrections(); //disabling as there is no clear reason why this exists.
 
 		AssetSystem& assetSystem = GameBase::get().getAssetSystem();
 
@@ -158,6 +158,11 @@ namespace SA
 		citylightTex = data.nightCityLightTex_filepath.has_value() ? new_sp<Texture_2D>(data.nightCityLightTex_filepath.value()) : nullptr;
 		colorMapTex = data.colorMapTex_filepath.has_value() ? new_sp<Texture_2D>(data.colorMapTex_filepath.value()) : nullptr;
 		nullBlackTex = assetSystem.getNullBlackTexture();
+	}
+
+	Planet::Planet(const Planet::Data& initData) : data(initData)
+	{
+		//applySizeCorrections();
 	}
 
 	void Planet::postConstruct()

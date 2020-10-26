@@ -48,7 +48,7 @@ namespace SA
 			float rotSpeedSec_rad = glm::radians(0.f);
 			Transform xform;
 		};
-		Planet(const Planet::Data& initData) : data(initData) { applySizeCorrections(); };
+		Planet(const Planet::Data& initData);;
 	public:
 		virtual void postConstruct() override;
 		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
@@ -63,7 +63,7 @@ namespace SA
 		void enableStarJump(bool bEnable, bool bSkipTransition = false);
 		void updateTransformForData(glm::vec3 offsetDir, float offsetDist);
 	private:
-		void applySizeCorrections();
+		//void applySizeCorrections();
 		void setOverrideData(Planet::Data& data);
 	private: //implementation
 		StarJumpData sj;

@@ -8,6 +8,7 @@
 #include "../../Tools/color_utils.h"
 #include "../../Rendering/SAGPUResource.h"
 #include "StarJumpData.h"
+#include <optional>
 
 namespace SA
 {
@@ -31,12 +32,20 @@ namespace SA
 	class StarField final : public GPUResource
 	{
 	public:
+		struct InitData 
+		{
+			std::optional<std::array<glm::vec3, 3>> colorScheme = std::nullopt;
+		};
+	public:
+		StarField(const StarField::InitData& init = InitData());
 		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
 
 		bool getForceCentered() { return bForceCentered; }
 		void setForceCentered(bool bNewForceCentered) { bForceCentered = bNewForceCentered; }
 		void enableStarJump(bool bEnable, bool bSkipTransition = false);
 		bool isStarJumping() { return sj.isStarJumpInProgress(); }
+		std::array<glm::vec3, 3>& getColorScheme() { return colorScheme; }
+		void regenerate(); //used to regenerate star field in level editor when colors are tweaked
 	protected:
 		virtual void postConstruct() override;
 	private:

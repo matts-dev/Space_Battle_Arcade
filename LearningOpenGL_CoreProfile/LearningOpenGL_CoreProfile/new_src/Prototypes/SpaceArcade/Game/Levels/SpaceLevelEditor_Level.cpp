@@ -17,17 +17,27 @@
 #include "../Environment/StarField.h"
 #include "../Environment/Nebula.h"
 #include "../../Rendering/Camera/Texture_2D.h"
+#include "../SAShip.h"
+#include "BasicTestSpaceLevel.h"
+#include "../../GameFramework/SALevelSystem.h"
+#include "SASpaceLevelBase.h"
 
 namespace SA
 {
 
 	namespace
 	{
-		char tempTextBuffer[4096];
+		char tempLabelText[4096];
+		char userText_temp[4096];
 		const char* textWithIdx(const char* const text, size_t idx) 
 		{
-			snprintf(tempTextBuffer, sizeof(tempTextBuffer), text, idx);
-			return tempTextBuffer;
+			snprintf(tempLabelText, sizeof(tempLabelText), text, idx);
+			return tempLabelText;
+		};
+		const char* textWithIdx(const char* const text, size_t idx1, size_t idx2) //todo, make above variadic
+		{
+			snprintf(tempLabelText, sizeof(tempLabelText), text, idx1, idx2);
+			return tempLabelText;
 		};
 	}
 
@@ -70,6 +80,7 @@ namespace SA
 		//		//asteroidDatum.demoAsteroid->render(parentWorldShader);
 		//	}
 		//}
+		
 	}
 
 	void SpaceLevelEditor_Level::renderUI_editor()
@@ -102,6 +113,28 @@ namespace SA
 				}
 			}
 
+			if (activeLevelConfig)
+			{
+				static bool bSpawnDebugLevel = true;
+				if (ImGui::Button("Play Level"))
+				{
+					saveActiveConfig();
+					LevelSystem& levelSystem = GameBase::get().getLevelSystem();
+
+					sp<SpaceLevelBase> newSpaceLevel = bSpawnDebugLevel ? new_sp<BasicTestSpaceLevel>() : new_sp<SpaceLevelBase>();
+					newSpaceLevel->setConfig(activeLevelConfig);
+
+					//convert to base class
+					sp<LevelBase> newLevel = newSpaceLevel;
+					levelSystem.loadLevel(newLevel);
+				}
+				
+				ImGui::SameLine(); ImGui::Checkbox("Spawn Level With Debug Mode", &bSpawnDebugLevel);
+				ImGui::Text("(note this will save the current level) ");
+
+
+			}
+
 			ImGui::Separator();
 
 			/////////////////////////////////////
@@ -110,6 +143,10 @@ namespace SA
 			if (ImGui::CollapsingHeader("LEVEL LOADING/SAVING", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				renderUI_levelLoadingSaving();
+			}
+			if (ImGui::CollapsingHeader("GAMEMODE PLACEMENTS", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				renderUI_gamemodeData();
 			}
 			if (ImGui::CollapsingHeader("WORLD OBJECTS", ImGuiTreeNodeFlags_DefaultOpen))
 			{
@@ -251,6 +288,188 @@ namespace SA
 		ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
 		ImGui::Separator();
 
+	}
+
+	void SpaceLevelEditor_Level::renderUI_gamemodeData()
+	{
+		/////////////////////////////////////////////////
+		// asteroid placements List
+		/////////////////////////////////////////////////
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+		if(activeLevelConfig && activeMod)
+		{
+			ImGui::Text("Game Mode Section:");
+
+			static size_t selectedCarrierIdx = 0;
+			static size_t selectedTeamIdx = 0;
+			static int selectedCarrierConfig = -1;
+
+			//for now this is hard coded to true because we don't have any other gamemodes
+			//but in future, one would let user select the type of game mode and show different UI based on what game mode is selected.
+			if (bool bCarrierTakedownGameMode = true)
+			{
+				SpaceLevelConfig::GameModeData_CarrierTakedown& gmData = activeLevelConfig->carrierGamemodeData;
+
+				{//create a new carrier
+					static int newCarrierTeamIdx = 0;
+					ImGui::InputInt("new carrier team", &newCarrierTeamIdx);
+					if (Utils::isValidIndex(gmData.teams, size_t(newCarrierTeamIdx)))
+					{
+						if (ImGui::Button("Create New Carrier"))
+						{
+							gmData.teams[size_t(newCarrierTeamIdx)].carrierSpawnData.emplace_back();
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Remove Last Carrier") && gmData.teams[size_t(newCarrierTeamIdx)].carrierSpawnData.size() > 0)
+						{
+							gmData.teams[size_t(newCarrierTeamIdx)].carrierSpawnData.pop_back();
+						}
+					}
+				}
+
+				//hard coding number of teams for now
+				size_t numTeams = 2;
+				for (size_t teamIdx = 0; teamIdx < numTeams; ++teamIdx)
+				{
+					//make a team data if one is not available
+					if (!Utils::isValidIndex(gmData.teams, teamIdx)) { gmData.teams.emplace_back(); }
+					SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
+
+					size_t levelConfigNumCarriers = teamData.carrierSpawnData.size();
+					size_t numCarriers = glm::max<size_t>(1, levelConfigNumCarriers);
+					for (size_t carrierIdx = 0; carrierIdx < numCarriers; ++carrierIdx)
+					{
+						bool bCarrierDirty = false;
+
+						//make a carrier if one is not available
+						if (!Utils::isValidIndex(teamData.carrierSpawnData, carrierIdx))
+						{ 
+							teamData.carrierSpawnData.emplace_back(); 
+							bCarrierDirty = true; 
+						}
+						CarrierSpawnData& carrierData = teamData.carrierSpawnData[carrierIdx];
+
+						//only show UI for the carrier we have selected
+						bool bIsSelectedCarrier = selectedCarrierIdx == carrierIdx && selectedTeamIdx == teamIdx;
+						if (ImGui::Selectable(textWithIdx("carrier[%d], team[%d]", carrierIdx, teamIdx)
+							, bIsSelectedCarrier))
+						{
+							if (teamIdx != selectedTeamIdx) //this happens when we select a carrier, perhaps this needs to be done in multiple places
+							{
+								selectedTeamIdx = teamIdx;
+								//onNewTeamSelected();
+							}
+							if (selectedCarrierIdx != carrierIdx)
+							{
+								selectedCarrierIdx = carrierIdx;
+								//onNewCarrierSelected();
+							}
+						}
+
+						if(bIsSelectedCarrier)
+						{
+
+							//--------------- manually type name, disabled because refactoring to let user have a selectable menu--------------
+							//Utils::copyCppStringToCString(carrierData.carrierShipSpawnConfig_name, userText_temp, sizeof(userText_temp));
+							//if (ImGui::InputText(textWithIdx("carrierShipSpawnConfig_name c[%d], t[%d]", carrierIdx, teamIdx), userText_temp, sizeof(userText_temp)))
+							//{
+							//	//always copying temp buffer the carrier data is persistent, but temp buffer may get cleared
+							//	carrierData.carrierShipSpawnConfig_name = userText_temp;
+							//	carrierDirty = true;
+							//}
+
+							// ------------------- selectable carrier configs ---------------------
+							ImGui::Separator();
+							ImGui::Text("Available Spawn Configs");
+							const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
+							if (spawnConfigs.size() > 0)
+							{
+								//int curConfigIdx = 0;
+								for (const auto& kvPair : spawnConfigs)
+								{
+									//size_t numSpawnPnts = kvPair.second->getSpawnPoints().size(); //this could be used to signal to user they need to add spawn points, but may need to come after selection
+									const std::string& iterConfigName = kvPair.first;
+									if (ImGui::Selectable(iterConfigName.c_str(), iterConfigName == carrierData.carrierShipSpawnConfig_name))
+									{
+										carrierData.carrierShipSpawnConfig_name = iterConfigName;
+										bCarrierDirty = true;
+									}
+									//++curConfigIdx;
+								}
+							}
+							ImGui::Separator();
+
+							if (!carrierData.position.has_value()) { carrierData.position = glm::vec3(0.f); }
+							bCarrierDirty |= ImGui::DragFloat3(textWithIdx("position c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.position->x);
+
+							if (!carrierData.rotation_deg.has_value()) { carrierData.rotation_deg = glm::vec3(0.f); }
+							bCarrierDirty |= ImGui::DragFloat3(textWithIdx("rotation c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.rotation_deg->x);
+
+							int numFightersProxy = int(carrierData.numInitialFighters);
+							if (ImGui::InputInt(textWithIdx("num init fighters to spawn c[%d] t[%d]", carrierIdx, teamIdx), &numFightersProxy))
+							{
+								//only make make this dirty if we're showing spawns in editor
+								//carrierDirty = true;
+								carrierData.numInitialFighters = size_t(numFightersProxy);
+							}
+
+							////////////////////////////////////////////////////////
+							// fighter data
+							////////////////////////////////////////////////////////
+							ImGui::Checkbox(textWithIdx("enable fighter respawns c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.fighterSpawnData.bEnableFighterRespawns);
+							int maxShipsProxy = int(carrierData.fighterSpawnData.maxNumberOwnedFighterShips);
+							if (ImGui::InputInt(textWithIdx("max Ships Spawnable c[%d] t[%d]", carrierIdx, teamIdx), &maxShipsProxy))
+							{
+								carrierData.fighterSpawnData.maxNumberOwnedFighterShips = int(maxShipsProxy);
+							}
+							ImGui::InputFloat(textWithIdx("respawn cooldown c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.fighterSpawnData.respawnCooldownSec);
+						}
+
+						if (bCarrierDirty || bForceCarrierTakedownGMDataRefresh)
+						{
+							while (!Utils::isValidIndex(teamPlaceholderCarriers, teamIdx)) //#todo #nextengine these things are bug prone to write by hand, perhaps a array library header that can grow array to a certain size and init to a default value
+							{
+								teamPlaceholderCarriers.emplace_back();
+							}
+							while (!Utils::isValidIndex(teamPlaceholderCarriers[teamIdx], carrierIdx))
+							{
+								teamPlaceholderCarriers[teamIdx].push_back(nullptr);
+							}
+
+							//lazy way, just delete the ship and make a new one
+							if (sp<Ship> oldShip = teamPlaceholderCarriers[teamIdx][carrierIdx])
+							{
+								unspawnEntity(oldShip);
+							}
+							teamPlaceholderCarriers[teamIdx][carrierIdx] = nullptr;
+
+							if (auto foundConfigIter = activeMod->getSpawnConfigs().find(carrierData.carrierShipSpawnConfig_name); foundConfigIter != activeMod->getSpawnConfigs().end())
+							{
+								sp<SpawnConfig> foundSpawnConfig = foundConfigIter->second;
+
+								Ship::SpawnData carrierSpawnData;
+								carrierSpawnData.bEditorMode = true;
+								carrierSpawnData.spawnTransform.position = carrierData.position.value_or(glm::vec3(0,0,0));
+								carrierSpawnData.spawnTransform.rotQuat = glm::quat(glm::radians(carrierData.rotation_deg.value_or(glm::vec3(0,0,0))));
+								carrierSpawnData.team = teamIdx;
+								carrierSpawnData.spawnConfig = foundSpawnConfig;
+								teamPlaceholderCarriers[teamIdx][carrierIdx] = spawnEntity<Ship>(carrierSpawnData);
+							}
+							else
+							{
+								logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "Could not find spawn config [%s]", carrierData.carrierShipSpawnConfig_name.c_str());
+							}
+						}
+					}
+				}
+			}
+		}
+
+		ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
+		ImGui::Separator();
+
+		//clear this at the end of the ui frame, this is just done here so I don't have to funcity the spawn logic, seemed like overkill just for making sure when we switch configs 
+		bForceCarrierTakedownGMDataRefresh = false;
 	}
 
 	void SpaceLevelEditor_Level::renderUI_avoidMeshPlacement()
@@ -626,6 +845,21 @@ namespace SA
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// starfield
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if(bool bAllowStarfieldColorTweaks = false)
+			{
+				bool bStarFieldDirty = false;
+
+				bStarFieldDirty |= ImGui::ColorPicker3("distance star color 1", &starField->getColorScheme()[0].r);
+				bStarFieldDirty |= ImGui::ColorPicker3("distance star color 2", &starField->getColorScheme()[1].r);
+				bStarFieldDirty |= ImGui::ColorPicker3("distance star color 3", &starField->getColorScheme()[2].r);
+
+				if (bStarFieldDirty)
+				{
+					//note: there's probably a gpu memory leak on level transition... is that GPU resource being released since it isn't done in dtor?
+					//#todo #nextengine gpu resources need special handles so we can guarantee they're released, but can't use RAII because of shutdown crashes (see GPUResource class). We need something clever to handle these cases, perhaps RAII will work if we disallow static objects. 
+					starField->regenerate();
+				}
+			}
 			//TODO this requires serialization of the color scheme for the star field, perhaps can just be 3 floats on the level config.
 			//	generate approach is:
 			//	 1. generate star field (generateStarField(), will require friend class SpaceLevelEditor_Level;)
@@ -669,18 +903,19 @@ namespace SA
 			localStarData_editor = newConfig->stars;
 			planets_editor = newConfig->planets;
 			nebulaData_editor = newConfig->nebulaData;
+			clearCarriers();
 
 			//force refresh so we render correct things 
 			updateLevelData_Planets();
 			updateLevelData_Star();
 			updateLevelData_Nebula();
-			
-
+			updateLevelData_Carriers(*newConfig);
 		}
 		else
 		{
 			localStarData_editor.clear();
 			planets_editor.clear();
+			clearCarriers();
 		}
 	}
 
@@ -778,7 +1013,7 @@ namespace SA
 				planets[planetIdx]->setOverrideData(initData);
 				planets[planetIdx]->updateTransformForData(*planets_editor[planetIdx].offsetDir, *planets_editor[planetIdx].offsetDistance);
 
-				//don't do this naymore... doesn't make sense to read the data then write it back ... thae work flow is isn't good
+				//don't do this anymore... doesn't make sense to read the data then write it back ... thae work flow is isn't good
 				//copy this to config, so if we save the data gets serialized to json
 				//activeLevelConfig->planets = planets_editor;
 				//activeLevelConfig->numPlanets = planets_editor.size();
@@ -818,6 +1053,56 @@ namespace SA
 			//write data back
 			//activeLevelConfig->nebulaData = nebulaData_editor;
 		}
+	}
+
+	void SpaceLevelEditor_Level::updateLevelData_Carriers(SpaceLevelConfig& newConfig)
+	{
+		const std::string& gamemodeTag = newConfig.getGamemodeTag();
+		if (gamemodeTag == TAG_GAMEMODE_CARRIER_TAKEDOWN || gamemodeTag.length() == 0)
+		{
+			newConfig.setGamemodeTag(TAG_GAMEMODE_CARRIER_TAKEDOWN); //in case it is nothing, set it to the correct tag.
+			bForceCarrierTakedownGMDataRefresh = true;
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//NOTE: attempting to render UI should spawn the carriers, to avoid code duplication; or functionifiy it.
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			//if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+			//{
+			//	//this just makes sure we load a default carrier
+			//	const auto& gamemodeData_CarrierTakedown = newConfig.getGamemodeData_CarrierTakedown();
+			//	for (size_t teamIdx = 0; teamIdx < gamemodeData_CarrierTakedown.teams.size(); ++teamIdx)
+			//	{
+			//		auto& carriers = gamemodeData_CarrierTakedown.teams[teamIdx].carrierSpawnData;
+			//		for (CarrierSpawnData& carrierData : carriers)
+			//		{
+			//			if (carrierData.carrierShipSpawnConfig_name.length() == 0)
+			//			{
+			//				if (sp<SpawnConfig> deafultCarrierConfigForTeam = activeMod->getDeafultCarrierConfigForTeam(teamIdx))
+			//				{
+			//					carrierData.carrierShipSpawnConfig_name = deafultCarrierConfigForTeam->getName();
+			//					todo_untested_above_name_may_be_wrong;
+			//				}
+			//			}
+			//		}
+			//	}
+			//}
+		}
+	}
+
+	void SpaceLevelEditor_Level::clearCarriers()
+	{
+		for (size_t teamIdx = 0; teamIdx < teamPlaceholderCarriers.size(); ++teamIdx)
+		{
+			//for(size_t carrierIdx = 0; carrierIdx < teamPl)
+			for (const sp<Ship>& ship : teamPlaceholderCarriers[teamIdx])
+			{
+				if (ship)
+				{
+					unspawnEntity(ship);
+				}
+			}
+		}
+		teamPlaceholderCarriers.clear();
 	}
 
 	void SpaceLevelEditor_Level::saveActiveConfig()

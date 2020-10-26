@@ -213,7 +213,7 @@ namespace SA
 
 								Transform carrierXform;
 								carrierXform.position = carrierData.position.has_value() ? *carrierData.position : randomCarrierLoc;
-								carrierXform.rotQuat = carrierData.rotation_deg.has_value() ? quat(*carrierData.rotation_deg) : randomCarrierRot;
+								carrierXform.rotQuat = carrierData.rotation_deg.has_value() ? quat(radians(*carrierData.rotation_deg)) : randomCarrierRot;
 
 								Ship::SpawnData carrierShipSpawnData;
 								carrierShipSpawnData.team = teamIdx;

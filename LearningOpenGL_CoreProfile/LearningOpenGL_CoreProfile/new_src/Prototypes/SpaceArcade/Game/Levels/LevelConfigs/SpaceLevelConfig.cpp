@@ -217,6 +217,13 @@ namespace SA
 		spaceLevelData[SYMBOL_TO_STR(nebulaData)] = nebulaArrayJson;
 
 		////////////////////////////////////////////////////////
+		// distant star data
+		////////////////////////////////////////////////////////
+		JSON_WRITE_VEC3(distantStarColor1, spaceLevelData);
+		JSON_WRITE_VEC3(distantStarColor2, spaceLevelData);
+		JSON_WRITE_VEC3(distantStarColor3, spaceLevelData);
+
+		////////////////////////////////////////////////////////
 		// carrier game mode data
 		////////////////////////////////////////////////////////
 		json json_carrierGamemodeData;
@@ -361,6 +368,13 @@ namespace SA
 					READ_JSON_TRANSFORM_OPTIONAL(nebula.transform, nebulaJson);
 				}
 			}
+
+			////////////////////////////////////////////////////////
+			// distant star data
+			////////////////////////////////////////////////////////
+			READ_JSON_VEC3_OPTIONAL(distantStarColor1, spaceLevelConfigJson);
+			READ_JSON_VEC3_OPTIONAL(distantStarColor2, spaceLevelConfigJson);
+			READ_JSON_VEC3_OPTIONAL(distantStarColor3, spaceLevelConfigJson);
 
 			////////////////////////////////////////////////////////
 			// read carrier take down game data

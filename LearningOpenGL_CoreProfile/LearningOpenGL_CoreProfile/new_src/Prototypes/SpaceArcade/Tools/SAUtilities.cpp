@@ -448,6 +448,19 @@ namespace SA
 			return intersects;
 		}
 
+		void copyCppStringToCString(const std::string& cppString, char* cStringBuffer, size_t bufferSize)
+		{
+			if (cStringBuffer 
+				&& /*remove edge cases on buffer size*/bufferSize > 1)
+			{
+				size_t savedStrSize = cppString.length() + 1; //+1 for null terminator, may not be necessary
+				std::memcpy(cStringBuffer, cppString.c_str(), bufferSize <= savedStrSize ? bufferSize : savedStrSize);
+
+				//make sure there's always a null term zero
+				cStringBuffer[bufferSize - 1] = 0;
+			}
+		}
+
 		const float cubeVerticesWithUVs[] = {
 			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,

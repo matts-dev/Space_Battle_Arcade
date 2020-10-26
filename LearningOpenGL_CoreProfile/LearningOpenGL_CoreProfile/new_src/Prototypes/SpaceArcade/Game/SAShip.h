@@ -61,6 +61,7 @@ namespace SA
 			sp<SpawnConfig> spawnConfig;
 			Transform spawnTransform;
 			size_t team = 0;
+			bool bEditorMode = false;
 		};
 	public:
 		Ship(const SpawnData& spawnData);
@@ -203,6 +204,7 @@ namespace SA
 		void regenerateEngineVFX();
 		void tickEngineFX();
 		void destroyEngineVFX();
+		void configureForEditorMode(const SpawnData& spawnData);
 	private:
 		void handlePlacementDestroyed(const sp<GameEntity>& placement);
 		void handleSpawnStasisOver();
@@ -278,6 +280,7 @@ namespace SA
 		bool bCollisionReflectForward:1;
 		bool bEnableAvoidanceFields = true;
 		bool bAwakeBrainAfterStasis = false;
+		bool bEditorMode = false;//basically signals that this ship should not do anything
 
 		sp<AudioEmitter> sfx_engine;
 		sp<AudioEmitter> sfx_muzzle;
