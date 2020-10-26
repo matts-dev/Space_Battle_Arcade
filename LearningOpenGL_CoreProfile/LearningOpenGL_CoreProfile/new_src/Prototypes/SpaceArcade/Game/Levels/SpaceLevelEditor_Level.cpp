@@ -632,16 +632,14 @@ namespace SA
 				{
 					StarData& selectedStar = localStarData_editor[selectedStarIdx];
 				
+					selectedStar.offsetDir = selectedStar.offsetDir.has_value() ? selectedStar.offsetDir : glm::vec3(1.f); //make sure optional has value
+					bDirty_stars |= ImGui::DragFloat3("star offsetDir", &selectedStar.offsetDir->x, 0.01f, -1.f, 1.f);
+				
+					selectedStar.offsetDistance = selectedStar.offsetDistance.has_value() ? selectedStar.offsetDistance : 1.f; //make sure optional has value
+					bDirty_stars |= ImGui::DragFloat("star offset distance", &selectedStar.offsetDistance.value(), 0.1f, 1.f, 200.f);
 
 					selectedStar.color = selectedStar.color.has_value() ? selectedStar.color : glm::vec3(1.f); //make sure optional has value
 					bDirty_stars |= ImGui::ColorPicker3("star color", &selectedStar.color->r);
-
-					selectedStar.offsetDir = selectedStar.offsetDir.has_value() ? selectedStar.offsetDir : glm::vec3(1.f); //make sure optional has value
-					bDirty_stars |= ImGui::InputFloat3("star offsetDir", &selectedStar.offsetDir->x);
-				
-					selectedStar.offsetDistance = selectedStar.offsetDistance.has_value() ? selectedStar.offsetDistance : 1.f; //make sure optional has value
-					bDirty_stars |= ImGui::InputFloat("star offset distance", &selectedStar.offsetDistance.value());
-
 					if (bDirty_stars)
 					{
 						updateLevelData_Star();
@@ -691,22 +689,55 @@ namespace SA
 					PlanetData& selectedPlanet = planets_editor[selectedPlanetIdx];
 
 					selectedPlanet.offsetDir = selectedPlanet.offsetDir.has_value() ? selectedPlanet.offsetDir : glm::vec3(1.f); //make sure optional has value
-					bDirty_Planet |= ImGui::InputFloat3("planet offsetDir", &selectedPlanet.offsetDir->x);
+					bDirty_Planet |= ImGui::DragFloat3("planet offsetDir", &selectedPlanet.offsetDir->x, 0.01f, -1.f, 1.f);
 
 					selectedPlanet.offsetDistance = selectedPlanet.offsetDistance.has_value() ? selectedPlanet.offsetDistance : 1.f; //make sure optional has value
-					bDirty_Planet |= ImGui::InputFloat("planet offset distance", &selectedPlanet.offsetDistance.value());
+					bDirty_Planet |= ImGui::DragFloat("planet offset distance", &selectedPlanet.offsetDistance.value(), 0.1f, 1.f, 100.f);
 
 					selectedPlanet.bHasCivilization = selectedPlanet.bHasCivilization.has_value() ? selectedPlanet.bHasCivilization : false; //make sure optional has value
 					bDirty_Planet |= ImGui::Checkbox("bHasCivilization", &selectedPlanet.bHasCivilization.value());
 
+					selectedPlanet.texturePath = selectedPlanet.texturePath.has_value() ? selectedPlanet.texturePath : "no mod relative path";
+					static char texturePathBuffer[2046];
+					bDirty_Planet |= ImGui::InputText("texture file path", texturePathBuffer, sizeof(texturePathBuffer));
+
 					static bool bSpecifyPlanetTexture = false;
 					ImGui::Checkbox("set planet texture", &bSpecifyPlanetTexture);
-
 					if (bSpecifyPlanetTexture)
 					{
-						selectedPlanet.texturePath = selectedPlanet.texturePath.has_value() ? selectedPlanet.texturePath : "no mod relative path";
-						static char texturePathBuffer[2046];
-						bDirty_Planet |= ImGui::InputText("texture file path", texturePathBuffer, sizeof(texturePathBuffer));
+						static bool bChooseFromDefaultPlanets = false;
+						ImGui::Checkbox("Choose from default planet textures (if copied into mod)", &bChooseFromDefaultPlanets);
+						if (bChooseFromDefaultPlanets)
+						{
+							//note great that these were hardcoded, but oh well.
+							std::vector<const char*> defaultPaths =
+							{
+								DefaultPlanetTexturesPaths::albedo1,
+								DefaultPlanetTexturesPaths::albedo2,
+								DefaultPlanetTexturesPaths::albedo3,
+								DefaultPlanetTexturesPaths::albedo4,
+								DefaultPlanetTexturesPaths::albedo5,
+								DefaultPlanetTexturesPaths::albedo6,
+								DefaultPlanetTexturesPaths::albedo7,
+								DefaultPlanetTexturesPaths::albedo8,
+								DefaultPlanetTexturesPaths::albedo_terrain,
+								DefaultPlanetTexturesPaths::albedo_sea,
+								DefaultPlanetTexturesPaths::albedo_nightlight,
+								DefaultPlanetTexturesPaths::colorChanel,
+							};
+							for (const char* path : defaultPaths)
+							{
+								if(ImGui::Selectable(path, false))
+								{
+									bDirty_Planet = true;
+
+									//#bug looks like this isn't removing mod relative data in other places, will be annoying because copy/pasting mode will fail if user doesn't have mod this was copied from
+									selectedPlanet.texturePath = path; 
+									Utils::copyCppStringToCString(*selectedPlanet.texturePath, texturePathBuffer, sizeof(texturePathBuffer));//make sure string copy is set before we deerence the optional!
+								}
+							}
+						}
+
 					}
 					else if (bool bNeedsClearing = selectedPlanet.texturePath.has_value())
 					{
@@ -771,6 +802,7 @@ namespace SA
 
 					bDirty_Nebula |= ImGui::ColorPicker3("nebula color", &selectedNebulaData.tintColor.r);
 					bDirty_Nebula |= ImGui::SliderFloat3("nebula position", &selectedNebulaData.transform.position.x, -sliderBounds, sliderBounds);
+
 					{ 
 						//glm::vec3 nebDirection = selectedNebulaData.transform.position; //relative to origin
 						//float nebDist = glm::length(nebDirection);

@@ -484,6 +484,19 @@ namespace SA
 				newStar->setLightLDR(starColor);
 				newStar->updateXformForData(starDir, starDist);
 			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// set up nebulae
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			nebulae.clear();
+			for (const NebulaData& nebulaData : levelConfig->getNebulae())
+			{
+				Nebula::Data init;
+				init.textureRelativePath = nebulaData.texturePath; //todo-- functionify this? not needed for now but want to avoid code duplication
+				init.tintColor = nebulaData.tintColor;
+				nebulae.push_back(new_sp<Nebula>(init));
+				nebulae.back()->setXform(nebulaData.transform);
+			}
 		}
 	}
 

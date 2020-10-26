@@ -93,6 +93,8 @@ namespace SA
 		bool overrideStarData(size_t idx, const StarData& inData);
 		const std::vector<StarData>& getStars() const { return stars; }
 
+		const std::vector<NebulaData>& getNebulae() const { return nebulaData; }
+
 		const std::vector<WorldAvoidanceMeshData>& getAvoidanceMeshes() const { return avoidanceMeshes; }
 		//bool replaceAvoidMeshData(size_t index, const WorldAvoidanceMeshData& data);
 		void addAvoidanceMesh(const WorldAvoidanceMeshData& avoidanceMesh) { avoidanceMeshes.push_back(avoidanceMesh); }

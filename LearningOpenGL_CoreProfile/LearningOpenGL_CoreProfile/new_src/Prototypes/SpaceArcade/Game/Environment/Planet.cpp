@@ -143,7 +143,7 @@ namespace SA
 	{
 		this->data = data;
 
-		//applySizeCorrections(); //disabling as there is no clear reason why this exists.
+		//applySizeCorrections(); //disabling as there is no clear reason why this exists and it is causing issues by being applied multiple times .
 
 		AssetSystem& assetSystem = GameBase::get().getAssetSystem();
 

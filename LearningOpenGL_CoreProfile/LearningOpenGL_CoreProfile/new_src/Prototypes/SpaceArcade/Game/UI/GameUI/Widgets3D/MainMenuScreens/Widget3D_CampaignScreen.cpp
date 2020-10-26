@@ -415,7 +415,16 @@ namespace SA
 					SelectableLevelData& thisLevel = linearLevels.back();
 					thisLevel.levelIndexNumberInCampaignConfig = levelIdx;
 					thisLevel.outGoingLevelPathIndices = level.outGoingPathIndices;
-					thisLevel.uiPlanet = makePlanetFromDefaults(level.optional_defaultPlanetIdx, levelIdx);
+					if (level.optional_defaultPlanetIdx >= 0)
+					{
+						thisLevel.uiPlanet = makePlanetFromDefaults(level.optional_defaultPlanetIdx, levelIdx);
+					}
+					else
+					{
+						//#todo fix this during next campaign pass, I think when we're using a real level we're not saving a texture idx? perhaps this is wrong
+						//#todo perhaps just set the index of the texture in the defaults when specifying a default texture?
+						thisLevel.uiPlanet = makePlanetFromDefaults(0, levelIdx);
+					}
 					thisLevel.uiPlanetScale = glm::clamp(level.optional_ui_planetSizeFactor, 0.1f, 10.f);
 					thisLevel.hoverWidget = new_sp<Widget3D_GenericMouseHoverable>();
 					if (thisLevel.hoverWidget)
