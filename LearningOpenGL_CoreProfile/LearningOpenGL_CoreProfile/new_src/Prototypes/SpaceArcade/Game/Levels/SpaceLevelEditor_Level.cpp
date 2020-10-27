@@ -21,6 +21,8 @@
 #include "BasicTestSpaceLevel.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "SASpaceLevelBase.h"
+#include "../AssetConfigs/CampaignConfig.h"
+#include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_CampaignScreen.h"
 
 namespace SA
 {
@@ -38,6 +40,23 @@ namespace SA
 		{
 			snprintf(tempLabelText, sizeof(tempLabelText), text, idx1, idx2);
 			return tempLabelText;
+		};
+
+		//note great that these were hardcoded, but oh well.
+		std::vector<const char*> defaultPaths =
+		{
+			DefaultPlanetTexturesPaths::albedo1,
+			DefaultPlanetTexturesPaths::albedo2,
+			DefaultPlanetTexturesPaths::albedo3,
+			DefaultPlanetTexturesPaths::albedo4,
+			DefaultPlanetTexturesPaths::albedo5,
+			DefaultPlanetTexturesPaths::albedo6,
+			DefaultPlanetTexturesPaths::albedo7,
+			DefaultPlanetTexturesPaths::albedo8,
+			DefaultPlanetTexturesPaths::albedo_terrain,
+			DefaultPlanetTexturesPaths::albedo_sea,
+			DefaultPlanetTexturesPaths::albedo_nightlight,
+			DefaultPlanetTexturesPaths::colorChanel,
 		};
 	}
 
@@ -57,6 +76,9 @@ namespace SA
 		{
 			handlePlayerCreated(player, 0);
 		}
+
+		//appears that the campaign widget will automatically render for us
+		//game.getGameUISystem()->addWeakObj(sp_this(), &SpaceLevelEditor_Level::handleGameUIRenderDispatch);
 	}
 
 	void SpaceLevelEditor_Level::endLevel_v()
@@ -81,6 +103,13 @@ namespace SA
 		//	}
 		//}
 		
+	}
+
+	void SpaceLevelEditor_Level::tick_v(float dt_sec)
+	{
+		Parent::tick_v(dt_sec);
+
+		if (campaignWidget) { campaignWidget->tick(dt_sec); } //probably should put in tick function
 	}
 
 	void SpaceLevelEditor_Level::renderUI_editor()
@@ -144,17 +173,30 @@ namespace SA
 			{
 				renderUI_levelLoadingSaving();
 			}
-			if (ImGui::CollapsingHeader("GAMEMODE PLACEMENTS", ImGuiTreeNodeFlags_DefaultOpen))
+			if (ImGui::CollapsingHeader("CAMPAIGN LOADING/SAVING"))
+			{
+				renderUI_campaignDesign();
+			}
+			if (ImGui::CollapsingHeader("GAMEMODE PLACEMENTS"))
 			{
 				renderUI_gamemodeData();
 			}
-			if (ImGui::CollapsingHeader("WORLD OBJECTS", ImGuiTreeNodeFlags_DefaultOpen))
+			if (ImGui::CollapsingHeader("WORLD OBJECTS"))
 			{
 				renderUI_avoidMeshPlacement();
 			}
-			if (ImGui::CollapsingHeader("environment ", ImGuiTreeNodeFlags_DefaultOpen))
+			if (ImGui::CollapsingHeader("ENVIRONMENT "))
 			{
 				renderUI_environment();
+			}
+			
+			///////////////////////////////////////////////////////////////////////////////////////////
+			if (bForceCarrierTakedownGMDataRefresh) //this bool is used in other places, so if removing this hack leave bool in place or fix up references
+			{
+				//this is required to do first load, with collapsed header it will not run this code.
+				//this is hack because it will probably flash the UI for 1 frame. but it will do its job avoid code duplication
+				//best approach is to functionify this stuff, but it just isn't worth it atm.
+				renderUI_gamemodeData();
 			}
 		}
 		ImGui::End();
@@ -288,6 +330,205 @@ namespace SA
 		ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
 		ImGui::Separator();
 
+	}
+
+	void SpaceLevelEditor_Level::renderUI_campaignDesign()
+	{
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+		if (activeMod)
+		{
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// select a campaign
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			size_t numCampaigns = activeMod->getNumCampaignEntries();
+			for (size_t campaignIdx = 0; campaignIdx < numCampaigns; ++campaignIdx)
+			{
+				if (sp<CampaignConfig> campaign = activeMod->getCampaign(campaignIdx))
+				{
+					if (ImGui::Selectable(textWithIdx("Campaign [%d]", campaignIdx), campaign == activeCampaign))
+					{
+						activeCampaign = campaign;
+					}
+				}
+			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// modify a campaign
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if (activeCampaign)
+			{
+				if (ImGui::Button("Save Campaign"))
+				{
+					activeCampaign->requestSave();
+				}
+
+				ImGui::Text("Note, some features are only available by modifying the campaign json found in the game data folder.");
+
+				static size_t selectedLevelIdx = 0;
+				for (size_t levelIdx = 0; levelIdx < activeCampaign->levels.size(); ++levelIdx)
+				{
+					size_t tier = activeCampaign->levels[levelIdx].tier;
+
+					if(ImGui::Selectable(textWithIdx("campaign level path-index[%d] column-tier[%d]", levelIdx, tier), selectedLevelIdx == levelIdx))
+					{
+						selectedLevelIdx = levelIdx;
+					}
+				}
+
+				bool bSelectedLevelInCampaignDirty = false;
+				if (Utils::isValidIndex(activeCampaign->levels, selectedLevelIdx))
+				{
+					////////////////////////////////////////////////////////
+					// Update name
+					////////////////////////////////////////////////////////
+					//	copy name to buffer for imgui, then write back after modification
+					CampaignConfig::LevelData& level = activeCampaign->levels[selectedLevelIdx];
+					Utils::copyCppStringToCString(level.name, userText_temp, sizeof(userText_temp));
+					if (ImGui::InputText("campaign referred level name", userText_temp, sizeof(userText_temp)))
+					{
+						level.name = userText_temp;
+						bSelectedLevelInCampaignDirty = true;
+					}
+
+					////////////////////////////////////////////////////////
+					//update planet texture overrides
+					////////////////////////////////////////////////////////
+					int numDefaultTextures = defaultPaths.size();
+					int textureOverride = int(level.optional_defaultPlanetIdx);
+					if (ImGui::InputInt("optional level index", &textureOverride, -1, numDefaultTextures))
+					{
+						level.optional_defaultPlanetIdx = int64_t(textureOverride);
+						bSelectedLevelInCampaignDirty = true;
+					}
+					bSelectedLevelInCampaignDirty |= ImGui::InputFloat("optional planet size factor", &level.optional_ui_planetSizeFactor);
+
+					////////////////////////////////////////////////////////
+					//update outgoing paths
+					////////////////////////////////////////////////////////
+					static size_t selectedOutgoingPosition = 0;
+					for (size_t outGoingPosition = 0; outGoingPosition < level.outGoingPathIndices.size(); ++outGoingPosition)
+					{
+						if (ImGui::Selectable(textWithIdx("connected level index [%d]", level.outGoingPathIndices[outGoingPosition]), selectedOutgoingPosition == outGoingPosition))
+						{
+							selectedOutgoingPosition = outGoingPosition;
+							bSelectedLevelInCampaignDirty = true;
+						}
+					}
+					if (Utils::isValidIndex(level.outGoingPathIndices, selectedOutgoingPosition))
+					{
+						int pathProxy = int(level.outGoingPathIndices[selectedOutgoingPosition]);
+						if (ImGui::InputInt("Outgoing Path Index", &pathProxy))
+						{
+							level.outGoingPathIndices[selectedOutgoingPosition] = size_t(pathProxy);
+							bSelectedLevelInCampaignDirty = true;
+						}
+					}
+
+					////////////////////////////////////////////////////////
+					// create new and remove old campaign path indices
+					////////////////////////////////////////////////////////
+					if (ImGui::Button("push outgoing path index"))
+					{
+						bSelectedLevelInCampaignDirty = true;
+						level.outGoingPathIndices.emplace_back();
+						bSelectedLevelInCampaignDirty = true;
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("pop last outgoing path index"))
+					{
+						bSelectedLevelInCampaignDirty = true;
+						if (level.outGoingPathIndices.size() > 0)
+						{
+							level.outGoingPathIndices.pop_back();
+							bSelectedLevelInCampaignDirty = true;
+						}
+					}
+
+					////////////////////////////////////////////////////////
+					// set up linked space level config
+					////////////////////////////////////////////////////////
+					ImGui::Separator();
+					ImGui::Text("AVAILABLE LEVELS -- click to set current selection to this level");
+					ImGui::Dummy({ 0, 5 });
+					const std::map<std::string, sp<SpaceLevelConfig>>& levelConfigs = activeMod->getLevelConfigs();
+					if (levelConfigs.size() > 0)
+					{
+						for (const auto& kvPair : levelConfigs)
+						{
+							if (ImGui::Selectable(kvPair.first.c_str(), level.spaceLevelConfig == kvPair.first))
+							{
+								//overwrite the name, the game will load based on this string;
+								level.spaceLevelConfig = kvPair.first;
+								bSelectedLevelInCampaignDirty = true;
+							}
+						}
+					}
+					ImGui::Dummy({ 0, 5 });
+					ImGui::Text("Selected Level:");
+					if (level.spaceLevelConfig.size() > 0)
+					{
+						ImGui::SameLine();
+						ImGui::Text(level.spaceLevelConfig.c_str());
+					}
+					ImGui::Separator();
+					////////////////////////////////////////////////////////
+					// set up column in which this level appears in the campaign
+					////////////////////////////////////////////////////////
+					int proxyTier = size_t(level.tier);
+					if (ImGui::InputInt("Tier column for selected level", &proxyTier))
+					{
+						level.tier = size_t(proxyTier);
+						bSelectedLevelInCampaignDirty = true;
+					}
+				}
+
+				static bool bShowCampaignRender = false;
+				if (ImGui::Checkbox("Show Campaign Widget", &bShowCampaignRender) || bSelectedLevelInCampaignDirty)
+				{
+					if (bShowCampaignRender)
+					{
+						if (!campaignWidget)
+						{
+							campaignWidget = new_sp<Widget3D_CampaignScreen>();
+							campaignWidget->activate(true);
+						}
+						campaignWidget->overrideCampaignIndex(activeCampaign->getIndexInCampaignArray());
+					}
+					else
+					{
+						if (campaignWidget) { campaignWidget->activate(false); }
+						campaignWidget = nullptr;
+					}
+
+				}
+
+				if (ImGui::Button("Push Level To Campaign"))
+				{
+					activeCampaign->levels.emplace_back();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Pop Level From Campaign"))
+				{
+					activeCampaign->levels.pop_back();
+				}
+
+			}
+			else
+			{
+				ImGui::Text("No active campaign");
+			}
+
+			ImGui::Text("Note: currently only a single campaign is supported; the first campaign in the mod the campaign that will play.");
+			if (numCampaigns < MAX_NUM_CAMPAIGNS)
+			{
+				ImGui::Text("Warning, if you create a new campaign and then save it, the only way to delete it is to remove the json file.");
+				if (ImGui::Button("Push New Campaign"))
+				{
+					sp<CampaignConfig> newCampaign = new_sp<CampaignConfig>();
+					activeMod->addCampaignConfig(newCampaign);
+				}
+			}
+		}
 	}
 
 	void SpaceLevelEditor_Level::renderUI_gamemodeData()
@@ -709,22 +950,6 @@ namespace SA
 						ImGui::Checkbox("Choose from default planet textures (if copied into mod)", &bChooseFromDefaultPlanets);
 						if (bChooseFromDefaultPlanets)
 						{
-							//note great that these were hardcoded, but oh well.
-							std::vector<const char*> defaultPaths =
-							{
-								DefaultPlanetTexturesPaths::albedo1,
-								DefaultPlanetTexturesPaths::albedo2,
-								DefaultPlanetTexturesPaths::albedo3,
-								DefaultPlanetTexturesPaths::albedo4,
-								DefaultPlanetTexturesPaths::albedo5,
-								DefaultPlanetTexturesPaths::albedo6,
-								DefaultPlanetTexturesPaths::albedo7,
-								DefaultPlanetTexturesPaths::albedo8,
-								DefaultPlanetTexturesPaths::albedo_terrain,
-								DefaultPlanetTexturesPaths::albedo_sea,
-								DefaultPlanetTexturesPaths::albedo_nightlight,
-								DefaultPlanetTexturesPaths::colorChanel,
-							};
 							for (const char* path : defaultPaths)
 							{
 								if(ImGui::Selectable(path, false))
@@ -907,6 +1132,14 @@ namespace SA
 		ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
 		ImGui::Separator();
 	}
+
+	//void SpaceLevelEditor_Level::handleGameUIRenderDispatch(GameUIRenderData& rd_ui)
+	//{
+	//	//if (campaignWidget)
+	//	//{
+	//	//	campaignWidget->renderGameUI(rd_ui);
+	//	//}
+	//}
 
 	void SpaceLevelEditor_Level::onActiveLevelConfigSet(const sp<SpaceLevelConfig>& newConfig)
 	{

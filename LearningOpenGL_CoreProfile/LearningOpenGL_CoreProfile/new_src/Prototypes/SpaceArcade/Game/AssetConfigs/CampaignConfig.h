@@ -23,6 +23,8 @@ namespace SA
 			//sp<SpaceLevelConfig> spaceLevelConfig;
 			std::string spaceLevelConfig;
 		};
+	public:
+		size_t getIndexInCampaignArray() { return campaignIndex; }
 	protected:
 		virtual void postConstruct() override;
 		virtual void onSerialize(json& outData) override;

@@ -1,6 +1,7 @@
 #pragma once
 #include "SASpaceLevelBase.h"
 #include "LevelConfigs/SpaceLevelConfig.h"
+//#include "../GameSystems/SAUISystem_Game.h"
 
 namespace SA
 {
@@ -8,6 +9,8 @@ namespace SA
 	class SpaceLevelConfig;
 	class AvoidMesh;
 	class Ship;
+	class Widget3D_CampaignScreen;
+	class CampaignConfig;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Level used to design campaign levels. 
@@ -19,15 +22,18 @@ namespace SA
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
+		virtual void tick_v(float dt_sec) override;
 	private://editor ui
 		void renderUI_editor();
 		void handlePlayerCreated(const sp<PlayerBase>& player, uint32_t playerIdx);
 		void handleKey(int key, int state, int modifier_keys, int scancode);
 		void renderUI_levelLoadingSaving();
+		void renderUI_campaignDesign();
 		void renderUI_gamemodeData();
 		void renderUI_avoidMeshPlacement();
 		void renderUI_environment();
 	private:
+		//void handleGameUIRenderDispatch(GameUIRenderData& rd_ui); //appears ui automatically renders for us
 		void onActiveLevelConfigSet(const sp<SpaceLevelConfig>& newConfig);
 		sp<AvoidMesh> spawnEditorDemoAvoidanceMesh(const std::string& spawnConfigName, const Transform& xform);
 		void writeConfigAvoidMeshes();
@@ -53,6 +59,8 @@ namespace SA
 		std::vector<NebulaData> nebulaData_editor;
 		std::vector<std::vector<sp<Ship>>> teamPlaceholderCarriers;
 		sp<SpaceLevelConfig> activeLevelConfig = nullptr;
+		sp<CampaignConfig> activeCampaign = nullptr;
+		sp<Widget3D_CampaignScreen> campaignWidget = nullptr;
 
 		bool bForceCarrierTakedownGMDataRefresh = false;
 	};

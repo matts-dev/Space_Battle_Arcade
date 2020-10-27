@@ -1,0 +1,153 @@
+{
+    "CampaignConfig": {
+        "levels": [
+            {
+                "level.name": "0",
+                "level.optional_defaultPlanetIdx": 0,
+                "level.optional_ui_planetSizeFactor": 1.0,
+                "level.outGoingPathIndices": [
+                    3
+                ],
+                "level.spaceLevelConfig": "level1-levelname",
+                "level.tier": 0
+            },
+            {
+                "level.name": "1",
+                "level.optional_defaultPlanetIdx": 1,
+                "level.optional_ui_planetSizeFactor": 3.200000047683716,
+                "level.outGoingPathIndices": [
+                    3,
+                    4
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 0
+            },
+            {
+                "level.name": "2",
+                "level.optional_defaultPlanetIdx": 2,
+                "level.optional_ui_planetSizeFactor": 2.0,
+                "level.outGoingPathIndices": [
+                    4
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 0
+            },
+            {
+                "level.name": "3",
+                "level.optional_defaultPlanetIdx": 3,
+                "level.optional_ui_planetSizeFactor": 3.0,
+                "level.outGoingPathIndices": [
+                    5
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 1
+            },
+            {
+                "level.name": "4",
+                "level.optional_defaultPlanetIdx": 4,
+                "level.optional_ui_planetSizeFactor": 1.7999999523162842,
+                "level.outGoingPathIndices": [
+                    6,
+                    7
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 1
+            },
+            {
+                "level.name": "5",
+                "level.optional_defaultPlanetIdx": 5,
+                "level.optional_ui_planetSizeFactor": 1.0,
+                "level.outGoingPathIndices": [
+                    8
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 2
+            },
+            {
+                "level.name": "6",
+                "level.optional_defaultPlanetIdx": 6,
+                "level.optional_ui_planetSizeFactor": 2.0,
+                "level.outGoingPathIndices": [
+                    8,
+                    9
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 2
+            },
+            {
+                "level.name": "7",
+                "level.optional_defaultPlanetIdx": 7,
+                "level.optional_ui_planetSizeFactor": 3.0,
+                "level.outGoingPathIndices": [
+                    9
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 2
+            },
+            {
+                "level.name": "8",
+                "level.optional_defaultPlanetIdx": 5,
+                "level.optional_ui_planetSizeFactor": 3.799999952316284,
+                "level.outGoingPathIndices": [
+                    10,
+                    12
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 3
+            },
+            {
+                "level.name": "9",
+                "level.optional_defaultPlanetIdx": 3,
+                "level.optional_ui_planetSizeFactor": 1.7999999523162842,
+                "level.outGoingPathIndices": [
+                    11
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 3
+            },
+            {
+                "level.name": "10",
+                "level.optional_defaultPlanetIdx": 0,
+                "level.optional_ui_planetSizeFactor": 1.340000033378601,
+                "level.outGoingPathIndices": [
+                    13
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 4
+            },
+            {
+                "level.name": "11",
+                "level.optional_defaultPlanetIdx": 1,
+                "level.optional_ui_planetSizeFactor": 0.5,
+                "level.outGoingPathIndices": [
+                    13
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 4
+            },
+            {
+                "level.name": "12",
+                "level.optional_defaultPlanetIdx": 2,
+                "level.optional_ui_planetSizeFactor": 2.0,
+                "level.outGoingPathIndices": [
+                    13
+                ],
+                "level.spaceLevelConfig": "",
+                "level.tier": 4
+            },
+            {
+                "level.name": "13",
+                "level.optional_defaultPlanetIdx": 7,
+                "level.optional_ui_planetSizeFactor": 5.0,
+                "level.outGoingPathIndices": null,
+                "level.spaceLevelConfig": "",
+                "level.tier": 5
+            }
+        ],
+        "userFacingName": "Campaign"
+    },
+    "ConfigBase": {
+        "bIsDeletable": true,
+        "name": "CampaignConfig"
+    }
+}

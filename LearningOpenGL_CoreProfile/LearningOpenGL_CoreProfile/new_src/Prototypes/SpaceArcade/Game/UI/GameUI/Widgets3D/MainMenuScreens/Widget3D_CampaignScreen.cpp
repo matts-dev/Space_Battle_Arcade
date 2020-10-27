@@ -48,6 +48,12 @@ namespace SA
 		}
 	};
 
+	void Widget3D_CampaignScreen::overrideCampaignIndex(size_t newIdx)
+	{
+		activeCampaignIdx = newIdx;
+		getConfigData();
+	}
+
 	void Widget3D_CampaignScreen::tick(float dt_sec)
 	{
 		Parent::tick(dt_sec);

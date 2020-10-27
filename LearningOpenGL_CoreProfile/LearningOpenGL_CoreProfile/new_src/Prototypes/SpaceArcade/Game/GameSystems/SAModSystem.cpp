@@ -225,7 +225,7 @@ namespace SA
 		if (campaignConfig)
 		{
 			campaignConfig->owningModDir = getModDirectoryPath();
-			campaignConfig->setCampaignIndex(settingsProfiles.size());
+			campaignConfig->setCampaignIndex(campaigns.size());
 			campaigns.push_back(campaignConfig);
 		}
 	}

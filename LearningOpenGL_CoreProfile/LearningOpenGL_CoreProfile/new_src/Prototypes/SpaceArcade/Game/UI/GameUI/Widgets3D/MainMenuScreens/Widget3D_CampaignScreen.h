@@ -33,6 +33,7 @@ namespace SA
 		~Widget3D_CampaignScreen();
 	public:
 		GAMEMENUSCREENBASE_EXPOSE_CLICK_DELEGATE(getBackButton, backButton);
+		void overrideCampaignIndex(size_t newIdx);
 	public:
 		virtual void tick(float dt_sec) override;
 	protected:

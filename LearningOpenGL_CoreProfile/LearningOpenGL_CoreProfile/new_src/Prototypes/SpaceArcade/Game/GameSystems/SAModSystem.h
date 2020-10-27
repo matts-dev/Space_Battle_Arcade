@@ -23,7 +23,7 @@ namespace SA
 	constexpr std::size_t MAX_MOD_NAME_LENGTH = 512;
 	constexpr size_t MAX_TEAM_NUM = 5;
 	constexpr size_t NUM_SETTINGS_PROFILES = 5;
-	constexpr size_t MAX_NUM_CAMPAIGNS = 1;
+	constexpr size_t MAX_NUM_CAMPAIGNS = 5;
 	const char* const MODS_DIRECTORY = "GameData/mods/";
 	std::string getModConfigFilePath();
 
@@ -110,6 +110,7 @@ namespace SA
 		sp<CampaignConfig> getCampaign(size_t index);
 		void addCampaignConfig(const sp<CampaignConfig>& settingsProfileConfig);
 		size_t getActiveCampaignIndex() const;
+		size_t getNumCampaignEntries() { return campaigns.size(); }
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// save games
