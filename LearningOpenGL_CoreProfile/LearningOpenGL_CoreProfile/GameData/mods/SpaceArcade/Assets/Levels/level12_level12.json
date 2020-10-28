@@ -1,0 +1,517 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": false,
+        "name": "level12"
+    },
+    "level12": {
+        "avoidanceMeshes": null,
+        "carrierGamemodeData": {
+            "carrierGamemodeData.teams": [
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                235.0,
+                                60.0,
+                                136.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                14.0,
+                                -166.0,
+                                0.0
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                149.0,
+                                4.0,
+                                -168.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                32.0,
+                                91.0,
+                                0.0
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "distantStarColor1": [
+            1.0,
+            1.0,
+            0.4000000059604645
+        ],
+        "distantStarColor2": [
+            1.0,
+            0.0,
+            0.0
+        ],
+        "distantStarColor3": [
+            0.0,
+            0.0,
+            1.0
+        ],
+        "gamemodeTag": "Carrier Takedown",
+        "nebulaData": [
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.568573534488678,
+                    0.6209912300109863,
+                    0.3457997441291809
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        8.0,
+                        6.285999774932861,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.9112359881401062,
+                    1.0,
+                    0.48396503925323486
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        1.5240000486373901,
+                        1.5240000486373901,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.9020788669586182,
+                    0.9970845580101013,
+                    0.4447636306285858
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        0.38100001215934753,
+                        0.5709999799728394,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.9679180979728699,
+                    0.3758638799190521,
+                    0.9766764044761658
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        1.4290000200271606,
+                        1.809999942779541,
+                        -1.215000033378601
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        2.2860000133514404,
+                        4.571000099182129,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.4781340956687927,
+                    0.08224464952945709,
+                    0.4354288876056671
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        0.47600001096725464,
+                        1.0479999780654907,
+                        -3.6449999809265137
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        2.4760000705718994,
+                        7.61899995803833,
+                        1.3079999685287476
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.6676384806632996,
+                    0.3854006826877594,
+                    0.5976962447166443
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -0.28600001335144043,
+                        -0.28600001335144043,
+                        -2.8970000743865967
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        3.809999942779541,
+                        3.0480000972747803,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.7855789065361023,
+                    0.9737609624862671,
+                    0.4286819398403168
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        0.0949999988079071,
+                        0.0949999988079071,
+                        -1.7760000228881836
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    1.0,
+                    0.4897959232330322,
+                    0.9271142482757568
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        1.0,
+                        0.8569999933242798,
+                        -0.09300000220537186
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        0.9520000219345093,
+                        1.1430000066757202,
+                        0.5609999895095825
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.38192421197891235,
+                    0.3892934322357178,
+                    1.0
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        0.9520000219345093,
+                        0.9520000219345093,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.5681653618812561,
+                    0.565597653388977,
+                    1.0
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        0.28600001335144043,
+                        0.28600001335144043,
+                        -4.205999851226807
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        0.5709999799728394,
+                        0.5709999799728394,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.4639393091201782,
+                    0.4309428930282593,
+                    0.9854227304458618
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -1.2380000352859497,
+                        1.809999942779541,
+                        2.5230000019073486
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        2.8570001125335693,
+                        2.2860000133514404,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.4037240743637085,
+                    0.3551921546459198,
+                    0.9825072884559631
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -2.9519999027252197,
+                        1.2380000352859497,
+                        2.8970000743865967
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        7.23799991607666,
+                        2.8570001125335693,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.9785518646240234,
+                    0.9825072884559631,
+                    0.6502307057380676
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -4.666999816894531,
+                        1.4290000200271606,
+                        3.0840001106262207
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        4.0,
+                        1.3329999446868896,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.9708454608917236,
+                    0.4981597661972046,
+                    0.8289021849632263
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -4.666999816894531,
+                        1.2380000352859497,
+                        2.5230000019073486
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        1.0,
+                        0.38100001215934753,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.4055218994617462,
+                    0.3803921639919281,
+                    0.9960784316062927
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -3.1429998874664307,
+                        1.0479999780654907,
+                        -1.7760000228881836
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        5.90500020980835,
+                        5.714000225067139,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.8573129177093506,
+                    0.25727379322052,
+                    0.9387755393981934
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -1.61899995803833,
+                        0.28600001335144043,
+                        -1.027999997138977
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        1.5240000486373901,
+                        1.1430000066757202,
+                        1.0
+                    ]
+                }
+            }
+        ],
+        "planets": [
+            {
+                "environmentBodyData.offsetDir": [
+                    0.6100000143051147,
+                    -1.0,
+                    -1.0
+                ],
+                "environmentBodyData.offsetDistance": 18.5,
+                "planetData.bHasCivilization": false,
+                "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_2.png"
+            }
+        ],
+        "stars": [
+            {
+                "environmentBodyData.offsetDir": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "environmentBodyData.offsetDistance": 31.5,
+                "starData.color": [
+                    0.9699410796165466,
+                    0.9825072884559631,
+                    0.7905889749526978
+                ]
+            }
+        ],
+        "userFacingName": "level12"
+    }
+}

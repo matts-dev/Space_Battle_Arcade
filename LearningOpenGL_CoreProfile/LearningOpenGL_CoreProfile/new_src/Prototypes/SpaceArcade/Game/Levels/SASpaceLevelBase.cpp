@@ -41,6 +41,7 @@
 #include "../../GameFramework/SAWorldEntity.h"
 #include "../Cameras/SAShipCamera.h"
 #include "../Environment/Nebula.h"
+#include "../GameEntities/AvoidMesh.h"
 
 namespace SA
 {
@@ -497,6 +498,25 @@ namespace SA
 				nebulae.push_back(new_sp<Nebula>(init));
 				nebulae.back()->setXform(nebulaData.transform);
 			}
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// set up avoidance meshes
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			avoidMeshes.clear();
+			if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+			{
+				const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
+				for(const WorldAvoidanceMeshData& avoidMeshData : levelConfig->getAvoidanceMeshes())
+				{
+					if (auto findIter = spawnConfigs.find(avoidMeshData.spawnConfigName); findIter != spawnConfigs.end() && findIter->second)
+					{
+						AvoidMesh::SpawnData asteroidSpawnParams;
+						asteroidSpawnParams.spawnTransform = avoidMeshData.spawnTransform;
+						asteroidSpawnParams.spawnConfig = findIter->second;
+						avoidMeshes.push_back(spawnEntity<AvoidMesh>(asteroidSpawnParams));
+					}
+				}
+			}
 		}
 	}
 
@@ -638,6 +658,8 @@ namespace SA
 
 	void SpaceLevelBase::refreshStarLightMapping()
 	{
+		dirLights.clear(); //get rid of extra lights
+
 		uint32_t MAX_DIR_LIGHTS = GameBase::getConstants().MAX_DIR_LIGHTS;
 		if (localStars.size() > MAX_DIR_LIGHTS)
 		{

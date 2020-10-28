@@ -1,0 +1,140 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": false,
+        "name": "Level2"
+    },
+    "Level2": {
+        "avoidanceMeshes": null,
+        "carrierGamemodeData": {
+            "carrierGamemodeData.teams": [
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                -200.0,
+                                -14.0,
+                                252.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                15.0,
+                                139.0,
+                                10.0
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                187.0,
+                                -45.0,
+                                -100.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                28.0,
+                                -60.0,
+                                -29.0
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "distantStarColor1": [
+            1.0,
+            1.0,
+            0.4000000059604645
+        ],
+        "distantStarColor2": [
+            1.0,
+            0.0,
+            0.0
+        ],
+        "distantStarColor3": [
+            0.0,
+            0.0,
+            1.0
+        ],
+        "gamemodeTag": "Carrier Takedown",
+        "nebulaData": [
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.3815028667449951,
+                    0.3814990520477295,
+                    0.3814990520477295
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -0.7549999952316284,
+                        0.1889999955892563,
+                        1.0
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        1.6979999542236328,
+                        1.8869999647140503,
+                        1.0
+                    ]
+                }
+            }
+        ],
+        "planets": [
+            {
+                "environmentBodyData.offsetDir": [
+                    0.41999998688697815,
+                    0.029999999329447746,
+                    -0.8600000143051147
+                ],
+                "environmentBodyData.offsetDistance": 2.799999952316284,
+                "planetData.bHasCivilization": false,
+                "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_2.png"
+            }
+        ],
+        "stars": [
+            {
+                "environmentBodyData.offsetDir": [
+                    -0.6299999952316284,
+                    0.27000001072883606,
+                    1.0
+                ],
+                "environmentBodyData.offsetDistance": 5.5,
+                "starData.color": [
+                    0.9335260391235352,
+                    0.9335199594497681,
+                    0.9335166811943054
+                ]
+            },
+            {
+                "environmentBodyData.offsetDir": [
+                    0.9900000095367432,
+                    0.8500000238418579,
+                    -1.0
+                ],
+                "environmentBodyData.offsetDistance": 37.599998474121094,
+                "starData.color": [
+                    1.0,
+                    0.9999899864196777,
+                    0.9999899864196777
+                ]
+            }
+        ],
+        "userFacingName": "Level2"
+    }
+}

@@ -395,7 +395,7 @@ namespace SA
 					////////////////////////////////////////////////////////
 					int numDefaultTextures = defaultPaths.size();
 					int textureOverride = int(level.optional_defaultPlanetIdx);
-					if (ImGui::InputInt("optional level index", &textureOverride, -1, numDefaultTextures))
+					if (ImGui::InputInt("optional planet texture index", &textureOverride, -1, numDefaultTextures))
 					{
 						level.optional_defaultPlanetIdx = int64_t(textureOverride);
 						bSelectedLevelInCampaignDirty = true;
@@ -568,6 +568,7 @@ namespace SA
 					}
 				}
 
+				bool bACarrierIsDirty = false;
 				//hard coding number of teams for now
 				size_t numTeams = 2;
 				for (size_t teamIdx = 0; teamIdx < numTeams; ++teamIdx)
@@ -575,18 +576,16 @@ namespace SA
 					//make a team data if one is not available
 					if (!Utils::isValidIndex(gmData.teams, teamIdx)) { gmData.teams.emplace_back(); }
 					SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
-
 					size_t levelConfigNumCarriers = teamData.carrierSpawnData.size();
 					size_t numCarriers = glm::max<size_t>(1, levelConfigNumCarriers);
 					for (size_t carrierIdx = 0; carrierIdx < numCarriers; ++carrierIdx)
 					{
-						bool bCarrierDirty = false;
 
 						//make a carrier if one is not available
 						if (!Utils::isValidIndex(teamData.carrierSpawnData, carrierIdx))
 						{ 
 							teamData.carrierSpawnData.emplace_back(); 
-							bCarrierDirty = true; 
+							bACarrierIsDirty = true; 
 						}
 						CarrierSpawnData& carrierData = teamData.carrierSpawnData[carrierIdx];
 
@@ -606,68 +605,84 @@ namespace SA
 								//onNewCarrierSelected();
 							}
 						}
+					}
 
-						if(bIsSelectedCarrier)
+				}
+
+				if(Utils::isValidIndex(gmData.teams, selectedTeamIdx) && Utils::isValidIndex(gmData.teams[selectedTeamIdx].carrierSpawnData, selectedCarrierIdx))
+				{
+					CarrierSpawnData& carrierData = gmData.teams[selectedTeamIdx].carrierSpawnData[selectedCarrierIdx];
+					//--------------- manually type name, disabled because refactoring to let user have a selectable menu--------------
+					//Utils::copyCppStringToCString(carrierData.carrierShipSpawnConfig_name, userText_temp, sizeof(userText_temp));
+					//if (ImGui::InputText(textWithIdx("carrierShipSpawnConfig_name c[%d], t[%d]", carrierIdx, teamIdx), userText_temp, sizeof(userText_temp)))
+					//{
+					//	//always copying temp buffer the carrier data is persistent, but temp buffer may get cleared
+					//	carrierData.carrierShipSpawnConfig_name = userText_temp;
+					//	carrierDirty = true;
+					//}
+
+					// ------------------- selectable carrier configs ---------------------
+					ImGui::Separator();
+					ImGui::Text("Available Spawn Configs");
+					const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
+					if (spawnConfigs.size() > 0)
+					{
+						//int curConfigIdx = 0;
+						for (const auto& kvPair : spawnConfigs)
 						{
-
-							//--------------- manually type name, disabled because refactoring to let user have a selectable menu--------------
-							//Utils::copyCppStringToCString(carrierData.carrierShipSpawnConfig_name, userText_temp, sizeof(userText_temp));
-							//if (ImGui::InputText(textWithIdx("carrierShipSpawnConfig_name c[%d], t[%d]", carrierIdx, teamIdx), userText_temp, sizeof(userText_temp)))
-							//{
-							//	//always copying temp buffer the carrier data is persistent, but temp buffer may get cleared
-							//	carrierData.carrierShipSpawnConfig_name = userText_temp;
-							//	carrierDirty = true;
-							//}
-
-							// ------------------- selectable carrier configs ---------------------
-							ImGui::Separator();
-							ImGui::Text("Available Spawn Configs");
-							const std::map<std::string, sp<SpawnConfig>>& spawnConfigs = activeMod->getSpawnConfigs();
-							if (spawnConfigs.size() > 0)
+							//size_t numSpawnPnts = kvPair.second->getSpawnPoints().size(); //this could be used to signal to user they need to add spawn points, but may need to come after selection
+							const std::string& iterConfigName = kvPair.first;
+							if (ImGui::Selectable(iterConfigName.c_str(), iterConfigName == carrierData.carrierShipSpawnConfig_name))
 							{
-								//int curConfigIdx = 0;
-								for (const auto& kvPair : spawnConfigs)
-								{
-									//size_t numSpawnPnts = kvPair.second->getSpawnPoints().size(); //this could be used to signal to user they need to add spawn points, but may need to come after selection
-									const std::string& iterConfigName = kvPair.first;
-									if (ImGui::Selectable(iterConfigName.c_str(), iterConfigName == carrierData.carrierShipSpawnConfig_name))
-									{
-										carrierData.carrierShipSpawnConfig_name = iterConfigName;
-										bCarrierDirty = true;
-									}
-									//++curConfigIdx;
-								}
+								carrierData.carrierShipSpawnConfig_name = iterConfigName;
+								bACarrierIsDirty = true;
 							}
-							ImGui::Separator();
-
-							if (!carrierData.position.has_value()) { carrierData.position = glm::vec3(0.f); }
-							bCarrierDirty |= ImGui::DragFloat3(textWithIdx("position c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.position->x);
-
-							if (!carrierData.rotation_deg.has_value()) { carrierData.rotation_deg = glm::vec3(0.f); }
-							bCarrierDirty |= ImGui::DragFloat3(textWithIdx("rotation c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.rotation_deg->x);
-
-							int numFightersProxy = int(carrierData.numInitialFighters);
-							if (ImGui::InputInt(textWithIdx("num init fighters to spawn c[%d] t[%d]", carrierIdx, teamIdx), &numFightersProxy))
-							{
-								//only make make this dirty if we're showing spawns in editor
-								//carrierDirty = true;
-								carrierData.numInitialFighters = size_t(numFightersProxy);
-							}
-
-							////////////////////////////////////////////////////////
-							// fighter data
-							////////////////////////////////////////////////////////
-							ImGui::Checkbox(textWithIdx("enable fighter respawns c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.fighterSpawnData.bEnableFighterRespawns);
-							int maxShipsProxy = int(carrierData.fighterSpawnData.maxNumberOwnedFighterShips);
-							if (ImGui::InputInt(textWithIdx("max Ships Spawnable c[%d] t[%d]", carrierIdx, teamIdx), &maxShipsProxy))
-							{
-								carrierData.fighterSpawnData.maxNumberOwnedFighterShips = int(maxShipsProxy);
-							}
-							ImGui::InputFloat(textWithIdx("respawn cooldown c[%d] t[%d]", carrierIdx, teamIdx), &carrierData.fighterSpawnData.respawnCooldownSec);
+							//++curConfigIdx;
 						}
+					}
+					ImGui::Separator();
 
-						if (bCarrierDirty || bForceCarrierTakedownGMDataRefresh)
+					if (!carrierData.position.has_value()) { carrierData.position = glm::vec3(0.f); }
+					bACarrierIsDirty |= ImGui::DragFloat3(textWithIdx("position c[%d] t[%d]", selectedCarrierIdx, selectedTeamIdx), &carrierData.position->x);
+
+					if (!carrierData.rotation_deg.has_value()) { carrierData.rotation_deg = glm::vec3(0.f); }
+					bACarrierIsDirty |= ImGui::DragFloat3(textWithIdx("rotation c[%d] t[%d]", selectedCarrierIdx, selectedTeamIdx), &carrierData.rotation_deg->x);
+
+					int numFightersProxy = int(carrierData.numInitialFighters);
+					if (ImGui::InputInt(textWithIdx("num init fighters to spawn c[%d] t[%d]", selectedCarrierIdx, selectedTeamIdx), &numFightersProxy))
+					{
+						//only make make this dirty if we're showing spawns in editor
+						//carrierDirty = true;
+						carrierData.numInitialFighters = size_t(numFightersProxy);
+					}
+
+					////////////////////////////////////////////////////////
+					// fighter data
+					////////////////////////////////////////////////////////
+					ImGui::Checkbox(textWithIdx("enable fighter respawns c[%d] t[%d]", selectedCarrierIdx, selectedTeamIdx), &carrierData.fighterSpawnData.bEnableFighterRespawns);
+					int maxShipsProxy = int(carrierData.fighterSpawnData.maxNumberOwnedFighterShips);
+					if (ImGui::InputInt(textWithIdx("max Ships Spawnable c[%d] t[%d]", selectedCarrierIdx, selectedTeamIdx), &maxShipsProxy))
+					{
+						carrierData.fighterSpawnData.maxNumberOwnedFighterShips = int(maxShipsProxy);
+					}
+					ImGui::InputFloat(textWithIdx("respawn cooldown c[%d] t[%d]", selectedCarrierIdx, selectedTeamIdx), &carrierData.fighterSpawnData.respawnCooldownSec);
+				}
+
+				//update all carriers (first load requires full refresh of all carriers)
+				if (bACarrierIsDirty || bForceCarrierTakedownGMDataRefresh)
+				{
+					for (size_t teamIdx = 0; teamIdx < numTeams; ++teamIdx)
+					{
+						//make a team data if one is not available
+						if (!Utils::isValidIndex(gmData.teams, teamIdx)) { gmData.teams.emplace_back(); }
+						SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
+						size_t levelConfigNumCarriers = teamData.carrierSpawnData.size();
+						size_t numCarriers = glm::max<size_t>(1, levelConfigNumCarriers);
+
+						for (size_t carrierIdx = 0; carrierIdx < numCarriers; ++carrierIdx)
 						{
+							CarrierSpawnData& carrierData = teamData.carrierSpawnData[carrierIdx];
+
 							while (!Utils::isValidIndex(teamPlaceholderCarriers, teamIdx)) //#todo #nextengine these things are bug prone to write by hand, perhaps a array library header that can grow array to a certain size and init to a default value
 							{
 								teamPlaceholderCarriers.emplace_back();
@@ -804,14 +819,14 @@ namespace SA
 					Transform newXform = ad.demoMesh->getTransform(); 
 					bool bDirty = false;
 
-					if (ImGui::InputFloat3("position", &newXform.position.x)){bDirty = true;}
-					if (ImGui::InputFloat3("scale", &newXform.scale.x)) { bDirty = true; }
+					if (ImGui::DragFloat3("position", &newXform.position.x)){bDirty = true;}
+					if (ImGui::DragFloat3("scale", &newXform.scale.x)) { bDirty = true; }
 
 					static glm::vec3 rotProxy_eulerAngles = glm::vec3(0.f);
 					rotProxy_eulerAngles.x = glm::degrees(glm::pitch(newXform.rotQuat));
 					rotProxy_eulerAngles.y = glm::degrees(glm::yaw(newXform.rotQuat));
 					rotProxy_eulerAngles.z = glm::degrees(glm::roll(newXform.rotQuat));
-					if (ImGui::InputFloat3("rotation", &rotProxy_eulerAngles.x)) { bDirty = true; }
+					if (ImGui::DragFloat3("rotation", &rotProxy_eulerAngles.x)) { bDirty = true; }
 
 					if (bDirty)
 					{
@@ -836,6 +851,7 @@ namespace SA
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// stars
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if (ImGui::CollapsingHeader("STARS"))
 			{
 				ImGui::Dummy(ImVec2(0, 10));
 
@@ -893,6 +909,7 @@ namespace SA
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// planets
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if (ImGui::CollapsingHeader("PLANETS"))
 			{
 				ImGui::Dummy(ImVec2(0, 10));
 
@@ -982,6 +999,7 @@ namespace SA
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// nebula
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			if (ImGui::CollapsingHeader("NEBULA"))
 			{
 				ImGui::Dummy(ImVec2(0, 10));
 				bool bDirty_Nebula = false;
@@ -1154,6 +1172,8 @@ namespace SA
 
 		avoidMeshData.clear();
 
+		refreshStarLightMapping();
+
 		if (newConfig)
 		{
 			for (const WorldAvoidanceMeshData& configAvoidMeshDatum : newConfig->getAvoidanceMeshes())
@@ -1199,6 +1219,7 @@ namespace SA
 					AvoidMesh::SpawnData asteroidSpawnParams;
 					asteroidSpawnParams.spawnTransform = xform;
 					asteroidSpawnParams.spawnConfig = kvPair->second;
+					asteroidSpawnParams.bEditorMode = true;
 					return spawnEntity<AvoidMesh>(asteroidSpawnParams);
 				}
 			}

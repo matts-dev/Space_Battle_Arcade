@@ -12,6 +12,7 @@ namespace SA
 	class StarField;
 	class Star;
 	class Nebula;
+	class AvoidMesh;
 	//class Planet; //included for now so that we can functionify the init data part that takes Planet::Data (For space level editor)
 	//struct Planet::Data;
 	class SpaceLevelConfig;
@@ -72,6 +73,7 @@ namespace SA
 		std::vector<sp<Star>> localStars;
 		std::vector<sp<Planet>> planets;
 		std::vector<sp<Nebula>> nebulae;
+		std::vector<sp<AvoidMesh>> avoidMeshes; //eg asteroids
 		sp<SA::Shader> forwardShadedModelShader;
 		sp<SA::Shader> highlightForwardModelShader;
 		std::vector<class RenderModelEntity*> stencilHighlightEntities;

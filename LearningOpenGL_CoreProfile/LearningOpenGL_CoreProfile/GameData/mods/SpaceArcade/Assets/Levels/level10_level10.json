@@ -1,0 +1,228 @@
+{
+    "ConfigBase": {
+        "bIsDeletable": false,
+        "name": "level10"
+    },
+    "level10": {
+        "avoidanceMeshes": null,
+        "carrierGamemodeData": {
+            "carrierGamemodeData.teams": [
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                114.0,
+                                -94.0,
+                                -294.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                -13.0,
+                                0.0,
+                                0.0
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "teamData.carrierSpawnData": [
+                        {
+                            "carrierData.carrierShipSpawnConfig_name": "Carrier",
+                            "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
+                            "carrierData.numInitialFighters": 250,
+                            "carrierData.position": [
+                                107.0,
+                                107.0,
+                                117.0
+                            ],
+                            "carrierData.rotation_deg": [
+                                25.0,
+                                -155.0,
+                                1.0
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "distantStarColor1": [
+            1.0,
+            1.0,
+            0.4000000059604645
+        ],
+        "distantStarColor2": [
+            1.0,
+            0.0,
+            0.0
+        ],
+        "distantStarColor3": [
+            0.0,
+            0.0,
+            1.0
+        ],
+        "gamemodeTag": "Carrier Takedown",
+        "nebulaData": [
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.0235294122248888,
+                    0.3921568691730499,
+                    0.6078431606292725
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        16.381000518798828,
+                        9.142999649047852,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.7609329223632813,
+                    0.5284243226051331,
+                    0.0
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        2.0,
+                        -0.47600001096725464,
+                        -1.215000033378601
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        4.0,
+                        4.38100004196167,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.7900874614715576,
+                    0.5441341400146484,
+                    0.01612422615289688
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -0.6669999957084656,
+                        -1.0479999780654907,
+                        -1.5889999866485596
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        2.2860000133514404,
+                        2.6670000553131104,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "nebula.texturePath": "Assets/Textures/nebula2.png",
+                "nebula.tintColor": [
+                    0.0,
+                    0.5667195320129395,
+                    0.9067055583000183
+                ],
+                "nebula.transform": {
+                    "nebula.transform.position": [
+                        -2.0,
+                        0.8569999933242798,
+                        1.215000033378601
+                    ],
+                    "nebula.transform.rotQuat": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "nebula.transform.scale": [
+                        4.76200008392334,
+                        3.23799991607666,
+                        1.0
+                    ]
+                }
+            }
+        ],
+        "planets": [
+            {
+                "environmentBodyData.offsetDir": [
+                    -0.11999999731779099,
+                    -0.4000000059604645,
+                    -0.9399999976158142
+                ],
+                "environmentBodyData.offsetDistance": 9.699999809265137,
+                "planetData.bHasCivilization": false,
+                "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_4.png"
+            },
+            {
+                "environmentBodyData.offsetDir": [
+                    -0.3400000035762787,
+                    0.5400000214576721,
+                    1.0
+                ],
+                "environmentBodyData.offsetDistance": 23.600000381469727,
+                "planetData.bHasCivilization": false,
+                "planetData.texturePath": "GameData/mods/SpaceArcade/Assets/Models3D/Planet/albedo_1.png"
+            }
+        ],
+        "stars": [
+            {
+                "environmentBodyData.offsetDir": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "environmentBodyData.offsetDistance": 25.5,
+                "starData.color": [
+                    0.42655691504478455,
+                    0.8219349980354309,
+                    0.9562681913375854
+                ]
+            },
+            {
+                "environmentBodyData.offsetDir": [
+                    0.5,
+                    -0.14000000059604645,
+                    -0.6800000071525574
+                ],
+                "environmentBodyData.offsetDistance": 50.900001525878906,
+                "starData.color": [
+                    0.9562681913375854,
+                    0.6608446836471558,
+                    0.3791617453098297
+                ]
+            }
+        ],
+        "userFacingName": "level10"
+    }
+}

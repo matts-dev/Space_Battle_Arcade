@@ -23,6 +23,7 @@ namespace SA
 		{
 			sp<SpawnConfig> spawnConfig;
 			Transform spawnTransform;
+			bool bEditorMode = false;
 		};
 		AvoidMesh(const SpawnData& spawnData);
 	public:
@@ -33,6 +34,7 @@ namespace SA
 		void updateAvoidanceSpheres();
 		void updateCollision();
 	private:
+		bool bEditorMode = false;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
 		sp<class SpawnConfig> spawnConfig = nullptr;
 		up<SH::HashEntry<WorldEntity>> collisionHandle = nullptr;

@@ -19,9 +19,13 @@ namespace SA
 	{
 		spawnConfig = spawnData.spawnConfig;
 
-		CollisionComponent* collisionComp = createGameComponent<CollisionComponent>();
-		collisionComp->setCollisionData(collisionData);
-		collisionComp->setKinematicCollision(spawnData.spawnConfig->requestCollisionTests());
+		bEditorMode = spawnData.bEditorMode;
+		if (!bEditorMode)
+		{
+			CollisionComponent* collisionComp = createGameComponent<CollisionComponent>();
+			collisionComp->setCollisionData(collisionData);
+			collisionComp->setKinematicCollision(spawnData.spawnConfig->requestCollisionTests());
+		}
 	}
 
 	void AvoidMesh::postConstruct()
@@ -35,14 +39,18 @@ namespace SA
 			avoidanceSphere->setParentScalesRadius(true); //asteroids are tiny and scaled up, we need radius to respect scale.
 			avoidanceSpheres.push_back(avoidanceSphere); 
 		}
-		updateAvoidanceSpheres();
-		
-		//WARNING: caching world sp will create cyclic reference
-		if (LevelBase* world = getWorld())
+
+		if (!bEditorMode)
 		{
-			collisionHandle = world->getWorldGrid().insert(*this, collisionData->getWorldOBB());
+			updateAvoidanceSpheres();
+		
+			//WARNING: caching world sp will create cyclic reference
+			if (LevelBase* world = getWorld())
+			{
+				collisionHandle = world->getWorldGrid().insert(*this, collisionData->getWorldOBB());
+			}
+			updateCollision();
 		}
-		updateCollision();
 	}
 
 	void AvoidMesh::render(Shader& shader)
@@ -71,6 +79,8 @@ namespace SA
 
 	void AvoidMesh::updateAvoidanceSpheres()
 	{
+		if (bEditorMode) { return; }
+
 		glm::mat4 astroidModelMat = getTransform().getModelMatrix();
 
 		for (sp<AvoidanceSphere>& avoidanceSphere : avoidanceSpheres)
@@ -81,14 +91,17 @@ namespace SA
 
 	void AvoidMesh::updateCollision()
 	{
-		Transform xform = getTransform();
-		collisionData->updateToNewWorldTransform(xform.getModelMatrix());
-
-		LevelBase* world = getWorld();
-		if (world && collisionHandle)
+		if (!bEditorMode)
 		{
-			SH::SpatialHashGrid<WorldEntity>& worldGrid = world->getWorldGrid();
-			worldGrid.updateEntry(collisionHandle, collisionData->getWorldOBB());
+			Transform xform = getTransform();
+			collisionData->updateToNewWorldTransform(xform.getModelMatrix());
+
+			LevelBase* world = getWorld();
+			if (world && collisionHandle)
+			{
+				SH::SpatialHashGrid<WorldEntity>& worldGrid = world->getWorldGrid();
+				worldGrid.updateEntry(collisionHandle, collisionData->getWorldOBB());
+			}
 		}
 	}
 
