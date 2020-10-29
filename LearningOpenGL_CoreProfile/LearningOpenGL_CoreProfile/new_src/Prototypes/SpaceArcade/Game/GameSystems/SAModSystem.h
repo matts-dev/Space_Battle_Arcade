@@ -122,8 +122,8 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		// team
 		/////////////////////////////////////////////////////////////////////////////////////
-		size_t getPlayerPreferredTeam() { return playerPreferredTeam; }
-		void setPlayerPreferredTeam(size_t team) { playerPreferredTeam = team; }
+		//size_t getPlayerPreferredTeam() { return playerPreferredTeam; }
+		//void setPlayerPreferredTeam(size_t team) { playerPreferredTeam = team; }
 
 		bool teamHasName(size_t teamIdx) const;
 		std::string getTeamName(size_t teamIdx) const;

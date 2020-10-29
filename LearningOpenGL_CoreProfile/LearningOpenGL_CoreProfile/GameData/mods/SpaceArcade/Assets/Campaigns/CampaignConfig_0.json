@@ -8,7 +8,7 @@
                 "level.outGoingPathIndices": [
                     3
                 ],
-                "level.spaceLevelConfig": "level1-levelname",
+                "level.spaceLevelConfig": "Level1-Level1",
                 "level.tier": 0
             },
             {
@@ -19,7 +19,7 @@
                     3,
                     4
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "Level2-Level2",
                 "level.tier": 0
             },
             {
@@ -29,7 +29,7 @@
                 "level.outGoingPathIndices": [
                     4
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level3-level3",
                 "level.tier": 0
             },
             {
@@ -39,7 +39,7 @@
                 "level.outGoingPathIndices": [
                     5
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level4-level4",
                 "level.tier": 1
             },
             {
@@ -50,7 +50,7 @@
                     6,
                     7
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "Level5-Level5",
                 "level.tier": 1
             },
             {
@@ -60,7 +60,7 @@
                 "level.outGoingPathIndices": [
                     8
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level9-level9",
                 "level.tier": 2
             },
             {
@@ -71,7 +71,7 @@
                     8,
                     9
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level7-level7",
                 "level.tier": 2
             },
             {
@@ -81,7 +81,7 @@
                 "level.outGoingPathIndices": [
                     9
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level8-level8",
                 "level.tier": 2
             },
             {
@@ -92,7 +92,7 @@
                     10,
                     12
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level6-level6",
                 "level.tier": 3
             },
             {
@@ -102,7 +102,7 @@
                 "level.outGoingPathIndices": [
                     11
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level10-level10",
                 "level.tier": 3
             },
             {
@@ -112,7 +112,7 @@
                 "level.outGoingPathIndices": [
                     13
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level11-level11",
                 "level.tier": 4
             },
             {
@@ -122,7 +122,7 @@
                 "level.outGoingPathIndices": [
                     13
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level12-level12",
                 "level.tier": 4
             },
             {
@@ -132,7 +132,7 @@
                 "level.outGoingPathIndices": [
                     13
                 ],
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level13-level13",
                 "level.tier": 4
             },
             {
@@ -140,7 +140,7 @@
                 "level.optional_defaultPlanetIdx": 7,
                 "level.optional_ui_planetSizeFactor": 5.0,
                 "level.outGoingPathIndices": null,
-                "level.spaceLevelConfig": "",
+                "level.spaceLevelConfig": "level14-level14",
                 "level.tier": 5
             }
         ],

@@ -91,7 +91,7 @@ namespace SA
 		void initialize(const LevelKey& key);
 		void tick(float dt_sec, const LevelKey& key);
 		void						setOwningLevel(const sp<SpaceLevelBase>& level);
-		const wp<SpaceLevelBase>&	getOwningLevel() const { return owningLevel; }
+		const wp<SpaceLevelBase>&	getOwningLevel() const { return weakOwningLevel; }
 		size_t getNumTeams() const { return numTeams; }
 		void addTurretNeedingTarget(const sp<ShipPlacementEntity>& turret);
 		void addHealerNeedingTarget(const sp<ShipPlacementEntity>& healer);
@@ -124,7 +124,7 @@ namespace SA
 		size_t numTeams = 2;
 	private:
 		bool bBaseInitialized = false; //perhaps make static and reset since this will ever be created from single thread
-		wp<SpaceLevelBase> owningLevel;
+		wp<SpaceLevelBase> weakOwningLevel;
 		std::vector<lp<Ship>> ships;
 		std::vector<GameModeTeamData> teamData;
 		std::vector<lp<ShipPlacementEntity>> turretsNeedingTarget;

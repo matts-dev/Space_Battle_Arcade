@@ -22,6 +22,9 @@
 #include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ExitScreen.h"
 #include "../../Tools/SAUtilities.h"
 #include "../UI/GameUI/SAHUD.h"
+#include "../SAPlayer.h"
+#include "../../GameFramework/SAAudioSystem.h"
+#include "../AssetConfigs/SASettingsProfileConfig.h"
 
 namespace SA
 {
@@ -246,6 +249,31 @@ namespace SA
 	void MainMenuLevel::handleMainMenuStartupDelayOver()
 	{
 		mainMenuScreen->activate(true); 
+
+		static bool firstLoad = true;
+		if (firstLoad)
+		{
+			firstLoad = false;
+			if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+			{
+				if (SAPlayer* SaPlayer = dynamic_cast<SAPlayer*>(player.get()))
+				{
+					if (const sp<SettingsProfileConfig>& settingsProfile = SaPlayer->getSettingsProfile())
+					{
+						////////////////////////////////////////////////////////
+						// set up audio
+						////////////////////////////////////////////////////////
+						AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+						audioSystem.setSystemVolumeMultiplier(settingsProfile->volumeMultiplier);
+
+						////////////////////////////////////////////////////////
+						// set up team
+						////////////////////////////////////////////////////////
+						//settingsProfile->selectedTeamIdx; //this is respected when joining level, so no need to do any work here with current implementation
+					}
+				}
+			}
+		}
 	}
 
 	void MainMenuLevel::updateCamera(float dt_sec)

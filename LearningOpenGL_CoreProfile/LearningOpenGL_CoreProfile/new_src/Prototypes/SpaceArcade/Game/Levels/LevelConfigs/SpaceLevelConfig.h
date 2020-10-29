@@ -72,6 +72,8 @@ namespace SA
 			struct TeamData
 			{
 				std::vector<CarrierSpawnData> carrierSpawnData; 
+				glm::vec3 playerSpawnPoint = glm::vec3(0.f);
+				glm::vec3 playerSpawnDirection = glm::vec3(1.f, 0.f, 0.f);
 			};
 			std::vector<TeamData> teams;
 		};

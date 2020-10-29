@@ -64,7 +64,7 @@ namespace SA
 
 	void ServerGameMode_SpaceBase::setOwningLevel(const sp<SpaceLevelBase>& level)
 	{
-		owningLevel = level;
+		weakOwningLevel = level;
 	}
 
 
@@ -85,7 +85,7 @@ namespace SA
 
 	void ServerGameMode_SpaceBase::initialize(const LevelKey& key)
 	{
-		sp<SpaceLevelBase> level = owningLevel.expired() ? nullptr : owningLevel.lock();
+		sp<SpaceLevelBase> level = weakOwningLevel.expired() ? nullptr : weakOwningLevel.lock();
 		onInitialize(level);
 
 		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
@@ -127,7 +127,7 @@ namespace SA
 	void ServerGameMode_SpaceBase::endGame(const EndGameParameters& endParameters)
 	{
 		//game mode acts on level because if client/server architecture is ever set up, clients will have access to level but not gamemode
-		if (sp<SpaceLevelBase> level = owningLevel.lock())
+		if (sp<SpaceLevelBase> level = weakOwningLevel.lock())
 		{
 			level->endGame(endParameters);
 		}

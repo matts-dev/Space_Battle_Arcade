@@ -1,4 +1,5 @@
 #include "SASettingsProfileConfig.h"
+#include "JsonUtils.h"
 
 namespace SA
 {
@@ -12,6 +13,7 @@ namespace SA
 			{"bEnableDevConsole", bEnableDevConsole},
 			{"masterVolume", masterVolume}
 		};
+		JSON_WRITE(selectedTeamIdx, settingsData);
 
 		std::string indexName = getIndexedName();
 		outData.push_back({ fileName, settingsData});
@@ -34,6 +36,8 @@ namespace SA
 				{
 					masterVolume = settingProfileData["masterVolume"];
 				}
+
+				READ_JSON_INT_OPTIONAL(selectedTeamIdx, settingProfileData);
 			}
 		}
 	}

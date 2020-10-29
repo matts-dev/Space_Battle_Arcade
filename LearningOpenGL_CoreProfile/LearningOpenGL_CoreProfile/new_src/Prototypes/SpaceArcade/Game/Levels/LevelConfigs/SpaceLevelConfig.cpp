@@ -249,6 +249,9 @@ namespace SA
 					json_carrierSpawnArray.push_back(json_carrierData);
 				}
 				json_Team[SYMBOL_TO_STR(teamData.carrierSpawnData)] = json_carrierSpawnArray;
+				JSON_WRITE_VEC3(teamData.playerSpawnPoint, json_Team);
+				JSON_WRITE_VEC3(teamData.playerSpawnDirection, json_Team);
+
 				json_teamArray.push_back(json_Team);
 			}
 			json_carrierGamemodeData[SYMBOL_TO_STR(carrierGamemodeData.teams)] = json_teamArray;
@@ -256,6 +259,7 @@ namespace SA
 		spaceLevelData.push_back({ SYMBOL_TO_STR(carrierGamemodeData), json_carrierGamemodeData });
 	
 		outData.push_back({ getName(), spaceLevelData });
+
 	}
 
 	void SpaceLevelConfig::onDeserialize(const json& inData)
@@ -394,8 +398,12 @@ namespace SA
 
 						const json& json_teamData = json_teamArray[teamIdx];
 
+						READ_JSON_VEC3_OPTIONAL(teamData.playerSpawnPoint, json_teamData);
+						READ_JSON_VEC3_OPTIONAL(teamData.playerSpawnDirection, json_teamData);
+
 						if (JsonUtils::hasArray(json_teamData, SYMBOL_TO_STR(teamData.carrierSpawnData)))
 						{
+
 							teamData.carrierSpawnData.clear(); //clear any previous data
 
 							const json& json_carrierSpawnArray = json_teamData[SYMBOL_TO_STR(teamData.carrierSpawnData)];

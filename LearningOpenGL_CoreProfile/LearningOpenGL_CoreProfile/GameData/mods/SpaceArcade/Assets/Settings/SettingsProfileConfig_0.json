@@ -5,6 +5,7 @@
     },
     "SettingsProfileConfig_0": {
         "bEnableDevConsole": true,
-        "masterVolume": 0.7014603018760681
+        "masterVolume": 0.49897927045822144,
+        "selectedTeamIdx": 1
     }
 }

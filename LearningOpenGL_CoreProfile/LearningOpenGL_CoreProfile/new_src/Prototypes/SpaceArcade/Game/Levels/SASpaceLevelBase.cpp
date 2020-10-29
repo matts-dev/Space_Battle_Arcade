@@ -485,6 +485,7 @@ namespace SA
 				newStar->setLightLDR(starColor);
 				newStar->updateXformForData(starDir, starDist);
 			}
+			refreshStarLightMapping(); // now that stars are set up, recalculate the levels directional lights.
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			// set up nebulae

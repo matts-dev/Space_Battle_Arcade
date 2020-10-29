@@ -200,6 +200,8 @@ namespace SA
 		};
 		void trySetEmitterBuffer(AudioEmitter& emitter, const EmitterPrivateKey&);
 		void stopEmitter(AudioEmitter& emitter, const EmitterPrivateKey&);
+		void setSystemVolumeMultiplier(float multiplier);
+		static float getSystemAudioMaxMultiplier(){ return 2.f; }
 	public://debug
 		void logDebugInformation();
 	private:	

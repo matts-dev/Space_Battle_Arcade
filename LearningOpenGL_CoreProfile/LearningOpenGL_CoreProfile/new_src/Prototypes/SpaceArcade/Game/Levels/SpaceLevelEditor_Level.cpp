@@ -23,6 +23,7 @@
 #include "SASpaceLevelBase.h"
 #include "../AssetConfigs/CampaignConfig.h"
 #include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_CampaignScreen.h"
+#include "../../GameFramework/SADebugRenderSystem.h"
 
 namespace SA
 {
@@ -102,7 +103,28 @@ namespace SA
 		//		//asteroidDatum.demoAsteroid->render(parentWorldShader);
 		//	}
 		//}
-		
+
+		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+		if (activeLevelConfig && activeMod)
+		{
+			if (bool bCarrierTakedownGameMode = true)
+			{
+				DebugRenderSystem& debugRenderSystem = GameBase::get().getDebugRenderSystem(); 
+
+				SpaceLevelConfig::GameModeData_CarrierTakedown& gmData = activeLevelConfig->carrierGamemodeData;
+
+				size_t numTeams = glm::max<size_t>(gmData.teams.size(), 2); //iterate over all teams, or make 2 if there isn't two
+				for (size_t teamIdx = 0; teamIdx < numTeams; ++teamIdx)
+				{
+					//make a team data if one is not available
+					if (!Utils::isValidIndex(gmData.teams, teamIdx)) { gmData.teams.emplace_back(); }
+					SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
+
+					//#todo this isn't going to render in release
+					debugRenderSystem.renderCone(teamData.playerSpawnPoint, glm::normalize(teamData.playerSpawnDirection), glm::radians(33.f), 3.f, glm::vec3(1.f));
+				}
+			}
+		}
 	}
 
 	void SpaceLevelEditor_Level::tick_v(float dt_sec)
@@ -511,7 +533,6 @@ namespace SA
 				{
 					activeCampaign->levels.pop_back();
 				}
-
 			}
 			else
 			{
@@ -571,11 +592,40 @@ namespace SA
 				bool bACarrierIsDirty = false;
 				//hard coding number of teams for now
 				size_t numTeams = 2;
+
+				////////////////////////////////////////////////////////
+				// set up player spawn points for each team
+				////////////////////////////////////////////////////////
 				for (size_t teamIdx = 0; teamIdx < numTeams; ++teamIdx)
 				{
 					//make a team data if one is not available
 					if (!Utils::isValidIndex(gmData.teams, teamIdx)) { gmData.teams.emplace_back(); }
 					SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
+					//ImGui::DragFloat3(textWithIdx("player spawn point team[%d]", teamIdx), &teamData.playerSpawnPoint.x);
+					//ImGui::DragFloat3(textWithIdx("player spawn dir team[%d]", teamIdx), &teamData.playerSpawnDirection.x);
+
+					if (ImGui::Button(textWithIdx("team[%d] - set player spawn to camera pos/dir", teamIdx)))
+					{
+						if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
+						{
+							if (const sp<CameraBase>& camera = player->getCamera())
+							{
+								teamData.playerSpawnPoint = camera->getPosition();
+								teamData.playerSpawnDirection = camera->getFront();
+							}
+						}
+					}
+				}
+
+				////////////////////////////////////////////////////////
+				// list carriers for given teams, done separately so carrier list is continugous
+				////////////////////////////////////////////////////////
+				for (size_t teamIdx = 0; teamIdx < numTeams; ++teamIdx)
+				{
+					//make a team data if one is not available
+					if (!Utils::isValidIndex(gmData.teams, teamIdx)) { gmData.teams.emplace_back(); }
+					SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
+
 					size_t levelConfigNumCarriers = teamData.carrierSpawnData.size();
 					size_t numCarriers = glm::max<size_t>(1, levelConfigNumCarriers);
 					for (size_t carrierIdx = 0; carrierIdx < numCarriers; ++carrierIdx)

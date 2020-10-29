@@ -299,6 +299,11 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 #endif //USE_OPENAL_API
 	}
 
+	void AudioSystem::setSystemVolumeMultiplier(float multiplier)
+	{
+		systemWideVolume = glm::clamp(multiplier, 0.f, getSystemAudioMaxMultiplier());
+	}
+
 	void AudioSystem::logDebugInformation()
 	{
 #if USE_OPENAL_API

@@ -18,6 +18,9 @@
 #include "../../GameFramework/Components/GameplayComponents.h"
 #include "../AI/SAShipBehaviorTreeNodes.h"
 #include <memory>
+#include "../AssetConfigs/SASettingsProfileConfig.h"
+#include "../SAPlayer.h"
+#include "../../Tools/SAUtilities.h"
 
 namespace SA
 {
@@ -316,20 +319,69 @@ namespace SA
 		const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
 		if (activeMod && myTeamData.size() > 0)
 		{
-			size_t playerTeamIdx = activeMod->getPlayerPreferredTeam();
-			playerTeamIdx = clamp<size_t>(playerTeamIdx, 0, myTeamData.size());
-
-			TeamData& team = myTeamData[playerTeamIdx];
-			if (sp<Ship> carrierShip = (team.carriers.size() > 0 && !team.carriers[0].expired()) ? team.carriers[0].lock() : nullptr)
+			PlayerSystem& playerSystem = SpaceArcade::get().getPlayerSystem();
+			for (size_t playerIdx = 0; playerIdx < playerSystem.numPlayers(); ++playerIdx)
 			{
-				if (FighterSpawnComponent* spawnComp = carrierShip->getGameComponent<FighterSpawnComponent>())
+				if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
 				{
-					PlayerSystem& playerSystem = SpaceArcade::get().getPlayerSystem();
-					for (size_t playerIdx = 0; playerIdx < playerSystem.numPlayers(); ++playerIdx)
+					///////////////////////////////////////////////////////////////////////
+					// figure out players current team based on settings, or take a default
+					///////////////////////////////////////////////////////////////////////
+					size_t playerTeamIdx = 0;
+					//set up correct team placement based on player's preference
+					if (SAPlayer* SaPlayer = dynamic_cast<SAPlayer*>(player.get()))
 					{
-						if (const sp<PlayerBase>& player = playerSystem.getPlayer(playerIdx))
+						const sp<SettingsProfileConfig>& settingsProfile = SaPlayer->getSettingsProfile();
+						if (settingsProfile)
+						{
+							playerTeamIdx = settingsProfile->selectedTeamIdx;
+						}
+					}
+					playerTeamIdx = clamp<size_t>(playerTeamIdx, 0, myTeamData.size());
+
+					////////////////////////////////////////////////////////
+					// use team data to configure player
+					////////////////////////////////////////////////////////
+					TeamData& team = myTeamData[playerTeamIdx];
+					if (sp<Ship> carrierShip = (team.carriers.size() > 0 && !team.carriers[0].expired()) ? team.carriers[0].lock() : nullptr)
+					{
+						if (FighterSpawnComponent* spawnComp = carrierShip->getGameComponent<FighterSpawnComponent>())
 						{
 							sp<Ship> playersShip = spawnComp->spawnEntity();
+							////////////////////////////////////////////////////////
+							// read config data to get the spawn points and use them
+							////////////////////////////////////////////////////////
+							const wp<SpaceLevelBase>& weakOwningLevel = getOwningLevel();
+							if(!weakOwningLevel.expired())
+							{
+								if (sp<SpaceLevelBase> level = weakOwningLevel.lock())
+								{
+									if (const sp<const SpaceLevelConfig>& config = level->getConfig())
+									{
+										const auto& configTeamData = config->getGamemodeData_CarrierTakedown();
+										if (Utils::isValidIndex(configTeamData.teams, playerTeamIdx))
+										{
+											const auto& td = configTeamData.teams[playerTeamIdx];
+											Transform xform;
+											xform.position = td.playerSpawnPoint;
+											playersShip->setTransform(xform);
+											if (glm::length2(td.playerSpawnDirection) > 0.01f)
+											{
+												playersShip->setVelocityDir(glm::normalize(td.playerSpawnDirection));
+											}
+										}
+									}
+								}
+							}
+
+							TeamComponent* teamComp = playersShip->getGameComponent<TeamComponent>();
+							if (teamComp)
+							{
+								teamComp->setTeam(glm::clamp<size_t>(playerTeamIdx, 0,  MAX_TEAM_NUM-1));
+							}
+
+
+							//set actual control target
 							player->setControlTarget(playersShip);
 							if (const sp<CameraBase>& camera = player->getCamera())
 							{

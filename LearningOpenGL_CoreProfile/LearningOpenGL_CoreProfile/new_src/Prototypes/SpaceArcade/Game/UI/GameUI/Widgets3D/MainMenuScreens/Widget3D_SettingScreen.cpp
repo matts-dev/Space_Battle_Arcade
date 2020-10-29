@@ -8,6 +8,8 @@
 #include "../../../../../GameFramework/SAPlayerBase.h"
 #include "../../../../../GameFramework/SAPlayerSystem.h"
 #include "../../../../../GameFramework/SAGameBase.h"
+#include "../../../../GameSystems/SAModSystem.h"
+#include "../../../../../GameFramework/SAAudioSystem.h"
 
 namespace SA
 {
@@ -19,6 +21,15 @@ namespace SA
 
 	void Widget3D_SettingsScreen::postConstruct()
 	{
+		//get the settings profile
+		if (!activeSettingsProfile)
+		{
+			if (SAPlayer* player = dynamic_cast<SAPlayer*>(GameBase::get().getPlayerSystem().getPlayer(0).get()))
+			{
+				activeSettingsProfile = player->getSettingsProfile();
+			}
+		}
+
 		backButton = new_sp<Widget3D_LaserButton>("Back");
 		enabledButtons.push_back(backButton.get());
 
@@ -26,6 +37,9 @@ namespace SA
 		enabledButtons.push_back(applyButton.get());
 		applyButton->onClickedDelegate.addWeakObj(sp_this(), &Widget3D_SettingsScreen::applySettings);
 
+		////////////////////////////////////////////////////////
+		// set up dev console selector
+		////////////////////////////////////////////////////////
 		selector_devConsole = new_sp<Widget3D_DiscreteSelector<size_t>>();
 		allSelectors.push_back(selector_devConsole.get());
 		std::vector<size_t> devConsoleOnChoices = { 0, 1 };
@@ -37,12 +51,30 @@ namespace SA
 		});
 		selector_devConsole->onValueChangedDelegate.addWeakObj(sp_this(), &Widget3D_SettingsScreen::handleDevConsoleChanged); //TODO really need weaklambda support for these kinds of things
 
+		////////////////////////////////////////////////////////
+		// set up team selector
+		////////////////////////////////////////////////////////
+		selector_team = new_sp<Widget3D_DiscreteSelector<size_t>>();
+		allSelectors.push_back(selector_team.get());
+		selector_team->setSelectables({ 0,1 });
+		size_t saveTeamIndex = activeSettingsProfile && activeSettingsProfile->selectedTeamIdx == 0 ? 0 : 1;//user ternary to clamp
+		selector_team->setIndex(saveTeamIndex); 
+		selector_team->setToString([](size_t value) {
+			const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
+			return std::string("Selected Team: ") + (activeMod->teamHasName(value) ? activeMod->getTeamName(value) : std::to_string(value));
+		});
+
+		////////////////////////////////////////////////////////
+		// set up audio slider
+		////////////////////////////////////////////////////////
 		slider_masterAudio = new_sp<Widget3D_Slider>();
 		allSliders.push_back(slider_masterAudio.get());
 		slider_masterAudio->setTitleText("Master Volume");
 		slider_masterAudio->setTitleTextScale(0.125f);
+		slider_masterAudio->setValue(activeSettingsProfile ? activeSettingsProfile->masterVolume / AudioSystem::getSystemAudioMaxMultiplier() : 0.5f); //convert setting to a [0,1] range
 
 		//defines the order of selectors/sliders
+		ordered_options.push_back(selector_team.get());
 		ordered_options.push_back(selector_devConsole.get());
 		ordered_options.push_back(slider_masterAudio.get());
 	}
@@ -130,6 +162,7 @@ namespace SA
 			//read all widget values
 			activeSettingsProfile->bEnableDevConsole = bool(selector_devConsole->getValue());
 			activeSettingsProfile->masterVolume = slider_masterAudio->getValue();
+			activeSettingsProfile->selectedTeamIdx = selector_team->getValue();
 
 			//save
 			activeSettingsProfile->requestSave();
@@ -141,6 +174,9 @@ namespace SA
 					player->setSettingsProfile(activeSettingsProfile);
 				}
 			}
+			
+			AudioSystem& audioSystem = GameBase::get().getAudioSystem();
+			audioSystem.setSystemVolumeMultiplier(slider_masterAudio->getValue() * AudioSystem::getSystemAudioMaxMultiplier()); //transform form from [0,1] to [0,max]
 		}
 	}
 
@@ -158,8 +194,9 @@ namespace SA
 		{
 			selector_devConsole->setIndex(size_t(activeSettingsProfile->bEnableDevConsole)); 
 			
-			slider_masterAudio->setValue(activeSettingsProfile->masterVolume);
+			slider_masterAudio->setValue(activeSettingsProfile->masterVolume / AudioSystem::getSystemAudioMaxMultiplier()); //convert to [0,1]
 
+			selector_team->setIndex(activeSettingsProfile->selectedTeamIdx);
 		}
 	}
 

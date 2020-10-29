@@ -35,6 +35,7 @@ namespace SA
 		sp<Widget3D_LaserButton> applyButton = nullptr;
 
 		sp<Widget3D_DiscreteSelector<size_t>> selector_devConsole = nullptr;
+		sp<Widget3D_DiscreteSelector<size_t>> selector_team = nullptr;
 		sp<Widget3D_Slider> slider_masterAudio = nullptr;
 
 		std::vector<Widget3D_DiscreteSelectorBase*> allSelectors;
