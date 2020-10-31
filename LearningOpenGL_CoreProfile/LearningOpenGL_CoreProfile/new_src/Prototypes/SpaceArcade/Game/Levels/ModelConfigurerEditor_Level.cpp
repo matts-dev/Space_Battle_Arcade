@@ -775,48 +775,52 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 		}
 		
-		ImGui::Separator();
-		ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSpheres);
-		if (ImGui::Button("Add avoidance sphere"))
+		if (activeConfig)
 		{
-			activeConfig->avoidanceSpheres.push_back({});
-		}
-
-		if (selectedAvoidanceSphereIdx != -1)
-		{
-			ImGui::SameLine();
-			if (ImGui::Button("Remove"))
+			ImGui::Separator();
+			ImGui::Checkbox("Render Avoidance Spheres", &bRenderAvoidanceSpheres);
+			if (ImGui::Button("Add avoidance sphere"))
 			{
-				activeConfig->avoidanceSpheres.erase(activeConfig->avoidanceSpheres.begin() + selectedAvoidanceSphereIdx);
-				selectedShapeIdx = -1;
+				activeConfig->avoidanceSpheres.push_back({});
 			}
-		}
-		int avoidanceIndex = 0;
-		for (AvoidanceSphereSubConfig& avoidSphereConfig : activeConfig->avoidanceSpheres)
-		{
-			snprintf(tempTextBuffer, sizeof(tempTextBuffer), "sphere %d : %f radius", avoidanceIndex, avoidSphereConfig.radius);
-			if (ImGui::Selectable(tempTextBuffer, avoidanceIndex == selectedAvoidanceSphereIdx))
+
+			if (selectedAvoidanceSphereIdx != -1)
 			{
-				//enter here if clicked the selectable
-				if (selectedAvoidanceSphereIdx != avoidanceIndex)
+				ImGui::SameLine();
+				if (ImGui::Button("Remove"))
 				{
-					selectedAvoidanceSphereIdx = avoidanceIndex;
-				}
-				else
-				{
-					selectedAvoidanceSphereIdx = -1;
+					activeConfig->avoidanceSpheres.erase(activeConfig->avoidanceSpheres.begin() + selectedAvoidanceSphereIdx);
+					selectedShapeIdx = -1;
 				}
 			}
-			avoidanceIndex++;
-		}
-		if (selectedAvoidanceSphereIdx != -1)
-		{
-			ImGui::InputFloat3("position", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].localPosition.x);
-			ImGui::InputFloat("radius", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].radius);
-		}
+			int avoidanceIndex = 0;
+			for (AvoidanceSphereSubConfig& avoidSphereConfig : activeConfig->avoidanceSpheres)
+			{
+				snprintf(tempTextBuffer, sizeof(tempTextBuffer), "sphere %d : %f radius", avoidanceIndex, avoidSphereConfig.radius);
+				if (ImGui::Selectable(tempTextBuffer, avoidanceIndex == selectedAvoidanceSphereIdx))
+				{
+					//enter here if clicked the selectable
+					if (selectedAvoidanceSphereIdx != avoidanceIndex)
+					{
+						selectedAvoidanceSphereIdx = avoidanceIndex;
+					}
+					else
+					{
+						selectedAvoidanceSphereIdx = -1;
+					}
+				}
+				avoidanceIndex++;
+			}
+			if (selectedAvoidanceSphereIdx != -1)
+			{
+				ImGui::InputFloat3("position", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].localPosition.x);
+				ImGui::InputFloat("radius", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].radius);
+			}
 
-		ImGui::Dummy(ImVec2(0, 20));
-		ImGui::Separator();
+			ImGui::Dummy(ImVec2(0, 20));
+			ImGui::Separator();
+
+		}
 
 
 		//pretty terrible, but doing this every tick after UI has had change to update. This isn't so bad because this is just a model editor.
