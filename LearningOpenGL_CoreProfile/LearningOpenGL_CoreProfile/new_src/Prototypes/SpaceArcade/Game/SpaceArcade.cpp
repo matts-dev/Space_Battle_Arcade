@@ -51,6 +51,7 @@
 #include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
 #include "../Rendering/ForwardRendering/ForwardRenderingStateMachine.h"
 #include "Levels/SpaceLevelEditor_Level.h"
+#include "../GameFramework/SALog.h"
 
 namespace SA
 {
@@ -105,11 +106,11 @@ namespace SA
 
 		//make sure resources are loaded before the level starts
 		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
-		sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();
+		//sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();
 		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
-		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
+		sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);
 
 		if (bEnableDebugEngineKeybinds)
@@ -423,7 +424,45 @@ namespace SA
 					if (input.isKeyJustPressed(window, GLFW_KEY_3)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::ALBEDO_SPEC); }
 					if (input.isKeyJustPressed(window, GLFW_KEY_4)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::LIGHTING); }
 				}
-
+				else
+				{
+					std::optional<size_t> renderMode;
+					static std::optional<bool> useNormalMapping;
+					static std::optional<bool> useNormalMappingMirrorCorrection;
+					static std::optional<bool> correctNormalMapSeams;
+					if (input.isKeyJustPressed(window, GLFW_KEY_1)) { renderMode = 0; }
+					if (input.isKeyJustPressed(window, GLFW_KEY_2)) { renderMode = 1; } // normal
+					if (input.isKeyJustPressed(window, GLFW_KEY_3)) { renderMode = 2; } // normal red
+					if (input.isKeyJustPressed(window, GLFW_KEY_4)) { renderMode = 3; } // normal green
+					if (input.isKeyJustPressed(window, GLFW_KEY_5)) { renderMode = 4; } // normal blue
+					if (input.isKeyJustPressed(window, GLFW_KEY_6)) { useNormalMapping = !useNormalMapping.value_or(true); } // normal blue
+					if (input.isKeyJustPressed(window, GLFW_KEY_7)) { useNormalMappingMirrorCorrection = !useNormalMappingMirrorCorrection.value_or(true); } // normal blue
+					if (input.isKeyJustPressed(window, GLFW_KEY_8)) { correctNormalMapSeams = !correctNormalMapSeams.value_or(false); } // normal blue
+					if (renderMode || correctNormalMapSeams.has_value() || useNormalMapping.has_value() || useNormalMappingMirrorCorrection.has_value())
+					{
+						const sp<LevelBase>& currentLevel = getLevelSystem().getCurrentLevel();
+						if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+						{
+							if (renderMode)
+							{
+								spaceLevel->debug_renderMode(*renderMode);
+							}
+							if (correctNormalMapSeams.has_value())
+							{
+								spaceLevel->debug_correctNormalMapSeamsOverride(*correctNormalMapSeams);
+							}
+							if (useNormalMapping.has_value())
+							{
+								spaceLevel->debug_useNormalMappingOverride(*useNormalMapping);
+							}
+							if (useNormalMappingMirrorCorrection.has_value())
+							{
+								logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "normal map mirror TBN flip on [%d]", int(*useNormalMappingMirrorCorrection));
+								spaceLevel->debug_useNormalMappingMirrorCorrection(*useNormalMappingMirrorCorrection);
+							}
+						}
+					}
+				}
 			}
 		}
 	}

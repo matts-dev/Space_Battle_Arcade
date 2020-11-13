@@ -10,6 +10,7 @@
 #include "OpenGLHelpers.h"
 #include "../Tools/PlatformUtils.h"
 
+//#todo #nextengine hot reload and compile shaders (requires tracking uniforms) from files
 
 namespace SA
 {

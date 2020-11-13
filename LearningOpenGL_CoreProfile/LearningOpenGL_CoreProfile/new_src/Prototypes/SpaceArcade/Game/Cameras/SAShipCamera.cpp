@@ -325,7 +325,7 @@ namespace SA
 			{
 				if (CollisionComponent* colliComp = collidable->getGameComponent<CollisionComponent>())
 				{
-					if (colliComp->requestsCollisionChecks()) //ignore the small ships from jitering camera.
+					if (colliComp->requestsCollisionChecks() && collidable != myShip.get()) //ignore the small ships from jitering camera.
 					{
 						if (CollisionData* otherColliData = colliComp->getCollisionData())
 						{

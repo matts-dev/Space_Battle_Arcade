@@ -25,7 +25,7 @@ namespace SA
 
 	struct LevelInitializer
 	{
-		//provide defaults to these arguments
+		//provide defaults to these arguments, 16 seems to be the most optimized for the base game, but mods may benefit from different sizes (eg example mod works best with 32)
 		glm::vec3 worldGridSize{ 16.f };
 	};
 

@@ -53,6 +53,8 @@ namespace
 
 	char tempTextBuffer[4096];
 
+	float sliderDragSpeed = 0.05f;
+
 }
 
 using TriangleProcessor = SAT::DynamicTriangleMeshShape::TriangleProcessor;
@@ -267,6 +269,10 @@ namespace SA
 			if (ImGui::CollapsingHeader("ENTITY LOADING/SAVING", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				renderUI_LoadingSavingMenu();
+			}
+			if (ImGui::CollapsingHeader("Mod Model Globals"))
+			{
+				renderUI_ModModelGlobals();
 			}
 			if (ImGui::CollapsingHeader("COLLISION"))
 			{
@@ -578,7 +584,7 @@ namespace SA
 		{
 			ImGui::Text("Complete the name and filepath fields to add a new spawn config.");
 		}
-			
+		
 		ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
 		ImGui::Separator();
 	}
@@ -711,14 +717,15 @@ namespace SA
 							}
 						}
 
+						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Translation Shape %d", selectedShapeIdx);
+						ImGui::DragFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].position.x, sliderDragSpeed);
+
 						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Scale Shape %d", selectedShapeIdx);
-						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].scale.x);
+						ImGui::DragFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].scale.x, sliderDragSpeed);
 
 						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Rotation Shape %d", selectedShapeIdx);
-						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].rotationDegrees.x);
+						ImGui::DragFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].rotationDegrees.x, sliderDragSpeed);
 
-						snprintf(tempTextBuffer, sizeof(tempTextBuffer), "Translation Shape %d", selectedShapeIdx);
-						ImGui::InputFloat3(tempTextBuffer, &activeConfig->shapes[selectedShapeIdx].position.x);
 
 						ImGui::RadioButton("Cube (3e 3f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::CUBE);
 						ImGui::SameLine(); ImGui::RadioButton("PolyCapsule (7e 6f)", &activeConfig->shapes[selectedShapeIdx].shape, (int)ECollisionShape::POLYCAPSULE);
@@ -811,7 +818,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				}
 				avoidanceIndex++;
 			}
-			if (selectedAvoidanceSphereIdx != -1)
+			if (selectedAvoidanceSphereIdx != -1 && Utils::isValidIndex(activeConfig->avoidanceSpheres, selectedAvoidanceSphereIdx))
 			{
 				ImGui::InputFloat3("position", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].localPosition.x);
 				ImGui::InputFloat("radius", &activeConfig->avoidanceSpheres[selectedAvoidanceSphereIdx].radius);
@@ -1075,9 +1082,10 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				if (selectedPlacementIndex != -1 &&  selectedPlacementIndex < int(placementSubConfigArray.size()))
 				{
 					bool bRefreshModelMat = false;
-					if (ImGui::InputFloat3("localPosition", &placementSubConfigArray[selectedPlacementIndex].position.x)) { bRefreshModelMat = true; };
-					if (ImGui::InputFloat3("localRotation", &placementSubConfigArray[selectedPlacementIndex].rotation_deg.x)) { bRefreshModelMat = true; };
-					if (ImGui::InputFloat3("localScale", &placementSubConfigArray[selectedPlacementIndex].scale.x)) { bRefreshModelMat = true; };
+					float objectiveSliderDragSpeed = 0.025f;
+					if (ImGui::DragFloat3("localPosition", &placementSubConfigArray[selectedPlacementIndex].position.x, objectiveSliderDragSpeed)) { bRefreshModelMat = true; };
+					if (ImGui::DragFloat3("localRotation", &placementSubConfigArray[selectedPlacementIndex].rotation_deg.x, objectiveSliderDragSpeed)) { bRefreshModelMat = true; };
+					if (ImGui::DragFloat3("localScale", &placementSubConfigArray[selectedPlacementIndex].scale.x, objectiveSliderDragSpeed)) { bRefreshModelMat = true; };
 
 					if (bRefreshModelMat)
 					{
@@ -1109,7 +1117,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						std::memcpy(filepathBuffer, loadedPath.c_str(), glm::min<size_t>(loadedPath.size(), bufferPathLength)); 
 					}
 
-					ImGui::InputText("3D model Filepath", filepathBuffer, bufferPathLength, 0);
+					ImGui::InputText("3D model Filepath objective", filepathBuffer, bufferPathLength, 0);
 					if (ImGui::Button("Refresh Placement Model"))
 					{
 						placementSubConfigArray[selectedPlacementIndex].relativeFilePath = filepathBuffer;
@@ -1750,6 +1758,27 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		}
 	}
 
+	void ModelConfigurerEditor_Level::renderUI_ModModelGlobals()
+	{
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			ModelGlobals modelGlobals = activeMod->getModelGlobals();
+			ImGui::Checkbox("Mod Uses Normal Mapping", &modelGlobals.bUseNormalMap);
+			ImGui::Checkbox("Mod Uses Normal TBN flip correction", &modelGlobals.bUseNormalMapTBNFlip);
+			ImGui::Checkbox("Mod Uses Normal Mapping X Seam correction", &modelGlobals.bUseNormalMapXSeamCorrection);
+			activeMod->setModelGlobals(modelGlobals); //just always setting state
+
+			if (ImGui::Button("Save Mod"))
+			{
+				activeMod->writeToFile();
+			}
+		}
+		else
+		{
+			ImGui::Text("No loaded mod");
+		}
+
+	}
 
 }
 

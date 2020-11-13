@@ -29,6 +29,15 @@ namespace SA
 
 	std::string convertModRelativePathToAbsolute(const std::string& modRelativePath);
 
+
+	//model globals, perhaps should be on individual models but doing here for now as assuming mod needs global control
+	struct ModelGlobals
+	{
+		bool bUseNormalMap = true;
+		bool bUseNormalMapTBNFlip = true;
+		bool bUseNormalMapXSeamCorrection = false;
+	};
+
 	////////////////////////////////////////////////////////////////////
 	// Mod Objects
 	////////////////////////////////////////////////////////////////////
@@ -135,6 +144,11 @@ namespace SA
 		/////////////////////////////////////////////////////////////////////////////////////
 		const sp<DifficultyConfig>& getDifficulty() {return difficulty;}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// model globals
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		const ModelGlobals& getModelGlobals() { return modelGlobals; }
+		void setModelGlobals(const ModelGlobals& newValues) { modelGlobals = newValues; }
 
 		////////////////////////////////////////////////////////////////////
 		// Serialization
@@ -142,6 +156,7 @@ namespace SA
 		std::string serialize() ;
 		void deserialize(const std::string& str);
 		void writeToFile();
+
 
 	public: //locked methods for construction
 		void setModName(PrivateKey key, const std::string& newModName);
@@ -152,6 +167,8 @@ namespace SA
 		bool bIsDeletable = true;
 		size_t activeCampaignIdx = 0;
 		size_t playerPreferredTeam = 0;
+
+		ModelGlobals modelGlobals;
 
 		std::vector<std::string> defaultCarrierSpawnConfigNamesByTeamIdx;
 		std::map<std::string, sp<SpawnConfig>> spawnConfigsByName;

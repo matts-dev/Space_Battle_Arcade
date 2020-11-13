@@ -44,6 +44,11 @@ namespace SA
 		void enableStarJump(bool bEnable, bool bSkipTransition = false);
 		static void staticEnableStarJump(bool bEnable, bool bSkipTransition = false);
 		bool isStarJumping() const;
+	public://debug
+		void debug_correctNormalMapSeamsOverride(std::optional<bool> correctNormalMapSeams);
+		void debug_useNormalMappingOverride(std::optional<bool> useNormalMapping);
+		void debug_useNormalMappingMirrorCorrection(std::optional<bool> useNormalMappingMirrorCorrection);
+		void debug_renderMode(size_t bNewValue){renderMode = bNewValue;}
 	protected:
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;
@@ -76,6 +81,9 @@ namespace SA
 		std::vector<sp<AvoidMesh>> avoidMeshes; //eg asteroids
 		sp<SA::Shader> forwardShadedModelShader;
 		sp<SA::Shader> highlightForwardModelShader;
+		sp<SA::Shader> debugNormalMapShader;
+		bool bDebugNormals = false;
+		size_t renderMode = 0;
 		std::vector<class RenderModelEntity*> stencilHighlightEntities;
 		StarJumpData sj;
 	protected:
@@ -86,6 +94,10 @@ namespace SA
 	private: //fields
 		std::vector<sp<TeamCommander>> commanders;
 		sp<const SpaceLevelConfig> levelConfig = nullptr;
+	private: //debug
+		std::optional<bool> useNormalMappingOverride;
+		std::optional<bool> useNormalMappingMirrorCorrectionOverride;
+		std::optional<bool> correctNormalMapSeamsOverride;
 	};
 
 	////////////////////////////////////////////////////////

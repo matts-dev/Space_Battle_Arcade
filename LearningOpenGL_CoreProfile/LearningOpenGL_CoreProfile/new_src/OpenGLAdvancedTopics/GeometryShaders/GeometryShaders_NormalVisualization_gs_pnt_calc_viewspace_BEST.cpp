@@ -298,7 +298,7 @@ namespace
 					for(int i = 0; i < 3; ++i) //hopefully loopunrolled
 					{
 						vec4 vertViewSpace = view * model * gl_in[i].gl_Position;
-						vec4 normalViewSpace = normalize(normalTransform * vertices[i].vertNormal);
+						vec4 normalViewSpace = normalize(normalTransform * vertices[i].vertNormal);		//WARNING: this is wrong, it normalized vec4 not vec3... will fix but testing something else atm and don't want to break a tweaked demo without testing the fix
 						vec4 tailPoint = vertViewSpace + (normalViewSpace * scale_down);
 
 						gl_Position = projection * vertViewSpace;	

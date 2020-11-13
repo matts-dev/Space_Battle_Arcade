@@ -338,7 +338,7 @@ namespace SA
 		{
 			projectileShader.setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(projectile->renderXform));
 			projectileShader.setUniform3f("lightColor", projectile->color); //#TODO this uniform name is very specific to emissive shader; either need a callback to configure uniforms unique to projectile or move shader here; NOTE: this perf loss scales linearly, adding this one uniform drops fps by 0.1
-			projectile->model->draw(projectileShader);
+			projectile->model->draw(projectileShader, false); //not binding materials projectiles don't use materials and this is causing a gl error when attempting ot bind a normal map texture
 		}
 	}
 

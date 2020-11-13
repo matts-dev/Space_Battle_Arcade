@@ -151,6 +151,11 @@ namespace SA
 			forwardShadedModelShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
 			forwardShadedModelShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
 			forwardShadedModelShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0)); //perhaps drive this from level information
+			forwardShadedModelShader->setUniform1i("renderMode", int(renderMode));
+			if (useNormalMappingOverride.has_value())					{ forwardShadedModelShader->setUniform1i("bUseNormalMapping", *useNormalMappingOverride); }
+			if (useNormalMappingMirrorCorrectionOverride.has_value())	{ forwardShadedModelShader->setUniform1i("bUseMirrorUvNormalCorrection", *useNormalMappingMirrorCorrectionOverride); }
+			if (correctNormalMapSeamsOverride.has_value())				{ forwardShadedModelShader->setUniform1i("bUseNormalSeamCorrection", *correctNormalMapSeamsOverride); }
+
 			for (size_t light = 0; light < FRD->dirLights.size(); ++light)
 			{
 				FRD->dirLights[light].applyToShader(*forwardShadedModelShader, light);
@@ -231,6 +236,27 @@ namespace SA
 					ec(glDisable(GL_STENCIL_TEST));
 				}
 
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// debug the generated normals from normal mapping
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				if (bDebugNormals)
+				{
+					debugNormalMapShader->use();
+					debugNormalMapShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
+					debugNormalMapShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
+					for (size_t light = 0; light < FRD->dirLights.size(); ++light)
+					{
+						FRD->dirLights[light].applyToShader(*debugNormalMapShader, light);
+					}
+
+					//ec(glDisable(GL_DEPTH_TEST));
+					for (const sp<RenderModelEntity>& entity : renderEntities)
+					{
+						debugNormalMapShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(entity->getTransform().getModelMatrix()));
+						entity->render(*debugNormalMapShader);
+					}
+					//ec(glEnable(GL_DEPTH_TEST));
+				}
 			}
 			else
 			{
@@ -551,6 +577,8 @@ namespace SA
 
 		forwardShadedModelShader = new_sp<SA::Shader>(spaceModelShader_forward_vs, spaceModelShader_forward_fs, false);
 		highlightForwardModelShader = new_sp<SA::Shader>(modelVertexOffsetShader_vs, fwdModelHighlightShader_fs, false);
+		debugNormalMapShader = new_sp<SA::Shader>(normalDebugShader_LineEmitter_vs, normalDebugShader_LineEmitter_fs, normalDebugShader_LineEmitter_gs, false);
+
 
 		//we don't know how many teams there will be after we load gamemode (in apply config), so make all teamcommands now
 		//#todo change this. this isn't great because we need team commanders to be around before spawning so they can be aware of when we spawn ships
@@ -567,6 +595,16 @@ namespace SA
 		static bool bFirstLevelStarted = false; //don't show VFX on first level (ie main menu)
 		enableStarJump(false, !bFirstLevelStarted); //animate in stars vfx
 		bFirstLevelStarted = true;
+
+		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
+		{
+			const ModelGlobals& modelGlobals = activeMod->getModelGlobals();
+			forwardShadedModelShader->use();
+			forwardShadedModelShader->setUniform1i("bUseNormalMapping", modelGlobals.bUseNormalMap);
+			forwardShadedModelShader->setUniform1i("bUseNormalSeamCorrection", modelGlobals.bUseNormalMapXSeamCorrection);
+			forwardShadedModelShader->setUniform1i("bUseMirrorUvNormalCorrection", modelGlobals.bUseNormalMapTBNFlip);
+			forwardShadedModelShader->use(false);
+		}
 	}
 
 	void SpaceLevelBase::endLevel_v()
@@ -689,6 +727,21 @@ namespace SA
 		sp<Star> defaultStar = new_sp<Star>();
 		defaultStar->setXform(defaultStarXform);
 		localStars.push_back(defaultStar);
+	}
+
+	void SpaceLevelBase::debug_correctNormalMapSeamsOverride(std::optional<bool> correctNormalMapSeams)
+	{
+		this->correctNormalMapSeamsOverride = correctNormalMapSeams;
+	}
+
+	void SpaceLevelBase::debug_useNormalMappingOverride(std::optional<bool> useNormalMapping)
+	{
+		this->useNormalMappingOverride = useNormalMapping;
+	}
+
+	void SpaceLevelBase::debug_useNormalMappingMirrorCorrection(std::optional<bool> useNormalMappingMirrorCorrection)
+	{
+		this->useNormalMappingMirrorCorrectionOverride = useNormalMappingMirrorCorrection;
 	}
 
 	std::vector<sp<class Planet>> makeRandomizedPlanetArray(RNG& rng)

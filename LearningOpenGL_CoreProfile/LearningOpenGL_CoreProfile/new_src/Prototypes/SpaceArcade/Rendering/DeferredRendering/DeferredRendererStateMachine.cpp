@@ -177,7 +177,8 @@ namespace SA
 					dirDiffuse += color.rgb * n_dot_l * dirLight.intensity;
 
 					//specular is a little ad-hoc since I do not currently define a specular component of the light for stars.
-					vec3 toSunLight_n = normalize(-directionalLightDir);
+						//vec3 toSunLight_n = normalize(-directionalLightDir); //commenting htis out, should be using struct we passed.
+					vec3 toSunLight_n = normalize(-dirLights[light].dir_n);
 					float shininess = 32; //hard coded for now, needs to be embedded in gbuffer
 					float specular = color.a; //spec packed into color within gbuffer
 					float dirLightSpecAmount = pow(max(dot(toView, reflect(-toSunLight_n, fragNormal)), 0), shininess);

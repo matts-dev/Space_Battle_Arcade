@@ -194,22 +194,30 @@ namespace SA
 				carrierSpawnData_A.team = 0;
 				carrierSpawnData_A.spawnConfig = carrierSpawnConfig;
 				carrierSpawnData_A.spawnTransform = carrierXform_TeamA;
-				sp<Ship> carrierShip_TeamA = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_A) : nullptr;
-				if (FighterSpawnComponent* spawnComp = carrierShip_TeamA->getGameComponent<FighterSpawnComponent>())
+
+				Ship::SpawnData carrierSpawnData_B = carrierSpawnData_A;//copy carrier A before we do special fix up logic to find defaults
+				if (bool bFixUpCarrier = carrierSpawnData_A.spawnConfig == nullptr)
+				{
+					//use the specific team indices as they may not be the same model in some mods
+					carrierSpawnData_A.spawnConfig = activeMod->getDeafultCarrierConfigForTeam(0);
+					carrierSpawnData_B.spawnConfig = activeMod->getDeafultCarrierConfigForTeam(1);
+				}
+
+				sp<Ship> carrierShip_TeamA = bSpawnCarriers && carrierSpawnData_A.spawnConfig ? spawnEntity<Ship>(carrierSpawnData_A) : nullptr;
+				if (FighterSpawnComponent* spawnComp = carrierShip_TeamA ? carrierShip_TeamA->getGameComponent<FighterSpawnComponent>() : nullptr)
 				{
 					spawnComp->setAutoRespawnConfig(spawnFighterConfig);
 				}
 
 				//#TODO #BUG passing same carrier spawn data shouldn't influence the other ships that were spawned. copying spawn data.
-				Ship::SpawnData carrierSpawnData_B = carrierSpawnData_A;
 				Transform carrierXform_TeamB = carrierXform_TeamA;
 				carrierXform_TeamB.position.z = -carrierXform_TeamB.position.z;
 				carrierXform_TeamB.rotQuat = glm::angleAxis(glm::radians(-13.0f), glm::vec3(0, 1, 0));
 				carrierSpawnData_B.spawnTransform = carrierXform_TeamB;
 				carrierSpawnData_B.team = 1;
 				//sp<Ship> carrierShip2 = spawnEntity<Ship>(carrierModel, carrierXform_TeamB, createUnitCubeCollisionInfo());
-				sp<Ship> carrierShip_TeamB = bSpawnCarriers ? spawnEntity<Ship>(carrierSpawnData_B) : nullptr;
-				if (FighterSpawnComponent* spawnComp = carrierShip_TeamB->getGameComponent<FighterSpawnComponent>())
+				sp<Ship> carrierShip_TeamB = bSpawnCarriers && carrierSpawnData_B.spawnConfig ? spawnEntity<Ship>(carrierSpawnData_B) : nullptr;
+				if (FighterSpawnComponent* spawnComp = carrierShip_TeamB ? carrierShip_TeamB->getGameComponent<FighterSpawnComponent>() : nullptr)
 				{
 					spawnComp->setAutoRespawnConfig(spawnFighterConfig);
 				}
@@ -264,8 +272,8 @@ namespace SA
 						}
 					}
 				};
-				spawnFighters(0, carrierXform_TeamA.position, carrierShip_TeamA->getGameComponent<FighterSpawnComponent>());
-				spawnFighters(1, carrierXform_TeamB.position, carrierShip_TeamB->getGameComponent<FighterSpawnComponent>());
+				spawnFighters(0, carrierXform_TeamA.position, carrierShip_TeamA ? carrierShip_TeamA->getGameComponent<FighterSpawnComponent>() : nullptr);
+				spawnFighters(1, carrierXform_TeamB.position, carrierShip_TeamB ? carrierShip_TeamB->getGameComponent<FighterSpawnComponent>() : nullptr);
 
 				//DEBUG assign targets to each other to test dogfighting
 				bool bEnableDebugTargets = false;
@@ -361,7 +369,7 @@ namespace SA
 
 							//#todo set up asteroid spawn
 							asteroidSpawn.spawnTransform.position = glm::vec3(0.f);
-							asteroidSpawn.spawnTransform.scale = glm::vec3(10.f);
+							asteroidSpawn.spawnTransform.scale = glm::vec3(5.f);
 							sp<AvoidMesh> testAsteroid = spawnEntity<AvoidMesh>(asteroidSpawn);
 						}
 					}

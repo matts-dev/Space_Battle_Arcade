@@ -337,7 +337,8 @@ namespace SA
 		}
 
 		//load models
-		try { pyramidModel = new_sp<SAT::Model>("GameData/custom_collision_shapes/pyramid_x.obj"); }
+		//try { pyramidModel = new_sp<SAT::Model>("GameData/custom_collision_shapes/pyramid_x.obj"); }//this doesn't scale well
+		try { pyramidModel = new_sp<SAT::Model>("GameData/custom_collision_shapes/pyramid_rotated.obj"); } //rotated pyramid lets you scale on corners
 		catch (std::runtime_error&) { log("CollisionShapeContainer", LogLevel::LOG_ERROR, "Failed to load pyramid model"); }
 
 		try { wedgeModel = new_sp<SAT::Model>("GameData/custom_collision_shapes/cockpitshape.obj"); }

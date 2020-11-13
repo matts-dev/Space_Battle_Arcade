@@ -378,6 +378,10 @@ namespace SA
 			{ SYMBOL_TO_STR(teamNames), j_teamNames }
 		};
 
+		JSON_WRITE(modelGlobals.bUseNormalMap, j);
+		JSON_WRITE(modelGlobals.bUseNormalMapTBNFlip, j);
+		JSON_WRITE(modelGlobals.bUseNormalMapXSeamCorrection, j);
+
 		return j.dump(4);
 	}
 
@@ -410,6 +414,10 @@ namespace SA
 				teamNames.push_back(j_teamName[size]);
 			}
 		}
+
+		READ_JSON_BOOL_OPTIONAL(modelGlobals.bUseNormalMap, j);
+		READ_JSON_BOOL_OPTIONAL(modelGlobals.bUseNormalMapTBNFlip, j);
+		READ_JSON_BOOL_OPTIONAL(modelGlobals.bUseNormalMapXSeamCorrection, j);
 	}
 
 	void Mod::writeToFile()

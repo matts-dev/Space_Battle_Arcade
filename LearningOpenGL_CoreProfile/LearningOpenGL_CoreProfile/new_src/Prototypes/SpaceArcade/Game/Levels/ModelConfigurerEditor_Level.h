@@ -51,6 +51,7 @@ namespace SA
 
 	private: //ui
 		void renderUI_LoadingSavingMenu();
+		void renderUI_ModModelGlobals();
 		void renderUI_Collision();
 		void renderUI_Projectiles();
 		void renderUI_ViewportUI();
@@ -82,6 +83,7 @@ namespace SA
 		bool bShowSlowShapes = false;
 		bool bModelXray = false;
 		bool bUseCollisionCamera = false;
+
 		int selectedShapeIdx = -1;
 		int selectedAvoidanceSphereIdx = -1;
 		int selectedCommPlacementIdx = -1;
@@ -120,7 +122,6 @@ namespace SA
 		bool bAutoSave = true;
 	public:
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
-
 	};
 
 }
