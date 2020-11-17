@@ -199,13 +199,27 @@ namespace SA
 						{
 							CarrierSpawnData carrierData = teamData.carrierSpawnData[carrierIdx];
 							auto findCarrierResult = activeMod->getSpawnConfigs().find(carrierData.carrierShipSpawnConfig_name);
-							if (findCarrierResult == activeMod->getSpawnConfigs().end())
+
+							sp<SpawnConfig> carrierSpawnConfig = nullptr;
+							if (findCarrierResult != activeMod->getSpawnConfigs().end())
 							{
-								std::string errorMsg = "Did not find carrier spawn config for name: " + carrierData.carrierShipSpawnConfig_name;
-								log(__FUNCTION__, LogLevel::LOG_ERROR, errorMsg.c_str());
-								continue;
+								//found it
+								carrierSpawnConfig = findCarrierResult->second;
 							}
-							else if (const sp<SpawnConfig>& carrierSpawnConfig = findCarrierResult->second)
+							else
+							{
+								//didn't find carrier data, attempt to use default carrier
+								std::string errorMsg = "Did not find carrier spawn config for name: " + carrierData.carrierShipSpawnConfig_name + ". Attempting to use mod defaults";
+								log(__FUNCTION__, LogLevel::LOG_ERROR, errorMsg.c_str());
+								carrierSpawnConfig = activeMod->getDeafultCarrierConfigForTeam(teamIdx);
+								if (!carrierSpawnConfig)
+								{
+									logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "Failed to find default carrier for mod for team %d, no carrier will spawn", teamIdx);
+									continue;
+								}
+							}
+
+							if (carrierSpawnConfig )
 							{
 								glm::quat randomCarrierRot;
 								glm::vec3 randomCarrierLoc;

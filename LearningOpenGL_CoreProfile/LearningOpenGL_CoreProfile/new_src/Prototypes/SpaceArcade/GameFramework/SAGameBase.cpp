@@ -71,11 +71,9 @@ namespace SA
 			//systems are initialized after all systems have been created; this way cross-system interaction can be achieved during initailization (ie subscribing to events, etc.)
 			for (const sp<SystemBase>& system : systems) { system->initSystem(); }
 
+ 			windowSystem->makeWindowPrimary(makeInitialWindow());
+			startUp();
 			bStarted = true;
-			{ //prevent permanent window reference via scoped destruction
-				sp<Window> window = startUp();
-				windowSystem->makeWindowPrimary(window);
-			}
 
 			//game loop processes
 			onGameloopBeginning.broadcast();

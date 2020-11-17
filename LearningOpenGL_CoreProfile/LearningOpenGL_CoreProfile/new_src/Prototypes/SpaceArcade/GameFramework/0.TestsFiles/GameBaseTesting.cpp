@@ -141,36 +141,41 @@ namespace
 			return *singleton;
 		}
 	private:
-		virtual sp<SA::Window> startUp() override
+		virtual sp<SA::Window> makeInitialWindow() override
+		{
+			int width = 1000, height = 500;
+			sp<SA::Window> window = new_sp<SA::Window>(width, height);
+			ec(glViewport(0, 0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?	
+			return window;
+		}
+
+		virtual void startUp() override
 		{
 			using namespace SA;
 
-			int width = 1000, height = 500;
-			sp<SA::Window> window = new_sp<SA::Window>(width, height);
-			ec(glViewport(0,0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
+			if (sp<Window> window = GameBase::get().getWindowSystem().getPrimaryWindow()) //refactored this function so that window creation is separate, this bit of code wasn't tested for nullptr
+			{
+				litObjShader = new_sp<SA::Shader>(litObjectShaderVertSrc, litObjectShaderFragSrc, false);
+				lampObjShader = new_sp<SA::Shader>(lightLocationShaderVertSrc, lightLocationShaderFragSrc, false);
 
-			litObjShader = new_sp<SA::Shader>(litObjectShaderVertSrc, litObjectShaderFragSrc, false);
-			lampObjShader = new_sp<SA::Shader>(lightLocationShaderVertSrc, lightLocationShaderFragSrc, false);
+				//set up unit cube
+				ec(glBindVertexArray(0));
+				ec(glGenVertexArrays(1, &cubeVAO));
+				ec(glBindVertexArray(cubeVAO));
+				ec(glGenBuffers(1, &cubeVBO));
+				ec(glBindBuffer(GL_ARRAY_BUFFER, cubeVBO));
+				ec(glBufferData(GL_ARRAY_BUFFER, sizeof(unitCubeVertices), unitCubeVertices, GL_STATIC_DRAW));
+				ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0)));
+				ec(glEnableVertexAttribArray(0));
+				ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))));
+				ec(glEnableVertexAttribArray(1));
+				ec(glBindVertexArray(0));
 
-			//set up unit cube
-			ec(glBindVertexArray(0));
-			ec(glGenVertexArrays(1, &cubeVAO));
-			ec(glBindVertexArray(cubeVAO));
-			ec(glGenBuffers(1, &cubeVBO));
-			ec(glBindBuffer(GL_ARRAY_BUFFER, cubeVBO));
-			ec(glBufferData(GL_ARRAY_BUFFER, sizeof(unitCubeVertices), unitCubeVertices, GL_STATIC_DRAW));
-			ec(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0)));
-			ec(glEnableVertexAttribArray(0));
-			ec(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float))));
-			ec(glEnableVertexAttribArray(1));
-			ec(glBindVertexArray(0));
+				fpsCamera = new_sp<SA::CameraFPS>(45.f, 0.f, 0.f);
+				fpsCamera->registerToWindowCallbacks_v(window);
 
-			fpsCamera = new_sp<SA::CameraFPS>(45.f, 0.f, 0.f);
-			fpsCamera->registerToWindowCallbacks_v(window);
-
-			glfwSetInputMode(window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-			return window;
+				glfwSetInputMode(window->get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			}
 		}
 
 		virtual void onShutDown() override

@@ -61,15 +61,26 @@ namespace SA
 		return *singleton;
 	}
 
-	sp<SA::Window> SpaceArcade::startUp()
+	sp<SA::Window> SpaceArcade::makeInitialWindow()
+	{
+		int width = 1440, height = 810;
+		sp<SA::Window> window = new_sp<SA::Window>(width, height);
+		ec(glViewport(0, 0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
+		return window;
+	}
+
+	void SpaceArcade::startUp()
 	{
 #if		SA_CAPTURE_SPATIAL_HASH_CELLS
 		log("SpaceArcade", LogLevel::LOG_WARNING, "Capturing debug spatial hash information, this has is a perf hit and should be disabled for release");
 #endif
-
-		int width = 1440, height = 810;
-		sp<SA::Window> window = new_sp<SA::Window>(width, height);
-		ec(glViewport(0, 0, width, height)); //#TODO, should we do this in the gamebase level on "glfwSetFramebufferSizeCallback" changed?
+		sp<Window> window = GameBase::get().getWindowSystem().getPrimaryWindow();
+		if (!window)
+		{
+			log("SpaceArcade", LogLevel::LOG_ERROR, "Failed to get window during startup.");
+			startShutdown();
+			return;
+		}
 
 		litObjShader = new_sp<SA::Shader>(litObjectShader_VertSrc, litObjectShader_FragSrc, false);
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);
@@ -106,11 +117,11 @@ namespace SA
 
 		//make sure resources are loaded before the level starts
 		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
-		//sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();
+		sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();
 		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();
-		sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
+		//sp<LevelBase> startupLevel = new_sp<ModelConfigurerEditor_Level>();
 		getLevelSystem().loadLevel(startupLevel);
 
 		if (bEnableDebugEngineKeybinds)
@@ -123,8 +134,6 @@ namespace SA
 		todo_enabling_of_deferred_renderer_needs_to_happen_before_system_initalization___NOT_HERE____otherwise_some_early_bird_system_shader_initaliation_will_not_create_deferred_shaders_i_think;
 		getRenderSystem().enableDeferredRenderer(true);
 #endif //IGNORE_INCOMPLETE_DEFERRED_RENDER_CODE
-
-		return window;
 	}
 
 	void SpaceArcade::onShutDown() 

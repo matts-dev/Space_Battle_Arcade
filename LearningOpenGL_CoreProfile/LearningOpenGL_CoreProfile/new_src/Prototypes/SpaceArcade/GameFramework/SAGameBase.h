@@ -81,7 +81,8 @@ namespace SA
 	protected:
 		/** Child game classes should set up pre-gameloop state here.
 			#return value Provide an initial primary window on startup.	*/
-		virtual sp<Window> startUp() = 0;
+		virtual sp<Window> makeInitialWindow() = 0;
+		virtual void startUp() = 0;
 		virtual void onShutDown() = 0;
 	private: //starting systems
 		bool bStarted = false;

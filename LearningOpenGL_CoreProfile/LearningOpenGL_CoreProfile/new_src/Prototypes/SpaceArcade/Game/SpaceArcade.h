@@ -38,7 +38,8 @@ namespace SA
 	public:
 		static SpaceArcade& get();
 	private:
-		virtual sp<SA::Window> startUp() override; 
+		virtual sp<Window> makeInitialWindow() override;
+		virtual void startUp() override; 
 		virtual void onShutDown() override;
 		virtual void tickGameLoop(float deltaTimeSecs) override;
 		virtual void cacheRenderDataForCurrentFrame(struct RenderData& frameRenderData) override;
