@@ -64,6 +64,7 @@ namespace SA
 		getInput().getKeyEvent(GLFW_KEY_ESCAPE).addWeakObj(sp_this(), &SAPlayer::handleEscapeKey);
 		getInput().getKeyEvent(GLFW_KEY_LEFT_CONTROL).addWeakObj(sp_this(), &SAPlayer::handleControlPressed);
 		getInput().getKeyEvent(GLFW_KEY_RIGHT_CONTROL).addWeakObj(sp_this(), &SAPlayer::handleControlPressed);
+		getInput().getKeyEvent(GLFW_KEY_TAB).addWeakObj(sp_this(), &SAPlayer::handleTabPressed);
 	}
 
 	void SAPlayer::onNewControlTargetSet(IControllable* oldTarget, IControllable* newTarget)
@@ -250,6 +251,15 @@ namespace SA
 			{
 				stopDilation();
 			}
+		}
+	}
+
+	void SAPlayer::handleTabPressed(int state, int modifier_keys, int scancode)
+	{
+		if (state == GLFW_PRESS)
+		{
+			SpaceArcade& game = SpaceArcade::get();
+			game.bOnlyHighlightTargets = !game.bOnlyHighlightTargets;
 		}
 	}
 

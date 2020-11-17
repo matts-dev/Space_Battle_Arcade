@@ -112,6 +112,7 @@ namespace SA
 		bool bEnableDebugEngineKeybinds = true;
 	public: //subclass engine config variables
 		bool bEnableStencilHighlights = true;
+		bool bOnlyHighlightTargets = true;
 
 
 	////////////////////////////////////////////////////////

@@ -1443,8 +1443,8 @@ namespace SA
 					brainComp->setNewBrain(sp<AIBrain>(nullptr));
 				}
 
-				if (transientCollidingProjectile)
-				{ //if you get a crash here, did we clean this up after being hit? this shoud always be cleaned up within the scope that the player is hit by a projectile!
+				if (transientCollidingProjectile && transientCollidingProjectile->owner)
+				{ //if you get a crash here, did we clean this up after being hit? this should always be cleaned up within the scope that the player is hit by a projectile!
 					if (OwningPlayerComponent* playerComp = transientCollidingProjectile->owner->getGameComponent<OwningPlayerComponent>())
 					{
 						if (playerComp->hasOwningPlayer())

@@ -104,32 +104,57 @@ namespace SA
 			const std::vector<sp<PlayerBase>>& allPlayers = game.getPlayerSystem().getAllPlayers();
 			if (game.bEnableStencilHighlights)
 			{
-				for (const sp<PlayerBase>& player : allPlayers)
+				if (game.bOnlyHighlightTargets)
 				{
-					if (IControllable* controlTarget = player->getControlTarget())
+					for (const sp<PlayerBase>& player : allPlayers)
 					{
-						if (WorldEntity* controlTarget_we = controlTarget->asWorldEntity())
+						if (IControllable* controlTarget = player->getControlTarget())
 						{
-							if (const BrainComponent* brainComp = controlTarget_we->getGameComponent<BrainComponent>())
+							if (WorldEntity* controlTarget_we = controlTarget->asWorldEntity())
 							{
-								if (const BehaviorTree::Tree* tree = brainComp->getTree())
+								if (const BrainComponent* brainComp = controlTarget_we->getGameComponent<BrainComponent>())
 								{
-									BehaviorTree::Memory& memory = tree->getMemory();
-									if (const BehaviorTree::ActiveAttackers* attackerMap = memory.getReadValueAs<BehaviorTree::ActiveAttackers>(BT_AttackersKey))
+									if (const BehaviorTree::Tree* tree = brainComp->getTree())
 									{
-										for (auto& iter : *attackerMap)
+										BehaviorTree::Memory& memory = tree->getMemory();
+										if (const BehaviorTree::ActiveAttackers* attackerMap = memory.getReadValueAs<BehaviorTree::ActiveAttackers>(BT_AttackersKey))
 										{
-											if (iter.second.attacker)
+											for (auto& iter : *attackerMap)
 											{
-												//dynamic cast sucks, but this will likely only be a few per frame. alternatively could set up a component for this. #nextengine in general, find a design to remove this issue of subclass casting
-												if (RenderModelEntity* attacker = dynamic_cast<RenderModelEntity*>(iter.second.attacker.fastGet()))
+												if (iter.second.attacker)
 												{
-													stencilHighlightEntities.push_back(attacker);
+													//dynamic cast sucks, but this will likely only be a few per frame. alternatively could set up a component for this. #nextengine in general, find a design to remove this issue of subclass casting
+													if (RenderModelEntity* attacker = dynamic_cast<RenderModelEntity*>(iter.second.attacker.fastGet()))
+													{
+														stencilHighlightEntities.push_back(attacker);
+													}
 												}
 											}
 										}
 									}
 								}
+							}
+						}
+					}
+				}
+				else /*Render all ship highlights. */
+				{
+					//since we're going to be rendering a whole bunch of highlights, reserve the array size to match upper bound of what we're rendering.
+					stencilHighlightEntities.reserve(renderEntities.size()); 
+
+					for (const sp<RenderModelEntity>& renderEntity : renderEntities)
+					{
+						//don't render carrier ships with highlights
+						if (renderEntity)
+						{
+							//ideally I'd would do this this in a more systemic way, but running out of time to finish this. check if this is a spawner (carrier) and don't highlight. 
+							//Perhaps a highlight component could be added and that could be checked for a more roboust system.
+							if (!renderEntity->hasGameComponent<FighterSpawnComponent>()
+								&& ! renderEntity->hasGameComponent<OwningPlayerComponent>()//make sure it isn't player
+								&& renderEntity->hasGameComponent<TeamComponent>() //make sure its not an asteroid
+							)
+							{
+								stencilHighlightEntities.push_back(renderEntity.get());
 							}
 						}
 					}
@@ -143,6 +168,9 @@ namespace SA
 			CustomGameShaders& gameCustomShaders = SpaceArcade::get().getGameCustomShaders();
 			gameCustomShaders.forwardModelShader = forwardShadedModelShader;
 
+			/////////////////////////////////////////////////////////////////////////////////////
+			// prepare forward shader uniforms
+			/////////////////////////////////////////////////////////////////////////////////////
 			//#todo a proper system for renderables should be set up; these uniforms only need to be set up front, not during each draw. It may also be advantageous to avoid virtual calls.
 			forwardShadedModelShader->use();
 			forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
@@ -201,6 +229,9 @@ namespace SA
 					entity->render(*forwardShadedModelShader);
 				}
 
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// highlight pass
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				if (stencilHighlightEntities.size() > 0)
 				{
 					ec(glStencilFunc(GL_NOTEQUAL, stencilHighlightBit, 0xFF)); //only render if we haven't stenciled this area
@@ -215,15 +246,39 @@ namespace SA
 					highlightForwardModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
 					highlightForwardModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
 
+					//set highligh color, this will be enemy color unless game is in mode where all highlights are rendered, then we will change based on if we're rendering a teammate or an enemy
+					size_t playerTeam = 0;
+					if (SAPlayer* player = dynamic_cast<SAPlayer*>(GameBase::get().getPlayerSystem().getPlayer(0).get()))
+					{
+						playerTeam = player->getCurrentTeamIdx();
+					}
 					/*vec3 highlightColor = vec3(0.8f);*/
-					vec3 highlightColor = vec3(0.5f, 0, 0);
-					highlightColor *= GameBase::get().getRenderSystem().isUsingHDR() ? 2.f : 1.f;//@hdr_tweak
+					float highlightHdrMultiplier = GameBase::get().getRenderSystem().isUsingHDR() ? 2.f : 1.f;//@hdr_tweak
+					vec3 enemyHighlightColor = vec3(0.5f, 0, 0) * highlightHdrMultiplier;
+					vec3 teamHighlightColor = vec3(vec2(0.1f), 0.5f) * highlightHdrMultiplier;
+					vec3 highlightColor = enemyHighlightColor;
 					highlightForwardModelShader->setUniform3f("color", highlightColor);
 
 					for (RenderModelEntity* highlightEntity : stencilHighlightEntities)
 					{
 						//set color to team color? will require component or something to get that information
 						highlightForwardModelShader->setUniformMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(highlightEntity->getTransform().getModelMatrix()));
+						
+						if (!game.bOnlyHighlightTargets)
+						{
+							//if rendering all ships, their color needs to match whether they're an enemy or a friendly
+							if (TeamComponent* teamComp = highlightEntity->getGameComponent<TeamComponent>())
+							{
+								highlightColor = (teamComp->getTeam() == playerTeam) ? teamHighlightColor : enemyHighlightColor;
+							}
+							else
+							{
+								//no team component, assume enemy;
+								highlightColor = enemyHighlightColor;
+							}
+							highlightForwardModelShader->setUniform3f("color", highlightColor);
+						}
+
 						highlightEntity->render(*highlightForwardModelShader);
 					}
 					stencilHighlightEntities.clear(); //clear raw pointers so they will be regenerated next frame

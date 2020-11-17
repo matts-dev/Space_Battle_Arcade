@@ -35,6 +35,7 @@ namespace SA
 	private://default input
 		void handleEscapeKey(int state, int modifier_keys, int scancode);
 		void handleControlPressed(int state, int modifier_keys, int scancode);
+		void handleTabPressed(int state, int modifier_keys, int scancode);
 		virtual bool tick(float dt_sec) override;
 	private://impl
 		void startDilation();
