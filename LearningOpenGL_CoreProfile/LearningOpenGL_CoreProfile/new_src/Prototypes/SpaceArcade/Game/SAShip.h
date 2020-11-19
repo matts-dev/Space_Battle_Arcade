@@ -119,6 +119,7 @@ namespace SA
 		bool fireProjectileAtShip(const WorldEntity& myTarget, std::optional<float> fireRadius_cosTheta = std::optional<float>{}, float shootRandomOffsetStrength = 1.f);
 		void fireProjectile(class BrainKey privateKey); //#todo perhaps remove this in favor of fire in direction; #todo don't delete without cleaning up brain key
 		void fireProjectileInDirection(glm::vec3 dir_n); //#todo reconsider limiting this so only brains
+		void setProjectileStartPoint(glm::vec3& outProjectileStart, const glm::vec3& dir_n);
 
 		inline float getAISkillLevel() { return aiSkillLevel; } //[0,1] 1 being the hardest enemy to face
 
@@ -291,6 +292,10 @@ namespace SA
 
 		//some ships may have multiple engines, hence may have multiple fire particles
 		std::vector<sp<ActiveParticleGroup>> engineFireParticlesFX;
+
+		//where projectiles spawn from, if none specified in spawn config, projectiles will spawn immediately in front of the ship.
+		size_t fireLocationIndex = 0;
+		std::vector<glm::vec3> projectileFireLocationOffsets;
 	};
 }
 

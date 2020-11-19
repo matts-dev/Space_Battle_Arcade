@@ -52,6 +52,11 @@ namespace
 	};
 
 	char tempTextBuffer[4096];
+	const char* textWithIdx(const char* const text, size_t idx)
+	{
+		snprintf(tempTextBuffer, sizeof(tempTextBuffer), text, idx);
+		return tempTextBuffer; //#todo, we're doing same thing in a few .cpps, time to make this a shared function in utils or something
+	};
 
 	float sliderDragSpeed = 0.05f;
 
@@ -843,6 +848,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 		}
 	}
 
+	static size_t fireOffsetSelectionIdx = 0;
 	void ModelConfigurerEditor_Level::renderUI_Projectiles()
 	{
 		ImGui::Separator(); //separate out this section of UI
@@ -866,7 +872,36 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 					}
 				}
 			}
+
 			ImGui::Dummy({ 0, 10.f });
+			if (activeConfig)
+			{
+				ImGui::Text("Fire Location Offsets");
+				for(size_t offsetIdx = 0; offsetIdx < activeConfig->fireLocationOffsets.size(); ++offsetIdx)
+				{
+					if (ImGui::Selectable(textWithIdx("fire offset location %d", offsetIdx), offsetIdx == fireOffsetSelectionIdx)) 
+					{
+						fireOffsetSelectionIdx = offsetIdx;
+					}
+				}
+
+				if (Utils::isValidIndex(activeConfig->fireLocationOffsets, fireOffsetSelectionIdx))
+				{
+					glm::vec3& fireOffsetLoc = activeConfig->fireLocationOffsets[fireOffsetSelectionIdx];
+					ImGui::DragFloat3("fire location offset", &fireOffsetLoc.x, /*dragspeed*/0.005f);
+				}
+
+				if (ImGui::Button("Push New Fire Location"))
+				{
+					activeConfig->fireLocationOffsets.push_back(glm::vec3(0.f));
+				}
+				if (activeConfig->fireLocationOffsets.size() > 0 && ImGui::Button("Pop Last Fire Location"))
+				{
+					activeConfig->fireLocationOffsets.pop_back();
+				}
+
+				ImGui::Dummy({ 0, 10.f });
+			}
 		}
 
 		ImGui::Separator();
@@ -1752,6 +1787,19 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 
 						rootXform; //this is this the current model xform;
 						debugRenderSystem.renderSphere(/*model*/ particleXform.getModelMatrix(), fx.color * fx.colorHdrIntensity);
+					}
+				}
+				if (bool bRenderFireLocationOffsets = true && activeConfig)
+				{
+					size_t fireLocIdx = 0;
+					vec3 basePosition = rootXform.position; 
+					for (const glm::vec3& fireLoc : activeConfig->fireLocationOffsets)
+					{
+						DebugRenderSystem& debugRenderer = GameBase::get().getDebugRenderSystem();
+						glm::vec3 fireLocColorDeselected(0.5f, 0., 0.5f);
+						debugRenderer.renderSphere(basePosition + rootXform.rotQuat * fireLoc, vec3(0.05f), (fireLocIdx == fireOffsetSelectionIdx) ? fireLocColorDeselected * 2.f : fireLocColorDeselected);
+
+						++fireLocIdx;
 					}
 				}
 			}

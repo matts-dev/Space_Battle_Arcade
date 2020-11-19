@@ -92,6 +92,7 @@ namespace SA
 		const std::vector<FighterSpawnPoint>& getSpawnPoints() const { return spawnPoints; };
 		const glm::vec3 getModelFacingDir_n() { return modelFacingDir; }
 		const glm::quat getModelDefaultRotation();
+		const std::vector<glm::vec3>& getFireLocationOffsets() const { return fireLocationOffsets; }
 
 #define AUDIO_GETTER_SETTER(sfx_member)\
 		const SoundEffectSubConfig& getConfig_##sfx_member() const { return sfx_member; }\
@@ -127,6 +128,8 @@ namespace SA
 		std::vector<PlacementSubConfig> turretPlacements;
 		
 		std::vector<EngineEffectData> engineEffectData;
+
+		std::vector<glm::vec3> fireLocationOffsets;
 
 		std::vector<FighterSpawnPoint> spawnPoints;
 		std::vector<std::string> spawnableConfigsByName;

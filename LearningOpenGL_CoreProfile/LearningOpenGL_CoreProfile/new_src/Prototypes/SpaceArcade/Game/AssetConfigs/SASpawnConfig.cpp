@@ -93,6 +93,7 @@ namespace SA
 			{ "shapes", {} },
 			{ "teamData", {} },
 			{ SYMBOL_TO_STR(engineEffectData), {} },
+			{ SYMBOL_TO_STR(fireLocationOffsets), {}},
 			{ "spawnPoints", {} },
 			{ "spawnableConfigsByName", {} },
 			{ "bRequestsCollisionTests", bRequestsCollisionTests}
@@ -178,6 +179,14 @@ namespace SA
 				outJson["placements"].push_back(obj);
 			}
 		};
+
+		for (const glm::vec3& fireLocationOffset : fireLocationOffsets) //name of the iter variable must match deserialization code
+		{
+			json fireLoc_j;
+			JSON_WRITE_VEC3(fireLocationOffset, fireLoc_j); //#todo #nextengine this is clunky, would be nice to push array without key to an array
+
+			spawnData[SYMBOL_TO_STR(fireLocationOffsets)].push_back(fireLoc_j);
+		}
 
 		serializePlacements(communicationPlacements,spawnData);
 		serializePlacements(turretPlacements,spawnData);
@@ -362,6 +371,25 @@ namespace SA
 						READ_JSON_VEC3_OPTIONAL(engineFX.localOffset, engineEffectArrayJson[fxIdx]);
 						READ_JSON_VEC3_OPTIONAL(engineFX.localScale, engineEffectArrayJson[fxIdx]);
 						READ_JSON_BOOL_OPTIONAL(engineFX.bOverrideColorWithTeamColor, engineEffectArrayJson[fxIdx]);
+					}
+				}
+
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// load custom fire offset locations
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				if (JsonUtils::hasArray(spawnData, SYMBOL_TO_STR(fireLocationOffsets)))
+				{
+					fireLocationOffsets.clear(); //clear the old and make way for the new
+
+					const json& fireLocOffsetArray_j = spawnData[SYMBOL_TO_STR(fireLocationOffsets)];
+					for(size_t fireLocIdx = 0; fireLocIdx < fireLocOffsetArray_j.size(); ++fireLocIdx)
+					{
+						json fireLoc_j = fireLocOffsetArray_j[fireLocIdx];
+
+						glm::vec3 fireLocationOffset;
+						READ_JSON_VEC3_OPTIONAL(fireLocationOffset, fireLoc_j);
+
+						fireLocationOffsets.push_back(fireLocationOffset);
 					}
 				}
 

@@ -168,6 +168,8 @@ namespace SA
 			avoidanceSpheres.push_back(avoidanceSphere);
 		}
 
+		projectileFireLocationOffsets = shipConfigData->getFireLocationOffsets();
+
 		//WARNING: caching world sp will create cyclic reference
 		if (LevelBase* world = getWorld())
 		{
@@ -529,7 +531,7 @@ namespace SA
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
 			spawnData.direction_n = velocityDir_n;
-			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
+			setProjectileStartPoint(spawnData.start, spawnData.direction_n);
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
 			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
@@ -537,11 +539,15 @@ namespace SA
 			spawnData.projectileLightData = makeProjectileLightData(cachedTeamData);
 			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
+
+			pickup_figure_out_if_sliding_projectile_from_offset_to_straight_line_will_be_trivial;
 		}
 	}
 
 	void Ship::fireProjectileInDirection(glm::vec3 dir_n)
 	{
+		using namespace glm;
+
 		if (primaryProjectile && length2(dir_n) > 0.001 && FIRE_PROJECTILE_ENABLED)
 		{
 			const sp<ProjectileSystem>& projectileSys = SpaceArcade::get().getProjectileSystem();
@@ -549,7 +555,7 @@ namespace SA
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
 			spawnData.direction_n = glm::normalize(dir_n);
-			spawnData.start = spawnData.direction_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
+			setProjectileStartPoint(spawnData.start, spawnData.direction_n);
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
 			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
@@ -558,6 +564,22 @@ namespace SA
 
 			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile);
+		}
+	}
+
+	void Ship::setProjectileStartPoint(glm::vec3& outProjectileStart, const glm::vec3& dir_n)
+	{
+		using namespace glm;
+		
+		if (bool bHasNoProjectileSpawnPoints = projectileFireLocationOffsets.size() == 0)
+		{
+			outProjectileStart = dir_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
+		}
+		else
+		{
+			fireLocationIndex = (fireLocationIndex + 1) % projectileFireLocationOffsets.size(); //wrap around index.
+			glm::vec3 offset = projectileFireLocationOffsets[fireLocationIndex];
+			outProjectileStart = getTransform().position + vec3(getForwardDir())*offset.z + vec3(getRightDir())*offset.x + vec3(getUpDir())*offset.y;
 		}
 	}
 
