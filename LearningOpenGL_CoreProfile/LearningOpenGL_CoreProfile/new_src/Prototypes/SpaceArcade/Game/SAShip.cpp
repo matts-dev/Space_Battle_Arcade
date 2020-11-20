@@ -531,7 +531,7 @@ namespace SA
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
 			spawnData.direction_n = velocityDir_n;
-			setProjectileStartPoint(spawnData.start, spawnData.direction_n);
+			setProjectileStartPoint(spawnData.start, spawnData.traceStart, spawnData.direction_n);
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
 			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
@@ -540,7 +540,6 @@ namespace SA
 			playerMuzzleSFX();
 			projectileSys->spawnProjectile(spawnData, *primaryProjectile); 
 
-			pickup_figure_out_if_sliding_projectile_from_offset_to_straight_line_will_be_trivial;
 		}
 	}
 
@@ -555,7 +554,7 @@ namespace SA
 			ProjectileSystem::SpawnData spawnData;
 			//#TODO #scenenodes doesn't account for parent transforms
 			spawnData.direction_n = glm::normalize(dir_n);
-			setProjectileStartPoint(spawnData.start, spawnData.direction_n);
+			setProjectileStartPoint(spawnData.start, spawnData.traceStart, spawnData.direction_n);
 			spawnData.color = cachedTeamData.projectileColor;
 			spawnData.team = cachedTeamIdx;
 			spawnData.sfx = shipConfigData->getConfig_sfx_projectileLoop();
@@ -567,19 +566,29 @@ namespace SA
 		}
 	}
 
-	void Ship::setProjectileStartPoint(glm::vec3& outProjectileStart, const glm::vec3& dir_n)
+	void Ship::setProjectileStartPoint(glm::vec3& outProjectileStart, std::optional<glm::vec3>& traceStart, const glm::vec3& dir_n)
 	{
 		using namespace glm;
-		
-		if (bool bHasNoProjectileSpawnPoints = projectileFireLocationOffsets.size() == 0)
+
+		constexpr bool bEnableProjectileSpawnOffsets = true;
+
+		if (projectileFireLocationOffsets.size() == 0 || !bEnableProjectileSpawnOffsets)
 		{
 			outProjectileStart = dir_n * 5.0f + getTransform().position; //#TODO make this work by not colliding with src ship; for now spawning in front of the ship
 		}
 		else
 		{
+			const Transform& shipXform = getTransform();
+			vec3 forward_n = vec3(getForwardDir());
+
 			fireLocationIndex = (fireLocationIndex + 1) % projectileFireLocationOffsets.size(); //wrap around index.
 			glm::vec3 offset = projectileFireLocationOffsets[fireLocationIndex];
-			outProjectileStart = getTransform().position + vec3(getForwardDir())*offset.z + vec3(getRightDir())*offset.x + vec3(getUpDir())*offset.y;
+			outProjectileStart = shipXform.position + forward_n*offset.z + vec3(getRightDir())*offset.x + vec3(getUpDir())*offset.y;
+
+			//find trace start point
+			glm::vec3 toProjStart_v = outProjectileStart - shipXform.position;
+			glm::vec3 projOnToForward_v = Utils::project(toProjStart_v, forward_n);
+			traceStart = shipXform.position + projOnToForward_v;
 		}
 	}
 

@@ -38,6 +38,8 @@ namespace SA
 		glm::vec3 hitLocation;
 		glm::vec3 aabbSize;
 		glm::vec3 color;
+		glm::vec3 traceStartPos;
+		glm::vec3 offsetStartPos;
 		glm::quat directionQuat; //#TODO maybe? duplicate info in xform
 		glm::mat4 collisionXform;
 		glm::mat4 renderXform;
@@ -45,11 +47,13 @@ namespace SA
 		float speed;
 		float lifetimeSec;
 		float timeAlive;
+		float offsetTraceCorrectionDistance;
 		sp<WorldEntity> owner;
 		int damage;
 		size_t team;
 		bool forceRelease;
 		bool bHit;
+		bool bCorrectPosition;
 		sp<const Model3D> model;
 		sp<AudioEmitter> soundEmitter = nullptr;
 		sp<PointLight_Deferred> pointLight = nullptr;
@@ -97,6 +101,7 @@ namespace SA
 			size_t team = 0;
 			SoundEffectSubConfig sfx;
 			std::optional<PointLight_Deferred::UserData> projectileLightData = std::nullopt;
+			std::optional<glm::vec3> traceStart;
 			sp<WorldEntity> owner = nullptr;
 		};
 		void spawnProjectile(const SpawnData& spawnData, const ProjectileConfig& projectileTypeHandle);

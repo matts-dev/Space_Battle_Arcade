@@ -51,6 +51,22 @@ namespace SA
 
 		//#optimize investigate whether some of the matrices below can be cached once (eg fire rotation? offsetDirection?)
 		vec3 start = xform.position;
+
+		if(bCorrectPosition)
+		{
+			vec3 originalOffset_v = offsetStartPos - traceStartPos;
+			vec3 toCurPos_v = xform.position - traceStartPos; //hypotenuse 
+			vec3 projOntoCenteredLine_v = Utils::project(toCurPos_v, direction_n); //ie the line as if we fired from center of ship, 
+
+			//consider the triangle made from the projection, and the vector to current position from start. line "opposite"
+			vec3 triOpposite_v = toCurPos_v - projOntoCenteredLine_v;
+			float blendAlpha = glm::clamp(1.f - glm::length(projOntoCenteredLine_v) / offsetTraceCorrectionDistance, 0.f, 1.f); //[0,1]
+			vec3 correctedPosition = (blendAlpha * originalOffset_v) + projOntoCenteredLine_v + traceStartPos;
+
+			//slide this position into place so that it gradually aligns with the trace from center of spawn
+			start = correctedPosition;
+		}
+
 		vec3 end = start + dt_distance * direction_n;
 		vec3 offsetDir = glm::normalize(start - end);
 		float offsetLength = dt_distance / 2;
@@ -312,6 +328,11 @@ namespace SA
 		spawned->soundEmitter = spawnSfxEffect(spawnData.sfx, spawnData.start);
 		spawned->pointLight = spawnPointLight(spawnData);
 
+		spawned->bCorrectPosition = spawnData.traceStart.has_value();
+		spawned->traceStartPos = spawnData.traceStart.value_or(glm::vec3(0.f));
+		spawned->offsetTraceCorrectionDistance = 30.f; //hardcoded for now, perhaps should be tweakable per model as size of model may vary
+		spawned->offsetStartPos = spawned->xform.position;
+		
 		spawned->timeAlive = 0.f;
 #if _WIN32 && _DEBUG
 		if (Utils::anyValueNAN(spawnRotation)) { __debugbreak(); return; }
