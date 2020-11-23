@@ -69,6 +69,7 @@ namespace SA
 		{
 			return std::string("Max fighters per carrier: ") + std::to_string(value);
 		});
+		selector_numFightersPerCarrier->setIndex(/*1000 from array as default*/ 2);
 
 
 		selector_fighterPercSpawnedAtStart = new_sp<Widget3D_DiscreteSelector<size_t>>();

@@ -177,7 +177,7 @@ namespace SA
 			forwardShadedModelShader->setUniformMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(FRD->view));
 			forwardShadedModelShader->setUniformMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(FRD->projection));
 			forwardShadedModelShader->setUniform3f("lightPosition", glm::vec3(0, 0, 0));
-			forwardShadedModelShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0));
+			forwardShadedModelShader->setUniform3f("lightDiffuseIntensity", glm::vec3(0, 0, 0)); //#TODO remove these from shader if they're not used
 			forwardShadedModelShader->setUniform3f("lightSpecularIntensity", glm::vec3(0, 0, 0));
 			forwardShadedModelShader->setUniform3f("lightAmbientIntensity", glm::vec3(0, 0, 0)); //perhaps drive this from level information
 			forwardShadedModelShader->setUniform1i("renderMode", int(renderMode));
@@ -472,24 +472,30 @@ namespace SA
 	void SpaceLevelBase::copyPlanetDataToInitData(const PlanetData& planet, Planet::Data& init)
 	{
 		assert(generationRNG);
-		auto makeRandomVec3 = [this]()
-		{
-			vec3 randomVec = vec3(generationRNG->getFloat());
-
-			//don't let zero vec occur
-			if (glm::length2(randomVec) < 0.0001f)
-			{
-				randomVec = vec3(1, 0, 0);
-			}
-
-			return randomVec;
-		};
 
 		glm::vec3 planetDir = normalize(planet.offsetDir.has_value() ? *planet.offsetDir : makeRandomVec3());
-		float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : generationRNG->getFloat(1.0f, 30.f);
+		float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : generationRNG->getFloat(2.0f, 30.f);
 		bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (generationRNG->getInt(0, 8) == 0);
 
-		init.albedo1_filepath = planet.texturePath.has_value() ? *planet.texturePath : DefaultPlanetTexturesPaths::albedo_terrain; //only copy if there is a value; otherwise use whatever is init as default (prevent crashes in level editor)
+		//init.albedo1_filepath = planet.texturePath.has_value() ? *planet.texturePath : DefaultPlanetTexturesPaths::albedo_terrain; //only copy if there is a value; otherwise use whatever is init as default (prevent crashes in level editor)
+		if (planet.texturePath.has_value())
+		{
+			init.albedo1_filepath = *planet.texturePath;
+		}
+		else if (generationRNG)
+		{
+			std::vector<std::string> defaultTextures = {
+				std::string(DefaultPlanetTexturesPaths::albedo1),
+				std::string(DefaultPlanetTexturesPaths::albedo2),
+				std::string(DefaultPlanetTexturesPaths::albedo3),
+				std::string(DefaultPlanetTexturesPaths::albedo4),
+				std::string(DefaultPlanetTexturesPaths::albedo5),
+				std::string(DefaultPlanetTexturesPaths::albedo6),
+				std::string(DefaultPlanetTexturesPaths::albedo7),
+				std::string(DefaultPlanetTexturesPaths::albedo8)
+			};
+			init.albedo1_filepath = defaultTextures[generationRNG->getInt<size_t>(0, defaultTextures.size() - 1)];
+		}
 		init.xform.position = planetDist * planetDir;
 
 		if (bHasCivilization)
@@ -497,10 +503,14 @@ namespace SA
 			//if this was randomly generated, then be sure to use the earth-like planet
 			if (const bool bWasRandomized = !planet.bHasCivilization.has_value())
 			{
-				//use the multi-layer material example
-				init.albedo1_filepath = DefaultPlanetTexturesPaths::albedo_sea;
-				init.albedo2_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
-				init.albedo3_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+				int oneInX_generateCivilization = 5;
+				if (generationRNG && (generationRNG->getInt(0, oneInX_generateCivilization) == 0))
+				{
+					//use the multi-layer material example
+					init.albedo1_filepath = DefaultPlanetTexturesPaths::albedo_sea;
+					init.albedo2_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+					init.albedo3_filepath = DefaultPlanetTexturesPaths::albedo_terrain;
+				}
 			}
 			else
 			{
@@ -512,13 +522,37 @@ namespace SA
 		}
 	}
 
+	glm::vec3 SpaceLevelBase::makeRandomVec3()
+	{
+		if (generationRNG)
+		{
+			vec3 randomVec = vec3(generationRNG->getFloat(-1.f, 1.f), generationRNG->getFloat(-1.f, 1.f), generationRNG->getFloat(-1.f, 1.f));
+
+			//don't let zero vec occur
+			if (glm::length2(randomVec) < 0.0001f)
+			{
+				randomVec = vec3(1, 0, 0);
+			}
+
+			return randomVec;
+		}
+		else
+		{
+			STOP_DEBUGGER_HERE();
+			return vec3(1.f, 0.f, 0.f);
+		}
+	}
+
 	void SpaceLevelBase::applyLevelConfig()
 	{
 		if (levelConfig)
 		{
 			if (const std::optional<size_t>& seed = levelConfig->getSeed())
 			{
-				GameBase::get().getRNGSystem().getSeededRNG(*seed);
+				if (!generationRNG)
+				{
+					generationRNG = GameBase::get().getRNGSystem().getSeededRNG(*seed);
+				}
 			}
 			else
 			{
@@ -526,18 +560,6 @@ namespace SA
 			}
 
 			assert(generationRNG);
-			auto makeRandomVec3 = [this]()
-			{
-				vec3 randomVec = vec3(generationRNG->getFloat());
-
-				//don't let zero vec occur
-				if (glm::length2(randomVec) < 0.0001f)
-				{
-					randomVec = vec3(1, 0, 0);
-				}
-
-				return randomVec;
-			};
 
 			////////////////////////////////////////////////////////
 			// set up planets
@@ -559,7 +581,7 @@ namespace SA
 			for (const StarData& star : levelConfig->getStars())
 			{
 				glm::vec3 starDir = normalize(star.offsetDir.has_value() ? *star.offsetDir : makeRandomVec3());
-				float starDist = star.offsetDistance.has_value() ? *star.offsetDistance : generationRNG->getFloat(1.0f, 30.f);
+				float starDist = star.offsetDistance.has_value() ? *star.offsetDistance : generationRNG->getFloat(10.0f, 40.f);
 				vec3 starColor = star.color.has_value() ? *star.color : vec3(1.f);	//perhaps randomize color
 
 				localStars.push_back(new_sp<Star>());

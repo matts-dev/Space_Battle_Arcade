@@ -67,6 +67,7 @@ namespace SA
 	protected:
 		void copyPlanetDataToInitData(const PlanetData& editorData, Planet::Data& outInitData);
 	private:
+		glm::vec3 makeRandomVec3();
 		virtual void applyLevelConfig();
 		void transitionToMainMenu();
 	public:

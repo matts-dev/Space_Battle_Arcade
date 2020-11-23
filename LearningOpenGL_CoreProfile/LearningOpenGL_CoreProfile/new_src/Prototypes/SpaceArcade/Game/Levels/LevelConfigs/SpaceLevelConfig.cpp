@@ -66,18 +66,15 @@ namespace SA
 		}
 	}
 
-	void SpaceLevelConfig::setNumPlanets(size_t number)
+	void SpaceLevelConfig::setNumPlanets(const size_t newNumPlanets)
 	{
-		numPlanets = number;
+		numPlanets = newNumPlanets;
 
 		//prevent json hacks from doing crazy size
 		constexpr size_t planetLimit = 20;
 		numPlanets = glm::clamp<size_t>(numPlanets, 0, planetLimit);
 
-		while (numPlanets < number)
-		{
-			planets.emplace_back();
-		}
+		planets.resize(numPlanets); //supports trimming
 	}
 
 	bool SpaceLevelConfig::overridePlanetData(size_t idx, const PlanetData& inData)
@@ -95,18 +92,15 @@ namespace SA
 		return false;
 	}
 
-	void SpaceLevelConfig::setNumStars(size_t number)
+	void SpaceLevelConfig::setNumStars(const size_t newNumStars)
 	{
-		numStars = number;
+		numStars = newNumStars;
 
 		//prevent json hacks from doing crazy size
 		constexpr size_t starLimit = 20;
 		numStars = glm::clamp<size_t>(numStars, 0, starLimit);
 
-		while (numStars < number)
-		{
-			stars.emplace_back();
-		}
+		stars.resize(newNumStars); //supports trimming
 	}
 
 	bool SpaceLevelConfig::overrideStarData(size_t idx, const StarData& inData)

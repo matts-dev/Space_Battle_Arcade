@@ -7,7 +7,7 @@
 #include "SASystemBase.h"
 #include "SAGameEntity.h"
 
-#define SA_RNG_USE_TIME 0
+#define SA_RNG_USE_TIME 1 //#todo #shipping
 
 namespace SA
 {

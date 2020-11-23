@@ -143,9 +143,12 @@ namespace SA
 		vec3 carrierLocation = carrierBehindTeamLocOffset + carrierRightOffset;
 
 		outLoc = carrierLocation;
-		outRotation = glm::angleAxis(glm::radians(180.f), worldUp) * centerRotation; //just flip center rotation by 180
-	}
+		bool bUseRandomrotation = true;
 
+		outRotation = (bUseRandomrotation) ?
+			glm::angleAxis(glm::radians(rng.getFloat(0.f, 360.f)), worldUp) : 
+			glm::angleAxis(glm::radians(180.f), worldUp) * centerRotation; //just flip center rotation by 180
+	}
 	
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
