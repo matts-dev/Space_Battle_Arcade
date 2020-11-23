@@ -1194,6 +1194,120 @@ namespace SA
 		}
 	}
 
+	void Ship::startCarrierExplosionSequence()
+	{
+		bool bFailure = true;
+
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		{
+			if (const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager())
+			{
+				bFailure = false; //at this point no need to flag failure, we've either started or are about to start the destroy sequence
+
+				//if we have a timer delegate, then we've already ran this code and no need to start another one (thinking this can happen fi ship is shot during explosion)
+				if (!carrierDestroyTickTimerDelegate)
+				{
+					carrierDestroyTickTimerDelegate = new_sp<MultiDelegate<>>();
+					carrierDestroyTickTimerDelegate->addWeakObj(sp_this(), &Ship::timerTick_CarrierExplosion);
+
+					float timerDuration = 0.5f;
+					worldTimeManager->createTimer(carrierDestroyTickTimerDelegate, timerDuration, /*loop*/ true);
+				}
+			}
+		}
+
+		if(bFailure)
+		{
+			destroy();
+		}
+	}
+
+	void Ship::timerTick_CarrierExplosion()
+	{
+		constexpr size_t MAX_CARRIER_EXPLOISION_TICKS = 20;
+
+		++numExplosionSequenceTicks;
+		if (numExplosionSequenceTicks > MAX_CARRIER_EXPLOISION_TICKS)
+		{
+			const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+			const sp<TimeManager>& worldTimeManager = currentLevel ? currentLevel->getWorldTimeManager() : nullptr;
+			if (carrierDestroyTickTimerDelegate && worldTimeManager)
+			{
+				worldTimeManager->removeTimer(carrierDestroyTickTimerDelegate); //don't loop any more
+			}
+			else{STOP_DEBUGGER_HERE();}
+
+			destroy(); //finally, destroy this for real 
+		}
+		else
+		{
+			if (rng)
+			{
+				size_t placementArrayIndex = rng->getInt<size_t>(0, 2);
+				sp<ShipPlacementEntity> selectedObjectiveToSpawnExplosionAt = nullptr;
+
+				////////////////////////////////////////////////////////
+				// select a random object to spawn the explosion at
+				////////////////////////////////////////////////////////
+				auto selectLambda = [this](std::vector<sp<ShipPlacementEntity>> placementArray) {
+					if (placementArray.size() > 0)
+					{
+						return placementArray[rng->getInt<size_t>(0, placementArray.size() - 1)];
+					}
+					else{return sp<ShipPlacementEntity>(nullptr);}
+				};
+				switch (placementArrayIndex)
+				{
+					case 0:	selectedObjectiveToSpawnExplosionAt = selectLambda(generatorEntities);
+						break;
+					case 1:	selectedObjectiveToSpawnExplosionAt = selectLambda(turretEntities);
+						break;
+					case 2:	selectedObjectiveToSpawnExplosionAt = selectLambda(communicationEntities);
+						break;
+					default:
+						break;
+				}
+
+				////////////////////////////////////////////////////////
+				// use the selected objective to spwan the explosion
+				////////////////////////////////////////////////////////
+				if (selectedObjectiveToSpawnExplosionAt)
+				{
+					glm::vec3 selectedObjectivePosition = selectedObjectiveToSpawnExplosionAt->getWorldPosition();
+
+					//VFX
+					float explosionScaleUp = 20.f;
+
+					ParticleSystem::SpawnParams particleSpawnParams;
+					particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+					particleSpawnParams.xform.position = selectedObjectivePosition;
+					particleSpawnParams.xform.scale = glm::vec3(explosionScaleUp);
+					particleSpawnParams.velocity = getVelocity();
+
+					//SFX
+					GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+					if (sp<AudioEmitter> sfx_explosionEmitter = shipConfigData ? GameBase::get().getAudioSystem().createEmitter() : nullptr)
+					{
+						shipConfigData->getConfig_sfx_explosion().configureEmitter(sfx_explosionEmitter);
+						sfx_explosionEmitter->setPriority(AudioEmitterPriority::GAMEPLAY_CRITICAL);
+						sfx_explosionEmitter->setPosition(selectedObjectivePosition);
+						sfx_explosionEmitter->setVelocity(getVelocity());
+						sfx_explosionEmitter->play();
+						carrierExplosionSFX.push_back(sfx_explosionEmitter);
+					}
+				}
+				else
+				{
+					STOP_DEBUGGER_HERE(); //there's no selected placement entity? how did this happen?
+					return;
+				}
+
+
+			}
+			else { STOP_DEBUGGER_HERE(); }
+		}
+	}
+
 	bool Ship::getAvoidanceDampenedVelocity(std::optional<glm::vec3>& adjustVel_n) const
 	{
 		using namespace glm;
@@ -1447,51 +1561,62 @@ namespace SA
 		{
 			if (!isPendingDestroy())
 			{
-				if (!activeShieldEffect.expired())
+				if (!isCarrierShip()) //is fighter shp
 				{
-					sp<ActiveParticleGroup> shieldVFX = activeShieldEffect.lock();
-					shieldVFX->killParticle();
-					shieldVFX->xform.scale = glm::vec3(0.f); //particle isn't disappearing... 
-					activeShieldEffect.reset();
-				}
-
-				ParticleSystem::SpawnParams particleSpawnParams;
-				particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
-				particleSpawnParams.xform.position = this->getTransform().position;
-				particleSpawnParams.velocity = getVelocity();
-
-				GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
-				if (sfx_explosion) 
-				{ 
-					sfx_explosion->setPosition(getWorldPosition());
-					sfx_explosion->setVelocity(getVelocity());
-					sfx_explosion->play(); 
-				}
-				if (sfx_engine) { sfx_engine->stop(); }
-
-				if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
-				{
-					brainComp->setNewBrain(sp<AIBrain>(nullptr));
-				}
-
-				if (transientCollidingProjectile && transientCollidingProjectile->owner)
-				{ //if you get a crash here, did we clean this up after being hit? this should always be cleaned up within the scope that the player is hit by a projectile!
-					if (OwningPlayerComponent* playerComp = transientCollidingProjectile->owner->getGameComponent<OwningPlayerComponent>())
+					if (!activeShieldEffect.expired())
 					{
-						if (playerComp->hasOwningPlayer())
+						sp<ActiveParticleGroup> shieldVFX = activeShieldEffect.lock();
+						shieldVFX->killParticle();
+						shieldVFX->xform.scale = glm::vec3(0.f); //particle isn't disappearing... 
+						activeShieldEffect.reset();
+					}
+
+					ParticleSystem::SpawnParams particleSpawnParams;
+					particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
+					particleSpawnParams.xform.position = this->getTransform().position;
+					particleSpawnParams.velocity = getVelocity();
+
+					GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
+					if (sfx_explosion) 
+					{ 
+						sfx_explosion->setPosition(getWorldPosition());
+						sfx_explosion->setVelocity(getVelocity());
+						sfx_explosion->play(); 
+					}
+					if (sfx_engine) { sfx_engine->stop(); }
+
+					if (BrainComponent* brainComp = getGameComponent<BrainComponent>())
+					{
+						brainComp->setNewBrain(sp<AIBrain>(nullptr));
+					}
+
+					if (transientCollidingProjectile && transientCollidingProjectile->owner)
+					{ //if you get a crash here, did we clean this up after being hit? this should always be cleaned up within the scope that the player is hit by a projectile!
+						if (OwningPlayerComponent* playerComp = transientCollidingProjectile->owner->getGameComponent<OwningPlayerComponent>())
 						{
-							//#todod #nextengine indexed dynamic casts with class header injected code? use index created at runtime to identify classes or something, this should let us use an index and then static cast if index is in an array of classes that are available or something (may need to tweak)
-							sp<PlayerBase> playerBase = playerComp->getOwningPlayer().lock();
-							if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
+							if (playerComp->hasOwningPlayer())
 							{
-								player->incrementKillCount(); //this could be virtual to avoid dynamic cast. but may be weird to put this in framework base. 
+								//#todod #nextengine indexed dynamic casts with class header injected code? use index created at runtime to identify classes or something, this should let us use an index and then static cast if index is in an array of classes that are available or something (may need to tweak)
+								sp<PlayerBase> playerBase = playerComp->getOwningPlayer().lock();
+								if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
+								{
+									player->incrementKillCount(); //this could be virtual to avoid dynamic cast. but may be weird to put this in framework base. 
+								}
 							}
 						}
 					}
+
+				}
+				else
+				{
+					startCarrierExplosionSequence();
 				}
 			}
 
-			destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
+			if (!isCarrierShip()) //carrier ship will have special destroy sequence
+			{
+				destroy(); //perhaps enter a destroyed state with timer to remove actually destroy -- rather than immediately despawning
+			}
 		}
 		else
 		{

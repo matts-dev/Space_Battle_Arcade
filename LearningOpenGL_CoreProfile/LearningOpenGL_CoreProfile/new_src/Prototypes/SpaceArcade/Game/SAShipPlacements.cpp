@@ -269,6 +269,10 @@ namespace SA
 			particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
 			particleSpawnParams.xform.position = cachedModelMat_PxL * glm::vec4(0, 0, 0, 1.f);
 			particleSpawnParams.xform.scale = getTransform().scale;
+			if (Ship* carrierShip = weakOwner.isValid() ? weakOwner.fastGet() : nullptr)
+			{
+				particleSpawnParams.xform.scale *= carrierShip->getTransform().scale;
+			}
 			return particleSpawnParams;
 		};
 		auto sharedExplosionLogic = [this, makeDefaultExplosion](ParticleSystem& particleSys) 

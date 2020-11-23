@@ -81,6 +81,10 @@ namespace SA
 			startShutdown();
 			return;
 		}
+		if (GLFWwindow* windowRaw = window->get())
+		{
+			glfwSetWindowTitle(windowRaw, "Space Arcade");
+		}
 
 		litObjShader = new_sp<SA::Shader>(litObjectShader_VertSrc, litObjectShader_FragSrc, false);
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);

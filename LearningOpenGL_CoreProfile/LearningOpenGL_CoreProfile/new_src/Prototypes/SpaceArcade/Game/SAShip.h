@@ -201,6 +201,8 @@ namespace SA
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) override;
 		void doShieldFX();
 		void tickShieldFX();
+		void startCarrierExplosionSequence();
+		void timerTick_CarrierExplosion();
 		bool getAvoidanceDampenedVelocity(std::optional<glm::vec3>& avoidVec) const;
 		void regenerateEngineVFX();
 		void tickEngineFX();
@@ -246,6 +248,7 @@ namespace SA
 		sp<const SpawnConfig> shipConfigData;
 		std::vector<sp<class AvoidanceSphere>> avoidanceSpheres;
 		sp<MultiDelegate<>> spawnStasisTimerDelegate = nullptr;
+		sp<MultiDelegate<>> carrierDestroyTickTimerDelegate = nullptr;
 		fwp<FighterSpawnComponent> owningSpawnComponent = nullptr; //spawn component used to spawn this ship instance 
 
 		std::vector<sp<ShipPlacementEntity>> generatorEntities;
@@ -255,6 +258,9 @@ namespace SA
 		size_t activeGenerators = 0;
 		size_t activeTurrets = 0;
 		size_t activeCommunications = 0;
+
+		std::vector<sp<AudioEmitter>> carrierExplosionSFX;
+		size_t numExplosionSequenceTicks = 0;
 
 		//because health is done in a component, we need a way to track the projectile that hit the ship, so that we can get information off of projectile.
 		//this is cleared immediately to avoid lifetime issues

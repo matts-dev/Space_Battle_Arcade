@@ -58,7 +58,8 @@ namespace SA
 			vec3 toCurPos_v = xform.position - traceStartPos; //hypotenuse 
 			vec3 projOntoCenteredLine_v = Utils::project(toCurPos_v, direction_n); //ie the line as if we fired from center of ship, 
 
-			//consider the triangle made from the projection, and the vector to current position from start. line "opposite"
+
+			//consider the triangle made from the projection, and the vector to current position from trace start. the "opposite" line is same as in SOA 
 			vec3 triOpposite_v = toCurPos_v - projOntoCenteredLine_v;
 			float blendAlpha = glm::clamp(1.f - glm::length(projOntoCenteredLine_v) / offsetTraceCorrectionDistance, 0.f, 1.f); //[0,1]
 			vec3 correctedPosition = (blendAlpha * originalOffset_v) + projOntoCenteredLine_v + traceStartPos;
