@@ -177,17 +177,7 @@ namespace SA
 		//TODO_lookup_fighter_for_team_and_cache_color_for_lasers;
 		if (!cacheGM) //#multiplayer clients are currently reading from gamemode, need to refactor this to read from gamestate
 		{
-			if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
-			{
-				//dynamic cast will only happen until we get a gamemode, which should be first frame
-				if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
-				{
-					if (ServerGameMode_SpaceBase* serverGameMode = spaceLevel->getServerGameMode_SpaceBase())
-					{
-						cacheGM = serverGameMode->requestTypedReference_Nonsafe<ServerGameMode_SpaceBase>();
-					}
-				}
-			}
+			cacheGameMode();
 		}
 
 		if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
@@ -204,6 +194,8 @@ namespace SA
 			}
 		}
 		textProgressBar->myProgressBar->setSlantRotation_rad(0.f);
+
+		GameBase::get().getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &Widget3D_TeamProgressBar::handlePostLevelChange);
 	}
 
 	void Widget3D_TeamProgressBar::renderGameUI(GameUIRenderData& renderData)
@@ -228,6 +220,30 @@ namespace SA
 		}
 
 		Parent::renderGameUI(renderData);
+	}
+
+	void Widget3D_TeamProgressBar::cacheGameMode()
+	{
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		{
+			//dynamic cast will only happen until we get a gamemode, which should be first frame
+			if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+			{
+				if (ServerGameMode_SpaceBase* serverGameMode = spaceLevel->getServerGameMode_SpaceBase())
+				{
+					cacheGM = serverGameMode->requestTypedReference_Nonsafe<ServerGameMode_SpaceBase>();
+				}
+			}
+		}
+	}
+
+	void Widget3D_TeamProgressBar::handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	{
+		//fix bug where "no gamestate data" was present because we created widget before we got the game mode.
+		if (!cacheGM)
+		{
+			cacheGameMode();
+		}
 	}
 
 }

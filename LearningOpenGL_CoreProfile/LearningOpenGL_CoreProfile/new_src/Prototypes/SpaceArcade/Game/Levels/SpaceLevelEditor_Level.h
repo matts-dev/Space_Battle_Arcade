@@ -18,6 +18,9 @@ namespace SA
 	class SpaceLevelEditor_Level : public SpaceLevelBase
 	{
 		using Parent = SpaceLevelBase;
+	public:
+		virtual bool isTestLevel() override { return true; }
+		virtual bool isMenuLevel() override { return true; }
 	protected:
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;

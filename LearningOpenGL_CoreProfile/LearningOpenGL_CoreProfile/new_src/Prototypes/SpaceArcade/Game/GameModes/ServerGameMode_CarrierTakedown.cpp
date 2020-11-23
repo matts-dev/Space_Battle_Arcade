@@ -304,7 +304,7 @@ namespace SA
 			{
 				if (!level->isTestLevel()) //test level will not have config, but I need to set it up with a gamemode
 				{
-					STOP_DEBUGGER_HERE(); //didn't get a level config or generation RNG. 
+					STOP_DEBUGGER_HERE(); //didn't get a level config or generation RNG. If you're playing an editor level, make sure you override the virtual isMenuLevel() virtual so a default gamemode isn't provided
 				}
 			}
 

@@ -719,6 +719,14 @@ namespace SA
 				}
 			}
 		}
+		else if (isTestLevel() && !isMenuLevel())
+		{
+			if (spaceGameMode = createGamemodeFromTag(TAG_GAMEMODE_CARRIER_TAKEDOWN)) //default to carrier take down
+			{
+				spaceGameMode->setOwningLevel(sp_this());
+				spaceGameMode->initialize(ServerGameMode_SpaceBase::LevelKey{});
+			}
+		}
 		return spaceGameMode;
 	}
 

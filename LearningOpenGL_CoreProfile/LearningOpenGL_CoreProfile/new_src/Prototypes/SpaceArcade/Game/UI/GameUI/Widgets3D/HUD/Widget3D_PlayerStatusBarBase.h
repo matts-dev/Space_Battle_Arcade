@@ -80,6 +80,9 @@ namespace SA
 	public:
 		virtual void renderGameUI(GameUIRenderData& renderData);
 	private:
+		void cacheGameMode();
+		void handlePostLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& /*newCurrentLevel*/);
+	private:
 		size_t teamIdx;
 		fwp<class ServerGameMode_SpaceBase> cacheGM = nullptr;
 	};

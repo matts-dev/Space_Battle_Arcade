@@ -167,7 +167,7 @@ namespace SA
 			if (activeLevelConfig)
 			{
 				static bool bSpawnDebugLevel = true;
-				if (ImGui::Button("Play Level"))
+				if (ImGui::Button("Play and Save Level"))
 				{
 					saveActiveConfig();
 					LevelSystem& levelSystem = GameBase::get().getLevelSystem();

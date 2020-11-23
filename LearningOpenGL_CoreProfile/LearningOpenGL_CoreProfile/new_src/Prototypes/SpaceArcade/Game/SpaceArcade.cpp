@@ -120,8 +120,8 @@ namespace SA
 		playerPilotAssistUI = new_sp<PlayerPilotAssistUI>();
 
 		//make sure resources are loaded before the level starts
-		//sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
-		sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();
+		sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
+		//sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();
 		//sp<LevelBase> startupLevel = new_sp<BasicTestSpaceLevel>();
 		//sp<LevelBase> startupLevel = new_sp<EnigmaTutorialLevel>();
 		//sp<LevelBase> startupLevel = new_sp<StressTestLevel>();

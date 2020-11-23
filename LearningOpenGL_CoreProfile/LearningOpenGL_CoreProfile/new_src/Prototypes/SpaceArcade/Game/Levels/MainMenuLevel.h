@@ -18,6 +18,8 @@ namespace SA
 	class MainMenuLevel : public SpaceLevelBase
 	{
 		using Parent = SpaceLevelBase;
+	public:
+		virtual bool isMenuLevel() override { return true; }
 	protected:
 		virtual void postConstruct() override;
 		virtual void startLevel_v() override;

@@ -12,6 +12,7 @@ namespace SA
 		virtual void onCreateLocalPlanets() override;
 		virtual void onCreateLocalStars() override;
 		virtual void startLevel_v() override;
+		virtual bool isMenuLevel() { return true; }
 		virtual void tick(float dt_sec) override;
 		virtual void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection) override;
 	private:
