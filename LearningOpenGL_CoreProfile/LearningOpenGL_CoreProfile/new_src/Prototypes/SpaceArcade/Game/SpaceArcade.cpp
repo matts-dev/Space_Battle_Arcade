@@ -118,7 +118,7 @@ namespace SA
 		hud = new_sp<HUD>();
 		console = new_sp<DeveloperConsole>();
 		playerPilotAssistUI = new_sp<PlayerPilotAssistUI>();
-
+			
 		//make sure resources are loaded before the level starts
 		sp<LevelBase> startupLevel = new_sp<MainMenuLevel>();
 		//sp<LevelBase> startupLevel = new_sp<SpaceLevelEditor_Level>();

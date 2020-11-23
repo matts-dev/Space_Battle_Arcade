@@ -67,10 +67,18 @@ namespace SA
 
 		if (numTeams != teamHealthBars.size())
 		{
+			const sp<PlayerBase>& player = SpaceArcade::get().getPlayerSystem().getPlayer(playerIdx);
+
 			//grow array
 			for(size_t teamIdx = teamHealthBars.size(); teamIdx < numTeams; ++teamIdx)
 			{
 				teamHealthBars.push_back(new_sp<Widget3D_TeamProgressBar>(playerIdx, teamIdx));
+
+				if (player && player->hasControlTarget())
+				{
+					teamHealthBars.back()->activate(true); //fix bug where for first life, in main menu you would not see team health bars
+				}
+				
 			}
 
 			//shrink array
@@ -86,7 +94,6 @@ namespace SA
 		if (bRenderHUD)
 		{
 			tryRegenerateTeamWidgets();
-
 
 			bool bPlayerSlomoReady = false;
 			const sp<PlayerBase>& playerBase = GameBase::get().getPlayerSystem().getPlayer(playerIdx);

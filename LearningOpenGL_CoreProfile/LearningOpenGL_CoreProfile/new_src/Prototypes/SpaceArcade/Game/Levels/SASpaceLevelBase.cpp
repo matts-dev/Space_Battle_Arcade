@@ -42,6 +42,7 @@
 #include "../Cameras/SAShipCamera.h"
 #include "../Environment/Nebula.h"
 #include "../GameEntities/AvoidMesh.h"
+#include "../UI/GameUI/SAHUD.h"
 
 namespace SA
 {
@@ -689,6 +690,14 @@ namespace SA
 		}
 
 		refreshStarLightMapping();
+
+		//fix bug where hud would not be visible after leaving main menu.
+		if (const sp<HUD> hud = !isMenuLevel() ? SpaceArcade::get().getHUD() : nullptr)
+		{
+			log(__FUNCTION__, LogLevel::LOG, "Enabling Hud Visibility");
+			hud->setVisibility(true);
+		}
+
 	}
 
 	void SpaceLevelBase::tick_v(float dt_sec)
