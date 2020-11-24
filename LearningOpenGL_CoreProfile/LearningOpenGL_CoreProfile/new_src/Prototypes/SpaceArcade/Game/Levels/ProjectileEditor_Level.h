@@ -22,7 +22,8 @@ namespace SA
 			COLLISION = 0,
 			DELTA_TIME
 		};
-
+	public:
+		virtual bool isEditorLevel() override { return true; }
 
 	private:
 		virtual void startLevel_v() override;

@@ -65,6 +65,8 @@ namespace SA
 		const std::set<sp<WorldEntity>>& getWorldEntities() { return worldEntities; }
 		const std::vector<DirectionLight>& getDirectionalLights() const { return dirLights; }
 		glm::vec3 getAmbientLight() const { return ambientLight; }
+
+		virtual bool isEditorLevel() { return false; }
 	private:
 		void startLevel();
 		void endLevel();

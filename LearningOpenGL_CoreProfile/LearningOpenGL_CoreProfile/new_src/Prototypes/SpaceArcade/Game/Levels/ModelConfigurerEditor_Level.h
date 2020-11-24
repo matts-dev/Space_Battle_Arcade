@@ -36,6 +36,9 @@ namespace SA
 
 	class ModelConfigurerEditor_Level : public LevelBase
 	{
+	public:
+		virtual bool isEditorLevel() override { return true; }
+
 	protected: //level base api
 		virtual void startLevel_v() override;
 		virtual void endLevel_v() override;

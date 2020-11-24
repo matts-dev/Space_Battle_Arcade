@@ -719,7 +719,6 @@ namespace SA
 			log(__FUNCTION__, LogLevel::LOG, "Enabling Hud Visibility");
 			hud->setVisibility(true);
 		}
-
 	}
 
 	void SpaceLevelBase::tick_v(float dt_sec)

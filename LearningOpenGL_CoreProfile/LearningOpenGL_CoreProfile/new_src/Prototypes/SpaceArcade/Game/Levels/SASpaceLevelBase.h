@@ -39,6 +39,7 @@ namespace SA
 		bool hasLevelConfig() { return levelConfig != nullptr; }
 		virtual bool isTestLevel() { return false; }
 		virtual bool isMenuLevel() { return false; }
+		virtual bool isEditorLevel() override { return isTestLevel() && isMenuLevel(); }
 		ServerGameMode_SpaceBase* getServerGameMode_SpaceBase();
 		const sp<StarField>& getStarField() { return starField; }
 		void endGame(const EndGameParameters& endParameters);

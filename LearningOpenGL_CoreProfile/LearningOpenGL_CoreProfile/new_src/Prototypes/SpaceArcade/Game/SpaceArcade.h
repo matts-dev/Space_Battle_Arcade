@@ -1,15 +1,15 @@
 #pragma once
-#include "..\GameFramework\SAGameBase.h"
+#include "../GameFramework/SAGameBase.h"
 
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include <vector>
 #include <map>
-#include "..\GameFramework\RenderModelEntity.h"
+#include "../GameFramework/RenderModelEntity.h"
 #include "SAUniformResourceLocators.h"
 #include "OptionalCompilationMacros.h"
-#include "Rendering\CustomGameShaders.h"
-#include "..\GameFramework\EngineCompileTimeFlagsAndMacros.h"
+#include "Rendering/CustomGameShaders.h"
+#include "../GameFramework/EngineCompileTimeFlagsAndMacros.h"
 
 namespace SA
 {
@@ -52,6 +52,9 @@ namespace SA
 
 		void updateInput(float detltaTimeSec);
 
+		//#todo this should probably be done somewhere else, eg a subclass of level system, but doing this now to finish the game befoer the new year
+		void handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Delegates
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +91,7 @@ namespace SA
 		bool isEditorMainMenuOnScreen() const;
 		bool isEditorMainmenuFeatureEnabled() const { return bEditorMainMenuEnabled; }
 		bool escapeShouldOpenEditorMenu() const { return bEscapeShouldOpenEditorMenu; }
-		void setEscapeShouldOpenEditorMenu(bool bValue) { bEscapeShouldOpenEditorMenu = bValue; }
+		void setEscapeShouldOpenEditorMenu(bool bValue);
 		void setEditorMainmenuFeatureEnabled(bool bEnabled) { bEditorMainMenuEnabled = bEnabled; }
 		void setClearColor(glm::vec3 inClearColor);
 		glm::vec3 getClearColor() const { return renderClearColor; }
@@ -96,7 +99,7 @@ namespace SA
 		CustomGameShaders& getGameCustomShaders(){ return customShaders; }
 	private:
 		bool bEditorMainMenuEnabled = true;
-		bool bEscapeShouldOpenEditorMenu = true;
+		bool bEscapeShouldOpenEditorMenu = true & !SHIPPING_BUILD;
 	public:
 		const sp<HUD> getHUD() const { return hud; }
 	public:

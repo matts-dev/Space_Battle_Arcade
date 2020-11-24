@@ -38,6 +38,15 @@ namespace SA
 	cheatDelegate->addWeakObj(sp_this(), &fptr);\
 	registerCheat(name, cheatDelegate);\
 }
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// section for cheats that should persist in shipping builds (eg console commands)
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// section for cheats that should be removed in shipping builds
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if COMPILE_CHEATS
 		REGISTER_CHEAT("one_shot_objectives", SpaceArcadeCheatSystem::cheat_oneShotObjectives);
 		REGISTER_CHEAT("destroy_all_objectives", SpaceArcadeCheatSystem::cheat_destroyAllObjectives);
 		REGISTER_CHEAT("destroy_all_generators", SpaceArcadeCheatSystem::cheat_destroyAllGenerators);
@@ -55,6 +64,7 @@ namespace SA
 		REGISTER_CHEAT("debug_sound_log_dump", SpaceArcadeCheatSystem::cheat_debugSound_logDump);
 		REGISTER_CHEAT("infinite_slowmo", SpaceArcadeCheatSystem::cheat_infiniteTimeDilation);
 		REGISTER_CHEAT("toggle_star_jump", SpaceArcadeCheatSystem::cheat_toggleStarJump);
+#endif //COMPILE_CHEATS
 	}
 
 	void SpaceArcadeCheatSystem::cheat_oneShotObjectives(const std::vector<std::string>& cheatArgs)

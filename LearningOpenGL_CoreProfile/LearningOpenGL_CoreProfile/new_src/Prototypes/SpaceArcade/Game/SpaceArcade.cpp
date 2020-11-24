@@ -86,6 +86,8 @@ namespace SA
 			glfwSetWindowTitle(windowRaw, "Space Arcade");
 		}
 
+		getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &SpaceArcade::handlePostLevelChange);
+
 		litObjShader = new_sp<SA::Shader>(litObjectShader_VertSrc, litObjectShader_FragSrc, false);
 		lampObjShader = new_sp<SA::Shader>(lightLocationShader_VertSrc, lightLocationShader_FragSrc, false);
 		//forwardShaded_EmissiveModelShader = new_sp<SA::Shader>(forwardShadedModel_SimpleLighting_vertSrc, forwardShadedModel_Emissive_fragSrc, false);
@@ -153,6 +155,11 @@ namespace SA
 	bool SpaceArcade::isEditorMainMenuOnScreen() const
 	{
 		return ui_root_editor->getUIVisible();
+	}
+
+	void SpaceArcade::setEscapeShouldOpenEditorMenu(bool bValue)
+	{
+		bEscapeShouldOpenEditorMenu = bValue;
 	}
 
 	void SpaceArcade::setClearColor(glm::vec3 inClearColor)
@@ -479,6 +486,31 @@ namespace SA
 			}
 		}
 	}
+
+	void SpaceArcade::handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	{
+		if (SHIPPING_BUILD)
+		{
+			log(__FUNCTION__, LogLevel::LOG, "Configuring escape menu due to SHIPPING_BUILD flag");
+			//Utils::configureDebugEscapeMenuForLevel(newCurrentLevel);
+
+			if (newCurrentLevel)
+			{
+				if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(newCurrentLevel.get()))
+				{
+					//if we are a space level, then the editor levels will be both a test level and a menu level, they should see the escape menu in shipping builds
+					bool bShouldDevEscapeMenuBeUsed = spaceLevel->isTestLevel() || spaceLevel->isEditorLevel();
+					setEscapeShouldOpenEditorMenu(bShouldDevEscapeMenuBeUsed);
+				}
+				else
+				{
+					//if we're not in a space level base, then we're in some sort of editor level
+					setEscapeShouldOpenEditorMenu(newCurrentLevel->isEditorLevel());
+				}
+			}
+		}
+	}
+
 }
 namespace
 {
