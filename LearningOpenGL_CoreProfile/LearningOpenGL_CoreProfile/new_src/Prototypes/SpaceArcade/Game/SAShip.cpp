@@ -41,6 +41,7 @@
 #include "../Rendering/Lights/PointLight_Deferred.h"
 #include "../GameFramework/SARenderSystem.h"
 #include "SAPlayer.h"
+#include "../GameFramework/Interfaces/SAIControllable.h"
 
 namespace SA
 {
@@ -1566,7 +1567,7 @@ namespace SA
 		{
 			if (!isPendingDestroy())
 			{
-				if (!isCarrierShip()) //is fighter shp
+				if (!isCarrierShip()) //is fighter ship
 				{
 					if (!activeShieldEffect.expired())
 					{
@@ -1606,6 +1607,17 @@ namespace SA
 								if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
 								{
 									player->incrementKillCount(); //this could be virtual to avoid dynamic cast. but may be weird to put this in framework base. 
+									
+									////////////////////////////////////////////////////////
+									// heal player a for getting a fighter kill
+									////////////////////////////////////////////////////////
+									IControllable* playersShipInterface = player->getControlTarget();
+									WorldEntity* playersShip = playersShipInterface ? playersShipInterface->asWorldEntity() : nullptr;
+									HitPointComponent* hpComp = playersShip ? playersShip->getGameComponent<HitPointComponent>() : nullptr;
+									if (hpComp && primaryProjectile)
+									{
+										hpComp->adjust(defaultProjectileDamage/2); //heal player relative to how much damage a projectile does
+									}
 								}
 							}
 						}
@@ -1625,7 +1637,11 @@ namespace SA
 		}
 		else
 		{
-			doShieldFX();
+			if (hp.current - old.current < 0)
+			{
+				//don'y show shield VFX when healed
+				doShieldFX();
+			}
 		}
 	}
 

@@ -84,6 +84,7 @@ namespace SA
 		virtual void notifyProjectileCollision(const Projectile& hitProjectile, glm::vec3 hitLoc) = 0;
 	};
 
+	constexpr int defaultProjectileDamage = 25;
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Projectile system
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +98,7 @@ namespace SA
 			glm::vec3 start;
 			glm::vec3 direction_n;
 			glm::vec3 color = glm::vec3(0.8f, 0.8f, 0.f);
-			int damage = 25;
+			int damage = defaultProjectileDamage;
 			size_t team = 0;
 			SoundEffectSubConfig sfx;
 			std::optional<PointLight_Deferred::UserData> projectileLightData = std::nullopt;
