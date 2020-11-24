@@ -16,6 +16,8 @@
 #include "../Tools/PlatformUtils.h"
 #include "AssetConfigs/SASettingsProfileConfig.h"
 #include "../GameFramework/SALog.h"
+#include "GameModes/ServerGameMode_CarrierTakedown.h"
+#include "Team/Commanders.h"
 
 namespace SA
 {
@@ -130,23 +132,39 @@ namespace SA
 		FighterSpawnComponent* spawnComp = nullptr;
 		if (spawnComp_safeCache)
 		{
-			spawnComp = spawnComp_safeCache.fastGet();
+			if (spawnComp_safeCache->isActive())
+			{
+				spawnComp = spawnComp_safeCache.fastGet();
+			}
 		}
-		else
+
+		if(!spawnComp) 
 		{
-			//static LevelSystem& LevelSys = GameBase::get().getLevelSystem();
-			//const sp<LevelBase>& level = LevelSys.getCurrentLevel();
-			//if (level)
-			//{
-			//	if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(level.get()))
-			//	{
-			//		if (TeamCommander* teamCommander = spaceLevel->getTeamCommander(currentTeamIdx))
-			//		{
-						//#TODO find another spawn component to spawn on? Perhaps through team commander? Probably better system
-						//this case may not even need to be addressed if there are never more than 1 carrier ship per team
-			//		}
-			//	}
-			//}
+			//fix bug: player spawns at dead carrier after it has been destroyed in skrimish match where there are more than 1 carrier per team.
+			static LevelSystem& LevelSys = GameBase::get().getLevelSystem();
+			const sp<LevelBase>& level = LevelSys.getCurrentLevel();
+			if (level)
+			{
+				if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(level.get()))
+				{
+					if (TeamCommander* teamCommander = spaceLevel->getTeamCommander(currentTeamIdx))
+					{
+						for (const fwp<WorldEntity>& carrierWeak : teamCommander->getTeamCarriers())
+						{
+							if (WorldEntity* carrier = carrierWeak.isValid() ? carrierWeak.fastGet() : nullptr)
+							{
+								FighterSpawnComponent* carrierSpawnComp = carrier->getGameComponent<FighterSpawnComponent>();
+								if (carrierSpawnComp && carrierSpawnComp->isActive())
+								{
+									spawnComp_safeCache = carrierSpawnComp->requestTypedReference_Safe<FighterSpawnComponent>();
+									spawnComp = carrierSpawnComp;
+									break; //stop looking for a spawn component, we found one that will work
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 
 

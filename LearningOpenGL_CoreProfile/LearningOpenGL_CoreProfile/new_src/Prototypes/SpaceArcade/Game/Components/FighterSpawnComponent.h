@@ -34,6 +34,9 @@ namespace SA
 		void setPostSpawnCustomization(const PostSpawnCustomizationFunc& inFunc);
 		void setTeamIdx(size_t inTeamIdx) { teamIdx = inTeamIdx; }
 		void setAutoRespawnConfig(const AutoRespawnConfiguration& newConfig) { autoSpawnConfiguration = newConfig; }
+		bool isActive() const { return bActivated; }
+		void setActive(bool bNewActivationState) { bActivated = bNewActivationState; }
+
 		sp<SpawnType> spawnEntity();
 	protected:
 		void postConstruct();
@@ -50,6 +53,7 @@ namespace SA
 		PostSpawnCustomizationFunc customizationFunc;
 		glm::mat4 parentXform{1.f}; 
 		size_t teamIdx = 0;
+		bool bActivated = true;
 		AutoRespawnConfiguration autoSpawnConfiguration;
 		float timeSinceLastSpawnSec = 0.f;
 	};

@@ -3,6 +3,7 @@
 #include "../Levels/SASpaceLevelBase.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../GameFramework/SAWorldEntity.h"
+#include "../Components/FighterSpawnComponent.h"
 
 namespace SA
 {
@@ -64,6 +65,20 @@ namespace SA
 		return false;
 	}
 
+	void TeamCommander::handleCarrierSpawned(const sp<WorldEntity>& carrierEntity)
+	{
+		TeamComponent* myTeamComp = getGameComponent<TeamComponent>();
+		if (TeamComponent* spawnTeamCom = carrierEntity->getGameComponent<TeamComponent>())
+		{
+			size_t spawnedTeam = spawnTeamCom->getTeam();
+			if (spawnedTeam == myTeamComp->getTeam())
+			{
+				fwp<WorldEntity> weakCarrier = carrierEntity;
+				carriers.push_back(weakCarrier);
+			}
+		}
+	}
+
 	sp<SA::WorldEntity> TeamCommander::getTarget()
 	{
 		for (size_t teamId = 0; teamId < pendingTargetsByTeam.size(); ++teamId)
@@ -100,7 +115,14 @@ namespace SA
 
 	void TeamCommander::handleEntitySpawned(const sp<WorldEntity>& spawned)
 	{
-		queueTarget(spawned);
+		if (bool bIsCarrier = spawned && spawned->hasGameComponent<FighterSpawnComponent>())
+		{
+			handleCarrierSpawned(spawned);
+		}
+		else
+		{
+			queueTarget(spawned);
+		}
 	}
 
 }

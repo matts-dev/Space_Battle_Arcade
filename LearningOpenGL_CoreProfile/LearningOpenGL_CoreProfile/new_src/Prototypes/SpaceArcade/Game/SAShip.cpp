@@ -435,6 +435,11 @@ namespace SA
 		RenderModelEntity::onDestroyed();
 		collisionHandle = nullptr; //release spatial hashing information
 
+		if (fighterSpawnComp)
+		{
+			fighterSpawnComp->setActive(false);
+		}
+
 #if ENABLE_BANDAID_FIXES
 		//#BUG #TODO it appears spatial hash is not getting cleaned up properly in case of carrier ships; repro is enable camera debugging, destroy carrier, fly to center and see camera is colliding
 		//for now, just removing collision comp so it cannot be used to do collision

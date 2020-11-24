@@ -67,6 +67,7 @@ namespace SA
 		timeSinceLastSpawnSec += dt_sec;
 
 		if (autoSpawnConfiguration.bEnabled 
+			&& bActivated
 			&& timeSinceLastSpawnSec > autoSpawnConfiguration.respawnCooldownSec 
 			&& spawnedEntities.size() < autoSpawnConfiguration.maxShips)
 		{

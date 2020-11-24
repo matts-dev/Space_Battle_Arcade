@@ -95,11 +95,11 @@ namespace SA
 		return subConfig;
 	}
 
-
 	static void helper_ChooseRandomCarrierPositionAndRotation(
 		const size_t teamIdx,
 		const size_t numTeams,
 		const size_t carrierIdxOnTeam,
+		const size_t teamOnRightIdx, //bit of a hack because this assumes 2 teams, but I don't ever see myself adding 3 at this point, last minute bug fixes
 		bool bRandomizeElevation,
 		bool bRandomizeOffsetLocation,
 		RNG& rng,
@@ -130,7 +130,7 @@ namespace SA
 			+ teamLocation;
 
 		constexpr float carrierRightOffsetFactor = 300.f;
-		vec3 carrierRightOffset = float(carrierIdxOnTeam) * carrierRightOffsetFactor * teamRight;
+		vec3 carrierRightOffset = float(carrierIdxOnTeam) * carrierRightOffsetFactor * (teamRight * (teamOnRightIdx == teamIdx? 1.f : -1.f ));
 
 		vec3 carrierElevationOffset = vec3(0.f);
 		if (bRandomizeElevation)
@@ -146,10 +146,10 @@ namespace SA
 		bool bUseRandomrotation = true;
 
 		outRotation = (bUseRandomrotation) ?
-			glm::angleAxis(glm::radians(rng.getFloat(0.f, 360.f)), worldUp) : 
+			glm::angleAxis(glm::radians(rng.getFloat(0.f, 360.f)), worldUp) :
 			glm::angleAxis(glm::radians(180.f), worldUp) * centerRotation; //just flip center rotation by 180
 	}
-	
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Carrier Takedown
@@ -187,7 +187,9 @@ namespace SA
 				const SpaceLevelConfig::GameModeData_CarrierTakedown& gmData = levelConfig->getGamemodeData_CarrierTakedown();
 				if (const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod())
 				{
+					bool teamZeroOnRightSideOfMap = bool(rng.getInt(0, 1));
 					numTeams = gmData.teams.size();
+
 					for (size_t teamIdx = 0; teamIdx < gmData.teams.size(); ++teamIdx)
 					{
 						const SpaceLevelConfig::GameModeData_CarrierTakedown::TeamData& teamData = gmData.teams[teamIdx];
@@ -228,7 +230,7 @@ namespace SA
 								glm::vec3 randomCarrierLoc;
 								if (!carrierData.position.has_value() || !carrierData.rotation_deg.has_value())
 								{
-									helper_ChooseRandomCarrierPositionAndRotation(teamIdx, numTeams, carrierIdx, true, true, rng, randomCarrierLoc, randomCarrierRot);
+									helper_ChooseRandomCarrierPositionAndRotation(teamIdx, numTeams, carrierIdx, teamZeroOnRightSideOfMap ? 0 : 1, true, true, rng, randomCarrierLoc, randomCarrierRot);
 								}
 
 								Transform carrierXform;
