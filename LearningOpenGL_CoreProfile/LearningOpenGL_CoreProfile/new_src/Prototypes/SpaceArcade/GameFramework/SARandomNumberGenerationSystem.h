@@ -6,8 +6,9 @@
 
 #include "SASystemBase.h"
 #include "SAGameEntity.h"
+#include "EngineCompileTimeFlagsAndMacros.h"
 
-#define SA_RNG_USE_TIME 1 //#todo #shipping
+#define SA_RNG_USE_TIME 0 | SHIPPING_BUILD
 
 namespace SA
 {

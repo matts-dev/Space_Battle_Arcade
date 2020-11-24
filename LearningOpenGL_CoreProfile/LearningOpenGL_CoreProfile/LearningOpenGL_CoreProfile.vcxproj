@@ -151,6 +151,7 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\CollisionComponent.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\CurveSystem.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\developer_console\DeveloperConsole.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineCompileTimeFlagsAndMacros.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineParticles\BuiltInParticles.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\Components\GameplayComponents.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\GameMode\ServerGameMode_Base.h" />

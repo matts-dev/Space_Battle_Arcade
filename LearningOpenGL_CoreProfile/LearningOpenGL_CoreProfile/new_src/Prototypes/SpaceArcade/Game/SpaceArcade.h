@@ -9,6 +9,7 @@
 #include "SAUniformResourceLocators.h"
 #include "OptionalCompilationMacros.h"
 #include "Rendering\CustomGameShaders.h"
+#include "..\GameFramework\EngineCompileTimeFlagsAndMacros.h"
 
 namespace SA
 {
@@ -110,7 +111,7 @@ namespace SA
 		bool bRenderDebugAvoidanceSphereCells = false;
 		bool bRenderProjectileOBBs = false;
 		bool bEnableDevConsoleFeature = true;
-		bool bEnableDebugEngineKeybinds = true;
+		bool bEnableDebugEngineKeybinds = true && !SHIPPING_BUILD;
 	public: //subclass engine config variables
 		bool bEnableStencilHighlights = true;
 		bool bOnlyHighlightTargets = true;

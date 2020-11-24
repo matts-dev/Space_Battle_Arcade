@@ -437,7 +437,7 @@ namespace SA
 					if (input.isKeyJustPressed(window, GLFW_KEY_3)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::ALBEDO_SPEC); }
 					if (input.isKeyJustPressed(window, GLFW_KEY_4)) { deferredRenderer->setDisplayBuffer(DeferredRendererStateMachine::BufferType::LIGHTING); }
 				}
-				else
+				else if (!SHIPPING_BUILD)
 				{
 					std::optional<size_t> renderMode;
 					static std::optional<bool> useNormalMapping;

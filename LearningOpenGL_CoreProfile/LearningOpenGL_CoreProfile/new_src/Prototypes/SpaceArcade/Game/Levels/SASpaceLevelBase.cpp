@@ -474,7 +474,7 @@ namespace SA
 		assert(generationRNG);
 
 		glm::vec3 planetDir = normalize(planet.offsetDir.has_value() ? *planet.offsetDir : makeRandomVec3());
-		float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : generationRNG->getFloat(2.0f, 30.f);
+		float planetDist = planet.offsetDistance.has_value() ? *planet.offsetDistance : generationRNG->getFloat(2.0f, 20.f);
 		bool bHasCivilization = planet.bHasCivilization.has_value() ? *planet.bHasCivilization : (generationRNG->getInt(0, 8) == 0);
 
 		//init.albedo1_filepath = planet.texturePath.has_value() ? *planet.texturePath : DefaultPlanetTexturesPaths::albedo_terrain; //only copy if there is a value; otherwise use whatever is init as default (prevent crashes in level editor)

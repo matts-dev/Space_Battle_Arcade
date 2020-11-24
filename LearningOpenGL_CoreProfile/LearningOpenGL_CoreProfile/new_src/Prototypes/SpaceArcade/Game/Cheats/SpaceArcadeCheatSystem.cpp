@@ -247,6 +247,7 @@ namespace SA
 				STOP_DEBUGGER_HERE(); //no campaign or save game config?
 			}
 		}
+#endif
 	}
 
 	void SpaceArcadeCheatSystem::cheat_debugSound(const std::vector<std::string>& cheatArgs)
@@ -257,6 +258,7 @@ namespace SA
 #endif //COMPILE_AUDIO_DEBUG_RENDERING_CODE
 	}
 
+
 	void SpaceArcadeCheatSystem::cheat_debugSound_logDump(const std::vector<std::string>& cheatArgs)
 	{
 		GameBase::get().getAudioSystem().logDebugInformation();
@@ -264,6 +266,7 @@ namespace SA
 
 	void SpaceArcadeCheatSystem::cheat_infiniteTimeDilation(const std::vector<std::string>& cheatArgs)
 	{
+#if COMPILE_CHEATS
 		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(0))
 		{
 			if (SAPlayer* shipPlayerCheat = dynamic_cast<SAPlayer*>(player.get()))
@@ -271,10 +274,13 @@ namespace SA
 				shipPlayerCheat->cheat_infiniteTimeDilation();
 			}
 		}
+#endif //COMPILE_CHEATS
 	}
+
 
 	void SpaceArcadeCheatSystem::cheat_toggleStarJump(const std::vector<std::string>& cheatArgs)
 	{
+#if COMPILE_CHEATS
 		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
 		{
 			if (SpaceLevelBase* level = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
@@ -282,9 +288,9 @@ namespace SA
 				level->enableStarJump(!level->isStarJumping());
 			}
 		}
+#endif //COMPILE_CHEATS
 	}
 
-#endif
 
 	void CheatStatics::givePlayerQuaternionCamera()
 	{

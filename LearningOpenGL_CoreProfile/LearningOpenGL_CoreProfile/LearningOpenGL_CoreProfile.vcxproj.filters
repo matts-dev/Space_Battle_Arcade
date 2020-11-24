@@ -942,6 +942,9 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Environment\Nebula.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineCompileTimeFlagsAndMacros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Libraries\glad.c">

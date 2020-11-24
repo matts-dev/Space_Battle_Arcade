@@ -4,6 +4,7 @@
 
 
 #include "../Environment/Planet.h" //included for init data... probably should be refactored so we can forward declare
+#include "../../GameFramework/EngineCompileTimeFlagsAndMacros.h"
 
 namespace SA
 {
@@ -22,8 +23,7 @@ namespace SA
 	struct EndGameParameters;
 
 	std::vector<sp<class Planet>> makeRandomizedPlanetArray(RNG& rng);
-
-	constexpr bool bShouldUseDebugLevel = true;
+	constexpr bool bShouldUseDebugLevel = true & !SHIPPING_BUILD;
 
 	////////////////////////////////////////////////////////
 	// The base class for space levels
