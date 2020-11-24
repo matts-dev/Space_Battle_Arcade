@@ -20,6 +20,10 @@
 #include "../../../GameFramework/SAPlayerSystem.h"
 #include "text/GlitchText.h"
 #include "../../SAPlayer.h"
+#include "Widgets3D/Widget3D_LaserButton.h"
+#include "../../Levels/MainMenuLevel.h"
+#include "../../../Tools/PlatformUtils.h"
+#include "../../../GameFramework/Input/SAInput.h"
 
 using namespace glm;
 
@@ -39,12 +43,41 @@ namespace SA
 		healthBar = new_sp<Widget3D_HealthBar>(playerIdx);
 		energyBar = new_sp<Widget3D_EnergyBar>(playerIdx);
 
-		DigitalClockFont::Data textInit;
-		textInit.text = "slowmo ready";
-		slowmoText = new_sp<GlitchTextFont>(textInit);
+		//escapeMenuLeaveButton = new_sp<Widget3D_LaserButton>("Leave Level");
+		//escapeMenuLeaveButton->onClickedDelegate.addWeakObj(sp_this(), &HUD::handleReturnToMainMenuClicked);
+		//escapeMenuLeaveButton->activate(false);
+
+		DigitalClockFont::Data textInit_LeaveButton;
+		textInit_LeaveButton.text = "Leave Level: [SHIFT + ENTER]";
+		escapeButtonText_Leave = new_sp<GlitchTextFont>(textInit_LeaveButton);
+		escapeButtonText_Leave->resetAnim();
+		escapeButtonText_Leave->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::CENTER);
+		escapeButtonText_Leave->setAnimPlayForward(bEscapeMenuOpen);
+		escapeButtonText_Leave->play(true);
+		escapeButtonText_Leave->completeAnimation();
+
+
+		textInit_LeaveButton.text = "RESUME: [ESCAPE]";
+		escapeButtonText_Resume = new_sp<GlitchTextFont>(textInit_LeaveButton);
+		escapeButtonText_Resume->resetAnim();
+		escapeButtonText_Resume->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::CENTER);
+		escapeButtonText_Resume->setAnimPlayForward(bEscapeMenuOpen);
+		escapeButtonText_Resume->play(true);
+		escapeButtonText_Resume->completeAnimation();
+
+		DigitalClockFont::Data textInit_slowmo;
+		textInit_slowmo.text = "slowmo ready";
+		slowmoText = new_sp<GlitchTextFont>(textInit_slowmo);
 		slowmoText->resetAnim();
 		slowmoText->play(true);
 		slowmoText->setAnimPlayForward(true);
+
+		if (const sp<PlayerBase>& player = GameBase::get().getPlayerSystem().getPlayer(playerIdx))
+		{
+			player->getInput().getKeyEvent(GLFW_KEY_ENTER).addWeakObj(sp_this(), &HUD::handleEnterPressed);
+			player->getInput().getKeyEvent(GLFW_KEY_KP_ENTER).addWeakObj(sp_this(), &HUD::handleEnterPressed);
+			
+		} else { STOP_DEBUGGER_HERE() } //we didn't get player so main menu enter+shift will not return player to main menu!
 
 #if HUD_FONT_TEST 
 		fontTest = new_sp<class Widget3D_DigitalClockFontTest>();
@@ -89,9 +122,71 @@ namespace SA
 		}
 	}
 
+	void HUD::handleReturnToMainMenuClicked()
+	{
+		if (starJumpTimer != nullptr)
+		{
+			return; //we're already leaving the level
+		}
+
+		setEscapeMenuOpen(false); //don't have this open if it ends up being shared when we go back to the main menu, close it now.
+
+		const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel();
+		const sp<TimeManager>& worldTimeManager = currentLevel->getWorldTimeManager();
+		SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get());
+		if (spaceLevel && worldTimeManager)
+		{
+			starJumpTimer = new_sp<MultiDelegate<>>();
+			starJumpTimer->addWeakObj(sp_this(), &HUD::handleStarJumpOver);
+
+			worldTimeManager->createTimer(starJumpTimer, EndGameParameters{}.delayTransitionMainmenuSec); //#TODO make this a flag somewhere instead of creating a struct
+			spaceLevel->enableStarJump(true);
+		}
+		else
+		{
+			SpaceLevelBase::transitionToMainMenu_s();
+		}
+	}
+
+	void HUD::handleStarJumpOver()
+	{
+		starJumpTimer = nullptr;
+		SpaceLevelBase::transitionToMainMenu_s();
+	}
+
+	void HUD::handleEnterPressed(int state, int modifier_keys, int scancode) //#TODO #nextengine have enums that are equal to GLFW states so I don't haev to guess if I am comparing correct things without looking at a code reference.
+	{
+		if (state == GLFW_PRESS 
+			&& modifier_keys == GLFW_MOD_SHIFT
+			&& bEscapeMenuOpen)
+		{
+			handleReturnToMainMenuClicked(); //can't do a button for now, but so just leaving button click delegate in place and calling it directly.
+			setEscapeMenuOpen(false);
+			escapeButtonText_Leave->completeAnimation(); //should be animating away due to settings escape menu closed call
+			escapeButtonText_Resume->completeAnimation(); //should be animating away due to settings escape menu closed call
+		}
+	}
+
+	void HUD::setEscapeMenuOpen(bool bNewValue)
+	{
+		if (bNewValue != bEscapeMenuOpen)
+		{
+			bEscapeMenuOpen = bNewValue;
+
+			//only bother activating escape menu buttons (eg leave button) if we're not in the main menu
+			if (bool NotInMainMenu = dynamic_cast<MainMenuLevel*>(GameBase::get().getLevelSystem().getCurrentLevel().get()) == nullptr)
+			{
+				//escapeMenuLeaveButton->activate(bEscapeMenuOpen);
+				escapeButtonText_Leave->setAnimPlayForward(bEscapeMenuOpen);
+				escapeButtonText_Resume->setAnimPlayForward(bEscapeMenuOpen);
+			}
+		}
+	}
+
 	void HUD::handleGameUIRender(GameUIRenderData& rd_ui)
 	{
-		if (bRenderHUD)
+		const RenderData* rd_game = rd_ui.renderData();
+		if (bRenderHUD && rd_game)
 		{
 			tryRegenerateTeamWidgets();
 
@@ -105,14 +200,6 @@ namespace SA
 					if (SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get()))
 					{
 						bPlayerSlomoReady = player->canDilateTime();
-						//if (player->canDilateTime())
-						//{
-						//	//slowmoText->setAnimPlayForward(true); //will not show if doing this, will need to debug
-						//}
-						//else
-						//{
-						//	//slowmoText->setAnimPlayForward(false);
-						//}
 					}
 				}
 			}
@@ -136,7 +223,7 @@ namespace SA
 			////////////////////////////////////////////////////////
 			// draw reticle
 			////////////////////////////////////////////////////////
-			if (spriteShader)
+			if (spriteShader && !bEscapeMenuOpen)
 			{
 				//draw reticle
 				if (quadShape && reticleTexture && reticleTexture->hasAcquiredResources() && spriteShader)
@@ -198,19 +285,33 @@ namespace SA
 			slowmoTextXform.scale = distScaleCorrection * vec3(0.075f);
 			slowmoTextXform.position = hudCenterPoint + hudData.camUp * ((0.1f + -statusBarOffsetPerc.y) *hudData.savezoneMax_y);
 			slowmoText->setXform(slowmoTextXform);
-			if (const RenderData* rd_game = rd_ui.renderData())
+			slowmoText->tick(rd_ui.dt_sec());
+			if (bPlayerSlomoReady)
 			{
-				slowmoText->tick(rd_ui.dt_sec());
-				if (bPlayerSlomoReady)
-				{
-					slowmoText->render(*rd_game);
-				}
+				slowmoText->render(*rd_game);
 			}
 
 			////////////////////////////////////////////////////////
 			// respawn widget
 			////////////////////////////////////////////////////////
 			respawnWidget->renderGameUI(rd_ui);
+
+			////////////////////////////////////////////////////////
+			// escape menu
+			////////////////////////////////////////////////////////
+			Transform escapeMenuLeaveButtonXform;
+			escapeMenuLeaveButtonXform.position = hudCenterPoint + hudData.camUp * (0.25f*hudData.savezoneMax_y);
+			escapeMenuLeaveButtonXform.scale = vec3(0.01f);
+			escapeMenuLeaveButtonXform.rotQuat = rd_ui.camQuat();
+			//escapeMenuLeaveButton->setXform(escapeMenuLeaveButtonXform);
+			escapeButtonText_Leave->setXform(escapeMenuLeaveButtonXform);
+			escapeButtonText_Leave->tick(distScaleCorrection);
+			escapeButtonText_Leave->render(*rd_game);
+
+			escapeMenuLeaveButtonXform.position = hudCenterPoint + hudData.camUp * (0.35f*hudData.savezoneMax_y);
+			escapeButtonText_Resume->setXform(escapeMenuLeaveButtonXform);
+			escapeButtonText_Resume->tick(distScaleCorrection);
+			escapeButtonText_Resume->render(*rd_game);
 
 			////////////////////////////////////////////////////////
 			// configure team bars

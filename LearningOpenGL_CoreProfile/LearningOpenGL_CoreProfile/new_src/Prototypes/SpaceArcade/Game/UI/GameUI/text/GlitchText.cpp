@@ -99,6 +99,15 @@ namespace SA
 		}
 	}
 
+	void GlitchTextFont::completeAnimation()
+	{
+		for (GlyphAnimData& glyph : animData)
+		{
+			if (bForwardDirection) { glyph.shiftVal = 0; }
+			else { glyph.shiftVal  = glyph.bitvecOffset; }
+		}
+	}
+
 	bool GlitchTextFont::tick(float dt_sec)
 	{
 		if (bPlaying)

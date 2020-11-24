@@ -625,7 +625,7 @@ namespace SA
 		}
 	}
 
-	void SpaceLevelBase::transitionToMainMenu()
+	void SpaceLevelBase::transitionToMainMenu_s()
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// detach all players from ships as we're about to do a level transition

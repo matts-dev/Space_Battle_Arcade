@@ -19,6 +19,7 @@
 #include "../../GameFramework/Components/CollisionComponent.h"
 #include "../../GameFramework/SACollisionUtils.h"
 #include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "../UI/GameUI/SAHUD.h"
 
 namespace SA
 {
@@ -219,8 +220,13 @@ namespace SA
 				worldTimeTicked += world_dt_sec;
 				if (bFireHeld && (worldTimeTicked - lastFireTimestamp) > myShip->getFireCooldownSec())
 				{
-					myShip->fireProjectileInDirection(normalize(getFront()));
-					lastFireTimestamp = worldTimeTicked;
+					const sp<HUD> hud = SpaceArcade::get().getHUD();
+					bool bCanFire = hud ? !hud->requiresCursorMode() : true; //don't shoot if escape menu is open
+					if (bCanFire)
+					{
+						myShip->fireProjectileInDirection(normalize(getFront()));
+						lastFireTimestamp = worldTimeTicked;
+					}
 				}
 			}
 		}

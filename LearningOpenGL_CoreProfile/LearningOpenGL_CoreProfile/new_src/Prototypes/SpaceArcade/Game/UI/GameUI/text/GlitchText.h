@@ -30,6 +30,7 @@ namespace SA
 		void play(bool bPlay) { bPlaying = bPlay; }
 		void setSpeedScale(float newScale) { speedScale = newScale; }
 		bool isPlaying() const { return bPlaying; }
+		void completeAnimation();
 	public:
 		virtual bool tick(float dt_sec) override;
 	private:

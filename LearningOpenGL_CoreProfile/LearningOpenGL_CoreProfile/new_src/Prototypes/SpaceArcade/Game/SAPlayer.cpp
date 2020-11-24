@@ -18,6 +18,7 @@
 #include "../GameFramework/SALog.h"
 #include "GameModes/ServerGameMode_CarrierTakedown.h"
 #include "Team/Commanders.h"
+#include "UI/GameUI/SAHUD.h"
 
 namespace SA
 {
@@ -192,19 +193,27 @@ namespace SA
 		if (state == GLFW_PRESS)
 		{
 			SpaceArcade& game = SpaceArcade::get();
-			if (modifier_keys == GLFW_KEY_LEFT_SHIFT)
+			if (modifier_keys == GLFW_MOD_SHIFT && !SHIPPING_BUILD)
 			{
 				game.startShutdown();
 			}
 			else
 			{
-				if (game.isEditorMainmenuFeatureEnabled() && game.escapeShouldOpenEditorMenu())
+				if (const sp<CameraBase>& camera = getCamera())
 				{
-					if (const sp<CameraBase>& camera = getCamera())
+					if (bool bDevMainMenu = game.isEditorMainmenuFeatureEnabled() && game.escapeShouldOpenEditorMenu())
 					{
-						//probably should move editor UI to level off of some subsystem
-						game.toggleEditorUIMainMenuVisible();
-						camera->setCursorMode(SpaceArcade::get().isEditorMainMenuOnScreen() || camera->cameraRequiresCursorMode());
+							//probably should move editor UI to level off of some subsystem
+							game.toggleEditorUIMainMenuVisible();
+							camera->setCursorMode(SpaceArcade::get().isEditorMainMenuOnScreen() || camera->cameraRequiresCursorMode());
+					}
+					else //level escape menu
+					{
+						if (const sp<HUD> hud = SpaceArcade::get().getHUD())
+						{
+							hud->toggleEscapeMenu();
+							camera->setCursorMode(hud->requiresCursorMode() || camera->cameraRequiresCursorMode());
+						}
 					}
 				}
 			}

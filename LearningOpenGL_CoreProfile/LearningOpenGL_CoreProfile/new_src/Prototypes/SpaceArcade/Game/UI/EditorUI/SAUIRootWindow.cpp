@@ -11,6 +11,7 @@
 #include "../../../GameFramework/SACrossPlatformUtils.h"
 #include "../../Levels/StressTestLevel.h"
 #include "../../Levels/SpaceLevelEditor_Level.h"
+#include "../../Levels/MainMenuLevel.h"
 
 namespace SA
 {
@@ -91,6 +92,13 @@ namespace SA
 			{
 				menuState = UIMenuState::DEV_MENU;
 			}
+			if (bool notInMainMenu = dynamic_cast<MainMenuLevel*>(GameBase::get().getLevelSystem().getCurrentLevel().get()) == nullptr)
+			{
+				if (ImGui::Button("Load Game Frontend Menu Screen"))
+				{
+					SpaceLevelBase::transitionToMainMenu_s();
+				}
+			}
 		}
 		ImGui::End();
 	}
@@ -129,9 +137,18 @@ namespace SA
 				sp<LevelBase> projectileEditor = new_sp<ProjectileEditor_Level>();
 				SpaceArcade::get().getLevelSystem().loadLevel(projectileEditor);
 			}
-			if (ImGui::Button("Back to Main Menu"))
+			if (bool notInMainMenu = dynamic_cast<MainMenuLevel*>(GameBase::get().getLevelSystem().getCurrentLevel().get()) == nullptr)
+			{
+				if (ImGui::Button("Load Game Frontend Menu Screen"))
+				{
+					SpaceLevelBase::transitionToMainMenu_s();
+					SpaceArcade::get().toggleEditorUIMainMenuVisible();
+				}
+			if (ImGui::Button("Back to Dev Main Menu"))
 			{
 				menuState = UIMenuState::MAIN_MENU;
+				SpaceArcade::get().toggleEditorUIMainMenuVisible();
+			}
 			}
 		ImGui::End();
 	}

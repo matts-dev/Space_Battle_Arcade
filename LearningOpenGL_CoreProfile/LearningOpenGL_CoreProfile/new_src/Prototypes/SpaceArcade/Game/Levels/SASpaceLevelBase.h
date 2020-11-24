@@ -46,6 +46,8 @@ namespace SA
 		void enableStarJump(bool bEnable, bool bSkipTransition = false);
 		static void staticEnableStarJump(bool bEnable, bool bSkipTransition = false);
 		bool isStarJumping() const;
+		static void transitionToMainMenu_s();
+		void transitionToMainMenu() { transitionToMainMenu_s(); }
 	public://debug
 		void debug_correctNormalMapSeamsOverride(std::optional<bool> correctNormalMapSeams);
 		void debug_useNormalMappingOverride(std::optional<bool> useNormalMapping);
@@ -70,7 +72,6 @@ namespace SA
 	private:
 		glm::vec3 makeRandomVec3();
 		virtual void applyLevelConfig();
-		void transitionToMainMenu();
 	public:
 		MultiDelegate<const EndGameParameters&> onGameEnding;
 	private:
