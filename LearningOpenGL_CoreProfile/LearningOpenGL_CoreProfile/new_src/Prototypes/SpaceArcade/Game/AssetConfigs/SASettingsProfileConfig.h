@@ -3,6 +3,14 @@
 
 namespace SA
 {
+	/** Performance scalability settings*/
+	struct ScalabilitySettings
+	{
+		//defaults are tweaked based on my testing
+		float multiplier_spawnComponentCooldownSec = 0.1f; 
+		float multiplier_maxSpawnableShips = 1.0f;
+	};
+
 	class SettingsProfileConfig : public ConfigBase
 	{
 	protected:
@@ -19,6 +27,9 @@ namespace SA
 		float masterVolume = 1.f; //[0,1]
 		size_t selectedTeamIdx = 0; //let player choose which team they want to play.
 		float volumeMultiplier = 1.f;
+
+		//performance tweaks
+		ScalabilitySettings scalabilitySettings;
 	private:
 		size_t profileIndex = 0;
 	};

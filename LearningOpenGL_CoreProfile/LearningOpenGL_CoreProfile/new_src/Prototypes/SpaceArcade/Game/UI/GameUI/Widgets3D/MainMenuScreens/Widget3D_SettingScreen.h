@@ -37,6 +37,8 @@ namespace SA
 		sp<Widget3D_DiscreteSelector<size_t>> selector_devConsole = nullptr;
 		sp<Widget3D_DiscreteSelector<size_t>> selector_team = nullptr;
 		sp<Widget3D_Slider> slider_masterAudio = nullptr;
+		sp<Widget3D_Slider> slider_perfRespawnCooldownMultiplier = nullptr;
+		sp<Widget3D_Slider> slider_perfRespawnMaxCount = nullptr;
 
 		std::vector<Widget3D_DiscreteSelectorBase*> allSelectors;
 		std::vector<Widget3D_Slider*> allSliders;

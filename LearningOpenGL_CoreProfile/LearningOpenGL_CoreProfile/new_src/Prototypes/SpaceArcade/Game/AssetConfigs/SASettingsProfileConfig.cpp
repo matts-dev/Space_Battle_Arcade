@@ -8,15 +8,17 @@ namespace SA
 
 	void SettingsProfileConfig::onSerialize(json& outData)
 	{
-		json settingsData =
+		json settingsData_j =
 		{
 			{"bEnableDevConsole", bEnableDevConsole},
 			{"masterVolume", masterVolume}
 		};
-		JSON_WRITE(selectedTeamIdx, settingsData);
+		JSON_WRITE(selectedTeamIdx, settingsData_j);
+		JSON_WRITE(scalabilitySettings.multiplier_maxSpawnableShips, settingsData_j);
+		JSON_WRITE(scalabilitySettings.multiplier_spawnComponentCooldownSec, settingsData_j);
 
 		std::string indexName = getIndexedName();
-		outData.push_back({ fileName, settingsData});
+		outData.push_back({ fileName, settingsData_j});
 	}
 
 	void SettingsProfileConfig::onDeserialize(const json& inData)
@@ -25,19 +27,21 @@ namespace SA
 
 		if (!inData.is_null() && inData.contains(indexedName))
 		{
-			const json& settingProfileData = inData[indexedName];
-			if (!settingProfileData.is_null())
+			const json& settingProfileData_j = inData[indexedName];
+			if (!settingProfileData_j.is_null())
 			{
-				if (settingProfileData.contains("bEnableDevConsole") && !settingProfileData["bEnableDevConsole"].is_null() && settingProfileData["bEnableDevConsole"].is_boolean())
+				if (settingProfileData_j.contains("bEnableDevConsole") && !settingProfileData_j["bEnableDevConsole"].is_null() && settingProfileData_j["bEnableDevConsole"].is_boolean())
 				{
-					bEnableDevConsole = settingProfileData["bEnableDevConsole"];
+					bEnableDevConsole = settingProfileData_j["bEnableDevConsole"];
 				}
-				if (settingProfileData.contains("masterVolume") && !settingProfileData["masterVolume"].is_null() && settingProfileData["masterVolume"].is_number_float())
+				if (settingProfileData_j.contains("masterVolume") && !settingProfileData_j["masterVolume"].is_null() && settingProfileData_j["masterVolume"].is_number_float())
 				{
-					masterVolume = settingProfileData["masterVolume"];
+					masterVolume = settingProfileData_j["masterVolume"];
 				}
 
-				READ_JSON_INT_OPTIONAL(selectedTeamIdx, settingProfileData);
+				READ_JSON_INT_OPTIONAL(selectedTeamIdx, settingProfileData_j);
+				READ_JSON_FLOAT_OPTIONAL(scalabilitySettings.multiplier_maxSpawnableShips, settingProfileData_j);
+				READ_JSON_FLOAT_OPTIONAL(scalabilitySettings.multiplier_spawnComponentCooldownSec, settingProfileData_j);
 			}
 		}
 	}

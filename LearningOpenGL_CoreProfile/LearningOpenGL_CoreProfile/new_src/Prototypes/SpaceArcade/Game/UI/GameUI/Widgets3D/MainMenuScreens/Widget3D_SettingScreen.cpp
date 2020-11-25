@@ -73,10 +73,31 @@ namespace SA
 		slider_masterAudio->setTitleTextScale(0.125f);
 		slider_masterAudio->setValue(activeSettingsProfile ? activeSettingsProfile->masterVolume / AudioSystem::getSystemAudioMaxMultiplier() : 0.5f); //convert setting to a [0,1] range
 
+		ScalabilitySettings defaultScalabilitySettings;
+		slider_perfRespawnCooldownMultiplier = new_sp<Widget3D_Slider>();
+		slider_perfRespawnCooldownMultiplier->setTitleText("Spawn Rate");
+		slider_perfRespawnCooldownMultiplier->setTitleTextScale(0.125f);
+		float respawnCooldownMult_inverted = 1.f - defaultScalabilitySettings.multiplier_spawnComponentCooldownSec;
+		if (activeSettingsProfile)
+		{
+			respawnCooldownMult_inverted = 1.f - activeSettingsProfile->scalabilitySettings.multiplier_spawnComponentCooldownSec;
+			respawnCooldownMult_inverted /= 0.9f;//convert to [0,1] since we're clamping at 0.1f.
+		}
+		slider_perfRespawnCooldownMultiplier->setValue(respawnCooldownMult_inverted);
+		allSliders.push_back(slider_perfRespawnCooldownMultiplier.get());
+
+		slider_perfRespawnMaxCount = new_sp<Widget3D_Slider>();
+		slider_perfRespawnMaxCount->setTitleText("Max Spawns");
+		slider_perfRespawnMaxCount->setTitleTextScale(0.125f);
+		slider_perfRespawnMaxCount->setValue(activeSettingsProfile ? activeSettingsProfile->scalabilitySettings.multiplier_maxSpawnableShips : defaultScalabilitySettings.multiplier_maxSpawnableShips);
+		allSliders.push_back(slider_perfRespawnMaxCount.get());
+
 		//defines the order of selectors/sliders
 		ordered_options.push_back(selector_team.get());
 		ordered_options.push_back(selector_devConsole.get());
 		ordered_options.push_back(slider_masterAudio.get());
+		ordered_options.push_back(slider_perfRespawnCooldownMultiplier.get());
+		ordered_options.push_back(slider_perfRespawnMaxCount.get());
 	}
 
 	void Widget3D_SettingsScreen::onActivationChanged(bool bActive)
@@ -145,6 +166,7 @@ namespace SA
 			{
 				slider->setStart(xform.position - sliderHalfWidth * hd.camRight);
 				slider->setEnd(xform.position + sliderHalfWidth * hd.camRight);
+				bUpdateNextPos = true;
 			}
 
 			//only update if we found a setting that we know the type of
@@ -161,8 +183,11 @@ namespace SA
 		{
 			//read all widget values
 			activeSettingsProfile->bEnableDevConsole = bool(selector_devConsole->getValue());
-			activeSettingsProfile->masterVolume = slider_masterAudio->getValue();
+			activeSettingsProfile->masterVolume = slider_masterAudio->getValue() * AudioSystem::getSystemAudioMaxMultiplier();
 			activeSettingsProfile->selectedTeamIdx = selector_team->getValue();
+			activeSettingsProfile->scalabilitySettings.multiplier_maxSpawnableShips = glm::clamp<float>(slider_perfRespawnMaxCount->getValue(), 0.05f, 1.0f);
+			float cooldownMult = 1.f - 0.9f*(slider_perfRespawnCooldownMultiplier->getValue()); //invert so higher feels like turning up settings, also convert back to [0.1,1j range
+			activeSettingsProfile->scalabilitySettings.multiplier_spawnComponentCooldownSec = glm::clamp<float>(cooldownMult, 0.1f, 1.f); //don't respawn faster than 0.1 the carrier setting in level
 
 			//save
 			activeSettingsProfile->requestSave();
@@ -195,6 +220,18 @@ namespace SA
 			selector_devConsole->setIndex(size_t(activeSettingsProfile->bEnableDevConsole)); 
 			
 			slider_masterAudio->setValue(activeSettingsProfile->masterVolume / AudioSystem::getSystemAudioMaxMultiplier()); //convert to [0,1]
+
+			//#TODO need to refactor this so we're not doing code duplication in set up....
+			ScalabilitySettings defaultScalabilitySettings;
+			float respawnCooldownMult_inverted = defaultScalabilitySettings.multiplier_spawnComponentCooldownSec;
+			if (activeSettingsProfile)
+			{
+				respawnCooldownMult_inverted = 1.f - activeSettingsProfile->scalabilitySettings.multiplier_spawnComponentCooldownSec;
+				respawnCooldownMult_inverted /= 0.9f;//convert to [0,1] since we're clamping at 0.1f.
+			}
+			slider_perfRespawnCooldownMultiplier->setValue(respawnCooldownMult_inverted);
+
+			slider_perfRespawnMaxCount->setValue(activeSettingsProfile ? activeSettingsProfile->scalabilitySettings.multiplier_maxSpawnableShips : defaultScalabilitySettings.multiplier_maxSpawnableShips);
 
 			selector_team->setIndex(activeSettingsProfile->selectedTeamIdx);
 		}

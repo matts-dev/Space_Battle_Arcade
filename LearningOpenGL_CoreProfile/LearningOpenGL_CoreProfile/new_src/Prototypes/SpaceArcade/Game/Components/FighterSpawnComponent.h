@@ -33,7 +33,7 @@ namespace SA
 		void tick(float dt_sec);
 		void setPostSpawnCustomization(const PostSpawnCustomizationFunc& inFunc);
 		void setTeamIdx(size_t inTeamIdx) { teamIdx = inTeamIdx; }
-		void setAutoRespawnConfig(const AutoRespawnConfiguration& newConfig) { autoSpawnConfiguration = newConfig; }
+		void setAutoRespawnConfig(const AutoRespawnConfiguration& newConfig);
 		bool isActive() const { return bActivated; }
 		void setActive(bool bNewActivationState) { bActivated = bNewActivationState; }
 

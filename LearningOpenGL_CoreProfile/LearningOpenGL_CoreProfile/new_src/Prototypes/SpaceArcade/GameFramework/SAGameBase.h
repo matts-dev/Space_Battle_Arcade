@@ -77,6 +77,7 @@ namespace SA
 		void start();
 		void startShutdown();
 		static bool isEngineShutdown();
+		bool isExiting() { return bExitGame; };
 		MultiDelegate<> onShutdownInitiated;
 	protected:
 		/** Child game classes should set up pre-gameloop state here.

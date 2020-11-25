@@ -36,6 +36,7 @@ namespace SA
 		bool bUseNormalMap = true;
 		bool bUseNormalMapTBNFlip = true;
 		bool bUseNormalMapXSeamCorrection = false;
+
 	};
 
 	////////////////////////////////////////////////////////////////////

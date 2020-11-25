@@ -8,6 +8,11 @@
 #include "../../GameFramework/SAGameEntity.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
 #include "../../Tools/SAUtilities.h"
+#include "../AssetConfigs/SASettingsProfileConfig.h"
+#include "../SAPlayer.h"
+#include "../../GameFramework/SAPlayerBase.h"
+#include "../../GameFramework/SAPlayerSystem.h"
+#include "../../GameFramework/SAGameBase.h"
 
 namespace SA
 {
@@ -90,6 +95,22 @@ namespace SA
 	void FighterSpawnComponent::setPostSpawnCustomization(const PostSpawnCustomizationFunc& inFunc)
 	{
 		customizationFunc = inFunc;
+	}
+
+	void FighterSpawnComponent::setAutoRespawnConfig(const AutoRespawnConfiguration& newConfig)
+	{
+		autoSpawnConfiguration = newConfig;
+
+		//apply perf scalability settings
+		const sp<PlayerBase>& playerBase = GameBase::get().getPlayerSystem().getPlayer(0);
+		SAPlayer* player = dynamic_cast<SAPlayer*>(playerBase.get());
+		if (const sp<SettingsProfileConfig>& settingsProfile = player->getSettingsProfile())
+		{
+			const ScalabilitySettings& scalabilitySettings = settingsProfile->scalabilitySettings;
+
+			autoSpawnConfiguration.respawnCooldownSec *= scalabilitySettings.multiplier_spawnComponentCooldownSec;
+			autoSpawnConfiguration.maxShips = size_t(autoSpawnConfiguration.maxShips * scalabilitySettings.multiplier_maxSpawnableShips);
+		}
 	}
 
 	void FighterSpawnComponent::postConstruct()

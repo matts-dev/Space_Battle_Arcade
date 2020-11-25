@@ -1659,10 +1659,11 @@ namespace SA
 	{
 		BrainComponent* brainComp = getGameComponent<BrainComponent>();
 		AIBrain* brain = brainComp ? brainComp->getBrain() : nullptr;
-		if (brain && brain->isActive())
+		if (brain && brain->isActive() && !(GameBase::isEngineShutdown() || GameBase::get().isExiting()))
 		{
 			brain->sleep();
 		}
+		bAwakeBrainAfterStasis = false;
 	}
 
 #if COMPILE_CHEATS

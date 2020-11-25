@@ -716,6 +716,7 @@ namespace SA
 						carrierData.fighterSpawnData.maxNumberOwnedFighterShips = int(maxShipsProxy);
 					}
 					ImGui::InputFloat(textWithIdx("respawn cooldown c[%d] t[%d]", selectedCarrierIdx, selectedTeamIdx), &carrierData.fighterSpawnData.respawnCooldownSec);
+					ImGui::Text("Note: scalability settings influence respawn cooldown and max ships spawned by multipliers.");
 				}
 
 				//update all carriers (first load requires full refresh of all carriers)
