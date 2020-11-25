@@ -42,6 +42,8 @@ namespace SA
 	class WorldEntity;
 	class AudioEmitter;
 
+	struct EndGameParameters;
+
 	namespace ShipUtilLibrary
 	{
 		void setShipTarget(const sp<Ship>& ship, const lp<WorldEntity>& target);
@@ -213,6 +215,7 @@ namespace SA
 		void handleSpawnStasisOver();
 		void handleSpawnedEntity(const sp<Ship>& ship);
 		void handleHpAdjusted(const HitPoints& old, const HitPoints& current);
+		void handleGameEnding(const EndGameParameters& endParams);
 #if COMPILE_CHEATS
 	private:
 		void cheat_oneShotPlacements();

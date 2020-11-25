@@ -42,6 +42,7 @@
 #include "../GameFramework/SARenderSystem.h"
 #include "SAPlayer.h"
 #include "../GameFramework/Interfaces/SAIControllable.h"
+#include "Levels/SASpaceLevelBase.h"
 
 namespace SA
 {
@@ -209,6 +210,15 @@ namespace SA
 		}
 
 		regenerateEngineVFX(); //needs to come after updating team data cache if we're using team colors for fire
+
+		if (const sp<LevelBase>& currentLevel = GameBase::get().getLevelSystem().getCurrentLevel())
+		{
+			//sigh, last minute fixes before release, adding dynamic_cast here
+			if (SpaceLevelBase* spaceLevel = dynamic_cast<SpaceLevelBase*>(currentLevel.get()))
+			{
+				spaceLevel->onGameEnding.addWeakObj(sp_this(), &Ship::handleGameEnding);
+			}
+		}
 
 #if COMPILE_SHIP_WIDGET
 		shipWidget = new_sp<Widget3D_Ship>();
@@ -1642,6 +1652,16 @@ namespace SA
 				//don'y show shield VFX when healed
 				doShieldFX();
 			}
+		}
+	}
+
+	void Ship::handleGameEnding(const EndGameParameters& endParams)
+	{
+		BrainComponent* brainComp = getGameComponent<BrainComponent>();
+		AIBrain* brain = brainComp ? brainComp->getBrain() : nullptr;
+		if (brain && brain->isActive())
+		{
+			brain->sleep();
 		}
 	}
 
