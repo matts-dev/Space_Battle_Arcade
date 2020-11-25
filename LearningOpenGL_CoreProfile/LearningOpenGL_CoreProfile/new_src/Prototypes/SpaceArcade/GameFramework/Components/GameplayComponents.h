@@ -85,6 +85,7 @@ namespace SA
 		const HitPoints& getHP() const { return hp; }
 		void overwriteHP(const HitPoints& newHP);
 		void setDamageReductionFactor(float reductionFactor);
+		float getDamageReductionFactor() { return damageReductionFactor; }
 	public:
 		MultiDelegate<const HitPoints& /*old*/, const HitPoints& /*current*/> onHpChangedEvent;
 	private:

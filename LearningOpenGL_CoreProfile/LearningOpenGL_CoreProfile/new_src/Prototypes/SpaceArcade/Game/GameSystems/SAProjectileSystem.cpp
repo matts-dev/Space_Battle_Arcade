@@ -171,7 +171,8 @@ namespace SA
 
 			if (collidingEntity)
 			{
-				float hitDistance = glm::sqrt(smallestDistanceCollision_2);
+				float maxHitDistance = 10.f; //I believe with large shapes this doesn't look good, so clamp it. it is using distance to shape origin.
+				float hitDistance = glm::clamp<float>(glm::sqrt(smallestDistanceCollision_2), 0.f, maxHitDistance);
 				glm::vec3 hit = start + (-offsetDir * hitDistance / 2.f); //div by 2 may not be right theoretically, but hit distance appears too far and this seems to fix
 
 				//#TODO #componentize this interface to be a component to avoid dynamic cast. This will require comp delegate notify owner though, which may be slower than dyn cast; profiling and optimizatin likely needed.

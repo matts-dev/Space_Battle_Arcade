@@ -76,7 +76,9 @@ namespace SA
 
 	void HitPointComponent::setDamageReductionFactor(float reductionFactor)
 	{
+#if SHIPPING_BUILD
 		if (reductionFactor != 0.f)
+#endif
 		{
 			damageReductionFactor = reductionFactor;
 		}

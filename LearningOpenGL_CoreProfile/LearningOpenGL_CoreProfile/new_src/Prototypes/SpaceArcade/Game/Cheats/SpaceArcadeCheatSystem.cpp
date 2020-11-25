@@ -64,6 +64,7 @@ namespace SA
 		REGISTER_CHEAT("debug_sound_log_dump", SpaceArcadeCheatSystem::cheat_debugSound_logDump);
 		REGISTER_CHEAT("infinite_slowmo", SpaceArcadeCheatSystem::cheat_infiniteTimeDilation);
 		REGISTER_CHEAT("toggle_star_jump", SpaceArcadeCheatSystem::cheat_toggleStarJump);
+		REGISTER_CHEAT("toggle_invincible", SpaceArcadeCheatSystem::cheat_toggleInvincible);
 #endif //COMPILE_CHEATS
 	}
 
@@ -301,6 +302,22 @@ namespace SA
 #endif //COMPILE_CHEATS
 	}
 
+
+	void SpaceArcadeCheatSystem::cheat_toggleInvincible(const std::vector<std::string>& cheatArgs)
+	{
+#if COMPILE_CHEATS
+		if (const sp<PlayerBase>& player = SpaceArcade::get().getPlayerSystem().getPlayer(0))
+		{
+			IControllable* controlTarget = player->getControlTarget();
+			WorldEntity* worldEntity = controlTarget ? controlTarget->asWorldEntity() : nullptr;
+			if (HitPointComponent* hpComp = worldEntity ? worldEntity->getGameComponent<HitPointComponent>() : nullptr)
+			{
+				bool invincible = hpComp->getDamageReductionFactor() == 0.f;
+				hpComp->setDamageReductionFactor(invincible ? 1.f : 0.f);
+			}
+		}
+#endif //COMPILE_CHEATS
+	}
 
 	void CheatStatics::givePlayerQuaternionCamera()
 	{
