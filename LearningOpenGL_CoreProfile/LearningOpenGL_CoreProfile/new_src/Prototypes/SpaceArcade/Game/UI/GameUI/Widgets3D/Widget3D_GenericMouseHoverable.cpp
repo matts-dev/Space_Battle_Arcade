@@ -9,6 +9,7 @@
 #include "../../../../Tools/DataStructures/SATransform.h"
 #include "../../../../Tools/PlatformUtils.h"
 #include "../../../../GameFramework/SADebugRenderSystem.h"
+#include "../../../../Tools/color_utils.h"
 
 #define DEBUG_GENERIC_HOVERABLE 1
 
@@ -226,6 +227,7 @@ namespace SA
 			{
 				sp<LaserUIObject> laser = laserPool.requestLaserObject();
 
+				laser->setColorImmediate(color::red());
 				laser->setAnimDurations(laserSpeedSecs, laserSpeedSecs);
 
 

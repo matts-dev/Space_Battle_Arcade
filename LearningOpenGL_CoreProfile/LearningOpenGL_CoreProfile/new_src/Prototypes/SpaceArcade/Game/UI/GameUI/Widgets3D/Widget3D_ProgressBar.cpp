@@ -2,6 +2,7 @@
 #include "../LaserUIPool.h"
 #include "../text/DigitalClockFont.h"
 #include "../text/GlitchText.h"
+#include "../../../../Tools/color_utils.h"
 
 namespace SA
 {
@@ -46,6 +47,15 @@ namespace SA
 			laser_boxLeft->bForceCameraRelative = true;
 			laser_boxBottom->bForceCameraRelative = true;
 			laser_boxRight->bForceCameraRelative = true;
+
+
+			laser_rangeBar->		   setColorImmediate(color::red());
+			laser_progressVerticalBar->setColorImmediate(color::red());
+			laser_boxTop->			   setColorImmediate(color::red());
+			laser_boxLeft->			   setColorImmediate(color::red());
+			laser_boxBottom->		   setColorImmediate(color::red());
+			laser_boxRight->		   setColorImmediate(color::red());
+
 
 			updateLasers(true);
 		}
