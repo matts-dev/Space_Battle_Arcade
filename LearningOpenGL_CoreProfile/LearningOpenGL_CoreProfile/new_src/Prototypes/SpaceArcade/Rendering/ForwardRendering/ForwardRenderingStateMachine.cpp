@@ -26,6 +26,11 @@
  
  	void ForwardRenderingStateMachine::stage_ToneMapping(glm::vec3 clearColor)
  	{
+		if (fb_height == 0 || fb_width == 0)
+		{
+			return; //user has minimized.
+		}
+
  		//draw render quad (this is where HDR calculations are done)
  
  		//enable screen's frame buffer
@@ -241,7 +246,7 @@
  		if (fb_width <= 0 || fb_height <= 0)
  		{
  			//window resized to framebuffer height we can't allocate for
- 			STOP_DEBUGGER_HERE();
+ 			//STOP_DEBUGGER_HERE(); //this happens when minized, don't trip here
  			return;
  		}
  
