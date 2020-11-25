@@ -676,7 +676,7 @@ namespace SA
 							if (planets.size() > 0)
 							{
 								DefaultPlanetTextureInfo planetTextureData = getDefaultPlanetTexturePathForIndex(size_t(selectedCampaignLevelData.optional_defaultPlanetIdx));
-								PlanetData planetCopy = planets.back();
+								PlanetData planetCopy = planets[0];
 								planetCopy.texturePath = planetTextureData.texturePath;
 								cachedLevelConfig->overridePlanetData(0, planetCopy);
 							}

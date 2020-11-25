@@ -12,9 +12,9 @@
                         {
                             "carrierData.carrierShipSpawnConfig_name": "Carrier",
                             "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
-                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
-                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
-                            "carrierData.numInitialFighters": 250,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 500,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 10.0,
+                            "carrierData.numInitialFighters": 125,
                             "carrierData.position": [
                                 165.0,
                                 -12.0,
@@ -29,9 +29,9 @@
                         {
                             "carrierData.carrierShipSpawnConfig_name": "Carrier",
                             "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
-                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
-                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
-                            "carrierData.numInitialFighters": 250,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 500,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 10.0,
+                            "carrierData.numInitialFighters": 125,
                             "carrierData.position": [
                                 -34.0,
                                 -11.0,
@@ -60,9 +60,9 @@
                         {
                             "carrierData.carrierShipSpawnConfig_name": "Carrier",
                             "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
-                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
-                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
-                            "carrierData.numInitialFighters": 250,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 500,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 10.0,
+                            "carrierData.numInitialFighters": 125,
                             "carrierData.position": [
                                 -66.0,
                                 1.0,
@@ -77,9 +77,9 @@
                         {
                             "carrierData.carrierShipSpawnConfig_name": "Carrier",
                             "carrierData.fighterSpawnData.bEnableFighterRespawns": true,
-                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 1000,
-                            "carrierData.fighterSpawnData.respawnCooldownSec": 5.0,
-                            "carrierData.numInitialFighters": 250,
+                            "carrierData.fighterSpawnData.maxNumberOwnedFighterShips": 500,
+                            "carrierData.fighterSpawnData.respawnCooldownSec": 10.0,
+                            "carrierData.numInitialFighters": 125,
                             "carrierData.position": [
                                 -282.0,
                                 12.0,
