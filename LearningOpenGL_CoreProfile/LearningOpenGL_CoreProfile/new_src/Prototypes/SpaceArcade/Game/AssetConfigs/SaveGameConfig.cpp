@@ -35,6 +35,11 @@ namespace SA
 		}
 	}
 
+	void SaveGameConfig::requestSave()
+	{
+		save();
+	}
+
 	std::string SaveGameConfig::getRepresentativeFilePath()
 	{
 		return owningModDir + std::string("GameSaves/") + fileName + std::string(".json");

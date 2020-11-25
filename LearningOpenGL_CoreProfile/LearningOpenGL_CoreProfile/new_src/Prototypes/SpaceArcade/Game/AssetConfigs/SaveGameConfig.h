@@ -17,7 +17,7 @@ namespace SA
 		virtual void postConstruct() override;
 	public:
 		void applyDemoDataIfEmpty();
-		void requestSave() { save(); }
+		void requestSave();
 	public:
 		virtual std::string getRepresentativeFilePath() override;
 		virtual void onSerialize(json& outData) override;

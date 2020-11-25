@@ -230,8 +230,14 @@ namespace SA
 		}
 	}
 
-	sp<SA::SaveGameConfig> Mod::getSaveGameConfig() const
+	sp<SA::SaveGameConfig> Mod::getSaveGameConfig()
 	{
+		if (!saveGameData)
+		{
+			saveGameData = new_sp<SaveGameConfig>(); //provide default save game in the event there isn't one loaded
+			saveGameData->owningModDir = getModDirectoryPath();
+		}
+
 		return saveGameData;
 	}
 
@@ -443,8 +449,9 @@ namespace SA
 	{
 		Parent::postConstruct();
 
-		saveGameData = new_sp<SaveGameConfig>(); //provide default save game in the event there isn't one loaded
+
 		difficulty = new_sp<DifficultyConfig>();
+		//difficulty->owningModDir = getModDirectoryPath();
 
 		//create all settings profiles before they are serialized/deserialized
 		//for (size_t settingsProfileIdx = 0; settingsProfileIdx < NUM_SETTINGS_PROFILES; ++settingsProfileIdx)
