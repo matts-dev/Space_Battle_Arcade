@@ -253,9 +253,9 @@ namespace SA
 			}
 			ParticleSystem::SpawnParams particleSpawnParams;
 			particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
-			particleSpawnParams.xform.scale = getTransform().scale;
+			//particleSpawnParams.xform.scale = getTransform().scale;
 			particleSpawnParams.xform.position = location;
-			particleSpawnParams.xform.scale *= vec3(1.0f); //scale down as to not confuse this with destroying the placement
+			particleSpawnParams.xform.scale *= vec3(0.1f); //scale down as to not confuse this with destroying the placement
 			GameBase::get().getParticleSystem().spawnParticle(particleSpawnParams);
 		}
 	}
@@ -268,11 +268,12 @@ namespace SA
 			ParticleSystem::SpawnParams particleSpawnParams;
 			particleSpawnParams.particle = ParticleFactory::getSimpleExplosionEffect();
 			particleSpawnParams.xform.position = cachedModelMat_PxL * glm::vec4(0, 0, 0, 1.f);
-			particleSpawnParams.xform.scale = getTransform().scale;
-			if (Ship* carrierShip = weakOwner.isValid() ? weakOwner.fastGet() : nullptr)
-			{
-				particleSpawnParams.xform.scale *= carrierShip->getTransform().scale;
-			}
+			//particleSpawnParams.xform.scale = getTransform().scale;
+			//if (Ship* carrierShip = weakOwner.isValid() ? weakOwner.fastGet() : nullptr)
+			//{
+			//	particleSpawnParams.xform.scale *= carrierShip->getTransform().scale;
+			//}
+			particleSpawnParams.xform.scale = glm::vec3(0.25f);
 			return particleSpawnParams;
 		};
 		auto sharedExplosionLogic = [this, makeDefaultExplosion](ParticleSystem& particleSys) 
