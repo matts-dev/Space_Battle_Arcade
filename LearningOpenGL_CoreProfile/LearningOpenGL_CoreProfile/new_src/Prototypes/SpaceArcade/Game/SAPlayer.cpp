@@ -58,6 +58,8 @@ namespace SA
 		//register to system ticker, rather than world ticker, so that player gets ticked even during level transitions and no resubscription is needed
 		GameBase::get().getSystemTimeManager().registerTicker(sp_this());
 		GameBase::get().onShutdownInitiated.addWeakObj(sp_this(), &SAPlayer::handleShutdownStarted);
+		GameBase::get().getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &SAPlayer::handlePostLevelChange);
+
 
 		if (const sp<Mod>& activeMod = modSystem->getActiveMod())
 		{
@@ -360,6 +362,11 @@ namespace SA
 	{
 		//clear strong binding to this 
 		GameBase::get().getSystemTimeManager().removeTicker(sp_this());
+	}
+
+	void SAPlayer::handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel)
+	{
+		shipsKilled = 0;
 	}
 
 }

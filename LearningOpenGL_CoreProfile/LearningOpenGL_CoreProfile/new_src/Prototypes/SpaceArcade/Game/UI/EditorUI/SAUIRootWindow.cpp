@@ -148,7 +148,6 @@ namespace SA
 			if (ImGui::Button("Back to Dev Main Menu"))
 			{
 				menuState = UIMenuState::MAIN_MENU;
-				SpaceArcade::get().toggleEditorUIMainMenuVisible();
 			}
 		ImGui::End();
 	}

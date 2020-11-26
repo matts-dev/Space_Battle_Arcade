@@ -6,6 +6,7 @@ namespace SA
 {
 	class SettingsProfileConfig;
 	class Mod;
+	class LevelBase;
 
 	class SAPlayer : public PlayerBase, public ITickable
 	{
@@ -32,6 +33,7 @@ namespace SA
 		void handleRespawnTimerUp();
 		void handleActiveModChanging(const sp<Mod>& previous, const sp<Mod>& active);
 		void handleShutdownStarted();
+		void handlePostLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
 	private://default input
 		void handleEscapeKey(int state, int modifier_keys, int scancode);
 		void handleControlPressed(int state, int modifier_keys, int scancode);
