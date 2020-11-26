@@ -20,6 +20,9 @@
 #include "TimeManagement/TickGroupManager.h"
 #include "../Tools/PlatformUtils.h"
 #include "SAAudioSystem.h"
+#include <thread>
+#include <chrono>
+#include "../../../../Libraries/nlohmann/json.hpp"
 
 namespace SA
 {
@@ -79,6 +82,7 @@ namespace SA
 			onGameloopBeginning.broadcast();
 			while (!bExitGame) 
 			{
+				framerateSleep();
 				tickGameloop_GameBase();
 			}
 
@@ -209,6 +213,31 @@ namespace SA
 	void GameBase::subscribePostRender(const sp<SystemBase>& system)
 	{
 		postRenderNotifys.insert(system);
+	}
+
+	void GameBase::framerateSleep()
+	{
+		if (!bEnableFramerateLimit){return;}
+
+		double currentTimeBeforeSleep = glfwGetTime();
+		double deltaSec = currentTimeBeforeSleep - lastFrameTime;
+
+		bool bShouldSleep = false;
+		double frameTargetDeltaSec = 1.0 / double(targetFramesPerSecond); 
+		
+		bShouldSleep = frameTargetDeltaSec > deltaSec;
+		double waitTimeSec = frameTargetDeltaSec - deltaSec;
+		long long waitTimeMiliSec = static_cast<long long>(waitTimeSec * 1000.f);
+		if (bShouldSleep)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(waitTimeMiliSec));
+		}
+
+		lastFrameTime = glfwGetTime();
+		if (bShouldSleep && lastFrameTime == currentTimeBeforeSleep)
+		{
+			STOP_DEBUGGER_HERE(); // helps catch if on other drivers glfw isn't updating time after the sleep, if this is happening I may need to rething this framerate cap method
+		}
 	}
 
 	void GameBase::registerTickGroups()
