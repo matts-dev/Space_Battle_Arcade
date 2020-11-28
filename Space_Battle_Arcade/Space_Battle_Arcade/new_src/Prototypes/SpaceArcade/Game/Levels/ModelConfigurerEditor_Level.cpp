@@ -333,6 +333,11 @@ namespace SA
 	{
 		player->getInput().onKey.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handleKey);
 		player->getInput().onButton.addWeakObj(sp_this(), &ModelConfigurerEditor_Level::handleMouseButton);
+
+		sp<QuaternionCamera> quatCam = new_sp<QuaternionCamera>();
+		quatCam->registerToWindowCallbacks_v(GameBase::get().getWindowSystem().getPrimaryWindow());
+		player->setCamera(quatCam);
+
 		if (const sp<CameraBase>& camera = player->getCamera())
 		{
 			//configure camera to look at model

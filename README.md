@@ -1,5 +1,8 @@
 # Space Battle Arcade
+
 A modifiable game for creating giant space battles.
+
+
 
 ![Visual](https://i.imgur.com/ndGVoTG.gif)
 
@@ -26,6 +29,15 @@ Complete with tools to make new levels and new space ships based on user defined
 
 ![Visual](https://i.imgur.com/DN7lkvh.jpg)
 
+# The Game Code
+
+The game is primarily a single threaded modern opengl application. 
+This game started as a learning project, so the code should not be considered best practice; some places are better written than other places.
+The repository base folders contain many opengl examples.
+However, the game code can be found in `Space_Battle_Arcade\Space_Battle_Arcade\Space_Battle_Arcade\new_src\Prototypes\SpaceArcade`
+The primary class to start looking at is `GameBase` which is essentially the engine. All primary systems can be found in its `GameBase.h`.
+The second class to consider is `SpaceArcade`, this is the game-specific subclass of GameBase. It also contains many game specific systems, such as the modding system.
+Remember, this was a learning project, so there are some inconsistencies in the way things are done, mostly because I've learned many new things while working on this project. 
 
 # Building The Game
 
@@ -39,3 +51,6 @@ When at the main menu, there is a section for mods. Following these menus will l
 The `GameData` folder will need to be placed wherever your .exe is located. If debugging with visual studio, the `GameData` folder will not be in the release folder or debug folder, rather it will be in a path something like this `Space_Battle_Arcade\Space_Battle_Arcade\Space_Battle_Arcade\GameData`. You'll need to copy any changes you amke here to your Relase and Debug folders if you want to run the .exe standalone while devloping a mod. I recommend building mods while running the game through visual studio, that way you will know the cause of any crashes you may encounter.
 Check out the dev blog for videos specifically on modding as they may provide some help in understanding how this works. https://www.youtube.com/playlist?list=PL22CMuqloY0qiYlv1Lm_QtfwuFz9OB0NE For the most part, modding is done within the model editor, which lets you set up models, collision, teams, projectiles, etc. And the level editor, used to layout levels in a campaign. 
 
+# note
+
+I"ve not chosen on a license yet, but know that this game is not a commerical project, and you can not sell it.

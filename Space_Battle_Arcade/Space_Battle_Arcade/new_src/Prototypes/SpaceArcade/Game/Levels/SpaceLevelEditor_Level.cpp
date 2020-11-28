@@ -24,6 +24,9 @@
 #include "../AssetConfigs/CampaignConfig.h"
 #include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_CampaignScreen.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
+#include "../../Rendering/Camera/SAQuaternionCamera.h"
+#include "../../GameFramework/SAWindowSystem.h"
+#include "../../GameFramework/SAGameBase.h"
 
 namespace SA
 {
@@ -1496,6 +1499,10 @@ namespace SA
 	{
 		player->getInput().onKey.addWeakObj(sp_this(), &SpaceLevelEditor_Level::handleKey);
 		//player->getInput().onButton.addWeakObj(sp_this(), &SpaceLevelEditor_Level::handleMouseButton);
+
+		sp<QuaternionCamera> quatCam = new_sp<QuaternionCamera>();
+		quatCam->registerToWindowCallbacks_v(GameBase::get().getWindowSystem().getPrimaryWindow());
+		player->setCamera(quatCam);
 
 		if (const sp<CameraBase>& camera = player->getCamera())
 		{

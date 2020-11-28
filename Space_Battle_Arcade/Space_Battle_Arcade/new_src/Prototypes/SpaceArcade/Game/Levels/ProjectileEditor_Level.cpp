@@ -14,6 +14,8 @@
 #include "../../../../Algorithms/SpatialHashing/SHDebugUtils.h"
 #include "../SAPrimitiveShapeRenderer.h"
 #include "../../GameFramework/SAAssetSystem.h"
+#include "../../Rendering/Camera/SAQuaternionCamera.h"
+#include "../../GameFramework/SAWindowSystem.h"
 
 namespace SA
 {
@@ -113,6 +115,11 @@ namespace SA
 	{
 		player->getInput().onKey.addWeakObj(sp_this(), &ProjectileEditor_Level::handleKey);
 		player->getInput().onButton.addWeakObj(sp_this(), &ProjectileEditor_Level::handleMouseButton);
+
+		sp<QuaternionCamera> quatCam = new_sp<QuaternionCamera>();
+		quatCam->registerToWindowCallbacks_v(GameBase::get().getWindowSystem().getPrimaryWindow());
+		player->setCamera(quatCam);
+
 		if (const sp<CameraBase>& camera = player->getCamera())
 		{
 			camera->setPosition({ 5, 0, 0 });
