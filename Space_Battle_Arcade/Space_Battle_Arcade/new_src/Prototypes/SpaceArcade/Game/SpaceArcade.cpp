@@ -83,7 +83,7 @@ namespace SA
 		}
 		if (GLFWwindow* windowRaw = window->get())
 		{
-			glfwSetWindowTitle(windowRaw, "Space Arcade");
+			glfwSetWindowTitle(windowRaw, "Space Battle Arcade");
 		}
 
 		getLevelSystem().onPostLevelChange.addWeakObj(sp_this(), &SpaceArcade::handlePostLevelChange);

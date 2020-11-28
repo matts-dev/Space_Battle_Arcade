@@ -78,7 +78,7 @@ namespace SA
 		flags |= ImGuiWindowFlags_NoMove;
 		flags |= ImGuiWindowFlags_NoResize;
 		flags |= ImGuiWindowFlags_NoCollapse;
-		ImGui::Begin("Space Arcade!", nullptr, flags);
+		ImGui::Begin("Space Battle Arcade!", nullptr, flags);
 		{
 			if (ImGui::Button("Mod Selection"))
 			{

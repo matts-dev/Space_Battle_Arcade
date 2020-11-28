@@ -487,7 +487,7 @@ namespace SA
 		static char filepathBuffer[512 + 1];
 		ImGui::InputText("3D model Filepath", filepathBuffer, 512, 0); //allow spaces to be in the filepath
 
-		ImGui::Text("File path should be relative to mod; for space arcade:");
+		ImGui::Text("File path should be relative to mod; for space battle arcade:");
 		ImGui::Text("eg /Assets/Models3D/Fighter/SGFighter.obj");
 		if (configNameBuffer[0] != 0 && filepathBuffer[0] != 0)
 		{
