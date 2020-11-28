@@ -222,10 +222,9 @@ namespace SA
 		double currentTimeBeforeSleep = glfwGetTime();
 		double deltaSec = currentTimeBeforeSleep - lastFrameTime;
 
-		bool bShouldSleep = false;
 		double frameTargetDeltaSec = 1.0 / double(targetFramesPerSecond); 
 		
-		bShouldSleep = frameTargetDeltaSec > deltaSec;
+		bool bShouldSleep = frameTargetDeltaSec > deltaSec;
 		double waitTimeSec = frameTargetDeltaSec - deltaSec;
 		long long waitTimeMiliSec = static_cast<long long>(waitTimeSec * 1000.f);
 		if (bShouldSleep)
