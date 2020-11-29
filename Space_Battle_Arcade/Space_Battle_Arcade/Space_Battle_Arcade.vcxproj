@@ -230,7 +230,8 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SASpawnConfig.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\SASpaceArcadeGlobalConstants.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\AIDebuggerWidget.h" />
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\SAHitboxPicker.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\LaserUIPool.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\SAHUD.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\DigitalClockFont.h" />
@@ -286,7 +287,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\ObjectPools.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\MultiDelegate.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.h" />
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\GeometryMath.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\Plane.h" />
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.h" />
@@ -573,7 +573,8 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\SpaceLevelEditor_Level.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Levels\StressTestLevel.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\SAShipPlacements.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\AIDebuggerWidget.cpp" />
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\SAHitboxPicker.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\LaserUIPool.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\SAHUD.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\text\DigitalClockFont.cpp" />
@@ -642,7 +643,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\color_utils.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\AdvancedPtrs.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\DataStructures\SATransform.cpp" />
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\GeometryMath.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\Geometry\SimpleShapes.cpp" />
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Tools\ModelLoading\SAMesh.cpp" />

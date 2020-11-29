@@ -10,7 +10,7 @@
 #include "../GameSystems/SAUISystem_Editor.h"
 #include "../SAShip.h"
 #include "../AssetConfigs/SASpawnConfig.h"
-#include "../Tools/Debug/SAHitboxPicker.h"
+#include "../Tools/DebugTools/SAHitboxPicker.h"
 #include "../../Tools/DataStructures/SATransform.h"
 #include "../../GameFramework/RenderModelEntity.h"
 #include "../../GameFramework/SAPlayerBase.h"

@@ -624,9 +624,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Tools\Algorithms\Algorithms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -861,9 +858,6 @@
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SaveGameConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\AI\GlobalSpaceArcadeBehaviorTreeKeys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -943,6 +937,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="new_src\Prototypes\SpaceArcade\GameFramework\EngineCompileTimeFlagsAndMacros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\SAHitboxPicker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\AIDebuggerWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1952,9 +1952,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SADebugRenderSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\SAHitboxPicker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\GameFramework\SABehaviorTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2174,9 +2171,6 @@
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\AssetConfigs\SaveGameConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\Debug\AIDebuggerWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\UI\GameUI\Widgets3D\Widget3D_ProgressBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2220,6 +2214,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Environment\Nebula.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\AIDebuggerWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="new_src\Prototypes\SpaceArcade\Game\Tools\DebugTools\SAHitboxPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
