@@ -3,8 +3,7 @@
 A modifiable game for creating giant space battles.
 
 
-
-![Imgur Image](https://i.imgur.com/ndGVoTG.gif)
+![Visual](https://i.imgur.com/ndGVoTG.gif)
 
 ![Visual](https://imgur.com/xq0D1Kx.gif)
 
@@ -14,7 +13,7 @@ A modifiable game for creating giant space battles.
 
 ![Visual](https://i.imgur.com/AWMKagm.gif)
 
-![Visual](https://i.imgur.com/wCD2pcW.gif)
+![Visual](https://i.imgur.com/47UpjZB.gif)
 
 
 The game is a complete standalone experience for creating large battles
