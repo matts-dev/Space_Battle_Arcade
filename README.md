@@ -4,7 +4,7 @@ A modifiable game for creating giant space battles.
 
 
 
-![Visual](https://i.imgur.com/ndGVoTG.gif)
+![Imgur Image](https://i.imgur.com/ndGVoTG.gif)
 
 ![Visual](https://imgur.com/xq0D1Kx.gif)
 
@@ -28,6 +28,10 @@ It comes with a campaign of hand crafted levels
 Complete with tools to make new levels and new space ships based on user defined models
 
 ![Visual](https://i.imgur.com/DN7lkvh.jpg)
+
+# Running The Game
+
+I have provided a zipped game binary in `GameBinary.zip`. Just extract that and run `Space_Battle_Arcade.exe`. Alternativel you can build it from the source. Once you have done that (see below), Be sure to copy all the dll and other files in `OPEN_GL_REQUIREMENTS\dlls` and `OPEN_AL_REQUIREMENTS\lib\OpenAL` into the same folder that the game exe is in. 
 
 # The Game Code
 
