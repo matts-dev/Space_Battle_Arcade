@@ -3,17 +3,19 @@
 A modifiable game for creating giant space battles.
 
 
-![Visual](https://i.imgur.com/ndGVoTG.gif)
+![Visual](./readme_media/large_battle_gif1.gif)
 
-![Visual](https://imgur.com/xq0D1Kx.gif)
+![Visual](./readme_media/large_battle_gif2.gif)
 
-![Visual](https://i.imgur.com/xjBQwhA.gif)
+![Visual](./readme_media/fighter_destroying_fighters.gif)
 
-![Visual](https://i.imgur.com/ishMFt9.gif)
+![Visual](./readme_media/large_battle_gif3.gif)
 
-![Visual](https://i.imgur.com/AWMKagm.gif)
+![Visual](./readme_media/large_battle_gif4.gif)
 
-![Visual](https://i.imgur.com/47UpjZB.gif)
+![Visual](./readme_media/destroy_objectives.gif)
+
+![Visual](./readme_media/menu_smallest.gif)
 
 
 The game is a complete standalone experience for creating large battles
