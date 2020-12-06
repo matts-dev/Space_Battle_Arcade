@@ -115,13 +115,16 @@ namespace SA
 
 		if (out)
 		{
-			unclaimedPool.push_back(out);
+			if (!out->bInvalidatedForLevelCleanup) //#fix bug where offscreen lasers will have incorrect offscreen locations
+			{
+				unclaimedPool.push_back(out);
 
-	#ifdef DEBUG_BUILD
-			bool bFoundOwned = std::find(ownedLaserObjects.begin(), ownedLaserObjects.end(), out) != ownedLaserObjects.end();
-			assert(bFoundOwned);
-	#endif
-			assignRandomOffscreenMode(*out);
+		#ifdef DEBUG_BUILD
+				bool bFoundOwned = std::find(ownedLaserObjects.begin(), ownedLaserObjects.end(), out) != ownedLaserObjects.end();
+				assert(bFoundOwned);
+		#endif
+				assignRandomOffscreenMode(*out);
+			}
 
 			//clear out the pointer freeing it for the user of the laser object
 			out = nullptr;
@@ -226,14 +229,23 @@ namespace SA
 
 	void LaserUIPool::handlePreLevelChange(const sp<LevelBase>& currentLevel, const sp<LevelBase>& newLevel)
 	{
-		//clear all lasers as we're changing levels (holding off on this as it could cause bad bugs if something releases its laser after we've done the clear)
+		//clear all lasers as we're changing levels 
 
+		//OLD NOTE: leaving for reference, but we're not clearing the lasers
+		//(holding off on this as it could cause bad bugs if something releases its laser after we've done the clear)
 		//TODO in order to do below, iterate over all the laser objects and set a "dead" flag that can be used to discard the laser when it is released instead of attempting to add it back to pool.
 		//since we do not ever changed owned lasers, we cannot rely on these "dead" lasers.
 
-		//activeLasers.clear();
-		//unclaimedPool.clear();
-		//ownedLaserObjects.clear();
+		for (sp<LaserUIObject>& laser : ownedLaserObjects)
+		{
+			//make sure any
+			laser->bInvalidatedForLevelCleanup = true;
+		}
+
+		activeLasers.clear();
+		unclaimedPool.clear();
+		ownedLaserObjects.clear();
+
 	}
 
 	void LaserUIPool::onReleaseGPUResources()
@@ -297,15 +309,18 @@ namespace SA
 			LaserUIObject::InstanceRenderData dataToInstance;
 			for (const sp<LaserUIObject> laser : ownedLaserObjects)
 			{
-				 laser->prepareRender(ui_rd, dataToInstance);
+				if (!laser->bInvalidatedForLevelCleanup) //only render lasers that are valid
+				{
+					laser->prepareRender(ui_rd, dataToInstance);
 
-				 //fast line shear trick -- convert basis vectors to shear matrix columns; see debug line renderer for more information
-				 instance_ShearMatrices.push_back(glm::mat4(
-					 vec4(dataToInstance.startPnt, 0),		//column1
-					 vec4(dataToInstance.endPnt, 0),		//column2	
-					 vec4(dataToInstance.color, 0),			//column3
-					 vec4(0, 0, 0, 1))						//column4
-				 );
+					 //fast line shear trick -- convert basis vectors to shear matrix columns; see debug line renderer for more information
+					 instance_ShearMatrices.push_back(glm::mat4(
+						 vec4(dataToInstance.startPnt, 0),		//column1
+						 vec4(dataToInstance.endPnt, 0),		//column2	
+						 vec4(dataToInstance.color, 0),			//column3
+						 vec4(0, 0, 0, 1))						//column4
+					 );
+				}
 			}
 		
 			//buffer shear matrices 

@@ -88,6 +88,8 @@ namespace SA
 		glm::vec3 endPos;	//actual line position
 		glm::vec3 color{ 1,0,0};
 		std::optional<ELaserOffscreenMode> offscreenMode;
+
+		bool bInvalidatedForLevelCleanup = false;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
