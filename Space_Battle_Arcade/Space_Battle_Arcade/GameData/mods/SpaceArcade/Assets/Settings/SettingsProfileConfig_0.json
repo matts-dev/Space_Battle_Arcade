@@ -8,6 +8,6 @@
         "masterVolume": 1.9242514371871948,
         "scalabilitySettings.multiplier_maxSpawnableShips": 1.0,
         "scalabilitySettings.multiplier_spawnComponentCooldownSec": 0.10000002384185791,
-        "selectedTeamIdx": 1
+        "selectedTeamIdx": 0
     }
 }

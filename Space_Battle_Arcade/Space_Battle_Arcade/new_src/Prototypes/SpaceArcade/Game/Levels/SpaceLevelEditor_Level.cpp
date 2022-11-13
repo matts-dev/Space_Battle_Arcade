@@ -1014,7 +1014,7 @@ namespace SA
 					bDirty_Planet |= ImGui::InputText("texture file path", texturePathBuffer, sizeof(texturePathBuffer));
 
 					static bool bSpecifyPlanetTexture = false;
-					ImGui::Checkbox("set planet texture", &bSpecifyPlanetTexture);
+					bool bJustChangedPlanetTexture = ImGui::Checkbox("set planet texture (toggle on/off to RNG)", &bSpecifyPlanetTexture);
 					if (bSpecifyPlanetTexture)
 					{
 						static bool bChooseFromDefaultPlanets = false;
@@ -1035,7 +1035,7 @@ namespace SA
 						}
 
 					}
-					else if (bool bNeedsClearing = selectedPlanet.texturePath.has_value())
+					else if (bool bNeedsClearing = selectedPlanet.texturePath.has_value() && bJustChangedPlanetTexture) //#fix bug where planets flicker when editing, don't clear whatever texture it has
 					{
 						selectedPlanet.texturePath = std::nullopt; //clear the texture
 						bDirty_Planet = true;
@@ -1349,6 +1349,9 @@ namespace SA
 					planets.push_back(generatedPlanets[0]); //only take a single element from the generated array
 				}
 				copyPlanetDataToInitData(planets_editor[planetIdx], initData);
+
+				//#fix bug where level editor will flicker planet textures, set planet texture if one isn't set; this will be randomly generated in copyPlanetData
+				planets_editor[planetIdx].texturePath = planets_editor[planetIdx].texturePath.has_value() ? planets_editor[planetIdx].texturePath : initData.albedo1_filepath;
 
 				planets[planetIdx]->setOverrideData(initData);
 				planets[planetIdx]->updateTransformForData(*planets_editor[planetIdx].offsetDir, *planets_editor[planetIdx].offsetDistance);

@@ -482,7 +482,7 @@ namespace SA
 		{
 			init.albedo1_filepath = *planet.texturePath;
 		}
-		else if (generationRNG)
+		else if (generationRNG) 
 		{
 			std::vector<std::string> defaultTextures = {
 				std::string(DefaultPlanetTexturesPaths::albedo1),
