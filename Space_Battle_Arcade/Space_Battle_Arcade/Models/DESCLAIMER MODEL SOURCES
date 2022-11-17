@@ -1,0 +1,39 @@
+Models created by myself:
+collision
+	uvsphere.obj
+	pyramid_x.obj
+	polygon_capsule.obj
+	icosphere.obj
+animation
+	3dBoxMan.blend
+	3dBoxMan_FullWeights.blend
+	3dBoxMan_Old
+space arcade
+	sa_turret.obj
+	GroundSatellite.obj
+	textured_planet.obj
+	LazerBolt.obj
+	sa_generator.obj
+	SGFighter.obj
+	SGFighter_normalmapped.obj
+	SGFighter_OldFlatShaded.obj
+	SGFighter_smooth_no_normalmap.obj
+	SGCarrier.obj
+		and associated collision shapes in this folder.
+		they match patterns:
+			SGCarrier.coll.*.obj
+	asteroid.obj
+ArtSrcFiles
+	polygon_capsule.blend
+
+ANY OTHER MODELS ARE NOT OWNED BY ME AND WERE MISSED WHEN REMOVING TUTORIAL CODE.
+
+Other models (from tutorial code used in reference code) may be from these locations.
+AFAIK I have removed all references from these models when starting this project (which duplicated my learning project)
+So I believe these sources are no longer necessary 
+
+
+https://learnopengl.com/Model-Loading/Model
+//animation model 
+https://www.katsbits.com/download/models/md5-example.php
+http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
