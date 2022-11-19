@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../GameFramework/TimeManagement/TickGroupManager.h"
+#include "GameFramework/TimeManagement/TickGroupManager.h"
 namespace SA
 {
 	struct SATickGroups : public TickGroups

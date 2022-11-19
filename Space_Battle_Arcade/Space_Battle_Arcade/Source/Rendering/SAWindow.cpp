@@ -1,4 +1,4 @@
-#include "SAWindow.h"
+#include "Rendering/SAWindow.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -8,7 +8,7 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "OpenGLHelpers.h"
+#include "Rendering/OpenGLHelpers.h"
 #include "GameFramework/SALog.h"
 
 #define MAP_GLFWWINDOW_TO_WINDOWOBJ

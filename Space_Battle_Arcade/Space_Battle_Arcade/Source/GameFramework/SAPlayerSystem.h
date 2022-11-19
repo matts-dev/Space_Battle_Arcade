@@ -3,8 +3,8 @@
 #include<cstdint>
 #include <vector>
 
-#include "SASystemBase.h"
-#include "..\Tools\DataStructures\MultiDelegate.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

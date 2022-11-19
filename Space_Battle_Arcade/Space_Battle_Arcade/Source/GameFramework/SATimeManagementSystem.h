@@ -1,12 +1,12 @@
 #pragma once
 
-#include "SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include <set>
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "../Tools/DataStructures/IterableHashSet.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "Tools/DataStructures/IterableHashSet.h"
 #include <unordered_map>
-#include "Interfaces/SATickable.h"
+#include "GameFramework/Interfaces/SATickable.h"
 
 namespace SA
 {

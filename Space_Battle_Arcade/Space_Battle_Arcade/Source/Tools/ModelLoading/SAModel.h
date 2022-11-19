@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <assimp\scene.h>
+#include <assimp/scene.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -10,8 +10,8 @@
 
 #include <set>
 #include <chrono>
-#include "..\..\Rendering\SAShader.h"
-#include "SAMesh.h"
+#include "Rendering/SAShader.h"
+#include "Tools/ModelLoading/SAMesh.h"
 
 namespace SA
 {

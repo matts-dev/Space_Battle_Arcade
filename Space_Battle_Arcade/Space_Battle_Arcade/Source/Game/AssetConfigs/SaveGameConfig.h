@@ -1,5 +1,5 @@
 #pragma once
-#include "SAConfigBase.h"
+#include "Game/AssetConfigs/SAConfigBase.h"
 
 namespace SA
 {

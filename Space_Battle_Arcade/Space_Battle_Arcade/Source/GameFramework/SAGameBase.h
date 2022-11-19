@@ -1,10 +1,10 @@
 #pragma once
 #include <set>
 
-#include "SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "SATimeManagementSystem.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SATimeManagementSystem.h"
 
 namespace SA
 {

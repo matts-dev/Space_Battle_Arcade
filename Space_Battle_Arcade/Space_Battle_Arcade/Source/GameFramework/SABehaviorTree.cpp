@@ -1,11 +1,11 @@
-#include "SABehaviorTree.h"
+#include "GameFramework/SABehaviorTree.h"
 
-#include "SALog.h"
+#include "GameFramework/SALog.h"
 #include <assert.h>
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "SALevelSystem.h"
-#include "SAGameBase.h"
-#include "SALevel.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALevel.h"
 #include <map>
 #include "SARandomNumberGenerationSystem.h"
 

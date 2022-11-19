@@ -1,13 +1,13 @@
 #include "Widget3D_Respawn.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../../../GameFramework/SAPlayerSystem.h"
-#include "../../../SAPlayer.h"
-#include "../../../../GameFramework/SALevel.h"
-#include "../../../../GameFramework/SALevelSystem.h"
-#include "../text/DigitalClockFont.h"
-#include "../../../SpaceArcade.h"
-#include "../../../GameSystems/SAUISystem_Game.h"
-#include "../../../../GameFramework/SADebugRenderSystem.h"
+#include "GameFramework/SAPlayerSystem.h"
+#include "Game/SAPlayer.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALevelSystem.h"
+#include "Game/UI/GameUI/text/DigitalClockFont.h"
+#include "Game/SpaceArcade.h"
+#include "Game/GameSystems/SAUISystem_Game.h"
+#include "GameFramework/SADebugRenderSystem.h"
 
 namespace SA
 {

@@ -1,9 +1,9 @@
 #include "SimpleShapes.h"
-#include "..\..\GameFramework\SAGameBase.h"
-#include "..\..\GameFramework\SAWindowSystem.h"
-#include "..\..\Rendering\SAWindow.h"
-#include "..\..\Rendering\OpenGLHelpers.h"
-#include "..\ModelLoading\SAModel.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "Rendering/SAWindow.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "Tools/ModelLoading/SAModel.h"
 
 namespace SA
 {

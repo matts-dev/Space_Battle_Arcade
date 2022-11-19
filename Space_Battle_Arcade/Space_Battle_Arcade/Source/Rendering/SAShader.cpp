@@ -4,10 +4,10 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 
-#include "SAShader.h"
+#include "Rendering/SAShader.h"
 
 #include "Tools/SAUtilities.h"
-#include "OpenGLHelpers.h"
+#include "Rendering/OpenGLHelpers.h"
 #include "Tools/PlatformUtils.h"
 
 //#todo #nextengine hot reload and compile shaders (requires tracking uniforms) from files

@@ -1,12 +1,12 @@
 #include "Widget3D_DigitalClockFontTest.h"
-#include "../text/DigitalClockFont.h"
+#include "Game/UI/GameUI/text/DigitalClockFont.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../../../GameFramework/SAPlayerSystem.h"
-#include "../../../../GameFramework/SAPlayerBase.h"
-#include "../../../../Rendering/Camera/SACameraBase.h"
+#include "GameFramework/SAPlayerSystem.h"
+#include "GameFramework/SAPlayerBase.h"
+#include "Rendering/Camera/SACameraBase.h"
 #include "Rendering/SAShader.h"
-#include "../../../../GameFramework/SARenderSystem.h"
-#include "../../../../Rendering/RenderData.h"
+#include "GameFramework/SARenderSystem.h"
+#include "Rendering/RenderData.h"
 
 namespace SA
 {

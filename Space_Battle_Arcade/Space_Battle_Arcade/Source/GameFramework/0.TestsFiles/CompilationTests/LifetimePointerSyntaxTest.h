@@ -1,7 +1,7 @@
 #pragma once
 #include <stack>
-#include "../../SAAutomatedTestSystem.h"
-#include "../../../Tools/DataStructures/LifetimePointer.h"
+#include "GameFramework/SAAutomatedTestSystem.h"
+#include "Tools/DataStructures/LifetimePointer.h"
 
 namespace SA
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "../GameFramework/EngineCompileTimeFlagsAndMacros.h"
+#include "GameFramework/EngineCompileTimeFlagsAndMacros.h"
 
 //NOTE: these can be defined at a project level
 

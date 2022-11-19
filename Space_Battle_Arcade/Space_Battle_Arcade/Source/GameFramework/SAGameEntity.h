@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "../Game/OptionalCompilationMacros.h"
+#include "Game/OptionalCompilationMacros.h"
 
 namespace SA
 {

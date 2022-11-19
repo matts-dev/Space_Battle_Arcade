@@ -1,10 +1,12 @@
-#include "SAMesh.h"
-#include "SAModel.h"
+#include "Tools/ModelLoading/SAMesh.h"
+#include "Tools/ModelLoading/SAModel.h"
+
 #include <iostream>
 #include <assimp/scene.h>
 #include <gtc/type_ptr.hpp>
+
 #include "Rendering/SAShader.h"
-#include "../../Rendering/OpenGLHelpers.h"
+#include "Rendering/OpenGLHelpers.h"
 
 
 namespace SA

@@ -1,7 +1,7 @@
 #pragma once
 #pragma once
 #include <array>
-#include "SASystemBase.h"
+#include "GameFramework/SASystemBase.h"
 #include "Tools/DataStructures/SATransform.h"
 
 

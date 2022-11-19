@@ -2,13 +2,13 @@
 
 
 #pragma once
-#include "SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include <string>
 #include <vector>
 #include <optional>
 #include <unordered_map>
 #include <assert.h>
-#include "../Tools/DataStructures/MultiDelegate.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

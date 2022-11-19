@@ -1,7 +1,7 @@
 #pragma once
-#include "Widget3D_Base.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_Base.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "MainMenuScreens/Widget3D_ActivatableBase.h"
+#include "Game/UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ActivatableBase.h"
 
 
 namespace SA

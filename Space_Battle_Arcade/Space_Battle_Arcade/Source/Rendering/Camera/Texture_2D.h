@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "../SAGPUResource.h"
+#include "Rendering/SAGPUResource.h"
 #include "Tools/DataStructures/SATransform.h"
 #include <optional>
 

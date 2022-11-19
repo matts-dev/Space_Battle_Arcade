@@ -1,9 +1,9 @@
 #pragma once
 #include <detail/func_trigonometric.hpp>
-#include "../../Rendering/Camera/SAQuaternionCamera.h"
-#include "../../Tools/DataStructures/LifetimePointer.h"
-#include "../../Tools/DataStructures/AdvancedPtrs.h"
-#include "../Environment/StarJumpData.h"
+#include "Rendering/Camera/SAQuaternionCamera.h"
+#include "Tools/DataStructures/LifetimePointer.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
+#include "Game/Environment/StarJumpData.h"
 namespace SA
 {
 	class Ship;

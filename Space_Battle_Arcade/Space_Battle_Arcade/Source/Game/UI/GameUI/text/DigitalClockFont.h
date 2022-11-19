@@ -11,10 +11,10 @@
 #include <glad/glad.h>
 #include <array>
 #include <GLFW/glfw3.h>
-#include "../../../../Rendering/SAGPUResource.h"
+#include "Rendering/SAGPUResource.h"
 #include <vector>
 #include "Tools/DataStructures/SATransform.h"
-#include "../../../../Tools/DataStructures/MultiDelegate.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

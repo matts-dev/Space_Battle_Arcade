@@ -1,11 +1,12 @@
- #include "ForwardRenderingStateMachine.h"
- #include "GameFramework/SALog.h"
- #include "../OpenGLHelpers.h"
- #include "GameFramework/SAWindowSystem.h"
- #include "../../Tools/PlatformUtils.h"
- #include "../NdcQuad.h"
- #include "../SAShader.h"
+ #include "Rendering/ForwardRendering/ForwardRenderingStateMachine.h"
+
  #include "GameFramework/SAGameBase.h"
+ #include "GameFramework/SALog.h"
+ #include "GameFramework/SAWindowSystem.h"
+ #include "Rendering/NdcQuad.h"
+ #include "Rendering/OpenGLHelpers.h"
+ #include "Rendering/SAShader.h"
+ #include "Tools/PlatformUtils.h"
  
  namespace SA
  {

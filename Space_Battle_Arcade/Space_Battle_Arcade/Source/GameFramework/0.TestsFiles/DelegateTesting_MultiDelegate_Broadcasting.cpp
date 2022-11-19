@@ -1,7 +1,7 @@
-#include "..\..\Rendering\SAWindow.h"
-#include "..\..\Rendering\OpenGLHelpers.h"
-#include "..\SAGameEntity.h"
-#include "..\..\Tools\DataStructures\MultiDelegate.h"
+#include "Rendering/SAWindow.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 #include<memory>
 #include <functional>
 #include <string>

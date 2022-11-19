@@ -1,11 +1,11 @@
 #include "SADogfightNodes_LargeTree.h"
 #include "GameFramework/SALog.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../GameFramework/SARandomNumberGenerationSystem.h"
+#include "GameFramework/SARandomNumberGenerationSystem.h"
 #include "SAShipAIBrain.h"
-#include "../SAShip.h"
+#include "Game/SAShip.h"
 #include "SAShipBehaviorTreeNodes.h"
-#include "../../GameFramework/SADebugRenderSystem.h"
+#include "GameFramework/SADebugRenderSystem.h"
 
 /*
 DEV NOTES

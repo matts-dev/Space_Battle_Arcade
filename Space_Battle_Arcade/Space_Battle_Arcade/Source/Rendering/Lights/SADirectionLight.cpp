@@ -2,7 +2,7 @@
 #include<assert.h>
 
 #include "SADirectionLight.h"
-#include "../SAShader.h"
+#include "Rendering/SAShader.h"
 #include "GameFramework/SAGameBase.h"
 
 

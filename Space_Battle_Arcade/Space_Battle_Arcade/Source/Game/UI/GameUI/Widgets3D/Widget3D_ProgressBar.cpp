@@ -1,7 +1,7 @@
-#include "Widget3D_ProgressBar.h"
-#include "../LaserUIPool.h"
-#include "../text/DigitalClockFont.h"
-#include "../text/GlitchText.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_ProgressBar.h"
+#include "Game/UI/GameUI/LaserUIPool.h"
+#include "Game/UI/GameUI/text/DigitalClockFont.h"
+#include "Game/UI/GameUI/text/GlitchText.h"
 #include "Tools/color_utils.h"
 
 namespace SA

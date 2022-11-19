@@ -3,7 +3,7 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
-#include "../Transformable.h"
+#include "ReferenceCode/OpenGL/Utilities/Transformable.h"
 
 class LightBase : public Transformable
 {

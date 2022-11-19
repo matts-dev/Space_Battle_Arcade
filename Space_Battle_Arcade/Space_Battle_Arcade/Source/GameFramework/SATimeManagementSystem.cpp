@@ -1,13 +1,13 @@
 #include <GLFW/glfw3.h>
-#include "SATimeManagementSystem.h"
-#include "SALog.h"
-#include "../Tools/DataStructures/IterableHashSet.h"
-#include "../Tools/DataStructures/ObjectPools.h"
+#include "GameFramework/SATimeManagementSystem.h"
+#include "GameFramework/SALog.h"
+#include "Tools/DataStructures/IterableHashSet.h"
+#include "Tools/DataStructures/ObjectPools.h"
 #include <algorithm>
 #include <assert.h>
 #include "TimeManagement/TickGroupManager.h"
 #include "Tools/PlatformUtils.h"
-#include "SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 
 namespace
 {

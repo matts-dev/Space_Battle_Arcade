@@ -7,11 +7,11 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
+#include "Game/AssetConfigs/SAConfigBase.h"
+#include "Game/SAShipPlacements.h"
 #include "GameFramework/SAGameEntity.h"
-#include "SAConfigBase.h"
 #include "Tools/DataStructures/SATransform.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../SAShipPlacements.h"
 
 namespace SA
 {

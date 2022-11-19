@@ -3,8 +3,8 @@
 #include <array>
 #include <string>
 
-#include "MainMenuScreens/Widget3D_ActivatableBase.h"
-#include "../../../GameSystems/SAUISystem_Game.h"
+#include "Game/UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ActivatableBase.h"
+#include "Game/GameSystems/SAUISystem_Game.h"
 #include "Tools/color_utils.h"
 #include "Tools/DataStructures/SATransform.h"
 

@@ -2,13 +2,13 @@
 
 #include <cstdint>
 #include <vector>
-#include "../SpaceArcade.h"
-#include "../SASpaceArcadeGlobalConstants.h"
-#include "GameFramework/SAGameEntity.h"
-#include "Tools/DataStructures/SATransform.h"
-#include "../../Tools/DataStructures/AdvancedPtrs.h"
+#include "Game/SpaceArcade.h"
+#include "Game/SASpaceArcadeGlobalConstants.h"
+#include "Game/Environment/StarJumpData.h"
 #include "GameFramework/SAGameBase.h"
-#include "StarJumpData.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
+#include "Tools/DataStructures/SATransform.h"
 
 
 namespace SA

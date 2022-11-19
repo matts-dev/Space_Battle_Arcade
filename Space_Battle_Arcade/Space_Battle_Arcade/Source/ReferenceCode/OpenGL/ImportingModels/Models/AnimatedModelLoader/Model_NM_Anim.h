@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "LoadedMesh_NM_Anim.h"
-#include <assimp\scene.h>
+#include <assimp/scene.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -9,7 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "..\..\..\nu_utils.h"
+#include "ReferenceCode/OpenGL/nu_utils.h"
 #include "ReferenceCode/OpenGL/Shader.h"
 #include <set>
 #include <chrono>

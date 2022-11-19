@@ -7,8 +7,8 @@
 #include <array>
 #include <cstdint>
 
-#include "../SAGameEntity.h"
-#include "../../Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

@@ -1,14 +1,15 @@
-#include "Widget3D_GenericMouseHoverable.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_GenericMouseHoverable.h"
 
 #include <gtx/common.inl>
-#include "../LaserUIPool.h"
-#include "../../../SpaceArcade.h"
-#include "../../../../GameFramework/SALevelSystem.h"
+
+#include "Game/SpaceArcade.h"
+#include "Game/UI/GameUI/LaserUIPool.h"
+#include "GameFramework/SADebugRenderSystem.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../../../GameFramework/SATimeManagementSystem.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SATimeManagementSystem.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../../../../Tools/PlatformUtils.h"
-#include "../../../../GameFramework/SADebugRenderSystem.h"
+#include "Tools/PlatformUtils.h"
 #include "Tools/color_utils.h"
 
 #define DEBUG_GENERIC_HOVERABLE 1

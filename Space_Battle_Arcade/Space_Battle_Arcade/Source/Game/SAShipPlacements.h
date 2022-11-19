@@ -1,14 +1,14 @@
 #pragma once
 #include <optional>
 
-#include "AssetConfigs/SAConfigBase.h"
-#include "GameSystems/SAProjectileSystem.h"
+#include "Game/AssetConfigs/SAConfigBase.h"
+#include "Game/GameSystems/SAProjectileSystem.h"
 #include "Tools/DataStructures/SATransform.h"
 #include "GameFramework/SAWorldEntity.h"
 #include "GameFramework/RenderModelEntity.h"
 #include "Tools/DataStructures/AdvancedPtrs.h"
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
-#include "AssetConfigs/SoundEffectSubConfig.h"
+#include "Game/AssetConfigs/SoundEffectSubConfig.h"
 
 namespace SA
 {

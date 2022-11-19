@@ -1,8 +1,8 @@
-#include "SALevelSystem.h"
-#include "SALevel.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SALevel.h"
 #include <iostream>
-#include "SAGameBase.h"
-#include "SATimeManagementSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SATimeManagementSystem.h"
 
 namespace SA
 {

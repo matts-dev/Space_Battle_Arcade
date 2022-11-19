@@ -9,7 +9,7 @@
 #include <gtc/type_ptr.hpp>
 
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
-#include "SAGPUResource.h"
+#include "Rendering/SAGPUResource.h"
 #include <optional>
 
 class Texture2D;

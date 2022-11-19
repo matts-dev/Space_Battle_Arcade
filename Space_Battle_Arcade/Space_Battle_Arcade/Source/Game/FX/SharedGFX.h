@@ -1,7 +1,7 @@
 #pragma once
 #include "GameFramework/SAGameEntity.h"
 
-#include "../../GameFramework/EngineParticles/BuiltInParticles.h"
+#include "GameFramework/EngineParticles/BuiltInParticles.h"
 
 namespace SA
 {

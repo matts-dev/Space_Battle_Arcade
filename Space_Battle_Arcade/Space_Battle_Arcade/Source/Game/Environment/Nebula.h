@@ -1,8 +1,8 @@
 #pragma once
 #include "GameFramework/SAGameEntity.h"
-#include "../../Rendering/SAGPUResource.h"
+#include "Rendering/SAGPUResource.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "StarJumpData.h"
+#include "Game/Environment/StarJumpData.h"
 #include <string>
 #include <glad/glad.h>
 

@@ -1,9 +1,9 @@
 #pragma once
-#include "SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 
-#include "..\Tools\DataStructures\MultiDelegate.h"
-#include "..\Tools\DataStructures\LifetimePointer.h"
-#include "..\Tools\DataStructures\AdvancedPtrs.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "Tools\DataStructures\LifetimePointer.h"
+#include "Tools\DataStructures\AdvancedPtrs.h"
 
 namespace SA
 {

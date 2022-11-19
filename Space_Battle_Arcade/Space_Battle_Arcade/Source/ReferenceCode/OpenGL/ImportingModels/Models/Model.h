@@ -1,14 +1,14 @@
 #pragma once
 #include <vector>
 #include "LoadedMesh.h"
-#include <assimp\scene.h>
+#include <assimp/scene.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <iostream>
 #include <stdexcept>
-#include "..\..\nu_utils.h"
+#include "ReferenceCode/OpenGL/nu_utils.h"
 
 class Model
 {

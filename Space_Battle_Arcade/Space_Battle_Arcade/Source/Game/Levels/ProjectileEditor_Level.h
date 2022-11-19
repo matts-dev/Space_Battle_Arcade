@@ -3,7 +3,7 @@
 
 #include<cstdint>
 
-#include "..\..\GameFramework\SALevel.h"
+#include "GameFramework/SALevel.h"
 
 namespace SA
 {

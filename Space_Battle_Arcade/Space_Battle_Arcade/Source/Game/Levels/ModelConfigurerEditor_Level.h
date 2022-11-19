@@ -1,9 +1,9 @@
 #pragma once
 #include <map>
-#include "SASpaceLevelBase.h"
+#include "Game/Levels/SASpaceLevelBase.h"
 
-#include "../AssetConfigs/SASpawnConfig.h"
-#include "../../GameFramework/SALevel.h"
+#include "Game/AssetConfigs/SASpawnConfig.h"
+#include "GameFramework/SALevel.h"
 
 namespace SAT
 {

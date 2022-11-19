@@ -1,6 +1,6 @@
-#include "Widget3D_Base.h"
-#include "../../../SpaceArcade.h"
-#include "../../../GameSystems/SAUISystem_Game.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_Base.h"
+#include "Game/SpaceArcade.h"
+#include "Game/GameSystems/SAUISystem_Game.h"
 
 
 namespace SA

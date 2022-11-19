@@ -1,4 +1,4 @@
-#include "SAGPUResource.h"
+#include "Rendering/SAGPUResource.h"
 #include "GameFramework/SAGameBase.h"
 #include "GameFramework/SAWindowSystem.h"
 

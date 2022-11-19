@@ -1,8 +1,8 @@
 #include "TickGroupManager.h"
-#include "../SAGameBase.h"
-#include "../SALog.h"
-#include "../../Tools/PlatformUtils.h"
-#include "../../Game/OptionalCompilationMacros.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALog.h"
+#include "Tools/PlatformUtils.h"
+#include "Game/OptionalCompilationMacros.h"
 #include <algorithm>
 
 namespace SA

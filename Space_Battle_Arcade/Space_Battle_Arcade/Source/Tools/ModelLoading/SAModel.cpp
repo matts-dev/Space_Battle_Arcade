@@ -1,10 +1,12 @@
-#include "SAModel.h"
+#include "Tools/ModelLoading/SAModel.h"
+
 #include <map>
 #include <chrono>
 #include <cstdint>
-#include "../SAUtilities.h"
-#include "../../Rendering/OpenGLHelpers.h"
-#include "../../GameFramework/SAAssetSystem.h"
+
+#include "Tools/SAUtilities.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "GameFramework/SAAssetSystem.h"
 #include "GameFramework/SAGameBase.h"
 
 

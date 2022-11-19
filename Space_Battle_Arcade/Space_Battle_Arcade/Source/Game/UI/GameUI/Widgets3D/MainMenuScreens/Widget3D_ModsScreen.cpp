@@ -1,5 +1,5 @@
 #include "Widget3D_ModsScreen.h"
-#include "../../../../SpaceArcade.h"
+#include "Game/SpaceArcade.h"
 
 namespace SA
 {

@@ -3,17 +3,17 @@
 #include<cstdio>
 
 #include "DeveloperConsole.h"
-#include "../CheatSystemBase.h"
-#include "../Input/SAInput.h"
-#include "../SAWindowSystem.h"
-#include "../SAGameBase.h"
-#include "../SAPlayerSystem.h"
-#include "../SAPlayerBase.h"
-#include "../SAGameEntity.h"
+#include "GameFramework/CheatSystemBase.h"
+#include "GameFramework/Input/SAInput.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAPlayerSystem.h"
+#include "GameFramework/SAPlayerBase.h"
+#include "GameFramework/SAGameEntity.h"
 #include "Rendering/SAWindow.h"
 #include "Game/SpaceArcade.h"
-#include "../../Game/GameSystems/SAUISystem_Editor.h"
-#include "../../Rendering/Camera/SACameraBase.h"
+#include "Game/GameSystems/SAUISystem_Editor.h"
+#include "Rendering/Camera/SACameraBase.h"
 
 namespace SA
 {

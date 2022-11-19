@@ -1,13 +1,13 @@
-#include "Widget3D_DiscreteSelector.h"
-#include "../text/GlitchText.h"
-#include "Widget3D_LaserButton.h"
-#include "../../../../GameFramework/SATimeManagementSystem.h"
-#include "../../../../GameFramework/SALevel.h"
-#include "../../../../GameFramework/SALevelSystem.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_DiscreteSelector.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_LaserButton.h"
+#include "Game/UI/GameUI/text/GlitchText.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../../../GameFramework/TimeManagement/TickGroupManager.h"
-#include "../../../../Tools/PlatformUtils.h"
-#include "../../../../Rendering/Camera/SACameraBase.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SATimeManagementSystem.h"
+#include "GameFramework/TimeManagement/TickGroupManager.h"
+#include "Rendering/Camera/SACameraBase.h"
+#include "Tools/PlatformUtils.h"
 
 namespace SA
 {

@@ -1,5 +1,5 @@
 #include "BehaviorTree_ProvidedNodes.h"
-#include "SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 
 namespace SA
 {

@@ -1,24 +1,26 @@
-#include "LaserUIPool.h"
 #include <assert.h>
 #include <algorithm>
+
+#include "Game/UI/GameUI/LaserUIPool.h"
+
+#include "Game/GameSystems/SAUISystem_Game.h"
+#include "Game/OptionalCompilationMacros.h"
+#include "Game/SpaceArcade.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../../GameFramework/SATimeManagementSystem.h"
 #include "GameFramework/SALevel.h"
 #include "GameFramework/SALevelSystem.h"
-#include "../../OptionalCompilationMacros.h"
-#include "../../../GameFramework/SARandomNumberGenerationSystem.h"
-#include "../../../Rendering/Camera/SACameraBase.h"
-#include "../../GameSystems/SAUISystem_Game.h"
-#include "../../../Rendering/OpenGLHelpers.h"
-#include "Game/SpaceArcade.h"
-#include "../../../Rendering/RenderData.h"
-#include "../../../GameFramework/SAPlayerBase.h"
-#include "../../../GameFramework/SAPlayerSystem.h"
-#include "Rendering/SAWindow.h"
+#include "GameFramework/SAPlayerBase.h"
+#include "GameFramework/SAPlayerSystem.h"
+#include "GameFramework/SARandomNumberGenerationSystem.h"
+#include "GameFramework/SARenderSystem.h"
+#include "GameFramework/SATimeManagementSystem.h"
 #include "GameFramework/SAWindowSystem.h"
-#include "../../../Rendering/Camera/SAQuaternionCamera.h"
-#include "../../../Tools/PlatformUtils.h"
-#include "../../../GameFramework/SARenderSystem.h"
+#include "Rendering/Camera/SACameraBase.h"
+#include "Rendering/Camera/SAQuaternionCamera.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "Rendering/RenderData.h"
+#include "Rendering/SAWindow.h"
+#include "Tools/PlatformUtils.h"
 
 namespace SA
 {

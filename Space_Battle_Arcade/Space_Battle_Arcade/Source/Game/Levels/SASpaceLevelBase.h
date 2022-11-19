@@ -1,10 +1,10 @@
 #pragma once
-#include "../../GameFramework/SALevel.h"
-#include "../Environment/StarJumpData.h"
+#include "GameFramework/SALevel.h"
+#include "Game/Environment/StarJumpData.h"
 
 
 #include "Game/Environment/Planet.h" //included for init data... probably should be refactored so we can forward declare
-#include "../../GameFramework/EngineCompileTimeFlagsAndMacros.h"
+#include "GameFramework/EngineCompileTimeFlagsAndMacros.h"
 
 namespace SA
 {

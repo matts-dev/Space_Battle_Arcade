@@ -1,6 +1,6 @@
-#include "SALevel.h"
-#include "SAGameBase.h"
-#include "SALog.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALog.h"
 #include "GameMode/ServerGameMode_Base.h"
 
 namespace SA

@@ -1,6 +1,6 @@
 #include "SAInput.h"
-#include "..\SAGameBase.h"
-#include "..\SAWindowSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
 
 namespace SA
 {

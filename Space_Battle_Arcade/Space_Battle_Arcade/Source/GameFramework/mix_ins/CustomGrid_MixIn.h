@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "../SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "Tools/DataStructures/SATransform.h"
 #include <optional>

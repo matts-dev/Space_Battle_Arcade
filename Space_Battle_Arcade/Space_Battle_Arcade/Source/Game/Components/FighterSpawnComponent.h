@@ -1,11 +1,11 @@
 #pragma once
 #include <vector>
-
-#include "../AssetConfigs/SASpawnConfig.h"
-#include "../SAShip.h"
-#include "../../GameFramework/Components/SAComponentEntity.h"
-#include "Tools/DataStructures/SATransform.h"
 #include <functional>
+
+#include "Game/AssetConfigs/SASpawnConfig.h"
+#include "Game/SAShip.h"
+#include "GameFramework/Components/SAComponentEntity.h"
+#include "Tools/DataStructures/SATransform.h"
 
 namespace SA
 {

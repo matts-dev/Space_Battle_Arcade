@@ -4,7 +4,7 @@
 #include<GLFW/glfw3.h>
 #include <iostream>
 
-#include "../Game/OptionalCompilationMacros.h"
+#include "Game/OptionalCompilationMacros.h"
 
 //_WIN32 is defined in both x64 and x86
 #ifdef _WIN32 

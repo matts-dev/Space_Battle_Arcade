@@ -1,7 +1,7 @@
 #pragma once
-#include "../../GameFramework/SAAIBrainBase.h"
-#include "../../GameFramework/SATimeManagementSystem.h"
-#include "../../Tools/DataStructures/LifetimePointer.h"
+#include "GameFramework/SAAIBrainBase.h"
+#include "GameFramework/SATimeManagementSystem.h"
+#include "Tools/DataStructures/LifetimePointer.h"
 
 namespace SA
 {

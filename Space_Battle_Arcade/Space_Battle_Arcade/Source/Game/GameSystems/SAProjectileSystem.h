@@ -4,14 +4,14 @@
 #include <list>
 #include <set>
 
-#include "../../GameFramework/SASystemBase.h"
-#include "../../Tools/ModelLoading/SAModel.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/ModelLoading/SAModel.h"
 #include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../../Tools/DataStructures/ObjectPools.h"
-#include "../AssetConfigs/SoundEffectSubConfig.h"
+#include "Tools/DataStructures/ObjectPools.h"
+#include "Game/AssetConfigs/SoundEffectSubConfig.h"
 #include <optional>
-#include "../../Rendering/Lights/PointLight_Deferred.h"
+#include "Rendering/Lights/PointLight_Deferred.h"
 
 namespace SA
 {

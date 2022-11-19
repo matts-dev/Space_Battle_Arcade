@@ -1,10 +1,10 @@
 #include "SACameraFPS.h"
 #include <iostream>
-#include "..\SAWindow.h"
-#include "..\..\Game\SpaceArcade.h"
-#include "..\..\GameFramework\SAWindowSystem.h"
+#include "Rendering/SAWindow.h"
+#include "Game\SpaceArcade.h"
+#include "GameFramework/SAWindowSystem.h"
 #include <gtx\compatibility.hpp>
-#include "..\..\Tools\SAUtilities.h"
+#include "Tools/SAUtilities.h"
 
 namespace SA
 {

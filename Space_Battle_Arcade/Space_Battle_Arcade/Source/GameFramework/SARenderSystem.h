@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "SASystemBase.h"
-#include "../Tools/Algorithms/AmortizeLoopTool.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/Algorithms/AmortizeLoopTool.h"
 #include "Tools/DataStructures/SATransform.h"
 
 namespace SA

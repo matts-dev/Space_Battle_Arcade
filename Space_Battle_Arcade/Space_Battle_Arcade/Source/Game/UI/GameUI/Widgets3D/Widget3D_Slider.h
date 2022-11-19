@@ -2,10 +2,10 @@
 
 #include <array>
 
-#include "MainMenuScreens/Widget3D_ActivatableBase.h"
-#include "../../../GameSystems/SAUISystem_Game.h"
+#include "Game/UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ActivatableBase.h"
+#include "Game/GameSystems/SAUISystem_Game.h"
 #include "Tools/color_utils.h"
-#include "../text/DigitalClockFont.h" //for enum class EVerticalPivot  because it is not possible to forward declare it since it is class internal member.
+#include "Game/UI/GameUI/text/DigitalClockFont.h" //for enum class EVerticalPivot  because it is not possible to forward declare it since it is class internal member.
 
 namespace SA
 {

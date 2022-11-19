@@ -1,4 +1,4 @@
-#include "SACollisionDebugRenderer.h"
+#include "Game/SACollisionDebugRenderer.h"
 
 #include "GameFramework/SACollisionUtils.h"
 #include "GameFramework/SARenderSystem.h"
@@ -7,8 +7,8 @@
 #include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
 #include "Rendering/OpenGLHelpers.h"
 #include "Rendering/SAWindow.h"
-#include "SAPrimitiveShapeRenderer.h"
-#include "SpaceArcade.h"
+#include "Game/SAPrimitiveShapeRenderer.h"
+#include "Game/SpaceArcade.h"
 
 namespace SA
 {

@@ -1,7 +1,7 @@
 #include "SoundEffectSubConfig.h"
 #include "JsonUtils.h"
-#include "../../GameFramework/SAAudioSystem.h"
-#include "../GameSystems/SAModSystem.h"
+#include "GameFramework/SAAudioSystem.h"
+#include "Game/GameSystems/SAModSystem.h"
 
 namespace SA
 {

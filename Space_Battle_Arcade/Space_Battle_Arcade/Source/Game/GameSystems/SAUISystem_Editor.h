@@ -1,6 +1,6 @@
 #pragma once
-#include "../../GameFramework/SASystemBase.h"
-#include "../../Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 struct GLFWwindow;
 

@@ -10,7 +10,7 @@
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SHDebugUtils.h"
 #include "Rendering/OpenGLHelpers.h"
 #include "Rendering/SAShader.h"
-#include "SAAssetSystem.h"
+#include "GameFramework/SAAssetSystem.h"
 #include "Tools/ModelLoading/SAModel.h"
 #include "Tools/SACollisionHelpers.h"
 

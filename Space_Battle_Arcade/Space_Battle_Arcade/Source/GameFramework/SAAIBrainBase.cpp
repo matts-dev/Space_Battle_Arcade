@@ -1,12 +1,12 @@
-#include "SAAIBrainBase.h"
-#include "SALog.h"
+#include "GameFramework/SAAIBrainBase.h"
+#include "GameFramework/SALog.h"
 #include <assert.h>
-#include "..\Tools\DataStructures\MultiDelegate.h"
-#include "SALevelSystem.h"
-#include "SAGameBase.h"
-#include "SALevel.h"
-#include "SABehaviorTree.h"
-#include "SATimeManagementSystem.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SABehaviorTree.h"
+#include "GameFramework/SATimeManagementSystem.h"
 
 namespace SA
 {

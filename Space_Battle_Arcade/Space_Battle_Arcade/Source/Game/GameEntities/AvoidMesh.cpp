@@ -1,9 +1,10 @@
 #include "AvoidMesh.h"
-#include "../AssetConfigs/SASpawnConfig.h"
-#include "../../Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
-#include "../../GameFramework/Components/CollisionComponent.h"
-#include "../../GameFramework/SALevel.h"
-#include "../../GameFramework/SACollisionUtils.h"
+
+#include "Game/AssetConfigs/SASpawnConfig.h"
+#include "GameFramework/Components/CollisionComponent.h"
+#include "GameFramework/SACollisionUtils.h"
+#include "GameFramework/SALevel.h"
+#include "Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
 
 namespace SA
 {

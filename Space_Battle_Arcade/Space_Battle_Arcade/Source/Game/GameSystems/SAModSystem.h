@@ -3,8 +3,8 @@
 #include <map>
 #include <vector>
 #include <string>
-#include "../../Tools/DataStructures/MultiDelegate.h"
-#include "../../GameFramework/SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SASystemBase.h"
 
 namespace SA
 {

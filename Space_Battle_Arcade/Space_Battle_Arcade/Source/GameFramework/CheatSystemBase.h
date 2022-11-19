@@ -2,8 +2,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SASystemBase.h"
 
 namespace SA
 {

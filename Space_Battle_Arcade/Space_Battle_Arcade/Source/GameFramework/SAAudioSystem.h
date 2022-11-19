@@ -10,12 +10,12 @@
 #include <set>
 #include <vector>
 
-#include "SASystemBase.h"
+#include "GameFramework/SASystemBase.h"
 #include "Tools/DataStructures/SATransform.h"
 #include <unordered_map>
 #include <optional>
-#include "../Tools/Algorithms/AmortizeLoopTool.h"
-#include "../Tools/DataStructures/ObjectPools.h"
+#include "Tools/Algorithms/AmortizeLoopTool.h"
+#include "Tools/DataStructures/ObjectPools.h"
 #include "Audio/ALBufferWrapper.h"
 
 #define COMPILE_AUDIO 1

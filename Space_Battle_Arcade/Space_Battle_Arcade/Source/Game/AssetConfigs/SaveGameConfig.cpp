@@ -1,7 +1,7 @@
 #include "SaveGameConfig.h"
 #include "JsonUtils.h"
-#include "../GameSystems/SAModSystem.h"
-#include "../SpaceArcade.h"
+#include "Game/GameSystems/SAModSystem.h"
+#include "Game/SpaceArcade.h"
 
 namespace SA
 {

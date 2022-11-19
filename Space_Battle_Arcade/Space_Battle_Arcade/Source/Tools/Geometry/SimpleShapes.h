@@ -9,7 +9,7 @@
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
-#include "../RemoveSpecialMemberFunctionUtils.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
 #include "GameFramework/SAGameEntity.h"
 
 namespace SA

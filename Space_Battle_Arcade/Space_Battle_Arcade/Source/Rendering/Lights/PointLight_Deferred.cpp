@@ -1,7 +1,7 @@
 #include "PointLight_Deferred.h"
 #include <cmath>
-#include "../SAShader.h"
-#include "../../GameFramework/SARenderSystem.h"
+#include "Rendering/SAShader.h"
+#include "GameFramework/SARenderSystem.h"
 
 namespace SA
 {

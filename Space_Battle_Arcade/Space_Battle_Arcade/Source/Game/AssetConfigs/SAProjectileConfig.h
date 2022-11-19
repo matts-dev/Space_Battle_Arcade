@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SAConfigBase.h"
+#include "Game/AssetConfigs/SAConfigBase.h"
 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>

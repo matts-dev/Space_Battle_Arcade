@@ -1,9 +1,9 @@
 #include "Widget3D_Ship.h"
-#include "../../../SAShip.h"
-#include "../../../GameSystems/SAUISystem_Game.h"
-#include "../../../SpaceArcade.h"
-#include "../text/DigitalClockFont.h"
-#include "../text/DigitalClockFont.h"
+#include "Game/SAShip.h"
+#include "Game/GameSystems/SAUISystem_Game.h"
+#include "Game/SpaceArcade.h"
+#include "Game/UI/GameUI/text/DigitalClockFont.h"
+#include "Game/UI/GameUI/text/DigitalClockFont.h"
 
 namespace SA
 {

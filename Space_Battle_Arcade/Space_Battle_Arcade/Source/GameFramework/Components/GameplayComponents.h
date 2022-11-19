@@ -1,8 +1,8 @@
 #pragma once
-#include "../../Tools/DataStructures/MultiDelegate.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 #include "SAComponentEntity.h"
-#include "../SAAIBrainBase.h"
-#include "../SAGameEntity.h"
+#include "GameFramework/SAAIBrainBase.h"
+#include "GameFramework/SAGameEntity.h"
 
 namespace SA
 {

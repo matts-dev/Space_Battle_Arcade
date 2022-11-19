@@ -13,14 +13,14 @@
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
-#include "../SpatialHashing/SpatialHashingComponent.h"
-#include "../SpatialHashing/SHDebugUtils.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SHDebugUtils.h"
 #include <functional>
 #include <cstdint>
 #include <random>
 
 #include "ReferenceCode/OpenGL/Utilities/FrameRateDisplay.h"
-#include "../SeparatingAxisTheorem/SATComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include <memory>
 
 namespace A419

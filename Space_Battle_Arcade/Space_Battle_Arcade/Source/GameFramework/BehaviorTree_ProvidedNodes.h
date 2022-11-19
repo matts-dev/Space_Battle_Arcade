@@ -1,5 +1,5 @@
 #pragma once
-#include "SABehaviorTree.h"
+#include "GameFramework/SABehaviorTree.h"
 namespace SA
 {
 	namespace BehaviorTree

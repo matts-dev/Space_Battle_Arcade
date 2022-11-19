@@ -1,5 +1,5 @@
 #include "EngineTestSuite.h"
-#include "..\Tools\DataStructures\MultiDelegate.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

@@ -4,12 +4,12 @@
 
 #include "SASpawnConfig.h"
 #include "SAProjectileConfig.h"
-#include "../GameSystems/SAModSystem.h"
-#include "../SpaceArcade.h"
-#include "../../Tools/ModelLoading/SAModel.h"
+#include "Game/GameSystems/SAModSystem.h"
+#include "Game/SpaceArcade.h"
+#include "Tools/ModelLoading/SAModel.h"
 #include "GameFramework/SALog.h"
-#include "../../GameFramework/SAAssetSystem.h"
-#include "../../GameFramework/SACollisionUtils.h"
+#include "GameFramework/SAAssetSystem.h"
+#include "GameFramework/SACollisionUtils.h"
 #include "Libraries/nlohmann/json.hpp"
 #include "JsonUtils.h"
 

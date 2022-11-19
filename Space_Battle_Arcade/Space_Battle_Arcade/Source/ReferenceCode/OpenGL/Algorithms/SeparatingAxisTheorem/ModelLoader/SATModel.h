@@ -8,7 +8,7 @@
 #include <assimp/postprocess.h>
 #include <iostream>
 #include <stdexcept>
-//#include "..\..\nu_utils.h"
+//#include "ReferenceCode/OpenGL/nu_utils.h"
 
 namespace SAT
 {

@@ -1,6 +1,6 @@
 #pragma once
-#include "ServerGameMode_SpaceBase.h"
-#include "../../Tools/DataStructures/LifetimePointer.h"
+#include "Game/GameModes/ServerGameMode_SpaceBase.h"
+#include "Tools/DataStructures/LifetimePointer.h"
 
 constexpr bool bTargetHeartbeatEveryFrame = false;
 

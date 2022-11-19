@@ -1,8 +1,8 @@
-#include "SAAutomatedTestSystem.h"
-#include "SAGameBase.h"
-#include "SALevelSystem.h"
-#include "SALog.h"
-#include "SALevel.h"
+#include "GameFramework/SAAutomatedTestSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SALevel.h"
 #include <stdio.h>
 #include "AutomatedTests/TimerTest.h"
 #include "AutomatedTests/SABehaviorTreeTest.h"

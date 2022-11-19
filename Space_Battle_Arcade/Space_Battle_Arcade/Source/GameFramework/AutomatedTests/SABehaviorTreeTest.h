@@ -1,5 +1,5 @@
 #pragma once
-#include "../SAAutomatedTestSystem.h"
+#include "GameFramework/SAAutomatedTestSystem.h"
 
 namespace SA
 {

@@ -1,12 +1,12 @@
-#include "SAPrimitiveShapeRenderer.h"
-#include "..\Rendering\OpenGLHelpers.h"
-#include "..\GameFramework\SAGameBase.h"
-#include "..\GameFramework\SAWindowSystem.h"
+#include "Game/SAPrimitiveShapeRenderer.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
 #include <assert.h>
-#include "..\Tools\SAUtilities.h"
-#include "..\Rendering\BuiltInShaders.h"
-#include "..\Rendering\SAShader.h"
-#include "..\GameFramework\SARenderSystem.h"
+#include "Tools/SAUtilities.h"
+#include "Rendering\BuiltInShaders.h"
+#include "Rendering/SAShader.h"
+#include "GameFramework/SARenderSystem.h"
 
 
 namespace SA

@@ -1,9 +1,10 @@
 #pragma once
-#include "SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
+
+#include "GameFramework/Components/SAComponentEntity.h"
+#include "GameFramework/Interfaces/SATickable.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "Interfaces/SATickable.h"
-#include "Components/SAComponentEntity.h"
 
 namespace SA
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include "Widget3D_MenuScreenBase.h"
-#include "../Widget3D_LaserButton.h"
-#include "../../../../../GameFramework/CurveSystem.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_LaserButton.h"
+#include "GameFramework/CurveSystem.h"
 
 namespace SA
 {

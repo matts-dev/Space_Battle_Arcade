@@ -7,9 +7,9 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "../SAGameEntity.h"
-#include "../SAParticleSystem.h"
-#include "../../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "GameFramework/SAGameEntity.h"
+#include "GameFramework/SAParticleSystem.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
 
 namespace SA
 {

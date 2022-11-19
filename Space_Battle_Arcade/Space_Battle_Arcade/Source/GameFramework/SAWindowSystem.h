@@ -1,7 +1,7 @@
 #pragma once
-#include "SASystemBase.h"
-#include "..\Tools\DataStructures\MultiDelegate.h"
-#include "..\Rendering\SAWindow.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "Rendering/SAWindow.h"
 #include <cstdint>
 #include <map>
 #include <set>

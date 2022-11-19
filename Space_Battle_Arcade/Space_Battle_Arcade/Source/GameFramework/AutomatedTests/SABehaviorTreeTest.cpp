@@ -1,15 +1,16 @@
-#include "SABehaviorTreeTest.h"
-#include "../SABehaviorTree.h"
 #include <vector>
 #include <iostream>
-#include "../SALog.h"
 #include <stdio.h>
-#include "../../Tools/DataStructures/MultiDelegate.h"
-#include "../SAGameBase.h"
-#include "../SALevelSystem.h"
-#include "../SATimeManagementSystem.h"
-#include "../SALevel.h"
 #include <utility>
+
+#include "GameFramework/SABehaviorTree.h"
+#include "GameFramework/AutomatedTests/SABehaviorTreeTest.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SATimeManagementSystem.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

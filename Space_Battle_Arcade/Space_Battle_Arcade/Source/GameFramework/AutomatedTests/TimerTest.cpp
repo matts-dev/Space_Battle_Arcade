@@ -1,11 +1,11 @@
 #include <cstdint>
 
 #include "TimerTest.h"
-#include "../SAGameBase.h"
-#include "../SATimeManagementSystem.h"
-#include "../SALevel.h"
-#include "../SALog.h"
-#include "../SALevelSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SATimeManagementSystem.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SALevelSystem.h"
 
 namespace SA
 {

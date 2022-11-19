@@ -3,15 +3,17 @@
 
 #include<glad/glad.h> //includes opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
-#include "SACameraCallbackRegister.h"
-#include "../SAWindow.h"
+
 #include <gtc/matrix_transform.hpp>
+
+#include "Rendering/Camera/SACameraCallbackRegister.h"
+#include "Rendering/SAWindow.h"
 #include "GameFramework/SALog.h"
 #include "GameFramework/SAGameBase.h"
 #include "GameFramework/SAWindowSystem.h"
-#include "../../GameFramework/SALevelSystem.h"
-#include "../../GameFramework/SALevel.h"
-#include "../../GameFramework/TimeManagement/TickGroupManager.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/TimeManagement/TickGroupManager.h"
 
 namespace SA
 {

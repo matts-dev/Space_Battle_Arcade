@@ -1,10 +1,10 @@
-#include "SAConfigBase.h"
+#include "Game/AssetConfigs/SAConfigBase.h"
 
 #include <fstream>
 #include <sstream>
 
-#include "../GameSystems/SAModSystem.h"
-#include "../SpaceArcade.h"
+#include "Game/GameSystems/SAModSystem.h"
+#include "Game/SpaceArcade.h"
 #include "Libraries/nlohmann/json.hpp"
 
 using json = nlohmann::json;

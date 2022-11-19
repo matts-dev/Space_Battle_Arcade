@@ -1,9 +1,9 @@
 #pragma once
-#include "..\GameFramework\SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
-#include "..\Tools\DataStructures\SATransform.h"
+#include "Tools\DataStructures\SATransform.h"
 
 namespace SA
 {

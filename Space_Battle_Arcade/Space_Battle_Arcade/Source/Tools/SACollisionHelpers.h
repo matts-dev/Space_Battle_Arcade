@@ -4,9 +4,9 @@
 
 #include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
-#include "DataStructures/SATransform.h"
-#include "RemoveSpecialMemberFunctionUtils.h"
-#include "../Rendering/SAGPUResource.h"
+#include "Tools/DataStructures/SATransform.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "Rendering/SAGPUResource.h"
 
 //#TODO_minor rename this file to be ShapeRenderWrapper and move other functionality to SACollisionUtils
 namespace SAT

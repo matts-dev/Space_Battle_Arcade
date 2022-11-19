@@ -2,7 +2,7 @@
 #include "DigitalClockFont.h"
 #include "Rendering/SAShader.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../../../GameFramework/SARandomNumberGenerationSystem.h"
+#include "GameFramework/SARandomNumberGenerationSystem.h"
 
 namespace SA
 {

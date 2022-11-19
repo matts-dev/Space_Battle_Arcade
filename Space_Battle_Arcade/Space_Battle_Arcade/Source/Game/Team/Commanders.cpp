@@ -1,9 +1,9 @@
 #include "Commanders.h"
-#include "../SpaceArcade.h"
-#include "../Levels/SASpaceLevelBase.h"
-#include "../../GameFramework/SALevelSystem.h"
-#include "../../GameFramework/SAWorldEntity.h"
-#include "../Components/FighterSpawnComponent.h"
+#include "Game/SpaceArcade.h"
+#include "Game/Levels/SASpaceLevelBase.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SAWorldEntity.h"
+#include "Game/Components/FighterSpawnComponent.h"
 
 namespace SA
 {

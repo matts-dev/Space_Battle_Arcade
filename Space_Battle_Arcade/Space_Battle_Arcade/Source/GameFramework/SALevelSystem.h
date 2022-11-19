@@ -1,8 +1,8 @@
 #pragma once
-#include "../GameFramework/SASystemBase.h"
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "SATimeManagementSystem.h"
-//#include "SALevel.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SATimeManagementSystem.h"
+//#include "GameFramework/SALevel.h"
 
 namespace SA
 {

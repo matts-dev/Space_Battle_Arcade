@@ -1,11 +1,11 @@
 #pragma once
-#include "../SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include <vector>
 #include <map>
 #include <typeindex>
 #include <assert.h>
-#include "../SALog.h"
-#include "../../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "GameFramework/SALog.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
 
 namespace SA
 {

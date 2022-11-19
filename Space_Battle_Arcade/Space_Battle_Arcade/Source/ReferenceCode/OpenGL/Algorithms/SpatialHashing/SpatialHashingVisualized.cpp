@@ -13,8 +13,8 @@
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
-#include "SpatialHashingComponent.h"
-#include "SHDebugUtils.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SHDebugUtils.h"
 #include <functional>
 
 namespace

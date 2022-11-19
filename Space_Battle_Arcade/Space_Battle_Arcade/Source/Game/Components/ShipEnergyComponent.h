@@ -1,5 +1,5 @@
 #pragma once
-#include "../../GameFramework/Components/SAComponentEntity.h"
+#include "GameFramework/Components/SAComponentEntity.h"
 
 namespace SA
 {

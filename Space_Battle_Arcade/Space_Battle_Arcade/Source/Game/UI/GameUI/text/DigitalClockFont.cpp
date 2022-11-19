@@ -1,9 +1,9 @@
 #include "DigitalClockFont.h"
-#include "../../../../Rendering/OpenGLHelpers.h"
+#include "Rendering/OpenGLHelpers.h"
 #include "Rendering/SAShader.h"
-#include "../../../../Rendering/RenderData.h"
-#include "../../../../GameFramework/SALog.h"
-#include "../../../../GameFramework/SARenderSystem.h"
+#include "Rendering/RenderData.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SARenderSystem.h"
 
 namespace SA
 {

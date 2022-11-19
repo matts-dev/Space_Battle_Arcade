@@ -1,5 +1,5 @@
 #pragma once
-#include "SASystemBase.h"
+#include "GameFramework/SASystemBase.h"
 
 #include<optional>
 #include<cstdint>
@@ -10,9 +10,9 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../Game/AssetConfigs/SAConfigBase.h"
+#include "Game/AssetConfigs/SAConfigBase.h"
 
 #define DISABLE_PARTICLE_SYSTEM 0
 

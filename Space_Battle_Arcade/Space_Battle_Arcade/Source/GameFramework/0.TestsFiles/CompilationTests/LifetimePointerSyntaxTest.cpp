@@ -1,11 +1,12 @@
+#include "LifetimePointerSyntaxTest.h"
+
 #include <iostream>
 #include <string>
-#include "../../../Tools/DataStructures/AdvancedPtrs.h"
-#include "../../../Tools/DataStructures/LifetimePointer.h"
-#include "../../SAGameBase.h"
-#include "LifetimePointerSyntaxTest.h"
-#include "../../SALog.h"
-#include "../../SAGameEntity.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
+#include "Tools/DataStructures/LifetimePointer.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SAGameEntity.h"
 
 namespace
 {

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "MainMenuScreens/Widget3D_ActivatableBase.h"
+#include "Game/UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ActivatableBase.h"
 
 #include <string>
 #include <limits>
 
-#include "../../../GameSystems/SAUISystem_Game.h"
-#include "../../../../GameFramework/Interfaces/SATickable.h"
+#include "Game/GameSystems/SAUISystem_Game.h"
+#include "GameFramework/Interfaces/SATickable.h"
 #include "Tools/color_utils.h"
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 

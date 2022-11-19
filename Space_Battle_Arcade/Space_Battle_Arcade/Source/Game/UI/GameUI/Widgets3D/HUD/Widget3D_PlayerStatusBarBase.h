@@ -1,8 +1,8 @@
 #pragma once
-#include "../Widget3D_Base.h"
-#include "../MainMenuScreens/Widget3D_ActivatableBase.h"
-#include "../../../../../Tools/DataStructures/AdvancedPtrs.h"
 #include <detail/setup.hpp>
+#include "Game/UI/GameUI/Widgets3D/Widget3D_Base.h"
+#include "Game/UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ActivatableBase.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
 
 namespace SA
 {

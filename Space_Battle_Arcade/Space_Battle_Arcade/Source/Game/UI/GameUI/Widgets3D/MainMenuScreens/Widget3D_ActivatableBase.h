@@ -1,5 +1,5 @@
 #pragma once
-#include "../Widget3D_Base.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_Base.h"
 
 namespace SA 
 {

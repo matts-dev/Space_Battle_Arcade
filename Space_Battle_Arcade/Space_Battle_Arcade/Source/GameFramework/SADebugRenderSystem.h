@@ -6,9 +6,9 @@
 #include <optional>
 #include <set>
 
-#include "SASystemBase.h"
-#include "SAGameEntity.h"
-#include "../Tools/Geometry/SimpleShapes.h"
+#include "GameFramework/SASystemBase.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/Geometry/SimpleShapes.h"
 
 namespace SA
 {

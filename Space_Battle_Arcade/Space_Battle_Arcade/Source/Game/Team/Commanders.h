@@ -3,11 +3,11 @@
 #include <vector>
 #include <stack>
 
-#include "../../GameFramework/Components/SAComponentEntity.h"
-#include "../../GameFramework/Components/GameplayComponents.h"
+#include "GameFramework/Components/SAComponentEntity.h"
+#include "GameFramework/Components/GameplayComponents.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../../Tools/DataStructures/LifetimePointer.h"
-#include "../../Tools/DataStructures/AdvancedPtrs.h"
+#include "Tools/DataStructures/LifetimePointer.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
 
 namespace SA
 {

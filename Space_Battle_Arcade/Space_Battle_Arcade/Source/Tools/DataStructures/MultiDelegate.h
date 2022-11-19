@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\..\GameFramework\SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include <stdexcept>
 #include <set>
 #include <type_traits>

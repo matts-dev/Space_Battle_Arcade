@@ -1,10 +1,10 @@
-#include "..\..\Rendering\SAWindow.h"
-#include "..\..\Rendering\OpenGLHelpers.h"
-#include "..\SAGameBase.h"
-#include "..\SAWindowSystem.h"
-#include "..\..\Rendering\Camera\SACameraFPS.h"
-#include "..\..\Rendering\SAShader.h"
-#include "..\SAGameEntity.h"
+#include "Rendering/SAWindow.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "Rendering\Camera\SACameraFPS.h"
+#include "Rendering/SAShader.h"
+#include "GameFramework/SAGameEntity.h"
 
 namespace
 {

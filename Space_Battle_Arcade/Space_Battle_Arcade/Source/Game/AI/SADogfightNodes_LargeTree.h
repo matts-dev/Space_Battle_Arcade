@@ -1,9 +1,9 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "../../Tools/DataStructures/AdvancedPtrs.h"
-#include "../../GameFramework/SABehaviorTree.h"
-#include "../../GameFramework/SAWorldEntity.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
+#include "GameFramework/SABehaviorTree.h"
+#include "GameFramework/SAWorldEntity.h"
 #include "SAShipBehaviorTreeNodes.h"
 
 namespace SA

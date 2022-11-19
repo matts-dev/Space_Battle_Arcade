@@ -1,5 +1,5 @@
 #pragma once
-#include "../../GameFramework/SARandomNumberGenerationSystem.h"
+#include "GameFramework/SARandomNumberGenerationSystem.h"
 
 namespace SA
 {

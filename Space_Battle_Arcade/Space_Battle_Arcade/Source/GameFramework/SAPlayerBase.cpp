@@ -1,7 +1,7 @@
-#include "SAPlayerBase.h"
-#include "Input/SAInput.h"
-#include "Interfaces/SAIControllable.h"
-#include "../Rendering/Camera/SACameraBase.h"
+#include "GameFramework/SAPlayerBase.h"
+#include "GameFramework/Input/SAInput.h"
+#include "GameFramework/Interfaces/SAIControllable.h"
+#include "Rendering/Camera/SACameraBase.h"
 
 namespace SA
 {

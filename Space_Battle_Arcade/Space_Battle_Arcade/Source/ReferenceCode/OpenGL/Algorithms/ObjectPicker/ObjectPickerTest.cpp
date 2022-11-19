@@ -1,27 +1,26 @@
 #pragma once
-#include<iostream>
-
-#include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
-#include<GLFW/glfw3.h>
+#include <iostream>
+#include <glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
+#include <GLFW/glfw3.h>
 #include <string>
-#include<cmath>
+#include <cmath>
+#include <gtx/quaternion.hpp>
+#include <tuple>
+#include <array>
+#include <functional>
+#include <cstdint>
+#include <random>
+#include <memory>
 
 #include "ReferenceCode/OpenGL/GettingStarted/Camera/CameraFPS.h"
 #include "ReferenceCode/OpenGL/InputTracker.h"
 #include "ReferenceCode/OpenGL/nu_utils.h"
 #include "ReferenceCode/OpenGL/Shader.h"
-#include <gtx/quaternion.hpp>
-#include <tuple>
-#include <array>
-#include "../SpatialHashing/SpatialHashingComponent.h"
-#include "../SpatialHashing/SHDebugUtils.h"
-#include <functional>
-#include <cstdint>
-#include <random>
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SHDebugUtils.h"
 
 #include "ReferenceCode/OpenGL/Utilities/FrameRateDisplay.h"
-#include "../SeparatingAxisTheorem/SATComponent.h"
-#include <memory>
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "ObjectPicker.h"
 
 namespace

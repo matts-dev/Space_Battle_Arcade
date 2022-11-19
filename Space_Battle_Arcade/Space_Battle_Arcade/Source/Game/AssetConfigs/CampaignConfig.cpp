@@ -1,8 +1,8 @@
 #include "CampaignConfig.h"
 #include "JsonUtils.h"
-#include "../Levels/LevelConfigs/SpaceLevelConfig.h"
-#include "../GameSystems/SAModSystem.h"
-#include "../SpaceArcade.h"
+#include "Game/Levels/LevelConfigs/SpaceLevelConfig.h"
+#include "Game/GameSystems/SAModSystem.h"
+#include "Game/SpaceArcade.h"
 
 namespace SA
 {

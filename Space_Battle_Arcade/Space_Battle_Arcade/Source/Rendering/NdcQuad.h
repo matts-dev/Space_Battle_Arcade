@@ -1,5 +1,5 @@
 #pragma once
-#include "SAGPUResource.h"
+#include "Rendering/SAGPUResource.h"
 #include <glad/glad.h>
 
 namespace SA

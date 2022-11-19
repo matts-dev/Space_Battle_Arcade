@@ -1,5 +1,5 @@
 #pragma once
-#include "../../GameFramework/CheatSystemBase.h"
+#include "GameFramework/CheatSystemBase.h"
 
 
 namespace SA

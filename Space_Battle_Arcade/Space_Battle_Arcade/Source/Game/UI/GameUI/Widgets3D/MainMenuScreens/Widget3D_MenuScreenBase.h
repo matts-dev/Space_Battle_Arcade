@@ -2,8 +2,8 @@
 #include <vector>
 
 #include "Widget3D_ActivatableBase.h"
-#include "../Widget3D_LaserButton.h"
-#include "../../../../../Tools/DataStructures/MultiDelegate.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_LaserButton.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

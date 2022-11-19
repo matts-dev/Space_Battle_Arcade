@@ -1,5 +1,5 @@
 #pragma once
-#include "../../GameFramework/RenderModelEntity.h"
+#include "GameFramework/RenderModelEntity.h"
 #include "GameFramework/SAGameEntity.h"
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 

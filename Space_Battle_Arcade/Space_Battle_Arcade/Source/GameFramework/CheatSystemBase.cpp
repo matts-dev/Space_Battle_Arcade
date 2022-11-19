@@ -1,11 +1,11 @@
 
-#include "CheatSystemBase.h"
+#include "GameFramework/CheatSystemBase.h"
 #include <sstream>
 #include <vector>
 #include <cctype>
 #include <algorithm>
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "SALog.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SALog.h"
 
 namespace SA
 {

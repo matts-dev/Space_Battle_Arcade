@@ -1,6 +1,6 @@
-#include "..\..\Rendering\SAWindow.h"
-#include "..\..\Rendering\OpenGLHelpers.h"
-#include "..\SAGameEntity.h"
+#include "Rendering/SAWindow.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "GameFramework/SAGameEntity.h"
 
 namespace
 {

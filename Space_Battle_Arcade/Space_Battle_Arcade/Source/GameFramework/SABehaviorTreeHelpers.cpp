@@ -1,5 +1,5 @@
 #include "SABehaviorTreeHelpers.h"
-#include "SALog.h"
+#include "GameFramework/SALog.h"
 
 namespace SA
 {

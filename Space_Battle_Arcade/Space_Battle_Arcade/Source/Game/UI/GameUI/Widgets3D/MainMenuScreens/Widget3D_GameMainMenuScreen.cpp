@@ -1,7 +1,7 @@
 #include "Widget3D_GameMainMenuScreen.h"
-#include "../Widget3D_LaserButton.h"
-#include "../../../../SpaceArcade.h"
-#include "../../../../../Tools/PlatformUtils.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_LaserButton.h"
+#include "Game/SpaceArcade.h"
+#include "Tools/PlatformUtils.h"
 
 namespace SA
 {

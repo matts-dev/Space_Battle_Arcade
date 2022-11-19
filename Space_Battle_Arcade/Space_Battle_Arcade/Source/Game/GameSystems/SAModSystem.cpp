@@ -5,21 +5,21 @@
 #include <system_error>
 #include <sstream>
 
-#include "../AssetConfigs/SASpawnConfig.h"
-#include "../AssetConfigs/SAProjectileConfig.h"
+#include "Game/AssetConfigs/SASpawnConfig.h"
+#include "Game/AssetConfigs/SAProjectileConfig.h"
 #include "GameFramework/SALog.h"
 #include "GameFramework/SAGameBase.h"
 #include "Libraries/nlohmann/json.hpp"
-#include "../AssetConfigs/SASettingsProfileConfig.h"
-#include "../AssetConfigs/CampaignConfig.h"
-#include "../AssetConfigs/SaveGameConfig.h"
-#include "../AssetConfigs/DifficultyConfig.h"
+#include "Game/AssetConfigs/SASettingsProfileConfig.h"
+#include "Game/AssetConfigs/CampaignConfig.h"
+#include "Game/AssetConfigs/SaveGameConfig.h"
+#include "Game/AssetConfigs/DifficultyConfig.h"
 #include <stdio.h>
-#include "../AssetConfigs/JsonUtils.h"
+#include "Game/AssetConfigs/JsonUtils.h"
 #include "Tools/SAUtilities.h"
-#include "../../Tools/PlatformUtils.h"
-#include "../SpaceArcade.h"
-#include "../Levels/LevelConfigs/SpaceLevelConfig.h"
+#include "Tools/PlatformUtils.h"
+#include "Game/SpaceArcade.h"
+#include "Game/Levels/LevelConfigs/SpaceLevelConfig.h"
 
 using json = nlohmann::json;
 

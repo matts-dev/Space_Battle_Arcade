@@ -4,8 +4,8 @@
 #include <random>
 #include <cstdint>
 
-#include "SASystemBase.h"
-#include "SAGameEntity.h"
+#include "GameFramework/SASystemBase.h"
+#include "GameFramework/SAGameEntity.h"
 #include "EngineCompileTimeFlagsAndMacros.h"
 
 #define SA_RNG_USE_TIME 0 | SHIPPING_BUILD

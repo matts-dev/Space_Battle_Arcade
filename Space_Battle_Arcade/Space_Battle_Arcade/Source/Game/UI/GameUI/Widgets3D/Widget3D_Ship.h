@@ -1,7 +1,7 @@
 #pragma once
-#include "Widget3D_Base.h"
-#include "../../../../Tools/DataStructures/AdvancedPtrs.h"
-#include "../../../../Tools/DataStructures/MultiDelegate.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_Base.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA
 {

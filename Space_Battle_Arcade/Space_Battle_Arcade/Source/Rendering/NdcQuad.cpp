@@ -1,5 +1,5 @@
-#include "NdcQuad.h"
-#include "OpenGLHelpers.h"
+#include "Rendering/NdcQuad.h"
+#include "Rendering/OpenGLHelpers.h"
 #include <glad/glad.h>
 
 

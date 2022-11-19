@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Widget3D_Base.h"
-#include "../../../../Tools/DataStructures/MultiDelegate.h"
-#include "../../../../GameFramework/SAGameEntity.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_Base.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SAGameEntity.h"
 
 namespace SA
 {

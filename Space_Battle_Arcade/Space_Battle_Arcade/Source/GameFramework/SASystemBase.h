@@ -1,5 +1,5 @@
 #pragma once
-#include "SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
 
 

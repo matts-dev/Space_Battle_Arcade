@@ -1,10 +1,10 @@
 #include "SAProjectileConfig.h"
-#include "..\SpaceArcade.h"
-#include "..\..\GameFramework\SAAssetSystem.h"
-#include "..\..\Tools\ModelLoading\SAModel.h"
-#include "..\..\GameFramework\SAWindowSystem.h"
-#include "..\..\Rendering\SAWindow.h"
-#include "..\..\GameFramework\SALog.h"
+#include "Game/SpaceArcade.h"
+#include "GameFramework/SAAssetSystem.h"
+#include "Tools/ModelLoading/SAModel.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "Rendering/SAWindow.h"
+#include "GameFramework/SALog.h"
 
 namespace SA
 {

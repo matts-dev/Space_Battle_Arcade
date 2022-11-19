@@ -4,7 +4,7 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include "ReferenceCode/OpenGL/Shader.h"
-#include "SpatialHashingComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 
 namespace SH
 {

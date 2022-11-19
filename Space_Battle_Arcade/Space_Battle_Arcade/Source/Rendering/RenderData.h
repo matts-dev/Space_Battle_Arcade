@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include "GameFramework/SAGameEntity.h"
-#include "../Game/SASpaceArcadeGlobalConstants.h"
-#include "Lights/SADirectionLight.h"
+#include "Game/SASpaceArcadeGlobalConstants.h"
+#include "Rendering/Lights/SADirectionLight.h"
 
 namespace SA
 {

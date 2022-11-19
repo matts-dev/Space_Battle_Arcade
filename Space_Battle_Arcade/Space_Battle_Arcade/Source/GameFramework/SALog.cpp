@@ -1,6 +1,6 @@
-#include "SALog.h"
+#include "GameFramework/SALog.h"
 #include <iostream>
-#include "SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include <string>
 
 namespace SA

@@ -1,18 +1,18 @@
 #include <stdio.h>
 
-#include "Widget3D_Slider.h"
-#include "../text/GlitchText.h"
-#include "../LaserUIPool.h"
+#include "Game/UI/GameUI/Widgets3D/Widget3D_Slider.h"
+#include "Game/UI/GameUI/text/GlitchText.h"
+#include "Game/UI/GameUI/LaserUIPool.h"
 #include "Tools/SAUtilities.h"
-#include "../../../../Tools/Geometry/GeometryMath.h"
-#include "../../../SpaceArcade.h"
-#include "../../../../Tools/PlatformUtils.h"
-#include "../../../../GameFramework/SALevel.h"
-#include "../../../../GameFramework/SALevelSystem.h"
+#include "Tools/Geometry/GeometryMath.h"
+#include "Game/SpaceArcade.h"
+#include "Tools/PlatformUtils.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALevelSystem.h"
 #include "GameFramework/SAGameBase.h"
-#include "../../../../Tools/DataStructures/MultiDelegate.h"
-#include "../../../../GameFramework/TimeManagement/TickGroupManager.h"
-#include "../../../../GameFramework/SADebugRenderSystem.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/TimeManagement/TickGroupManager.h"
+#include "GameFramework/SADebugRenderSystem.h"
 
 namespace SA
 {

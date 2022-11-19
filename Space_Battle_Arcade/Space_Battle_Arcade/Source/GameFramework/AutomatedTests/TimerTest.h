@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../SAAutomatedTestSystem.h"
+#include "GameFramework/SAAutomatedTestSystem.h"
 
 #define VERBOSE_TIMER_TEST_LOGGING 0
 

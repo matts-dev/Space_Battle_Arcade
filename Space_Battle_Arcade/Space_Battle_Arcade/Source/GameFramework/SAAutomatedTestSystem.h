@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "SASystemBase.h"
-#include "../Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 #define SA_ENABLE_AUTOMATED_TESTS 0
 

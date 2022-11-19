@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Libraries/nlohmann/json.hpp"
-#include "../../Tools/PlatformUtils.h"
+#include "Tools/PlatformUtils.h"
 #include "GameFramework/SALog.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

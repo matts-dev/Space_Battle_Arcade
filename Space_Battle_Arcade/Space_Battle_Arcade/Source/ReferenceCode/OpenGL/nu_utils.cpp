@@ -1,4 +1,4 @@
-#include "nu_utils.h"
+#include "ReferenceCode/OpenGL/nu_utils.h"
 #include<iostream>
 
 void verifyShaderCompiled(const char* shadername, GLuint shader)

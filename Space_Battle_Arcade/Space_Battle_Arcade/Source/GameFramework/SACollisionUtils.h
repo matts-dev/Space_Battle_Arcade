@@ -12,7 +12,7 @@
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
-#include "../GameFramework/SASystemBase.h"
+#include "GameFramework/SASystemBase.h"
 #include "Tools/DataStructures/SATransform.h"
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
 #include "Rendering/SAShader.h"

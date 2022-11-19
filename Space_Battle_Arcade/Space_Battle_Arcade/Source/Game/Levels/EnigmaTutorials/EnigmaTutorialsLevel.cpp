@@ -3,12 +3,12 @@
 #include<ctime>
 
 #include "Game/Environment/Planet.h"
-#include "../../Environment/Star.h"
-#include "../../../GameFramework/SARandomNumberGenerationSystem.h"
+#include "Game/Environment/Star.h"
+#include "GameFramework/SARandomNumberGenerationSystem.h"
 #include "GameFramework/SAGameBase.h"
 #include "Tools/DataStructures/SATransform.h"
 #include "EnigmaTutorialAnimationEntity.h"
-#include "../../../GameFramework/SARenderSystem.h"
+#include "GameFramework/SARenderSystem.h"
 
 namespace SA
 {

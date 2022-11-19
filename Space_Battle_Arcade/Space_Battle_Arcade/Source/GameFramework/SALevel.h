@@ -1,6 +1,6 @@
 #pragma once
-#include "SAGameEntity.h"
-#include "Interfaces/SATickable.h"
+#include "GameFramework/SAGameEntity.h"
+#include "GameFramework/Interfaces/SATickable.h"
 
 #include <set>
 
@@ -13,8 +13,8 @@
 #include "SAWorldEntity.h"
 #include "mix_ins/CustomGrid_MixIn.h"
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
-#include "../Tools/DataStructures/MultiDelegate.h"
-#include "../Rendering/Lights/SADirectionLight.h"
+#include "Tools/DataStructures/MultiDelegate.h"
+#include "Rendering/Lights/SADirectionLight.h"
 
 namespace SA
 {

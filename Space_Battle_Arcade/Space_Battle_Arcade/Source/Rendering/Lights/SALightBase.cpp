@@ -1,6 +1,6 @@
 #include "SALightBase.h"
 #include <string>
-#include "../SAShader.h"
+#include "Rendering/SAShader.h"
 
 namespace SA
 {

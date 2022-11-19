@@ -6,7 +6,7 @@
 #include "Audio/ALBufferWrapper.h"
 #endif
 
-#include "SASystemBase.h"
+#include "GameFramework/SASystemBase.h"
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include <set>

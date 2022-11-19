@@ -1,6 +1,6 @@
 #pragma once
 #include "Widget3D_MenuScreenBase.h"
-#include "../../../../../Tools/DataStructures/MultiDelegate.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 
 namespace SA 
 {

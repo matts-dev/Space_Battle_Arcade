@@ -1,5 +1,5 @@
 #pragma once
-#include "../SASpaceLevelBase.h"
+#include "Game/Levels/SASpaceLevelBase.h"
 #include "GameFramework/SAGameEntity.h"
 
 namespace SA

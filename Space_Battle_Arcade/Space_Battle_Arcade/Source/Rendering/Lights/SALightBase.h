@@ -3,7 +3,7 @@
 #include <string>
 #include <cstdint>
 #include "Tools/DataStructures/SATransform.h"
-#include "../../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
 
 namespace SA
 {

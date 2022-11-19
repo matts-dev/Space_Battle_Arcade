@@ -1,12 +1,12 @@
 #pragma once
-#include "../BuildConfiguration/SAPreprocessorDefines.h"
+#include "BuildConfiguration/SAPreprocessorDefines.h"
 
 #if USE_OPENAL_API
 #include<AL/al.h>
 #include<AL/alc.h>
 
 #include <iostream>
-#include "../../Tools/PlatformUtils.h"
+#include "Tools/PlatformUtils.h"
 
 //OpenAL error checking
 #define OpenAL_ErrorCheck(message)\

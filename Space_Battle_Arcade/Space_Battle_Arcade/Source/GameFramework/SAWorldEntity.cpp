@@ -1,7 +1,7 @@
 #include "SAWorldEntity.h"
-#include "SAGameBase.h"
-#include "SALevel.h"
-#include "SALevelSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALevelSystem.h"
 #include "Tools/SAUtilities.h"
 
 namespace SA

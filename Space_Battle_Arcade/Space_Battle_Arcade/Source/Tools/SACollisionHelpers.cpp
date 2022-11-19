@@ -2,7 +2,7 @@
 #include "ModelLoading/SAModel.h"
 #include "ModelLoading/SAMesh.h"
 #include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
-#include "../Rendering/RenderData.h"
+#include "Rendering/RenderData.h"
 #include "GameFramework/SARenderSystem.h"
 #include "GameFramework/SAGameBase.h"
 #include "Rendering/SAShader.h"

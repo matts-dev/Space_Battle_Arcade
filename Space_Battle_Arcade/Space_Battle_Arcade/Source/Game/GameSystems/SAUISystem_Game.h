@@ -1,8 +1,8 @@
 #pragma once
 
 #include <optional>
-#include "../../GameFramework/SASystemBase.h"
-#include "../../Tools/DataStructures/MultiDelegate.h"
+#include "GameFramework/SASystemBase.h"
+#include "Tools/DataStructures/MultiDelegate.h"
 #include "Tools/DataStructures/SATransform.h" //glm includes
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include <array>

@@ -6,8 +6,8 @@
 #include "GameFramework/SAGameEntity.h"
 #include "Tools/DataStructures/SATransform.h"
 #include "Tools/color_utils.h"
-#include "../../Rendering/SAGPUResource.h"
-#include "StarJumpData.h"
+#include "Rendering/SAGPUResource.h"
+#include "Game/Environment/StarJumpData.h"
 #include <optional>
 
 namespace SA

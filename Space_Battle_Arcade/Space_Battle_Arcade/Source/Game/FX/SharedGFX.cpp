@@ -1,5 +1,5 @@
 #include "SharedGFX.h"
-#include "../../GameFramework/SALevelSystem.h"
+#include "GameFramework/SALevelSystem.h"
 #include "GameFramework/SAGameBase.h"
 
 namespace SA

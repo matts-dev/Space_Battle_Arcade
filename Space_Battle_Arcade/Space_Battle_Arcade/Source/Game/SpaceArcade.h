@@ -7,9 +7,9 @@
 #include <map>
 #include "GameFramework/RenderModelEntity.h"
 #include "SAUniformResourceLocators.h"
-#include "OptionalCompilationMacros.h"
+#include "Game/OptionalCompilationMacros.h"
 #include "Rendering/CustomGameShaders.h"
-#include "../GameFramework/EngineCompileTimeFlagsAndMacros.h"
+#include "GameFramework/EngineCompileTimeFlagsAndMacros.h"
 
 namespace SA
 {

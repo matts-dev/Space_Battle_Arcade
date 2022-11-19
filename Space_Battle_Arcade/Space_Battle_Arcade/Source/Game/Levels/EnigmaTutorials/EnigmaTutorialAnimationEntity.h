@@ -1,8 +1,8 @@
 #pragma once
-#include "../../../GameFramework/Interfaces/SATickable.h"
+#include "GameFramework/Interfaces/SATickable.h"
 #include "GameFramework/SAGameEntity.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../../../GameFramework/CurveSystem.h"
+#include "GameFramework/CurveSystem.h"
 
 
 namespace SA

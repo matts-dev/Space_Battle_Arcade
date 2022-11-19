@@ -1,7 +1,7 @@
 #pragma once
-#include "SASpaceLevelBase.h"
+#include "Game/Levels/SASpaceLevelBase.h"
 #include "Tools/DataStructures/SATransform.h"
-#include "../../GameFramework/CurveSystem.h"
+#include "GameFramework/CurveSystem.h"
 #include <optional>
 
 namespace SA

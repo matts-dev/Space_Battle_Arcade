@@ -1,4 +1,4 @@
-#include "..\..\SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "memory"
 namespace
 {

@@ -1,13 +1,14 @@
-#include "BuiltInParticles.h"
-#include "..\SAParticleSystem.h"
-#include "..\..\Tools\ModelLoading\SAModel.h"
-#include "..\..\Tools\Geometry\SimpleShapes.h"
-#include "..\SAGameBase.h"
-#include "..\SALog.h"
-#include "..\SAAssetSystem.h"
-#include "..\SARenderSystem.h"
-#include "..\..\Tools\SAUtilities.h"
-#include "..\..\Game\AssetConfigs\SASpawnConfig.h"
+#include "GameFramework/EngineParticles/BuiltInParticles.h"
+
+#include "Game/AssetConfigs/SASpawnConfig.h"
+#include "GameFramework/SAAssetSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SAParticleSystem.h"
+#include "GameFramework/SARenderSystem.h"
+#include "Tools/Geometry/SimpleShapes.h"
+#include "Tools/ModelLoading/SAModel.h"
+#include "Tools/SAUtilities.h"
 
 
 namespace SA

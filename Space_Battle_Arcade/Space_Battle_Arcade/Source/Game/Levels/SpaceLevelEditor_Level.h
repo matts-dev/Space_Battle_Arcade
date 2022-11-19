@@ -1,7 +1,7 @@
 #pragma once
-#include "SASpaceLevelBase.h"
+#include "Game/Levels/SASpaceLevelBase.h"
 #include "LevelConfigs/SpaceLevelConfig.h"
-//#include "../GameSystems/SAUISystem_Game.h"
+//#include "Game/GameSystems/SAUISystem_Game.h"
 
 namespace SA
 {

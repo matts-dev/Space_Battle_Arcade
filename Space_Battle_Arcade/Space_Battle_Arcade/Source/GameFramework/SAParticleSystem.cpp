@@ -1,20 +1,20 @@
 #include <assert.h>
 #include <stack>
-#include "SAAssetSystem.h"
-#include "SALevelSystem.h"
-#include "SALog.h"
-#include "SALevel.h"
-#include "SAGameBase.h"
-#include "SAParticleSystem.h"
-#include "SAPlayerSystem.h"
-#include "SAPlayerBase.h"
-#include "SAWindowSystem.h"
-#include "../Tools/Geometry/SimpleShapes.h"
+#include "GameFramework/SAAssetSystem.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAParticleSystem.h"
+#include "GameFramework/SAPlayerSystem.h"
+#include "GameFramework/SAPlayerBase.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "Tools/Geometry/SimpleShapes.h"
 #include "Tools/SAUtilities.h"
-#include "../Rendering/Camera/SACameraBase.h"
+#include "Rendering/Camera/SACameraBase.h"
 #include "Rendering/OpenGLHelpers.h"
-#include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
-#include "SARenderSystem.h"
+#include "Rendering/DeferredRendering/DeferredRendererStateMachine.h"
+#include "GameFramework/SARenderSystem.h"
 
 namespace SA
 {
