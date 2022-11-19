@@ -1,7 +1,7 @@
 #include <ctime>
 
 #include "SARandomNumberGenerationSystem.h"
-#include <assimp\Compiler\pstdint.h>
+#include <assimp/Compiler/pstdint.h>
 
 namespace SA
 {

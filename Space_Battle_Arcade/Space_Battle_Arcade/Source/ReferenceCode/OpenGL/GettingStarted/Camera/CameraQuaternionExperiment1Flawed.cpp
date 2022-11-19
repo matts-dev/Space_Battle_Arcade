@@ -1,6 +1,6 @@
 #include "CameraQuaternionExperiment1Flawed.h"
 #include <iostream>
-#include <gtx\quaternion.hpp>
+#include <gtx/quaternion.hpp>
 
 //local to .cpp 
 namespace

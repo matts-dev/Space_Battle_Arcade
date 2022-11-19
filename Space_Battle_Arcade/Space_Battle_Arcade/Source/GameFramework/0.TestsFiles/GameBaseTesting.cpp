@@ -2,7 +2,7 @@
 #include "Rendering/OpenGLHelpers.h"
 #include "GameFramework/SAGameBase.h"
 #include "GameFramework/SAWindowSystem.h"
-#include "Rendering\Camera\SACameraFPS.h"
+#include "Rendering/Camera/SACameraFPS.h"
 #include "Rendering/SAShader.h"
 #include "GameFramework/SAGameEntity.h"
 

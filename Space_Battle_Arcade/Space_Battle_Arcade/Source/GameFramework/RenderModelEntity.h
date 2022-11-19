@@ -1,6 +1,6 @@
 #pragma once
 #include "SAWorldEntity.h"
-#include "Tools\DataStructures\SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "Tools/ModelLoading/SAModel.h"
 
 namespace SA

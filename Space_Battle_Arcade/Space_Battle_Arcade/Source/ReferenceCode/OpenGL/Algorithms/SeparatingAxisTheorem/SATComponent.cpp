@@ -1,5 +1,5 @@
 #include "SATComponent.h"
-#include <gtx\norm.hpp>
+#include <gtx/norm.hpp>
 
 namespace SAT
 {
