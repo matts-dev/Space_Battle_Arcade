@@ -1,5 +1,5 @@
 #include "Widget3D_Respawn.h"
-#include "../../../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../../../GameFramework/SAPlayerSystem.h"
 #include "../../../SAPlayer.h"
 #include "../../../../GameFramework/SALevel.h"

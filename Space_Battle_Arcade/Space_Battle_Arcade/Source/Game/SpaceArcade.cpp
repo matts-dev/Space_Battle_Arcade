@@ -3,23 +3,23 @@
 #include <assert.h>
 #include <random>
 
-#include "../Rendering/SAWindow.h"
-#include "../Rendering/OpenGLHelpers.h"
+#include "Rendering/SAWindow.h"
+#include "Rendering/OpenGLHelpers.h"
 #include "../Rendering/Camera/SACameraFPS.h"
-#include "../Rendering/SAShader.h"
+#include "Rendering/SAShader.h"
 #include "../Rendering/BuiltInShaders.h"
 
-#include "../GameFramework/SAGameBase.h"
-#include "../GameFramework/SAWindowSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
 #include "../GameFramework/Input/SAInput.h"
-#include "../GameFramework/SAAssetSystem.h"
-#include "../GameFramework/SALevelSystem.h"
+#include "GameFramework/SAAssetSystem.h"
+#include "GameFramework/SALevelSystem.h"
 
-#include "../Tools/SAUtilities.h"
-#include "../Tools/ModelLoading/SAModel.h"
-#include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
+#include "Tools/SAUtilities.h"
+#include "Tools/ModelLoading/SAModel.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SHDebugUtils.h"
 
-#include "../GameFramework/SACollisionUtils.h"
+#include "GameFramework/SACollisionUtils.h"
 #include "GameSystems/SAProjectileSystem.h"
 #include "GameSystems/SAUISystem_Editor.h"
 #include "GameSystems/SAModSystem.h"
@@ -32,13 +32,13 @@
 #include "Levels/BasicTestSpaceLevel.h"
 #include "UI/EditorUI/SAUIRootWindow.h"
 #include "SAPlayer.h"
-#include "../GameFramework/SAPlayerSystem.h"
+#include "GameFramework/SAPlayerSystem.h"
 #include "../GameFramework/SATimeManagementSystem.h"
 #include "UI/GameUI/SAHUD.h"
 #include "SASpaceArcadeGlobalConstants.h"
 #include "../Rendering/Lights/SADirectionLight.h"
 #include "../Rendering/RenderData.h"
-#include "../GameFramework/SARenderSystem.h"
+#include "GameFramework/SARenderSystem.h"
 #include "Cheats/SpaceArcadeCheatSystem.h"
 #include "../GameFramework/developer_console/DeveloperConsole.h"
 #include "Levels/StressTestLevel.h"
@@ -51,7 +51,7 @@
 #include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
 #include "../Rendering/ForwardRendering/ForwardRenderingStateMachine.h"
 #include "Levels/SpaceLevelEditor_Level.h"
-#include "../GameFramework/SALog.h"
+#include "GameFramework/SALog.h"
 
 namespace SA
 {

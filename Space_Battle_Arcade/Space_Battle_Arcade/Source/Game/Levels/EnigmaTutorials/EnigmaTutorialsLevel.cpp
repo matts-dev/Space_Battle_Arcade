@@ -2,11 +2,11 @@
 
 #include<ctime>
 
-#include "../../Environment/Planet.h"
+#include "Game/Environment/Planet.h"
 #include "../../Environment/Star.h"
 #include "../../../GameFramework/SARandomNumberGenerationSystem.h"
-#include "../../../GameFramework/SAGameBase.h"
-#include "../../../Tools/DataStructures/SATransform.h"
+#include "GameFramework/SAGameBase.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "EnigmaTutorialAnimationEntity.h"
 #include "../../../GameFramework/SARenderSystem.h"
 

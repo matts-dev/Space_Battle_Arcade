@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include "../../../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "../../../GameFramework/Interfaces/SATickable.h"
 #include "../../../Tools/DataStructures/AdvancedPtrs.h"
 #include <functional>
-#include "../../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 
 namespace SA
 {

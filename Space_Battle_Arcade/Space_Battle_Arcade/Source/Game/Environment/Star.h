@@ -4,10 +4,10 @@
 #include <vector>
 #include "../SpaceArcade.h"
 #include "../SASpaceArcadeGlobalConstants.h"
-#include "../../GameFramework/SAGameEntity.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/AdvancedPtrs.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "StarJumpData.h"
 
 

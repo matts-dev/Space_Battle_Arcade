@@ -1,7 +1,7 @@
 #pragma once
 #include "../../GameFramework/RenderModelEntity.h"
-#include "../../GameFramework/SAGameEntity.h"
-#include "../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "GameFramework/SAGameEntity.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 
 
 namespace SA

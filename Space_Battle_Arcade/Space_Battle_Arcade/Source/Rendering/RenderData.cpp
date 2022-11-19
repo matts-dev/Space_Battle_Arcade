@@ -1,6 +1,6 @@
 #include "RenderData.h"
 
-#include "../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 
 namespace SA
 {

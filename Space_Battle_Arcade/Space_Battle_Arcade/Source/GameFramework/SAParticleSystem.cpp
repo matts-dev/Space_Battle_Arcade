@@ -10,9 +10,9 @@
 #include "SAPlayerBase.h"
 #include "SAWindowSystem.h"
 #include "../Tools/Geometry/SimpleShapes.h"
-#include "../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 #include "../Rendering/Camera/SACameraBase.h"
-#include "../Rendering/OpenGLHelpers.h"
+#include "Rendering/OpenGLHelpers.h"
 #include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
 #include "SARenderSystem.h"
 

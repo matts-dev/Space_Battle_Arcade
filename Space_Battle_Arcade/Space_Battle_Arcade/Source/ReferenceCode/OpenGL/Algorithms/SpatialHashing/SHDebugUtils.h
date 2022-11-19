@@ -3,7 +3,7 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
-#include "../../../Shader.h"
+#include "ReferenceCode/OpenGL/Shader.h"
 #include "SpatialHashingComponent.h"
 
 namespace SH

@@ -1,8 +1,8 @@
 #include "SAQuaternionCamera.h"
-#include "../../Tools/SAUtilities.h"
-#include "../../GameFramework/SALog.h"
-#include "../../GameFramework/SAWindowSystem.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "Tools/SAUtilities.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "GameFramework/SAGameBase.h"
 
 namespace SA
 {

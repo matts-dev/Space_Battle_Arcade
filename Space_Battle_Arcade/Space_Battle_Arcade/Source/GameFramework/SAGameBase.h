@@ -2,7 +2,7 @@
 #include <set>
 
 #include "SAGameEntity.h"
-#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 #include "SATimeManagementSystem.h"
 

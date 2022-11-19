@@ -2,10 +2,10 @@
 
 #include <array>
 
-#include "../../DataStructures/SATransform.h"
-#include "../../../GameFramework/SAGameEntity.h"
-#include "../../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
-#include "../../DataStructures/AdvancedPtrs.h"
+#include "GameFramework/SAGameEntity.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
+#include "Tools/DataStructures/SATransform.h"
 
 namespace SA
 {

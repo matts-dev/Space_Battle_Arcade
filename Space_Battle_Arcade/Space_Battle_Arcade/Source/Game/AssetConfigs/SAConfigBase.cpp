@@ -5,7 +5,7 @@
 
 #include "../GameSystems/SAModSystem.h"
 #include "../SpaceArcade.h"
-#include "../../../../../Libraries/nlohmann/json.hpp"
+#include "Libraries/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 

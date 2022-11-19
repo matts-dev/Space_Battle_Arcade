@@ -1,6 +1,6 @@
 #include "SAGPUResource.h"
-#include "../GameFramework/SAGameBase.h"
-#include "../GameFramework/SAWindowSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
 
 namespace SA
 {

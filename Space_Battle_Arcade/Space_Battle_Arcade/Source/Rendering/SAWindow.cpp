@@ -9,7 +9,7 @@
 #include <gtx/quaternion.hpp>
 
 #include "OpenGLHelpers.h"
-#include "../GameFramework/SALog.h"
+#include "GameFramework/SALog.h"
 
 #define MAP_GLFWWINDOW_TO_WINDOWOBJ
 

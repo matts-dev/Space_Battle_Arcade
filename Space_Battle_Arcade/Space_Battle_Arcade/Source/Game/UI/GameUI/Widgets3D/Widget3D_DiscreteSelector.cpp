@@ -4,7 +4,7 @@
 #include "../../../../GameFramework/SATimeManagementSystem.h"
 #include "../../../../GameFramework/SALevel.h"
 #include "../../../../GameFramework/SALevelSystem.h"
-#include "../../../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../../../GameFramework/TimeManagement/TickGroupManager.h"
 #include "../../../../Tools/PlatformUtils.h"
 #include "../../../../Rendering/Camera/SACameraBase.h"

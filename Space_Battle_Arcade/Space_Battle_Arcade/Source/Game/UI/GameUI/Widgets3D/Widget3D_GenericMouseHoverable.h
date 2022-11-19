@@ -5,8 +5,8 @@
 
 #include "MainMenuScreens/Widget3D_ActivatableBase.h"
 #include "../../../GameSystems/SAUISystem_Game.h"
-#include "../../../../Tools/color_utils.h"
-#include "../../../../Tools/DataStructures/SATransform.h"
+#include "Tools/color_utils.h"
+#include "Tools/DataStructures/SATransform.h"
 
 namespace SA
 {

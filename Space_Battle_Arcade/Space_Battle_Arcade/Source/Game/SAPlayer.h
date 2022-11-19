@@ -1,6 +1,6 @@
 #pragma once
-#include "../GameFramework/SAGameEntity.h"
-#include "../GameFramework/SAPlayerBase.h"
+#include "GameFramework/SAGameEntity.h"
+#include "GameFramework/SAPlayerBase.h"
 
 namespace SA
 {

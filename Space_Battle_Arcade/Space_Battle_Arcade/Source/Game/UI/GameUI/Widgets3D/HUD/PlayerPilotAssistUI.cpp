@@ -2,7 +2,7 @@
 #include "../../../../SpaceArcade.h"
 #include "../../../../GameSystems/SAUISystem_Game.h"
 #include "../../../../../GameFramework/SAPlayerSystem.h"
-#include "../../../../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../../../../GameFramework/SAPlayerBase.h"
 #include "../../../../../GameFramework/Components/GameplayComponents.h"
 #include "../../../../../GameFramework/Interfaces/SAIControllable.h"
@@ -10,7 +10,7 @@
 #include "../../../../AI/SAShipBehaviorTreeNodes.h"
 #include "../../../../../GameFramework/SADebugRenderSystem.h"
 #include "../../../../AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
-#include "../../../../../Tools/color_utils.h"
+#include "Tools/color_utils.h"
 #include "../../../../../Rendering/OpenGLHelpers.h"
 #include "../../../../../Rendering/Camera/SACameraBase.h"
 

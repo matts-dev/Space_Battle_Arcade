@@ -6,7 +6,7 @@
 #include <utility>
 #include <unordered_map>
 
-#include "../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 
 namespace SA

@@ -1,8 +1,8 @@
 #include "SAProjectileTweakerWidget.h"
-#include "../../GameSystems/SAModSystem.h"
-#include "../../../../../../Libraries/imgui.1.69.gl/imgui.h"
-#include "../../SpaceArcade.h"
-#include "../../AssetConfigs/SAProjectileConfig.h"
+#include "Game/GameSystems/SAModSystem.h"
+#include "Libraries/imgui.1.69.gl/imgui.h"
+#include "Game/SpaceArcade.h"
+#include "Game/AssetConfigs/SAProjectileConfig.h"
 
 namespace SA
 {

@@ -1,5 +1,5 @@
 #include "GameplayComponents.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 
 namespace SA
 {

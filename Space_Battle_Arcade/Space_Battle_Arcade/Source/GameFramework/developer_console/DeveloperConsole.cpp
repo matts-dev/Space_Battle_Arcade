@@ -1,4 +1,4 @@
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "Libraries/imgui.1.69.gl/imgui.h"
 
 #include<cstdio>
 
@@ -10,8 +10,8 @@
 #include "../SAPlayerSystem.h"
 #include "../SAPlayerBase.h"
 #include "../SAGameEntity.h"
-#include "../../Rendering/SAWindow.h"
-#include "../../Game/SpaceArcade.h"
+#include "Rendering/SAWindow.h"
+#include "Game/SpaceArcade.h"
 #include "../../Game/GameSystems/SAUISystem_Editor.h"
 #include "../../Rendering/Camera/SACameraBase.h"
 

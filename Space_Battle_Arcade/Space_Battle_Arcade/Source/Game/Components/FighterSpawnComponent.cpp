@@ -5,14 +5,14 @@
 #include "../SAShip.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../GameFramework/SALevel.h"
-#include "../../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
-#include "../../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 #include "../AssetConfigs/SASettingsProfileConfig.h"
 #include "../SAPlayer.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/SAPlayerSystem.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 
 namespace SA
 {

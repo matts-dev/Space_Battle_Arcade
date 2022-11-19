@@ -1,6 +1,6 @@
 #include<iostream>
 
-#include "../../../Libraries/nlohmann/json.hpp"
+#include "Libraries/nlohmann/json.hpp"
 #include <string>
 #include <fstream>
 #include <filesystem>

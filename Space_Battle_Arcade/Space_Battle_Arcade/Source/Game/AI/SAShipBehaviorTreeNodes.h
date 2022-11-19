@@ -2,7 +2,7 @@
 #include "../../GameFramework/SABehaviorTree.h"
 #include "../../GameFramework/SATimeManagementSystem.h"
 #include "../SAShip.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/AdvancedPtrs.h"
 #include <assimp/Compiler/pstdint.h>
 #include "../../Tools/DataStructures/LifetimePointer.h"

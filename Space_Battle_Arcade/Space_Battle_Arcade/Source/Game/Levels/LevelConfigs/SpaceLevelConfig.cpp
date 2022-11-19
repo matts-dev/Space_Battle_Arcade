@@ -1,13 +1,14 @@
 #include "SpaceLevelConfig.h"
-#include "../../../GameFramework/SALog.h"
-#include "../../AssetConfigs/JsonUtils.h"
-#include "../../AssetConfigs/SAConfigBase.h"
-#include "../../AssetConfigs/SASpawnConfig.h"
-#include "../../GameSystems/SAModSystem.h"
-#include "../../SpaceArcade.h"
-#include "../../Environment/Planet.h"
-#include "../../GameModes/ServerGameMode_CarrierTakedown.h"
-#include "../../../Tools/SAUtilities.h"
+
+#include "Game/AssetConfigs/JsonUtils.h"
+#include "Game/AssetConfigs/SAConfigBase.h"
+#include "Game/AssetConfigs/SASpawnConfig.h"
+#include "Game/Environment/Planet.h"
+#include "Game/GameModes/ServerGameMode_CarrierTakedown.h"
+#include "Game/GameSystems/SAModSystem.h"
+#include "Game/SpaceArcade.h"
+#include "GameFramework/SALog.h"
+#include "Tools/SAUtilities.h"
 
 namespace SA
 {

@@ -1,10 +1,11 @@
 #include "AvoidanceSphere.h"
-#include "../../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
-#include "../../../GameFramework/SADebugRenderSystem.h"
-#include "../../../GameFramework/SAGameBase.h"
-#include "../../../GameFramework/SALevelSystem.h"
-#include "../../../GameFramework/SALevel.h"
-#include "../../SAUtilities.h"
+
+#include "GameFramework/SADebugRenderSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALevelSystem.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Tools/SAUtilities.h"
 
 namespace SA
 {

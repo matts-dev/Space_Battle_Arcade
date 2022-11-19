@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "../../GameFramework/SAGameEntity.h"
-#include "../../Tools/DataStructures/SATransform.h"
-#include "../../Tools/color_utils.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/DataStructures/SATransform.h"
+#include "Tools/color_utils.h"
 #include "../../Rendering/SAGPUResource.h"
 #include "StarJumpData.h"
 #include <optional>

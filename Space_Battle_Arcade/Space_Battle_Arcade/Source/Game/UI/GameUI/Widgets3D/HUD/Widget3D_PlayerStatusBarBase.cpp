@@ -3,7 +3,7 @@
 
 #include "../Widget3D_ProgressBar.h"
 #include "../../../../../GameFramework/SAPlayerBase.h"
-#include "../../../../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../../../../GameFramework/SAPlayerSystem.h"
 
 #include "../../text/GlitchText.h"
@@ -16,7 +16,7 @@
 #include "../../../../Levels/SASpaceLevelBase.h"
 #include "../../../../../GameFramework/SALevelSystem.h"
 #include "../../../../GameModes/ServerGameMode_SpaceBase.h"
-#include "../../../../../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 #include "../../../../GameSystems/SAModSystem.h"
 #include "../../../../SpaceArcade.h"
 namespace SA

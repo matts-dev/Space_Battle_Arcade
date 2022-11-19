@@ -7,10 +7,10 @@
 #include "../GameSystems/SAModSystem.h"
 #include "../SpaceArcade.h"
 #include "../../Tools/ModelLoading/SAModel.h"
-#include "../../GameFramework/SALog.h"
+#include "GameFramework/SALog.h"
 #include "../../GameFramework/SAAssetSystem.h"
 #include "../../GameFramework/SACollisionUtils.h"
-#include "../../../../../Libraries/nlohmann/json.hpp"
+#include "Libraries/nlohmann/json.hpp"
 #include "JsonUtils.h"
 
 

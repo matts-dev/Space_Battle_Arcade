@@ -1,8 +1,8 @@
 #pragma once
-#include "../../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include <string>
 #include <cstdint>
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../../Tools/RemoveSpecialMemberFunctionUtils.h"
 
 namespace SA

@@ -2,11 +2,11 @@
 
 #include<fstream>
 #include<sstream>
-#include "../../../../Libraries/stb_image.h"
+#include "Libraries/stb_image.h"
 #include <complex>
 #include <vector>
-#include "../Rendering/SAShader.h"
-#include "../Rendering/OpenGLHelpers.h"
+#include "Rendering/SAShader.h"
+#include "Rendering/OpenGLHelpers.h"
 
 namespace SA
 {

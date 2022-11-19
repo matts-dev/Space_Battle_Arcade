@@ -7,7 +7,7 @@
 #include "../../../../SAPlayer.h"
 #include "../../../../../GameFramework/SAPlayerBase.h"
 #include "../../../../../GameFramework/SAPlayerSystem.h"
-#include "../../../../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../../../GameSystems/SAModSystem.h"
 #include "../../../../../GameFramework/SAAudioSystem.h"
 

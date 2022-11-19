@@ -1,9 +1,9 @@
 #include "Star.h"
 #include "../../Tools/Geometry/SimpleShapes.h"
-#include "../../Rendering/SAShader.h"
+#include "Rendering/SAShader.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../GameFramework/SAPlayerSystem.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../Rendering/Camera/SACameraBase.h"
 #include <algorithm>
 

@@ -3,10 +3,10 @@
 #include<glad/glad.h> 
 #include <vector>
 
-#include "../../../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "../../../Rendering/SAGPUResource.h"
 #include "../../../GameFramework/Interfaces/SATickable.h"
-#include "../../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../../../Tools/DataStructures/MultiDelegate.h"
 #include <optional>
 #include "../../../GameFramework/CurveSystem.h"

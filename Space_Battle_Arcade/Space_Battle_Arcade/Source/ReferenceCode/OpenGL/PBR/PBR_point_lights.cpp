@@ -5,12 +5,12 @@
 #include<GLFW/glfw3.h>
 #include <string>
 #include "../nu_utils.h"
-#include "../../Shader.h"
-#include "../../Libraries/stb_image.h"
-#include "../GettingStarted/Camera/CameraFPS.h"
-#include "../Utilities/SphereMesh.h"
-#include "../../InputTracker.h"
-#include "../Utilities/SphereMeshTextured.h"
+#include "ReferenceCode/OpenGL/Shader.h"
+#include "Libraries/stb_image.h"
+#include "ReferenceCode/OpenGL/GettingStarted/Camera/CameraFPS.h"
+#include "ReferenceCode/OpenGL/Utilities/SphereMesh.h"
+#include "ReferenceCode/OpenGL/InputTracker.h"
+#include "ReferenceCode/OpenGL/Utilities/SphereMeshTextured.h"
 
 namespace
 {

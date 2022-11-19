@@ -1,6 +1,6 @@
 #include "RenderModelEntity.h"
 #include "SAWorldEntity.h"
-#include "../Rendering/SAShader.h"
+#include "Rendering/SAShader.h"
 
 namespace SA
 {

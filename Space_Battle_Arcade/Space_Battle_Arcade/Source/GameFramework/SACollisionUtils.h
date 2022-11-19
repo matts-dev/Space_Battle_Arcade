@@ -9,13 +9,13 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
-#include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
 #include "../GameFramework/SASystemBase.h"
-#include "../Tools/DataStructures/SATransform.h"
-#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
-#include "../Rendering/SAShader.h"
+#include "Tools/DataStructures/SATransform.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "Rendering/SAShader.h"
 
 namespace SAT
 {

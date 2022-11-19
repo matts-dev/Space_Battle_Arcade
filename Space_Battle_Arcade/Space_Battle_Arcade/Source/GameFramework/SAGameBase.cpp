@@ -10,7 +10,7 @@
 #include "SAParticleSystem.h"
 #include "SAAutomatedTestSystem.h"
 
-#include "../Rendering/SAWindow.h"
+#include "Rendering/SAWindow.h"
 #include "SALog.h"
 #include "SARandomNumberGenerationSystem.h"
 #include "SADebugRenderSystem.h"
@@ -18,11 +18,11 @@
 #include "CheatSystemBase.h"
 #include "CurveSystem.h"
 #include "TimeManagement/TickGroupManager.h"
-#include "../Tools/PlatformUtils.h"
+#include "Tools/PlatformUtils.h"
 #include "SAAudioSystem.h"
 #include <thread>
 #include <chrono>
-#include "../../../../Libraries/nlohmann/json.hpp"
+#include "Libraries/nlohmann/json.hpp"
 
 namespace SA
 {

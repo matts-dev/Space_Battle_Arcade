@@ -6,9 +6,9 @@
 #include "SACameraCallbackRegister.h"
 #include "../SAWindow.h"
 #include <gtc/matrix_transform.hpp>
-#include "../../GameFramework/SALog.h"
-#include "../../GameFramework/SAGameBase.h"
-#include "../../GameFramework/SAWindowSystem.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../GameFramework/SALevel.h"
 #include "../../GameFramework/TimeManagement/TickGroupManager.h"

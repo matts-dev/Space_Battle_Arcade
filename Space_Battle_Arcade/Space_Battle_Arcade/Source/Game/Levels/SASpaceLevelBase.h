@@ -3,7 +3,7 @@
 #include "../Environment/StarJumpData.h"
 
 
-#include "../Environment/Planet.h" //included for init data... probably should be refactored so we can forward declare
+#include "Game/Environment/Planet.h" //included for init data... probably should be refactored so we can forward declare
 #include "../../GameFramework/EngineCompileTimeFlagsAndMacros.h"
 
 namespace SA

@@ -1,13 +1,14 @@
 #include "SACollisionDebugRenderer.h"
-#include "SpaceArcade.h"
-#include "../GameFramework/SAWindowSystem.h"
-#include "../Rendering/SAWindow.h"
-#include "../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
-#include "../Rendering/OpenGLHelpers.h"
-#include "../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
+
+#include "GameFramework/SACollisionUtils.h"
+#include "GameFramework/SARenderSystem.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "Rendering/SAWindow.h"
 #include "SAPrimitiveShapeRenderer.h"
-#include "../GameFramework/SACollisionUtils.h"
-#include "../GameFramework/SARenderSystem.h"
+#include "SpaceArcade.h"
 
 namespace SA
 {

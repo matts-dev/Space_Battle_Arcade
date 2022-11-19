@@ -2,7 +2,7 @@
 #include "SAGameBase.h"
 #include "SALevel.h"
 #include "SALevelSystem.h"
-#include "../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 
 namespace SA
 {

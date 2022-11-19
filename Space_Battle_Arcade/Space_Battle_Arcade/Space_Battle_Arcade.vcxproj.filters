@@ -1331,7 +1331,7 @@
     <ClCompile Include="Source\GameFramework\SAWorldEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\old\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_includesprojectionslightmovement.cpp">
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_includesprojectionslightmovement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Rendering\Camera\SACameraBase.cpp">

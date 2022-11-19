@@ -1,5 +1,5 @@
 #pragma once
-#include "../../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 
 #include "../../GameFramework/EngineParticles/BuiltInParticles.h"
 

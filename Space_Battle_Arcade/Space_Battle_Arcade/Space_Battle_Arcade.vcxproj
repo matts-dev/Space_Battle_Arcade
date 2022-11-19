@@ -483,7 +483,7 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_flawed_sourcetest.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_calc_lengthschange.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_pnt_calc_viewspace_BEST.cpp" />
-    <ClCompile Include="Source\ReferenceCode\old\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_includesprojectionslightmovement.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_includesprojectionslightmovement.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_v2_viewspace.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PassthroughGeometry_Model.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PointsToHouses.cpp" />

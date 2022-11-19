@@ -12,7 +12,7 @@
 #include <set>
 #include <map>
 #include <string>
-#include "../Tools/DataStructures/SATransform.h" //glm
+#include "Tools/DataStructures/SATransform.h" //glm
 #include "AssetManagement/AssetHandle.h"
 
 namespace SA

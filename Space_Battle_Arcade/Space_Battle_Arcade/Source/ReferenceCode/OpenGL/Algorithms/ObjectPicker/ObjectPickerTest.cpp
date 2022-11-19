@@ -6,10 +6,10 @@
 #include <string>
 #include<cmath>
 
-#include "../../GettingStarted/Camera/CameraFPS.h"
-#include "../../../InputTracker.h"
-#include "../../nu_utils.h"
-#include "../../../Shader.h"
+#include "ReferenceCode/OpenGL/GettingStarted/Camera/CameraFPS.h"
+#include "ReferenceCode/OpenGL/InputTracker.h"
+#include "ReferenceCode/OpenGL/nu_utils.h"
+#include "ReferenceCode/OpenGL/Shader.h"
 #include <gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <random>
 
-#include "../../Utilities/FrameRateDisplay.h"
+#include "ReferenceCode/OpenGL/Utilities/FrameRateDisplay.h"
 #include "../SeparatingAxisTheorem/SATComponent.h"
 #include <memory>
 #include "ObjectPicker.h"

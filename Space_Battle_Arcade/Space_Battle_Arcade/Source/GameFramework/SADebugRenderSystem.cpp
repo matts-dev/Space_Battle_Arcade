@@ -3,13 +3,13 @@
 #include "SAPlayerBase.h"
 #include "SAPlayerSystem.h"
 #include "../Rendering/Camera/SACameraBase.h"
-#include "../Rendering/OpenGLHelpers.h"
-#include "../Rendering/SAShader.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "Rendering/SAShader.h"
 #include "SALevel.h"
 #include "SALevelSystem.h"
 #include <detail/func_common.hpp>
 #include "../Tools/Geometry/SimpleShapes.h" //#TODO remove this once the sphereutils is mvoed to another file and include that.
-#include "../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 #include "SARenderSystem.h"
 
 namespace SA

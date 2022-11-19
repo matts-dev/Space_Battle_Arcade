@@ -6,9 +6,9 @@
 #include "../Levels/SASpaceLevelBase.h"
 #include "../SpaceArcade.h"
 #include "../../Tools/PlatformUtils.h"
-#include "../../GameFramework/SALog.h"
+#include "GameFramework/SALog.h"
 #include "../SAShip.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../Components/FighterSpawnComponent.h"
 #include "../../Tools/DataStructures/MultiDelegate.h"
 #include "../../GameFramework/SAPlayerBase.h"
@@ -20,7 +20,7 @@
 #include <memory>
 #include "../AssetConfigs/SASettingsProfileConfig.h"
 #include "../SAPlayer.h"
-#include "../../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 
 namespace SA
 {

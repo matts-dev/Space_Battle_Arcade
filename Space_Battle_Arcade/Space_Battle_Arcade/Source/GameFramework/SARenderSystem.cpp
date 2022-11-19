@@ -3,10 +3,10 @@
 #include "../Rendering/RenderData.h"
 #include "../Rendering/SAGPUResource.h"
 #include <algorithm>
-#include "../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 #include "../Rendering/DeferredRendering/DeferredRendererStateMachine.h"
-#include "../Rendering/SAShader.h"
-#include "../Rendering/Lights/PointLight_Deferred.h"
+#include "Rendering/SAShader.h"
+#include "Rendering/Lights/PointLight_Deferred.h"
 #include "../Rendering/ForwardRendering/ForwardRenderingStateMachine.h"
 
 namespace SA

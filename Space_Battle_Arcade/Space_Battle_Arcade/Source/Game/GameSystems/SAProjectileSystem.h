@@ -6,8 +6,8 @@
 
 #include "../../GameFramework/SASystemBase.h"
 #include "../../Tools/ModelLoading/SAModel.h"
-#include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../../Tools/DataStructures/ObjectPools.h"
 #include "../AssetConfigs/SoundEffectSubConfig.h"
 #include <optional>

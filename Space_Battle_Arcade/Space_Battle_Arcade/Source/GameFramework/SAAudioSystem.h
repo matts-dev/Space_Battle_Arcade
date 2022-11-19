@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "SASystemBase.h"
-#include "../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include <unordered_map>
 #include <optional>
 #include "../Tools/Algorithms/AmortizeLoopTool.h"

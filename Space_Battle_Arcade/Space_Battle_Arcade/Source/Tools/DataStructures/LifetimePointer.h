@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "MultiDelegate.h"
-#include "../../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "../../GameFramework/Interfaces/SATickable.h"
 #include "../RemoveSpecialMemberFunctionUtils.h"
 

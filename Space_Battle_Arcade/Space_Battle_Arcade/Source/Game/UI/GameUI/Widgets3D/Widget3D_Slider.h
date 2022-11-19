@@ -4,7 +4,7 @@
 
 #include "MainMenuScreens/Widget3D_ActivatableBase.h"
 #include "../../../GameSystems/SAUISystem_Game.h"
-#include "../../../../Tools/color_utils.h"
+#include "Tools/color_utils.h"
 #include "../text/DigitalClockFont.h" //for enum class EVerticalPivot  because it is not possible to forward declare it since it is class internal member.
 
 namespace SA

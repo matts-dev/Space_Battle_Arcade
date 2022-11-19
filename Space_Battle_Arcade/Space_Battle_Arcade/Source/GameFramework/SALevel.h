@@ -12,7 +12,7 @@
 #include "RenderModelEntity.h"
 #include "SAWorldEntity.h"
 #include "mix_ins/CustomGrid_MixIn.h"
-#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 #include "../Rendering/Lights/SADirectionLight.h"
 

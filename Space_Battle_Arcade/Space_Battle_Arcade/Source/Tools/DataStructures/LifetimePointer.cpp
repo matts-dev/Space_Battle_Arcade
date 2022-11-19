@@ -1,5 +1,5 @@
 #include "LifetimePointer.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../GameFramework/SATimeManagementSystem.h"
 
 namespace SA

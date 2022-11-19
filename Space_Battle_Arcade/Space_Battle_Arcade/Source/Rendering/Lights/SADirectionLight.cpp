@@ -3,7 +3,7 @@
 
 #include "SADirectionLight.h"
 #include "../SAShader.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 
 
 namespace SA

@@ -6,11 +6,11 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../../Tools/ModelLoading/SAModel.h"
-#include "../../GameFramework/SALog.h"
-#include "../../GameFramework/SAGameEntity.h"
-#include "../../Tools/SACollisionHelpers.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/SACollisionHelpers.h"
 
 namespace
 {

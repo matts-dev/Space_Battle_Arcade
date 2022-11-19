@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <assert.h>
 #include "TimeManagement/TickGroupManager.h"
-#include "../Tools/PlatformUtils.h"
+#include "Tools/PlatformUtils.h"
 #include "SAGameBase.h"
 
 namespace

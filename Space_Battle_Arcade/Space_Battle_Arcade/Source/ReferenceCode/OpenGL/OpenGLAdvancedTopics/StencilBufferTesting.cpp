@@ -5,9 +5,9 @@
 #include<GLFW/glfw3.h>
 #include <string>
 #include "../nu_utils.h"
-#include "../../Shader.h"
-#include "../../Libraries/stb_image.h"
-#include "../../InputTracker.h"
+#include "ReferenceCode/OpenGL/Shader.h"
+#include "Libraries/stb_image.h"
+#include "ReferenceCode/OpenGL/InputTracker.h"
 
 namespace
 {

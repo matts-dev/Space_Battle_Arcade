@@ -1,7 +1,7 @@
 #include "Texture_2D.h"
 #include "../../GameFramework/SAAssetSystem.h"
-#include "../../GameFramework/SAGameBase.h"
-#include "../../GameFramework/SALog.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALog.h"
 #include "../OpenGLHelpers.h"
 namespace SA
 {

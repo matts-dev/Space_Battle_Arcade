@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "../Game/SASpaceArcadeGlobalConstants.h"
 #include "Lights/SADirectionLight.h"
 

@@ -2,7 +2,7 @@
 
 #include "../SAGPUResource.h"
 #include <glad/glad.h>
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 
 namespace SA
 {

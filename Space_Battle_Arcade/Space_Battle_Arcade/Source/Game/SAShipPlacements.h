@@ -3,11 +3,11 @@
 
 #include "AssetConfigs/SAConfigBase.h"
 #include "GameSystems/SAProjectileSystem.h"
-#include "../Tools/DataStructures/SATransform.h"
-#include "../GameFramework/SAWorldEntity.h"
-#include "../GameFramework/RenderModelEntity.h"
-#include "../Tools/DataStructures/AdvancedPtrs.h"
-#include "../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Tools/DataStructures/SATransform.h"
+#include "GameFramework/SAWorldEntity.h"
+#include "GameFramework/RenderModelEntity.h"
+#include "Tools/DataStructures/AdvancedPtrs.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "AssetConfigs/SoundEffectSubConfig.h"
 
 namespace SA

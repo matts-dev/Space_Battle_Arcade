@@ -2,7 +2,7 @@
 #include "../SpaceArcade.h"
 #include "../../Tools/DataStructures/MultiDelegate.h"
 #include "../GameSystems/SAUISystem_Editor.h"
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "Libraries/imgui.1.69.gl/imgui.h"
 #include "../GameSystems/SAModSystem.h"
 #include <string>
 #include "LevelConfigs/SpaceLevelConfig.h"
@@ -10,10 +10,10 @@
 #include "../../GameFramework/SAPlayerSystem.h"
 #include "../../Rendering/Camera/SACameraBase.h"
 #include "../../GameFramework/Input/SAInput.h"
-#include "../../Tools/SAUtilities.h"
+#include "Tools/SAUtilities.h"
 #include "../GameEntities/AvoidMesh.h"
 #include "../Environment/Star.h"
-#include "../Environment/Planet.h"
+#include "Game/Environment/Planet.h"
 #include "../Environment/StarField.h"
 #include "../Environment/Nebula.h"
 #include "../../Rendering/Camera/Texture_2D.h"
@@ -25,8 +25,8 @@
 #include "../UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_CampaignScreen.h"
 #include "../../GameFramework/SADebugRenderSystem.h"
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
-#include "../../GameFramework/SAWindowSystem.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "GameFramework/SAGameBase.h"
 
 namespace SA
 {

@@ -4,12 +4,12 @@
 #include "../LaserUIPool.h"
 #include "../../../SpaceArcade.h"
 #include "../../../../GameFramework/SALevelSystem.h"
-#include "../../../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../../../GameFramework/SATimeManagementSystem.h"
-#include "../../../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../../../../Tools/PlatformUtils.h"
 #include "../../../../GameFramework/SADebugRenderSystem.h"
-#include "../../../../Tools/color_utils.h"
+#include "Tools/color_utils.h"
 
 #define DEBUG_GENERIC_HOVERABLE 1
 

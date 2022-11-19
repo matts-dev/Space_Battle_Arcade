@@ -1,11 +1,11 @@
 #pragma once
-#include "../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include <vector>
 #include <map>
-#include "../GameFramework/RenderModelEntity.h"
+#include "GameFramework/RenderModelEntity.h"
 #include "SAUniformResourceLocators.h"
 #include "OptionalCompilationMacros.h"
 #include "Rendering/CustomGameShaders.h"

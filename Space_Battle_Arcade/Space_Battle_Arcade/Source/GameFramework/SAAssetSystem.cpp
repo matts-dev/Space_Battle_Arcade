@@ -3,9 +3,9 @@
 #include <iostream>
 #include <stdio.h>
 
-#include "../../../../Libraries/stb_image.h"
-#include "../Tools/ModelLoading/SAModel.h"
-#include "../Rendering/OpenGLHelpers.h"
+#include "Libraries/stb_image.h"
+#include "Tools/ModelLoading/SAModel.h"
+#include "Rendering/OpenGLHelpers.h"
 #include "../Rendering/Camera/Texture_2D.h"
 #include <dr_lib/dr_wav.h>
 #include "Audio/SoundRawData.h"

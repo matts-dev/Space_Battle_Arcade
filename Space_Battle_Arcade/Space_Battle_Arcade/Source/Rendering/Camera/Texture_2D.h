@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "../SAGPUResource.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include <optional>
 
 namespace SA

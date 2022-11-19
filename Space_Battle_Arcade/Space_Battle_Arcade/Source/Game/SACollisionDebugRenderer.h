@@ -7,7 +7,7 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/quaternion.hpp>
 
-#include "../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 
 namespace SAT
 {

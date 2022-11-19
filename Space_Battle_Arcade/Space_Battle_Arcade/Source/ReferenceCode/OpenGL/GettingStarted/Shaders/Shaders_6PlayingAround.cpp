@@ -5,8 +5,8 @@
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
 #include <string>
-#include "../../nu_utils.h"
-#include "../../../Shader.h"
+#include "ReferenceCode/OpenGL/nu_utils.h"
+#include "ReferenceCode/OpenGL/Shader.h"
 
 
 namespace

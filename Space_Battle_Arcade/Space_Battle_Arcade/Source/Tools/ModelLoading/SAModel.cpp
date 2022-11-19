@@ -5,7 +5,7 @@
 #include "../SAUtilities.h"
 #include "../../Rendering/OpenGLHelpers.h"
 #include "../../GameFramework/SAAssetSystem.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 
 
 namespace SA

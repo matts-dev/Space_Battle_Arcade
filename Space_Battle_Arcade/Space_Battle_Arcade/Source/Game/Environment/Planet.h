@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../GameFramework/SAGameEntity.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "GameFramework/SAGameEntity.h"
+#include "Tools/DataStructures/SATransform.h"
 #include <string>
 #include <optional>
 #include "../../GameFramework/Interfaces/SATickable.h"

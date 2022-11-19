@@ -1,6 +1,6 @@
 #pragma once
 #include "SAGameEntity.h"
-#include "../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../Tools/DataStructures/MultiDelegate.h"
 #include "Interfaces/SATickable.h"
 #include "Components/SAComponentEntity.h"

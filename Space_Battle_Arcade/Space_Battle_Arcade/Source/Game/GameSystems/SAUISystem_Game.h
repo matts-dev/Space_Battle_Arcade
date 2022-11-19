@@ -3,12 +3,12 @@
 #include <optional>
 #include "../../GameFramework/SASystemBase.h"
 #include "../../Tools/DataStructures/MultiDelegate.h"
-#include "../../Tools/DataStructures/SATransform.h" //glm includes
-#include "../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Tools/DataStructures/SATransform.h" //glm includes
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include <array>
 
 struct GLFWwindow;
-
+ 
 namespace SA
 {
 	struct GameUIRenderData;

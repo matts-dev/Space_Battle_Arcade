@@ -7,8 +7,8 @@
 
 #include "../../../GameSystems/SAUISystem_Game.h"
 #include "../../../../GameFramework/Interfaces/SATickable.h"
-#include "../../../../Tools/color_utils.h"
-#include "../../../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Tools/color_utils.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 
 namespace SA
 {

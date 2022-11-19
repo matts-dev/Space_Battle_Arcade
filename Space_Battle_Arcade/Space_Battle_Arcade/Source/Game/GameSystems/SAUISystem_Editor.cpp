@@ -2,12 +2,12 @@
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
-#include "../../../../../Libraries/imgui.1.69.gl/imgui_impl_glfw.h"
-#include "../../../../../Libraries/imgui.1.69.gl/imgui_impl_opengl3.h"
-#include "../../GameFramework/SAGameBase.h"
-#include "../../GameFramework/SAWindowSystem.h"
-#include "../../Rendering/SAWindow.h"
+#include "Libraries/imgui.1.69.gl/imgui.h"
+#include "Libraries/imgui.1.69.gl/imgui_impl_glfw.h"
+#include "Libraries/imgui.1.69.gl/imgui_impl_opengl3.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SAWindowSystem.h"
+#include "Rendering/SAWindow.h"
 
 namespace SA
 {

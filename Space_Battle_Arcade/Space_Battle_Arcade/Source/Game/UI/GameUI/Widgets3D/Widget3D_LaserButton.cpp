@@ -5,7 +5,7 @@
 #include "../../../GameSystems/SAUISystem_Game.h"
 #include "../../../../Rendering/RenderData.h"
 #include "../../../../GameFramework/SADebugRenderSystem.h"
-#include "../../../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../../SpaceArcade.h"
 #include "../../../../Tools/PlatformUtils.h"
 #include "../../../../GameFramework/SAAudioSystem.h"

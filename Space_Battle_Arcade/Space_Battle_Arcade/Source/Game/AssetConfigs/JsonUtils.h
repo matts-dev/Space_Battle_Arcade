@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../../../../Libraries/nlohmann/json.hpp"
+#include "Libraries/nlohmann/json.hpp"
 #include "../../Tools/PlatformUtils.h"
-#include "../../GameFramework/SALog.h"
+#include "GameFramework/SALog.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TODOs/REFACTORS

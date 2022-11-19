@@ -1,17 +1,19 @@
-#include "SAUIRootWindow.h"
 #include<cstdio>
-#include "../../SpaceArcade.h"
-#include "../../GameSystems/SAUISystem_Editor.h"
-#include "../../../GameFramework/SALevelSystem.h"
-#include "../../../../../../Libraries/imgui.1.69.gl/imgui.h"
-#include "../../Levels/BasicTestSpaceLevel.h"
-#include "../../Levels/ProjectileEditor_Level.h"
-#include "../../Levels/ModelConfigurerEditor_Level.h"
-#include "../../GameSystems/SAModSystem.h"
-#include "../../../GameFramework/SACrossPlatformUtils.h"
-#include "../../Levels/StressTestLevel.h"
-#include "../../Levels/SpaceLevelEditor_Level.h"
-#include "../../Levels/MainMenuLevel.h"
+
+#include "SAUIRootWindow.h"
+
+#include "Game/GameSystems/SAModSystem.h"
+#include "Game/GameSystems/SAUISystem_Editor.h"
+#include "Game/Levels/BasicTestSpaceLevel.h"
+#include "Game/Levels/MainMenuLevel.h"
+#include "Game/Levels/ModelConfigurerEditor_Level.h"
+#include "Game/Levels/ProjectileEditor_Level.h"
+#include "Game/Levels/SpaceLevelEditor_Level.h"
+#include "Game/Levels/StressTestLevel.h"
+#include "Game/SpaceArcade.h"
+#include "GameFramework/SACrossPlatformUtils.h"
+#include "GameFramework/SALevelSystem.h"
+#include "Libraries/imgui.1.69.gl/imgui.h"
 
 namespace SA
 {

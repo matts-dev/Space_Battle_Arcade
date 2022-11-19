@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SALightBase.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 
 namespace SA
 {

@@ -1,4 +1,4 @@
-#include "..\..\Libraries\stb_image.h"
+#include "Libraries/stb_image.h"
 #include <iostream>
 
 

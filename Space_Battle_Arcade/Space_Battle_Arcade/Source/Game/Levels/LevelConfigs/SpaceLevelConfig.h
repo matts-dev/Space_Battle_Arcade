@@ -2,9 +2,9 @@
 #include <optional>
 #include <string>
 
-#include "../../AssetConfigs/SAConfigBase.h"
-#include "../../../Tools/DataStructures/SATransform.h"
-#include "../../../Tools/color_utils.h"
+#include "Game/AssetConfigs/SAConfigBase.h"
+#include "Tools/DataStructures/SATransform.h"
+#include "Tools/color_utils.h"
 
 namespace SA
 {

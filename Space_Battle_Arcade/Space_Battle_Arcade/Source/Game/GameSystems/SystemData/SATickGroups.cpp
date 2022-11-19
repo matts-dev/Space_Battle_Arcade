@@ -1,5 +1,5 @@
 #include "SATickGroups.h"
-#include "../../SpaceArcade.h"
+#include "Game/SpaceArcade.h"
 
 namespace SA
 {

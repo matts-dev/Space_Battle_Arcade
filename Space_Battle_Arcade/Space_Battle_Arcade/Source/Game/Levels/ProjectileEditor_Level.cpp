@@ -4,18 +4,18 @@
 #include "../../GameFramework/RenderModelEntity.h"
 #include "../GameSystems/SAProjectileSystem.h"
 #include "../GameSystems/SAUISystem_Editor.h"
-#include "../../../../../Libraries/imgui.1.69.gl/imgui.h"
+#include "Libraries/imgui.1.69.gl/imgui.h"
 #include "../../Rendering/BuiltInShaders.h"
 #include "../../GameFramework/SAPlayerBase.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../GameFramework/SAPlayerSystem.h"
 #include "../../GameFramework/Input/SAInput.h"
 #include "../../Rendering/Camera/SACameraBase.h"
-#include "../../../../Algorithms/SpatialHashing/SHDebugUtils.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SHDebugUtils.h"
 #include "../SAPrimitiveShapeRenderer.h"
 #include "../../GameFramework/SAAssetSystem.h"
 #include "../../Rendering/Camera/SAQuaternionCamera.h"
-#include "../../GameFramework/SAWindowSystem.h"
+#include "GameFramework/SAWindowSystem.h"
 
 namespace SA
 {

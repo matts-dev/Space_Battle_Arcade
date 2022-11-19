@@ -1,20 +1,18 @@
 #include "SACollisionUtils.h"
-#include "../Rendering/SAShader.h"
-#include "../../../Algorithms/SpatialHashing/SHDebugUtils.h"
-#include "../Rendering/OpenGLHelpers.h"
-#include "../Tools/ModelLoading/SAModel.h"
-#include "../GameFramework/SAWorldEntity.h"
-//#include "SASpawnConfig.h"
 
-#include "../GameFramework/SALog.h"
-#include "../../../Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
-#include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
-#include "../Game/SpaceArcade.h"
-#include "../Game/GameSystems/SAModSystem.h"
-#include "../Tools/SACollisionHelpers.h"
+#include "Game/GameSystems/SAModSystem.h"
+#include "Game/SACollisionDebugRenderer.h"
+#include "Game/SpaceArcade.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SAWorldEntity.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/ModelLoader/SATModel.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SHDebugUtils.h"
+#include "Rendering/OpenGLHelpers.h"
+#include "Rendering/SAShader.h"
 #include "SAAssetSystem.h"
-#include "../Game/SACollisionDebugRenderer.h"
-
+#include "Tools/ModelLoading/SAModel.h"
+#include "Tools/SACollisionHelpers.h"
 
 
 

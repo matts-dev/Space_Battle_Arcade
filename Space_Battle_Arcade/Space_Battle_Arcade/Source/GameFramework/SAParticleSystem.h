@@ -11,7 +11,7 @@
 #include <gtx/quaternion.hpp>
 
 #include "SAGameEntity.h"
-#include "../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "../Game/AssetConfigs/SAConfigBase.h"
 
 #define DISABLE_PARTICLE_SYSTEM 0

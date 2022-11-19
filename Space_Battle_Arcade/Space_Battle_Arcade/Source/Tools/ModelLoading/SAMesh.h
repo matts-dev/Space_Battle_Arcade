@@ -12,7 +12,7 @@
 #include <assimp/mesh.h>
 #include <map>
 #include <assimp/scene.h>
-#include "../../Rendering/SAShader.h"
+#include "Rendering/SAShader.h"
 
 namespace SA
 {

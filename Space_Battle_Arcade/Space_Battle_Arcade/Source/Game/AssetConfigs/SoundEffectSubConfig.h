@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-#include "../../../../../Libraries/nlohmann/json.hpp"
-#include "../../GameFramework/SAGameEntity.h"
+#include "Libraries/nlohmann/json.hpp"
+#include "GameFramework/SAGameEntity.h"
 #include <optional>
 
 namespace SA

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../GameFramework/SAGameEntity.h"
+#include "GameFramework/SAGameEntity.h"
 #include "../../Tools/RemoveSpecialMemberFunctionUtils.h"
 #include "../../Tools/DataStructures/LifetimePointer.h"
 #include "../SAShip.h" //must include this to use lifetime pointers ATOW #nextengine don't let lifetime points screw up using forward declarations

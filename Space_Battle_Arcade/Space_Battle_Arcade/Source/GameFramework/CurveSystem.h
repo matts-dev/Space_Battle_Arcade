@@ -2,7 +2,7 @@
 #pragma once
 #include <array>
 #include "SASystemBase.h"
-#include "../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 
 
 constexpr bool CLAMP_CURVE_PARAMS = true;

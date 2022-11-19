@@ -8,7 +8,7 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
-#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
 #include "SAGPUResource.h"
 #include <optional>
 

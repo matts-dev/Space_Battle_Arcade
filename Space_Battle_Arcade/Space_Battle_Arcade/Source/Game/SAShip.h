@@ -1,16 +1,16 @@
 #pragma once
 #include <optional>
-#include "GameSystems/SAProjectileSystem.h"
 #include "AssetConfigs/SASpawnConfig.h"
-#include "../GameFramework/SAWorldEntity.h"
-#include "../GameFramework/RenderModelEntity.h"
-#include "../GameFramework/SACollisionUtils.h"
-#include "../GameFramework/Components/GameplayComponents.h"
-#include "../GameFramework/Interfaces/SAIControllable.h"
-#include "../Tools/ModelLoading/SAModel.h"
-#include "../Tools/DataStructures/SATransform.h"
-#include "../Tools/RemoveSpecialMemberFunctionUtils.h"
-#include "../Tools/DataStructures/LifetimePointer.h"
+#include "GameFramework/Components/GameplayComponents.h"
+#include "GameFramework/Interfaces/SAIControllable.h"
+#include "GameFramework/RenderModelEntity.h"
+#include "GameFramework/SACollisionUtils.h"
+#include "GameFramework/SAWorldEntity.h"
+#include "GameSystems/SAProjectileSystem.h"
+#include "Tools/DataStructures/LifetimePointer.h"
+#include "Tools/DataStructures/SATransform.h"
+#include "Tools/ModelLoading/SAModel.h"
+#include "Tools/RemoveSpecialMemberFunctionUtils.h"
 
 namespace SA
 {

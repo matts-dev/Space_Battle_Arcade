@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include "../SAGameEntity.h"
-#include "../../../../Algorithms/SpatialHashing/SpatialHashingComponent.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Tools/DataStructures/SATransform.h"
 #include <optional>
 
 namespace SA

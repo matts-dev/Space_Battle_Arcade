@@ -1,6 +1,6 @@
 #pragma once
 #include "Widget3D_Base.h"
-#include "../../../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "MainMenuScreens/Widget3D_ActivatableBase.h"
 
 

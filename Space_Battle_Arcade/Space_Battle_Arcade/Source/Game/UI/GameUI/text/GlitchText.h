@@ -3,7 +3,7 @@
 #include <vector>
 #include "../../../../GameFramework/Interfaces/SATickable.h"
 #include "../../../../GameFramework/SAGameEntity.h"
-#include "../../../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "DigitalClockFont.h"
 
 namespace SA

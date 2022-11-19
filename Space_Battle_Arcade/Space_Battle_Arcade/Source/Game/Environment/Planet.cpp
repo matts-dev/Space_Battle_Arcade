@@ -4,7 +4,7 @@
 #include "../../GameFramework/SAPlayerSystem.h"
 #include "../../GameFramework/SAPlayerBase.h"
 #include "../../Rendering/Camera/SACameraBase.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../GameFramework/SARandomNumberGenerationSystem.h"
 #include "../../Rendering/Camera/Texture_2D.h"
 #include "../../GameFramework/SALevel.h"

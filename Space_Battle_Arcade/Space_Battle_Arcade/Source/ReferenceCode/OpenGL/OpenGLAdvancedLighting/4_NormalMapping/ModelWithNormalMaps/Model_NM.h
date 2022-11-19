@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 #include "..\..\..\nu_utils.h"
-#include "..\..\..\..\Shader.h"
+#include "ReferenceCode/OpenGL/Shader.h"
 
 class Model_NM
 {

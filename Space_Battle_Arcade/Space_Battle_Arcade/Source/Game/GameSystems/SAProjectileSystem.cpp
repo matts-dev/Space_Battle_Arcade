@@ -1,14 +1,14 @@
 #include "SAProjectileSystem.h"
 
-#include "../../Tools/SAUtilities.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "Tools/SAUtilities.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../GameFramework/SALevelSystem.h"
 #include "../../GameFramework/SALevel.h"
 #include "../../GameFramework/SACollisionUtils.h"
-#include "../../GameFramework/SAGameBase.h"
+#include "GameFramework/SAGameBase.h"
 #include "../../GameFramework/SATimeManagementSystem.h"
 
-#include "../../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 #include "../AssetConfigs/SAProjectileConfig.h"
 #include "../../GameFramework/Components/CollisionComponent.h"
 #include "../../GameFramework/SAWorldEntity.h"

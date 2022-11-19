@@ -4,7 +4,7 @@
 #include "../AssetConfigs/SASpawnConfig.h"
 #include "../SAShip.h"
 #include "../../GameFramework/Components/SAComponentEntity.h"
-#include "../../Tools/DataStructures/SATransform.h"
+#include "Tools/DataStructures/SATransform.h"
 #include <functional>
 
 namespace SA

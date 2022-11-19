@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "../../../Algorithms/SeparatingAxisTheorem/SATComponent.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATComponent.h"
 
 #include "DataStructures/SATransform.h"
 #include "RemoveSpecialMemberFunctionUtils.h"

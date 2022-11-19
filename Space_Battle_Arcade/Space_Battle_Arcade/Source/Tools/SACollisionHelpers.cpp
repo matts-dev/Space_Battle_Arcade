@@ -1,11 +1,11 @@
 #include "SACollisionHelpers.h"
 #include "ModelLoading/SAModel.h"
 #include "ModelLoading/SAMesh.h"
-#include "../../../Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
+#include "ReferenceCode/OpenGL/Algorithms/SeparatingAxisTheorem/SATRenderDebugUtils.h"
 #include "../Rendering/RenderData.h"
-#include "../GameFramework/SARenderSystem.h"
-#include "../GameFramework/SAGameBase.h"
-#include "../Rendering/SAShader.h"
+#include "GameFramework/SARenderSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "Rendering/SAShader.h"
 
 namespace SA
 {

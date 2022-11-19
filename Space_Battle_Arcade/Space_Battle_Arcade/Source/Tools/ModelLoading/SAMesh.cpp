@@ -3,7 +3,7 @@
 #include <iostream>
 #include <assimp/scene.h>
 #include <gtc/type_ptr.hpp>
-#include "../../Rendering/SAShader.h"
+#include "Rendering/SAShader.h"
 #include "../../Rendering/OpenGLHelpers.h"
 
 
