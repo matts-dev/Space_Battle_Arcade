@@ -1,26 +1,28 @@
 #include "SAShipBehaviorTreeNodes.h"
 #include "SAShipAIBrain.h"
-#include "Tools/DataStructures/SATransform.h"
-#include "Game/SAShip.h"
-#include "GameFramework/SAGameBase.h"
-#include "GameFramework/SARandomNumberGenerationSystem.h"
-#include "Tools/SAUtilities.h"
-#include "GameFramework/SALog.h"
-#include "GameFramework/SALevelSystem.h"
-#include "GameFramework/SALevel.h"
-#include <gtc/quaternion.hpp>
-#include "GameFramework/SADebugRenderSystem.h"
-#include "GameFramework/Components/GameplayComponents.h"
-#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Game/AI/SAShipBehaviorTreeNodes.h"
 #include "Game/Levels/SASpaceLevelBase.h"
+#include "Game/SAShip.h"
 #include "Game/Team/Commanders.h"
-#include <assert.h>
-#include "Tools/DataStructures/ChoiceChoosingHelper.h"
-#include "Tools/color_utils.h"
+#include "GameFramework/Components/GameplayComponents.h"
 #include "GameFramework/CurveSystem.h"
+#include "GameFramework/SADebugRenderSystem.h"
+#include "GameFramework/SAGameBase.h"
+#include "GameFramework/SALevel.h"
+#include "GameFramework/SALevelSystem.h"
+#include "GameFramework/SALog.h"
+#include "GameFramework/SARandomNumberGenerationSystem.h"
+#include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
+#include "Tools/DataStructures/ChoiceChoosingHelper.h"
+#include "Tools/DataStructures/SATransform.h"
 #include "Tools/PlatformUtils.h"
+#include "Tools/SAUtilities.h"
+#include "Tools/color_utils.h"
+#include <assert.h>
+#include <gtc/quaternion.hpp>
 //#include "GameFramework/SAGameBase.h"
 //#include "GameFramework/SALevelSystem.h"
+
 
 namespace SA
 {
@@ -1562,7 +1564,7 @@ namespace SA
 		// DogfightNode and helpers
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		void AiVsPlayer_MoveArgAdjustments(DogfightNodeTickData& p, Ship::MoveTowardsPointArgs& moveArgs)
+		void AiVsPlayer_MoveArgAdjustments(BehaviorTree::DogfightNodeTickData& p, Ship::MoveTowardsPointArgs& moveArgs)
 		{
 			if (uint8_t(DF_ComboStepFlags::FIGHTING_PLAYER) & p.flags)
 			{

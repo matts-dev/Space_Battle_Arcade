@@ -7,6 +7,7 @@
 namespace SA
 {
 	struct RenderData;
+	struct GamebaseIdentityKey;
 	class GameBase;
 
 	class DeferredRendererStateMachine;
@@ -27,7 +28,7 @@ namespace SA
 	public:
 		/** Subclasses of GameBase can write to a frames data, whereas everyone else can only read from the data */
 		const RenderData* getFrameRenderData_Read(uint64_t frameNumber)														{ return getFrameRenderData(frameNumber); }
-		RenderData*		  getFrameRenderData_Write(uint64_t frameNumber, const struct GamebaseIdentityKey& privateKey)		{ return getFrameRenderData(frameNumber); }
+		RenderData*		  getFrameRenderData_Write(uint64_t frameNumber, const GamebaseIdentityKey& privateKey)		{ return getFrameRenderData(frameNumber); }
 
 		void enableDeferredRenderer(bool bEnable);
 		bool usingDeferredRenderer() { return deferredRenderer != nullptr; }

@@ -13,7 +13,7 @@
 namespace SA
 {
 	class Shader;
-
+	class DebugRenderSystem;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Structured frame management.
@@ -202,7 +202,7 @@ namespace SA
 			bTimerUp = true;
 		}
 		void registerTimer();
-		virtual void render(float dtSec, class DebugRenderSystem& debugRenderSys) = 0;
+		virtual void render(float dtSec, DebugRenderSystem& debugRenderSys) = 0;
 	};
 
 	struct LineTimedRenderDatum : TimedRenderDatum

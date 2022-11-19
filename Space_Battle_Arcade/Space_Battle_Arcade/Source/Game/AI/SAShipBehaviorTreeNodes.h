@@ -19,6 +19,7 @@ namespace SA
 	class ShipAIBrain;
 	namespace BehaviorTree
 	{
+		class Task_DogfightNode;
 		struct DogfightNodeTickData;
 	}
 
@@ -627,7 +628,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 		// DogfightNode
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		void AiVsPlayer_MoveArgAdjustments(DogfightNodeTickData& p, Ship::MoveTowardsPointArgs& moveArgs);
+		void AiVsPlayer_MoveArgAdjustments(BehaviorTree::DogfightNodeTickData& p, Ship::MoveTowardsPointArgs& moveArgs);
 		float getAIVsPlayer_Viscosity(float variabilityMultiplier, DogfightNodeTickData& p);
 		float getAIVsPlayer_MoveSpeed(float variabilityMultiplier, DogfightNodeTickData& p); 
 
@@ -796,7 +797,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 				,Ship& myShip
 				,TargetDirection arrangement
 				,/*DF_ComboStepFlags*/ uint8_t flags
-				, class Task_DogfightNode& owningDFNode
+				, BehaviorTree::Task_DogfightNode& owningDFNode
 			) :
 				dt_sec(dt_sec)
 				,myTarget(myTarget)
