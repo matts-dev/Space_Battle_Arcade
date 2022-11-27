@@ -36,6 +36,13 @@ macro(LinkOpenAL TARGET ACCESS)
 
 		# Set the target's folders
 		set_target_properties(OpenAL PROPERTIES FOLDER ${PROJECT_NAME}/thirdparty)
+
+		#copy the dlls to the build folder
+		#https://stackoverflow.com/questions/10671916/how-to-copy-dll-files-into-the-same-folder-as-the-executable-using-cmake
+		add_custom_command(TARGET ${TARGET} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${openal_soft_BINARY_DIR}"
+			"${CMAKE_CURRENT_BINARY_DIR}")
 	endif()
 
 	target_include_directories(${TARGET} ${ACCESS} ${openal_soft_SOURCE_DIR}/include)

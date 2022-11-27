@@ -10,8 +10,127 @@ namespace SA
 	////////////////////////////////////////////////////////
 	// statics
 	////////////////////////////////////////////////////////
+
+	#define C10001_INTERNAL_WORKAROUND_SA
+
+	//windows has an internal compile error ONLY in release versions when using a lambda such as below.
+	//the error asks for a repo to be reported, so setting this up to be able to be compiled in both ways.
+	#ifdef C10001_INTERNAL_WORKAROUND_SA
+	std::array<int32_t, DCFont::NumPossibleValuesInChar> BuildFontMapWorkaround() {
+
+		std::array<int32_t, DCFont::NumPossibleValuesInChar> map{};
+		std::memset(map.data(), 0xFFFFFFFF, map.size() * sizeof(int)); //have unset characters show everything for easy debugging
+
+		const int32_t left = DCBars::LEFT_TOP | DCBars::LEFT_BOTTOM;
+		const int32_t leftBar = left | DCBars::MIDDLE_LEFT_PERIOD;
+		const int32_t leftBarFull = leftBar | DCBars::BOTTOM_LEFT_PERIOD | DCBars::TOP_LEFT_PERIOD;
+		const int32_t right = DCBars::RIGHT_TOP | DCBars::RIGHT_BOTTOM;
+		const int32_t rightBar = right | DCBars::MIDDLE_RIGHT_PERIOD;
+		const int32_t rightBarFull = rightBar | DCBars::BOTTOM_RIGHT_PERIOD | DCBars::TOP_RIGHT_PERIOD;
+		const int32_t top = DCBars::TOP_LEFT | DCBars::TOP_RIGHT;
+		const int32_t topBar = top | DCBars::TOP_MIDDLE_PERIOD;
+		const int32_t topBarFull = topBar | DCBars::TOP_LEFT_PERIOD | DCBars::TOP_RIGHT_PERIOD;
+		const int32_t middle = DCBars::MIDDLE_LEFT | DCBars::MIDDLE_RIGHT;
+		const int32_t middleBar = middle | DCBars::MIDDLE_MIDDLE_PERIOD;
+		const int32_t middleBarFull = middleBar | DCBars::MIDDLE_RIGHT_PERIOD | DCBars::MIDDLE_LEFT_PERIOD;
+		const int32_t bottom = DCBars::BOTTOM_LEFT | DCBars::BOTTOM_RIGHT;
+		const int32_t bottomBar = bottom | DCBars::BOTTOM_MIDDLE_PERIOD;
+		const int32_t bottomBarFull = bottomBar | DCBars::BOTTOM_LEFT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
+		const int32_t circle = left | right | top | bottom;
+		const int32_t circleBar = circle | DCBars::TOP_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::MIDDLE_LEFT_PERIOD | DCBars::MIDDLE_RIGHT_PERIOD;
+
+		const int32_t vertMiddle = DCBars::MIDDLE_TOP | DCBars::MIDDLE_BOTTOM;
+		const int32_t vertMiddleBar = vertMiddle | DCBars::MIDDLE_MIDDLE_PERIOD;
+		const int32_t vertMiddleBarFull = vertMiddleBar | DCBars::TOP_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD;
+
+		const int32_t forwardSlash = DCBars::FORWARD_SLASH_BL | DCBars::FORWARD_SLASH_TR;
+		const int32_t backSlash = DCBars::BACK_SLASH_TL | DCBars::BACK_SLASH_BR;
+
+
+		map[' '] = 0;
+		map['a'] = map['A'] = left | right | topBar | middleBarFull | DCBars::BOTTOM_LEFT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
+		map['b'] = map['B'] = (circleBar | middleBar | DCBars::BOTTOM_LEFT_PERIOD | DCBars::TOP_LEFT_PERIOD) - DCBars::MIDDLE_RIGHT_PERIOD;
+		map['c'] = map['C'] = leftBarFull | topBar | bottomBar;
+		map['d'] = map['D'] = leftBarFull | topBar | bottomBar | rightBar;
+		map['e'] = map['E'] = leftBarFull | topBar | middleBar | bottomBar | DCBars::TOP_RIGHT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
+		map['f'] = map['F'] = leftBarFull | topBar | middleBar | DCBars::TOP_RIGHT_PERIOD;
+		map['g'] = map['G'] = DCBars::MIDDLE_RIGHT | DCBars::RIGHT_BOTTOM | DCBars::BOTTOM_RIGHT_PERIOD | bottomBar | leftBar | topBar | DCBars::TOP_LEFT_PERIOD;
+		map['h'] = map['H'] = middleBar | leftBarFull | rightBarFull;
+		map['i'] = map['I'] = vertMiddleBarFull | topBar | bottomBar;
+		map['j'] = map['J'] = rightBar | DCBars::TOP_RIGHT | bottomBar | DCBars::BOTTOM_LEFT;
+		map['k'] = map['K'] = leftBarFull | DCBars::MIDDLE_LEFT | DCBars::FORWARD_SLASH_TR | DCBars::BACK_SLASH_BR | DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD | DCBars::TOP_RIGHT_PERIOD;
+		map['l'] = map['L'] = leftBarFull | bottomBar;
+		map['m'] = map['M'] = leftBarFull | rightBarFull | DCBars::BACK_SLASH_TL | DCBars::FORWARD_SLASH_TR | DCBars::MIDDLE_MIDDLE_PERIOD/*| DCBars::MIDDLE_BOTTOM*/;
+		map['n'] = map['N'] = leftBarFull | DCBars::BACK_SLASH_TL | DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BACK_SLASH_BR | rightBarFull;
+		map['o'] = map['O'] = circleBar;
+		map['p'] = map['P'] = leftBarFull | topBar | middleBar | DCBars::RIGHT_TOP;
+		map['q'] = map['Q'] = circle | DCBars::BACK_SLASH_BR | DCBars::BOTTOM_RIGHT_PERIOD;
+		map['r'] = map['R'] = leftBarFull | middleBar | topBar | DCBars::RIGHT_TOP | DCBars::BACK_SLASH_BR | DCBars::BOTTOM_RIGHT_PERIOD;
+		map['s'] = map['S'] = topBar | middleBar | bottomBar | DCBars::LEFT_TOP | DCBars::RIGHT_BOTTOM;
+		map['t'] = map['T'] = vertMiddleBarFull | topBarFull;
+		map['u'] = map['U'] = leftBar | bottomBar | rightBar;
+		map['v'] = map['V'] = DCBars::BACK_SLASH_BL | DCBars::FORWARD_SLASH_BR | DCBars::RIGHT_TOP | DCBars::LEFT_TOP | DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::MIDDLE_RIGHT_PERIOD | DCBars::MIDDLE_LEFT_PERIOD;
+		map['w'] = map['W'] = leftBarFull | rightBarFull | DCBars::BACK_SLASH_BR | DCBars::FORWARD_SLASH_BL | DCBars::MIDDLE_MIDDLE_PERIOD/*|DCBars::MIDDLE_TOP*/;
+		map['x'] = map['X'] = DCBars::BACK_SLASH_TL | DCBars::BACK_SLASH_BR | DCBars::FORWARD_SLASH_TR | DCBars::FORWARD_SLASH_BL | DCBars::MIDDLE_MIDDLE_PERIOD;
+		map['y'] = map['Y'] = DCBars::BACK_SLASH_TL | DCBars::FORWARD_SLASH_TR | DCBars::MIDDLE_BOTTOM | DCBars::MIDDLE_MIDDLE_PERIOD;
+		map['z'] = map['Z'] = topBar | DCBars::FORWARD_SLASH_TR | DCBars::FORWARD_SLASH_BL | bottomBar | DCBars::MIDDLE_MIDDLE_PERIOD;
+
+		map['!'] = DCBars::MIDDLE_TOP | DCBars::BOTTOM_MIDDLE_PERIOD;
+		map['@'] = topBarFull | bottomBarFull | leftBarFull | rightBarFull | DCBars::BACK_SLASH_BL | DCBars::BACK_SLASH_TR | DCBars::FORWARD_SLASH_BR | DCBars::FORWARD_SLASH_TL;
+		map['#'] = /*topBarFull | middleBarFull |*/ DCBars::BACK_SLASH_BL | DCBars::BACK_SLASH_BR | DCBars::BACK_SLASH_TL | DCBars::BACK_SLASH_TR
+			| DCBars::FORWARD_SLASH_BL | DCBars::FORWARD_SLASH_BR | DCBars::FORWARD_SLASH_TL | DCBars::FORWARD_SLASH_TR;
+		map['$'] = topBar | middleBar | bottomBar | DCBars::LEFT_TOP | DCBars::RIGHT_BOTTOM | vertMiddleBarFull;
+		map['%'] = forwardSlash | DCBars::FORWARD_SLASH_TL | DCBars::FORWARD_SLASH_BR | DCBars::BACK_SLASH_TL | DCBars::BACK_SLASH_BR;
+		map['^'] = DCBars::FORWARD_SLASH_TL | DCBars::BACK_SLASH_TR | DCBars::TOP_MIDDLE_PERIOD;
+		map['&'] = backSlash | topBar | DCBars::RIGHT_TOP | DCBars::MIDDLE_RIGHT | DCBars::FORWARD_SLASH_BL | DCBars::BOTTOM_LEFT | DCBars::FORWARD_SLASH_BL;
+		map['*'] = DCBars::BACK_SLASH_TL | DCBars::FORWARD_SLASH_TL;
+		map['('] = leftBar | DCBars::BOTTOM_LEFT | DCBars::TOP_LEFT;
+		map[')'] = rightBar | DCBars::BOTTOM_RIGHT | DCBars::TOP_RIGHT;
+		map['-'] = middleBar;
+		map['_'] = bottomBarFull;
+		map['+'] = middleBar | vertMiddleBar;
+		map['='] = middleBar | topBar;
+
+		map['\''] = DCBars::TOP_MIDDLE_PERIOD;
+		map['"'] = DCBars::TOP_MIDDLE_PERIOD | DCBars::TOP_RIGHT_PERIOD;
+		map[':'] = DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD;
+		map[';'] = DCBars::MIDDLE_MIDDLE_PERIOD | DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::BOTTOM_LEFT;
+		map['.'] = DCBars::BOTTOM_MIDDLE_PERIOD;
+		map['>'] = DCBars::BACK_SLASH_TL | DCBars::FORWARD_SLASH_BL | DCBars::MIDDLE_MIDDLE_PERIOD;
+		map['<'] = DCBars::BACK_SLASH_BR | DCBars::FORWARD_SLASH_TR | DCBars::MIDDLE_MIDDLE_PERIOD;
+		map[','] = DCBars::BOTTOM_MIDDLE_PERIOD | DCBars::BOTTOM_LEFT;
+		map['/'] = forwardSlash | DCBars::MIDDLE_MIDDLE_PERIOD;
+		map['\\'] = backSlash | DCBars::MIDDLE_MIDDLE_PERIOD;
+		map['?'] = topBar | DCBars::RIGHT_TOP | DCBars::MIDDLE_RIGHT | DCBars::MIDDLE_BOTTOM;
+		map['|'] = middleBarFull;
+		map['~'] = DCBars::MIDDLE_LEFT | DCBars::MIDDLE_TOP | DCBars::MIDDLE_RIGHT;
+		map['`'] = DCBars::TOP_LEFT_PERIOD;
+
+		map['['] = leftBar | DCBars::BOTTOM_LEFT | DCBars::TOP_LEFT | DCBars::TOP_LEFT_PERIOD | DCBars::BOTTOM_LEFT_PERIOD;
+		map[']'] = rightBar | DCBars::BOTTOM_RIGHT | DCBars::TOP_RIGHT | DCBars::TOP_RIGHT_PERIOD | DCBars::BOTTOM_RIGHT_PERIOD;
+		map['{'] = vertMiddleBar | DCBars::MIDDLE_LEFT | DCBars::TOP_RIGHT | DCBars::BOTTOM_RIGHT;
+		map['}'] = vertMiddleBar | DCBars::MIDDLE_RIGHT | DCBars::TOP_LEFT | DCBars::BOTTOM_LEFT;
+
+		map['1'] = right;
+		map['2'] = topBar | middleBar | bottomBar | DCBars::LEFT_BOTTOM | DCBars::RIGHT_TOP;
+		map['3'] = right | bottomBar | middleBar | topBar;
+		map['4'] = DCBars::LEFT_TOP | middleBar | right | DCBars::TOP_LEFT_PERIOD | DCBars::TOP_RIGHT_PERIOD;
+		map['5'] = topBar | middleBar | bottomBar | DCBars::LEFT_TOP | DCBars::RIGHT_BOTTOM;
+		map['6'] = bottomBar | middleBar | topBar | DCBars::RIGHT_BOTTOM | leftBar;
+		map['7'] = right | topBar;
+		map['8'] = topBar | middleBar | bottomBar | left | right;
+		map['9'] = right | topBar | middleBar | DCBars::LEFT_TOP;
+		map['0'] = circle;
+		return map;
+	}
+	#endif
+
 	const std::array<int32_t, DCFont::NumPossibleValuesInChar>& DigitalClockGlyph::getCharToBitvectorMap()
 	{
+	#ifdef C10001_INTERNAL_WORKAROUND_SA
+		static std::array<int32_t, DCFont::NumPossibleValuesInChar> map = BuildFontMapWorkaround();
+		return map;
+	#else
 		static std::array<int32_t, DCFont::NumPossibleValuesInChar> map;
 		static int oneTimeInit = [&]()
 		{
@@ -121,6 +240,7 @@ namespace SA
 			return 0;
 		}();
 		return map;
+	#endif
 	}
 
 	//not best solution to make these static, but works for now. Perhaps better is to have these stored in some render system for memory clean up and unit testing efficency

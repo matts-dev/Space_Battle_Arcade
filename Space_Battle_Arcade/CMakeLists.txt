@@ -109,7 +109,6 @@ LinkAssimp(${EXECUTABLE_NAME} PUBLIC)
 
 add_compile_definitions(GLFW_INCLUDE_NONE) #stop GLFW and GLAD conflicts on linux; include order does not fix it on linux. Must be defined before include glfw; must not be defined when compiling glfw.
 
-
 # change html build output so that it is runnable via server
 if(HTML_BUILD) 
     message(STATUS "Building HTML")
