@@ -2,7 +2,7 @@
 #include <iostream>
 #include <assimp/scene.h>
 #include "Model_NM_Anim.h"
-#include <gtc/type_ptr.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 void LoadedMesh_NM_Anim::setupMesh()

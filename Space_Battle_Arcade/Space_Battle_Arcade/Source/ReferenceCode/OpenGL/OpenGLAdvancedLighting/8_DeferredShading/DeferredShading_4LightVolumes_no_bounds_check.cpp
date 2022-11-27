@@ -17,7 +17,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "ReferenceCode/OpenGL/ImportingModels/Models/Model.h"
-#include <gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "ReferenceCode/OpenGL/Utilities/SphereMesh.h"
 #include <complex>
 

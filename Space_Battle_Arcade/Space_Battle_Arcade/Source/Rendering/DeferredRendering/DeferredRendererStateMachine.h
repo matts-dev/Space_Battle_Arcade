@@ -1,7 +1,7 @@
 #pragma once
 #include "Rendering/SAGPUResource.h"
 #include <glad/glad.h>
-#include <fwd.hpp>
+#include <glm/fwd.hpp>
 
 namespace SA
 {

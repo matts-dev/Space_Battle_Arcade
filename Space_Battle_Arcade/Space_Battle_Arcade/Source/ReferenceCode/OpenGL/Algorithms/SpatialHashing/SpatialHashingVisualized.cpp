@@ -10,7 +10,7 @@
 #include "ReferenceCode/OpenGL/InputTracker.h"
 #include "ReferenceCode/OpenGL/nu_utils.h"
 #include "ReferenceCode/OpenGL/Shader.h"
-#include <gtx/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"

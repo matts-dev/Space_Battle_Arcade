@@ -61,7 +61,7 @@ namespace SA
 		selector_team->setIndex(saveTeamIndex); 
 		selector_team->setToString([](size_t value) {
 			const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
-			return std::string("Selected Team: ") + (activeMod->teamHasName(value) ? activeMod->getTeamName(value) : std::to_string(value));
+			return std::string("Selected Team: ") + (activeMod && activeMod->teamHasName(value) ? activeMod->getTeamName(value) : std::to_string(value));
 		});
 
 		////////////////////////////////////////////////////////

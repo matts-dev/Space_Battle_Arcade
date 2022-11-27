@@ -19,7 +19,7 @@
 #include "Tools/SAUtilities.h"
 #include "Tools/color_utils.h"
 #include <assert.h>
-#include <gtc/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 //#include "GameFramework/SAGameBase.h"
 //#include "GameFramework/SALevelSystem.h"
 

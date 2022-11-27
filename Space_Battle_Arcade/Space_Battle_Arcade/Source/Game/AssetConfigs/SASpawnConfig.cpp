@@ -1,4 +1,4 @@
-#include <detail/type_mat.hpp>
+#include <glm/detail/type_mat.hpp>
 #include <sstream>
 #include <fstream>
 

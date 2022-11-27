@@ -9,7 +9,7 @@
 #include "GameFramework/SAPlayerBase.h"
 #include "GameFramework/SARenderSystem.h"
 #include "Rendering/Camera/Texture_2D.h"
-#include <detail/func_common.hpp>
+#include <glm/detail/func_common.hpp>
 #include "Tools/color_utils.h"
 #include "GameFramework/SALog.h"
 #include "GameFramework/SAAudioSystem.h"

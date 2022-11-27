@@ -2,10 +2,10 @@
 #include <string>
 #include <vector>
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-#include <gtx/quaternion.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "Game/AssetConfigs/SAConfigBase.h"
 #include "Game/SAShipPlacements.h"

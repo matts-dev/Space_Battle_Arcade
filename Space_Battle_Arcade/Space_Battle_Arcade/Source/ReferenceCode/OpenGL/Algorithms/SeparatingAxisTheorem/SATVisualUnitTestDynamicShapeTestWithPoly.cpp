@@ -12,7 +12,7 @@
 #include "ReferenceCode/OpenGL/Shader.h"
 #include "SATComponent.h"
 #include "SATUnitTestUtils.h"
-#include <gtx/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
 #include "SATRenderDebugUtils.h"

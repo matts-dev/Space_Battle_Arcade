@@ -5,10 +5,10 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-#include <gtx/quaternion.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include "Tools/DataStructures/SATransform.h"
 #include <array> 
 #include <vector> //perhaps should break things out into "array utils" etc, so we don't have to include these everywhere that wants access to utils

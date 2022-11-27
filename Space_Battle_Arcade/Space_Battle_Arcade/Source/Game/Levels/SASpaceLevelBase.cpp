@@ -14,7 +14,7 @@
 #include "Rendering/RenderData.h"
 #include "GameFramework/SARenderSystem.h"
 #include "Tools/Algorithms/SphereAvoidance/AvoidanceSphere.h"
-#include <fwd.hpp>
+#include <glm/fwd.hpp>
 #include <vector>
 #include "GameFramework/SAGameEntity.h"
 #include "GameFramework/SARandomNumberGenerationSystem.h"

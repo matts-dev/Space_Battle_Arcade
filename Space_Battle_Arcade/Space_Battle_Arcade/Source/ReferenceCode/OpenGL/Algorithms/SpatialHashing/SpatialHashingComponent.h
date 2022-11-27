@@ -8,10 +8,10 @@
 #define HASH_MAP_UNORDERED_SET 0
 #define HASH_MAP_MANUAL_HASH_ARRAY 0
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-#include <gtx/quaternion.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include <iterator>
 #include <list>

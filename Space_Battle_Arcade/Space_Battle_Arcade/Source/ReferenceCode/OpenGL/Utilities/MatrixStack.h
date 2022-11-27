@@ -1,7 +1,7 @@
 #pragma once
 
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
 #include<GLFW/glfw3.h>

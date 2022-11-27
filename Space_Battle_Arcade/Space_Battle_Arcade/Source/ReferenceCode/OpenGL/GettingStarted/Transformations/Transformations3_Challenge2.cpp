@@ -7,9 +7,9 @@
 #include "ReferenceCode/OpenGL/nu_utils.h"
 #include "ReferenceCode/OpenGL/Shader.h"
 #include "Libraries/stb_image.h"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 namespace

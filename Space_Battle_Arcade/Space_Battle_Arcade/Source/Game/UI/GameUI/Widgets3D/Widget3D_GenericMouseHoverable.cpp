@@ -1,6 +1,6 @@
 #include "Game/UI/GameUI/Widgets3D/Widget3D_GenericMouseHoverable.h"
 
-#include <gtx/common.inl>
+#include <glm/gtx/common.inl>
 
 #include "Game/SpaceArcade.h"
 #include "Game/UI/GameUI/LaserUIPool.h"

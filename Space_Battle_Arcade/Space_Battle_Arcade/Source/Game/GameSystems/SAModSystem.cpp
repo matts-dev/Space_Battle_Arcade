@@ -466,6 +466,8 @@ namespace SA
 	{
 		std::map<std::string, sp<Mod>> deletedMods = loadedMods;
 
+		//std::cout << "mod system current path:" << std::filesystem::current_path().string() << std::endl;
+
 		//create directory path
 		std::error_code exists_ec;
 		if (!std::filesystem::exists(MODS_DIRECTORY, exists_ec))

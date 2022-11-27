@@ -6,7 +6,7 @@
 #include <string>
 #include<cmath>
 #include <memory>
-#include <gtx/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
 #include <functional>

@@ -173,7 +173,11 @@ namespace SA
 	void Planet::render(float dt_sec, const glm::mat4& view, const glm::mat4& projection)
 
 	{
-		if (!albedo0Tex) { return; }
+		if (albedo0Tex == nullptr
+			|| planetModel == nullptr)
+		{ 
+			return; 
+		}
 		static GameBase& game = GameBase::get();
 
 		planetShader->use();

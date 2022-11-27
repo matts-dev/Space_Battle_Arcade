@@ -1,5 +1,5 @@
 #pragma once
-#include <detail/setup.hpp>
+#include <glm/detail/setup.hpp>
 #include "Game/UI/GameUI/Widgets3D/Widget3D_Base.h"
 #include "Game/UI/GameUI/Widgets3D/MainMenuScreens/Widget3D_ActivatableBase.h"
 #include "Tools/DataStructures/AdvancedPtrs.h"

@@ -3,7 +3,7 @@
 #include "Rendering/SAWindow.h"
 #include "Game/SpaceArcade.h"
 #include "GameFramework/SAWindowSystem.h"
-#include <gtx/compatibility.hpp>
+#include <glm/gtx/compatibility.hpp>
 #include "Tools/SAUtilities.h"
 
 namespace SA

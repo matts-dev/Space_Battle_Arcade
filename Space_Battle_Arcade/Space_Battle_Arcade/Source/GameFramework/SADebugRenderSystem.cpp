@@ -7,7 +7,7 @@
 #include "Rendering/SAShader.h"
 #include "GameFramework/SALevel.h"
 #include "GameFramework/SALevelSystem.h"
-#include <detail/func_common.hpp>
+#include <glm/detail/func_common.hpp>
 #include "Tools/Geometry/SimpleShapes.h" //#TODO remove this once the sphereutils is mvoed to another file and include that.
 #include "Tools/SAUtilities.h"
 #include "GameFramework/SARenderSystem.h"

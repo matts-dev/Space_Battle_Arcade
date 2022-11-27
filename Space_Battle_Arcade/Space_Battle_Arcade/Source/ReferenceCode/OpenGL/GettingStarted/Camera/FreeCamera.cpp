@@ -1,6 +1,6 @@
 #include "FreeCamera.h"
 #include <iostream>
-#include <gtx/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 //local to .cpp 
 namespace

@@ -5,7 +5,7 @@
 #include <string>
 #include "ReferenceCode/OpenGL/nu_utils.h"
 #include "ReferenceCode/OpenGL/InputTracker.h"
-#include <gtx/wrap.hpp>
+#include <glm/gtx/wrap.hpp>
 
 namespace
 {

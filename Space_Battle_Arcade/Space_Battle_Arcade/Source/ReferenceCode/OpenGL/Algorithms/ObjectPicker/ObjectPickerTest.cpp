@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include <cmath>
-#include <gtx/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <tuple>
 #include <array>
 #include <functional>
