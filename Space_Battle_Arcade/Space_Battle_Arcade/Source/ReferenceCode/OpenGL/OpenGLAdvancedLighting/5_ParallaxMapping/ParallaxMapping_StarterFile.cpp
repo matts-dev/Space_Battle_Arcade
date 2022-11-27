@@ -9,7 +9,7 @@
 #include "Libraries/stb_image.h"
 #include "ReferenceCode/OpenGL/GettingStarted/Camera/CameraFPS.h"
 #include "ReferenceCode/OpenGL/InputTracker.h"
-#include <assimp/Compiler/pstdint.h>
+#include <cstdint>
 
 namespace
 {
