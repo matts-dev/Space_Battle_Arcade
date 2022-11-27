@@ -5,6 +5,7 @@
 #include "Libraries/stb_image.h"
 #include <complex>
 #include <vector>
+#include <algorithm>
 #include "Rendering/SAShader.h"
 #include "Rendering/OpenGLHelpers.h"
 

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <list>
 #include <vector>
+#include <string>
 
 namespace SA
 {

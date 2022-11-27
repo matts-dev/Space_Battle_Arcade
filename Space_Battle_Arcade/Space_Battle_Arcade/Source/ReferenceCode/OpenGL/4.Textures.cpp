@@ -2,7 +2,7 @@
 
 #include"Utilities.h"
 #include"Shader.h"
-#include"libraries/stb_image.h"
+#include "Libraries/stb_image.h"
 
 
 namespace Tex {

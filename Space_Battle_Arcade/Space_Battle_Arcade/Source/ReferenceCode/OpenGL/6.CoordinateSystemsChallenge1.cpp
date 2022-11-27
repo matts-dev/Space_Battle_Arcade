@@ -3,7 +3,7 @@
 #include<iostream>
 #include"Utilities.h"
 #include"Shader.h"
-#include"libraries/stb_image.h"
+#include "Libraries/stb_image.h"
 #include"glm/glm.hpp"
 #include"glm/gtc/matrix_transform.hpp"
 #include"glm/gtc/type_ptr.hpp"

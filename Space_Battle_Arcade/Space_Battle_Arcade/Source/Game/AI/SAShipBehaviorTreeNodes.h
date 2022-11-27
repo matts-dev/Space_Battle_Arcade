@@ -1,5 +1,5 @@
 #pragma once
-#include <assimp/Compiler/pstdint.h>
+#include <cstdint>
 
 #include "GameFramework/SABehaviorTree.h"
 #include "GameFramework/SATimeManagementSystem.h"

@@ -400,11 +400,11 @@ namespace SAT
 		}
 
 		//calculate face indices so we can use the 3d SAT face axis calculations
-		size_t num2DPnts = convexPoints.size();
-		for (size_t edgeStartIdx = 0; edgeStartIdx < num2DPnts; ++edgeStartIdx)
+		uint32_t num2DPnts = convexPoints.size();
+		for (uint32_t edgeStartIdx = 0; edgeStartIdx < num2DPnts; ++edgeStartIdx)
 		{
-			size_t horizontalPointIdx = (edgeStartIdx + 1) % num2DPnts;		//wrap around for last index
-			size_t verticalPointIdx = edgeStartIdx + num2DPnts;				//this reach into top layer indices
+			uint32_t horizontalPointIdx = (edgeStartIdx + 1) % num2DPnts;		//wrap around for last index
+			uint32_t verticalPointIdx = edgeStartIdx + num2DPnts;				//this reach into top layer indices
 
 			Shape2D::FacePointIndices face;
 			face.edge1.indexA = horizontalPointIdx;
@@ -435,7 +435,7 @@ namespace SAT
 		using glm::cross; using glm::normalize; using glm::vec3; using glm::vec4; using glm::dot;
 
 		//used to reduce the number of std::vector space reserved, since symmetric objects will hopefully have redundant edges/faces
-		const size_t mirrorRedundancyHeuristic = 2;
+		const uint32_t mirrorRedundancyHeuristic = 2;
 
 		std::vector<vec3> uniqueFaceNormals;
 		uniqueFaceNormals.reserve(triangles.size());
@@ -452,9 +452,9 @@ namespace SAT
 			points.push_back(tri.pntA);
 			points.push_back(tri.pntB);
 			points.push_back(tri.pntC);
-			size_t aIdx = points.size() - 3;
-			size_t bIdx = points.size() - 2;
-			size_t cIdx = points.size() - 1;
+			uint32_t aIdx = points.size() - 3;
+			uint32_t bIdx = points.size() - 2;
+			uint32_t cIdx = points.size() - 1;
 
 			float vecsSameIfGreaterOrEqualThanThis = 1.0f - considerDotsSameIfWithin;
 

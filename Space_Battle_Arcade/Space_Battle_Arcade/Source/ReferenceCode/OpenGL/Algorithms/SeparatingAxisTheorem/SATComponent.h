@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include<cstdint>
+#include <cstdint>
 #include <limits>
 
 #include <glm/glm.hpp>
