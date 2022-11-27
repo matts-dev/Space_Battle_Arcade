@@ -349,13 +349,13 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				}
 				path = emitter->userData.sfxAssetPath;
 			}
-			logf_sa(__FUNCTION__, LogLevel::LOG, "USER LIST: emitter %p with source %d is playing %d with sound %s", emitterRaw, sourceIdx, (sourceState == AL_PLAYING), path.c_str());
+			logf_sa(__FUNCTION__, LogLevel::LOG, "USER LIST: emitter %p with source %d is playing %d with sound %s", emitterRaw, int(sourceIdx), int((sourceState == AL_PLAYING)), path.c_str());
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Stats
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		logf_sa(__FUNCTION__, LogLevel::LOG, "STATS: UserActiveList[%d] TotalEmitters[%d] TotalSources[%d], TotalPlayingSound[%d]", list_userActivatedSounds.size(), allEmitters.size(), generatedSources.size(), numSourcesPlaying);
+		logf_sa(__FUNCTION__, LogLevel::LOG, "STATS: UserActiveList[%zd] TotalEmitters[%zd] TotalSources[%zd], TotalPlayingSound[%zd]", list_userActivatedSounds.size(), allEmitters.size(), generatedSources.size(), numSourcesPlaying);
 #else
 		AUDIO_API_NEEDS_DEBUG_IMPLEMENTATION;
 #endif 
@@ -569,7 +569,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				if (Utils::isValidIndex(contextAttributes, valueIdx))
 				{
 					api_MaxMonoSources = size_t(contextAttributes[valueIdx]);
-					logf_sa(__FUNCTION__, LogLevel::LOG, "OpenAL max audio mono sources: %d", api_MaxMonoSources);
+					logf_sa(__FUNCTION__, LogLevel::LOG, "OpenAL max audio mono sources: %d", int(api_MaxMonoSources));
 				}
 				else
 				{
@@ -581,7 +581,7 @@ logf_sa(__FUNCTION__, LogLevel::LOG, msg, __VA_ARGS__);
 				if (Utils::isValidIndex(contextAttributes, valueIdx))
 				{
 					api_MaxStereoSources = size_t(contextAttributes[valueIdx]);
-					logf_sa(__FUNCTION__, LogLevel::LOG, "OpenAL max audio stereo sources: %d", api_MaxStereoSources);
+					logf_sa(__FUNCTION__, LogLevel::LOG, "OpenAL max audio stereo sources: %d", int(api_MaxStereoSources));
 				}
 				else
 				{

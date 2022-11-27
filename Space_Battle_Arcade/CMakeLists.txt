@@ -22,6 +22,7 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS
 	Space_Battle_Arcade/Source/*.cpp 
 	Space_Battle_Arcade/Source/*.h
 	Space_Battle_Arcade/SourceExternal/*.cpp# TODO - once compiling see if perhaps can remove this and pull down our own dependencies
+	Space_Battle_Arcade/SourceExternal/*.c# TODO - once compiling see if perhaps can remove this and pull down our own dependencies
 	Space_Battle_Arcade/SourceExternal/*.h# TODO - once compiling see if perhaps can remove this and pull down our own dependencies
 	)
 add_executable(${EXECUTABLE_NAME} ${sources})
@@ -77,6 +78,7 @@ if(NOT HTML_BUILD)
 	#only build this on desktop; emscripten will use the headers included with emscripten expose opengl functions
 	include(${CMAKE_DIR}/LinkGLAD.cmake) 
 	LinkGLAD(${EXECUTABLE_NAME} PUBLIC)
+	add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD) #haev imgui_impl_opengl3 pick up the corret loader.
 
 	include(${CMAKE_DIR}/LinkOpenAL.cmake) 
 	message(STATUS "________________________Link OpenAL________________________")
@@ -105,12 +107,7 @@ LinkAssimp(${EXECUTABLE_NAME} PUBLIC)
 #EngineLinkIMGUI(${EXECUTABLE_NAME} PUBLIC)
 
 
-# --------------------------------------------------------------
-# Set up applications
-# --------------------------------------------------------------
 add_compile_definitions(GLFW_INCLUDE_NONE) #stop GLFW and GLAD conflicts on linux; include order does not fix it on linux. Must be defined before include glfw; must not be defined when compiling glfw.
-
-#add_subdirectory("Applications/HelloTriangle")
 
 
 # change html build output so that it is runnable via server

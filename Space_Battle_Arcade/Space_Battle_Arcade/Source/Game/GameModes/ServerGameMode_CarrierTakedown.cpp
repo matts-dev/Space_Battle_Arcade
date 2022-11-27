@@ -219,7 +219,7 @@ namespace SA
 								carrierSpawnConfig = activeMod->getDeafultCarrierConfigForTeam(teamIdx);
 								if (!carrierSpawnConfig)
 								{
-									logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "Failed to find default carrier for mod for team %d, no carrier will spawn", teamIdx);
+									logf_sa(__FUNCTION__, LogLevel::LOG_WARNING, "Failed to find default carrier for mod for team %zd, no carrier will spawn", teamIdx);
 									continue;
 								}
 							}

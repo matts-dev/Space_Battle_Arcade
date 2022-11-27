@@ -945,6 +945,15 @@
     <ClInclude Include="Source\ReferenceCode\OpenGL\nu_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SourceExternal\Libraries\dr_lib\dr_wav.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceExternal\Libraries\dr_lib\dr_flac.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceExternal\Libraries\dr_lib\dr_mp3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SourceExternal\Libraries\imgui.1.69.gl\EXAMPLE.cpp">
@@ -966,9 +975,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SourceExternal\Libraries\imgui.1.69.gl\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SourceExternal\Libraries\dr_wav_impl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SourceExternal\Libraries\glad.c">
@@ -2220,6 +2226,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_Simple_COLOR_PassthroughGShaderTriangles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceExternal\Libraries\dr_lib\dr_wav_impl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

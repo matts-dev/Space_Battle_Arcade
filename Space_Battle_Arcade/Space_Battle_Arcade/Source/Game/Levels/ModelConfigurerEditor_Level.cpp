@@ -1005,19 +1005,19 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				}
 				else
 				{
-					snprintf(strBuffer, strBufferSize, "Team %d", teamIdx);
+					snprintf(strBuffer, strBufferSize, "Team %zd", teamIdx);
 				}
 				if (ImGui::CollapsingHeader(strBuffer))
 				{
-					snprintf(strBuffer, strBufferSize, "Team Tint %d", teamIdx);
+					snprintf(strBuffer, strBufferSize, "Team Tint %zd", teamIdx);
 					ImGui::ColorPicker3(strBuffer, &teamData.teamTint.r);
 					ImGui::Dummy(ImVec2(0, 20)); 
 
-					snprintf(strBuffer, strBufferSize, "Shield Color %d", teamIdx);
+					snprintf(strBuffer, strBufferSize, "Shield Color %zd", teamIdx);
 					ImGui::ColorPicker3(strBuffer, &teamData.shieldColor.r);
 					ImGui::Dummy(ImVec2(0, 20)); 
 
-					snprintf(strBuffer, strBufferSize, "projectile Color %d", teamIdx);
+					snprintf(strBuffer, strBufferSize, "projectile Color %zd", teamIdx);
 					ImGui::ColorPicker3(strBuffer, &teamData.projectileColor.r);
 					ImGui::Dummy(ImVec2(0, 20)); //bottom spacing
 
@@ -1358,7 +1358,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				ImGui::DragInt("engine fx idx", &targetEngineFXIdx, 1.f, 0, activeConfig->engineEffectData.size());
 				for (size_t fxIdx = 0; fxIdx < activeConfig->engineEffectData.size(); ++fxIdx)
 				{
-					snprintf(tempTextBuffer, sizeof(tempTextBuffer), "engine fx %d", fxIdx);
+					snprintf(tempTextBuffer, sizeof(tempTextBuffer), "engine fx %zd", fxIdx);
 
 					EngineEffectData& fx = activeConfig->engineEffectData[fxIdx];
 

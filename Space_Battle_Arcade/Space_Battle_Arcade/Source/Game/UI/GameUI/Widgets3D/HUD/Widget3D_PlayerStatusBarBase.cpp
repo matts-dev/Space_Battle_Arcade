@@ -188,7 +188,7 @@ namespace SA
 			else
 			{
 				char teamString[2048];
-				snprintf(teamString, sizeof(teamString), "Team %d", teamIdx + 1);
+				snprintf(teamString, sizeof(teamString), "Team %zd", teamIdx + 1);
 				textProgressBar->myText->setText(teamString);
 			}
 		}

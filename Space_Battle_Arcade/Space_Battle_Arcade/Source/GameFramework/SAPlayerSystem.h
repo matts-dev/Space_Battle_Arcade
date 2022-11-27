@@ -24,7 +24,7 @@ namespace SA
 		{
 			static_assert(std::is_base_of<SA::PlayerBase, T>::value, "Players must be of the base class PlayerBase.");
 
-			sp<T> newPlayer = new_sp<T>(players.size());
+			sp<T> newPlayer = new_sp<T>(static_cast<int32_t>(players.size()));
 			players.push_back(newPlayer);
 
 			//broadcast that player was created with explicit PlayerBase type

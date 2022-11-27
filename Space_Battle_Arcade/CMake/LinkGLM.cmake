@@ -4,7 +4,7 @@ macro(LinkGLM TARGET ACCESS)
 	FetchContent_Declare(
 		glm
 		GIT_REPOSITORY https://github.com/DependencyMaster/glm.git
-		GIT_TAG 0.9.9.8
+		GIT_TAG 0.9.8.0 #NOTE: this is an old version before api for identity matrix changed from mat() to mat(1.f)
 	)
 
 	FetchContent_GetProperties(glm)

@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SourceExternal\Libraries\dr_lib\dr_flac.h" />
+    <ClInclude Include="SourceExternal\Libraries\dr_lib\dr_mp3.h" />
+    <ClInclude Include="SourceExternal\Libraries\dr_lib\dr_wav.h" />
     <ClInclude Include="Source\ReferenceCode\OpenGL\Camera.h" />
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\detail\atomic_count.hpp" />
     <ClInclude Include="Libraries\boost\ver-1.69.0\smart_ptr\include\boost\detail\lightweight_mutex.hpp" />
@@ -331,6 +334,7 @@
     <ClInclude Include="Source\Game\UI\GameUI\Widgets3D\HUD\Widget3D_PlayerStatusBarBase.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SourceExternal\Libraries\dr_lib\dr_wav_impl.c" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\1.HelloWindow.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\2.HelloTriangle.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\2.HelloTriangleChallenge1.cpp" />
@@ -361,7 +365,6 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\8.ColorsPt1.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\9.BasicLighting1.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\Camera.cpp" />
-    <ClCompile Include="SourceExternal\Libraries\dr_wav_impl.c" />
     <ClCompile Include="SourceExternal\Libraries\imgui.1.69.gl\EXAMPLE.cpp" />
     <ClCompile Include="SourceExternal\Libraries\imgui.1.69.gl\imgui.cpp" />
     <ClCompile Include="SourceExternal\Libraries\imgui.1.69.gl\imgui_demo.cpp" />

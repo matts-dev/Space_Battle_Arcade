@@ -202,7 +202,7 @@ namespace SA
 			static int calledOneTimeAtIncrement = []()->int
 			{
 				char msg[2048];
-				snprintf(msg, sizeof(msg), "GameComponentSystem : component num:{%d} entry array min bytes: {%d bytes}", nextComponentCreationIndex, sizeof(sp<ComponentType>) * nextComponentCreationIndex);
+				snprintf(msg, sizeof(msg), "GameComponentSystem : component num:{%zd} entry array min bytes: {%zd bytes}", nextComponentCreationIndex, sizeof(sp<ComponentType>) * nextComponentCreationIndex);
 				log("Memory", LogLevel::LOG, msg);
 				return 0;
 			}();

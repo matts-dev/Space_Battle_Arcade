@@ -7,7 +7,7 @@
 #include "Tools/ModelLoading/SAModel.h"
 #include "Rendering/OpenGLHelpers.h"
 #include "Rendering/Camera/Texture_2D.h"
-#include <dr_lib/dr_wav.h>
+#include <Libraries/dr_lib/dr_wav.h>
 #include "Audio/SoundRawData.h"
 #include "Audio/OpenALUtilities.h"
 #include "SAAudioSystem.h"
