@@ -1331,9 +1331,6 @@
     <ClCompile Include="Source\GameFramework\SAWorldEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_includesprojectionslightmovement.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Rendering\Camera\SACameraBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1958,21 +1955,6 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_ExplodingObjects_NDCHackLightingUpdate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_flawed_rotatingnormals_matchestutorialcode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_flawed_sourcetest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_calc_lengthschange.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_pnt_calc_viewspace_BEST.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_v2_viewspace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PassthroughGeometry_Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1980,9 +1962,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PointsToHouses_VertexColors.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_Simple_COLOR_PassthroughGeometryShaderTriangles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_SimpleExample.cpp">
@@ -2220,6 +2199,27 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\nu_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_flawed_rotNorm_TutCode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_flawed_sourcetest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_gs_calc_lengthschange.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_gs_pnt_calc_viewspace_BEST.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_vs_pnt_calc_v2_viewspace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_vs_pnt_calc_inclProjectionsLightMov.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_Simple_COLOR_PassthroughGShaderTriangles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

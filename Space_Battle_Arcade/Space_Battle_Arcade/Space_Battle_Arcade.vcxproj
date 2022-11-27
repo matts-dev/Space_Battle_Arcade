@@ -479,12 +479,12 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\FrameBuffer\FrameBuffers_6EdgeDetectionPostProcessing.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_ExplodingObjects_NDCHackLightingUpdate.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_ExplodingObjects_LightingNoUpdate.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_flawed_rotatingnormals_matchestutorialcode.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_flawed_sourcetest.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_calc_lengthschange.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_gs_pnt_calc_viewspace_BEST.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_includesprojectionslightmovement.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVisualization_vs_pnt_calc_v2_viewspace.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_flawed_rotNorm_TutCode.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_flawed_sourcetest.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_gs_calc_lengthschange.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_gs_pnt_calc_viewspace_BEST.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_vs_pnt_calc_inclProjectionsLightMov.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_NormalVis_vs_pnt_calc_v2_viewspace.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PassthroughGeometry_Model.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PointsToHouses.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_PointsToHouses_VertexColors.cpp" />
@@ -492,7 +492,7 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_SimpleExampleViewportCorrection.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_SimplePassthroughGeometryShaderPoints.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_SimplePassthroughGeometryShaderTriangles.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_Simple_COLOR_PassthroughGeometryShaderTriangles.cpp" />
+    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\GeometryShaders\GeometryShaders_Simple_COLOR_PassthroughGShaderTriangles.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_AsteroidField_Instanced.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_AsteroidField_NoInstancing.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_BasicInstanceIDWithUniforms.cpp" />
