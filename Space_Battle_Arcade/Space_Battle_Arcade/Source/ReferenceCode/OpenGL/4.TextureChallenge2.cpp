@@ -1,7 +1,6 @@
 /// CHALLENGE 2: Experiment with the different texture wrapping methods by specifying texture coordinates in the range 0.0f to 2.0f instead of 0.0f to 1.0f. See if you can display 4 smiley faces on a single container image clamped at its edge
 
 
-#pragma once
 
 #include"Utilities.h"
 #include"Shader.h"

@@ -38,7 +38,7 @@ namespace SA
 
 
 /** Automatically provide template type for convenience. Namespaces and class (SA::GameEntity) must be specified for certain templates to compile.*/
-#define sp_this() SA::GameEntity::sp_this_impl<std::remove_reference<decltype(*this)>::type>()
+#define sp_this() SA::GameEntity::sp_this_impl<typename std::remove_reference<decltype(*this)>::type>()
 
 /** Represents a top level object*/
 namespace SA

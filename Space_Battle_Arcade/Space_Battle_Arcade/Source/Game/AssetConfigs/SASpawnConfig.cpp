@@ -72,7 +72,8 @@ namespace SA
 		}
 		else
 		{
-			log("SpawnConfig", LogLevel::LOG_WARNING, "No model available when creating collision info!" __FUNCTION__);
+			log("SpawnConfig", LogLevel::LOG_WARNING, "No model available when creating collision info!");
+			log("SpawnConfig", LogLevel::LOG_WARNING, __FUNCTION__);
 		}
 
 		return collisionInfo;

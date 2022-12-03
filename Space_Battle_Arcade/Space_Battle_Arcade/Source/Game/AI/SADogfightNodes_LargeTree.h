@@ -223,7 +223,7 @@ namespace SA
 				assert(memoryValue);
 				cachedValue = (memoryValue)? *memoryValue : nullptr; 
 			}
-			virtual void startBranchConditionCheck()
+			virtual void startBranchConditionCheck() override
 			{
 				//Memory& memory = getMemory();
 				//const sp<TargetIs>* memoryValue = memory.getReadValueAs<sp<TargetIs>>(memoryKey);

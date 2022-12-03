@@ -1,5 +1,5 @@
 
-#pragma once
+
 
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
@@ -66,19 +66,19 @@ namespace SA
 		std::string vertShaderSrc, fragShaderSrc, geoShaderSrc;
 		if (stringsAreFilePaths)
 		{
-			if (failed = !SA::Utils::readFileToString(vertexShaderFilePath, vertShaderSrc))
+			if ( (failed = !SA::Utils::readFileToString(vertexShaderFilePath, vertShaderSrc)) )
 			{
 				std::cerr << "failed to load vertex shader from file" << std::endl; STOP_DEBUGGER_HERE();
 				return;
 			}
-			if (failed = !SA::Utils::readFileToString(fragmentShaderFilePath, fragShaderSrc))
+			if ( (failed = !SA::Utils::readFileToString(fragmentShaderFilePath, fragShaderSrc)))
 			{
 				std::cerr << "failed to load fragment shader from file" << std::endl; STOP_DEBUGGER_HERE();
 				return;
 			}
 			if (hasGeometryShader)
 			{
-				if (failed = !SA::Utils::readFileToString(geoShaderSrc, geoShaderSrc))
+				if ( (failed = !SA::Utils::readFileToString(geoShaderSrc, geoShaderSrc)))
 				{
 					std::cerr << "failed to load fragment shader from file" << std::endl; STOP_DEBUGGER_HERE();
 					return;
@@ -113,12 +113,12 @@ namespace SA
 			ec(glCompileShader(geometryShader));
 		}
 
-		if (failed = !shaderCompileSuccess(vertexShader))
+		if ( (failed = !shaderCompileSuccess(vertexShader)) )
 		{
 			std::cerr << "failed to compile the vertex shader" << std::endl;
 			return;
 		}
-		if (failed = !shaderCompileSuccess(fragmentShader))
+		if ( (failed = !shaderCompileSuccess(fragmentShader)) )
 		{
 			std::cerr << "failed to compile the fragment shader" << std::endl;
 			return;
@@ -126,7 +126,7 @@ namespace SA
 
 		if (hasGeometryShader)
 		{
-			if (failed = !shaderCompileSuccess(geometryShader))
+			if ( (failed = !shaderCompileSuccess(geometryShader)) )
 			{
 				std::cerr << "failed to compile the geom shader" << std::endl;
 				return;
@@ -143,7 +143,7 @@ namespace SA
 			ec(glAttachShader(linkedProgram, geometryShader));
 		}
 		ec(glLinkProgram(linkedProgram));
-		if (failed = !programLinkSuccess(linkedProgram))
+		if ( (failed = !programLinkSuccess(linkedProgram)) )
 		{
 			std::cerr << "failed to link shader program" << std::endl;
 			return;
@@ -168,7 +168,7 @@ namespace SA
 	{
 		if (!linkedProgram)
 		{
-			bool hasGeometryShader = initData.geometryShaderSrc.has_value() && (initData.geometryShaderSrc)->c_str() != "";
+			bool hasGeometryShader = initData.geometryShaderSrc.has_value() && (initData.geometryShaderSrc)->size() > 0;
 
 			GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 			if (!vertexShader) { std::cerr << "failed create vertexShader" << std::endl; }
@@ -183,19 +183,19 @@ namespace SA
 			std::string vertShaderSrc, fragShaderSrc, geoShaderSrc;
 			if (initData.bStringsAreFilePaths)
 			{
-				if (failed = !SA::Utils::readFileToString(*initData.vertexShaderSrc, vertShaderSrc))
+				if ( (failed = !SA::Utils::readFileToString(*initData.vertexShaderSrc, vertShaderSrc)) )
 				{
 					std::cerr << "failed to load vertex shader from file" << std::endl;
 					return;
 				}
-				if (failed = !SA::Utils::readFileToString(*initData.fragmentShaderSrc, fragShaderSrc))
+				if ( (failed = !SA::Utils::readFileToString(*initData.fragmentShaderSrc, fragShaderSrc)) )
 				{
 					std::cerr << "failed to load fragment shader from file" << std::endl;
 					return;
 				}
 				if (hasGeometryShader)
 				{
-					if (failed = !SA::Utils::readFileToString(*initData.geometryShaderSrc, geoShaderSrc))
+					if ( (failed = !SA::Utils::readFileToString(*initData.geometryShaderSrc, geoShaderSrc)) )
 					{
 						std::cerr << "failed to load fragment shader from file" << std::endl;
 						return;
@@ -230,12 +230,12 @@ namespace SA
 				ec(glCompileShader(geometryShader));
 			}
 
-			if (failed = !shaderCompileSuccess(vertexShader))
+			if ( (failed = !shaderCompileSuccess(vertexShader)) )
 			{
 				std::cerr << "failed to compile the vertex shader" << std::endl;
 				return;
 			}
-			if (failed = !shaderCompileSuccess(fragmentShader))
+			if ( (failed = !shaderCompileSuccess(fragmentShader)) )
 			{
 				std::cerr << "failed to compile the fragment shader" << std::endl;
 				return;
@@ -243,7 +243,7 @@ namespace SA
 
 			if (hasGeometryShader)
 			{
-				if (failed = !shaderCompileSuccess(geometryShader))
+				if ( (failed = !shaderCompileSuccess(geometryShader)) )
 				{
 					std::cerr << "failed to compile the geom shader" << std::endl;
 					return;
@@ -260,7 +260,7 @@ namespace SA
 				ec(glAttachShader(linkedProgram, geometryShader));
 			}
 			ec(glLinkProgram(linkedProgram));
-			if (failed = !programLinkSuccess(linkedProgram))
+			if ( (failed = !programLinkSuccess(linkedProgram)) )
 			{
 				std::cerr << "failed to link shader program" << std::endl;
 				return;

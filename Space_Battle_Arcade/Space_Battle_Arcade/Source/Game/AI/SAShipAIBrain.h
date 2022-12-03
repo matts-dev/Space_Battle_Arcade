@@ -72,7 +72,7 @@ namespace SA
 	public:
 		FlyInDirectionBrain(const sp<Ship>& controlledShip) : ShipAIBrain(controlledShip) {}
 		virtual bool onAwaken() override;
-		void postConstruct();
+		virtual void postConstruct() override;
 	private:
 		float speed = 1.f;
 	};

@@ -6,6 +6,7 @@
 
 namespace SA
 {
+	class PlayerBase;
 	namespace BehaviorTree
 	{
 		class Tree;

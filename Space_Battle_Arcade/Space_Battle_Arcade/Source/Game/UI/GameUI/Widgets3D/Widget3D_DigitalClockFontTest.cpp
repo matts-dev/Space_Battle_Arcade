@@ -15,7 +15,7 @@ namespace SA
 		rawGlyph = new_sp<DigitalClockGlyph>();
 		glyphShader = getDefaultGlyphShader_uniformBased();
 
-		DigitalClockFont::Data init;
+		DigitalClockFontInitData init;
 		init.text = 
 R"(a bcdefghijklmnopqrstuvwxyz
 A BCDEFGHIJKLMNOPQRSTUVWXYZ
@@ -23,13 +23,13 @@ A BCDEFGHIJKLMNOPQRSTUVWXYZ
 !@#$%^&*()_+-=[]{};:'",<.>/?\`~
 )";
 
-		//init.pivotHorizontal = DigitalClockFont::EHorizontalPivot::LEFT;
-		init.pivotHorizontal = DigitalClockFont::EHorizontalPivot::CENTER;
-		//init.pivotHorizontal = DigitalClockFont::EHorizontalPivot::RIGHT;
+		//init.pivotHorizontal = EHorizontalPivot::LEFT;
+		init.pivotHorizontal = EHorizontalPivot::CENTER;
+		//init.pivotHorizontal = EHorizontalPivot::RIGHT;
 
-		//init.pivotVertical = DigitalClockFont::EVerticalPivot::TOP;
-		init.pivotVertical = DigitalClockFont::EVerticalPivot::CENTER;
-		//init.pivotVertical = DigitalClockFont::EVerticalPivot::BOTTOM;
+		//init.pivotVertical = EVerticalPivot::TOP;
+		init.pivotVertical = EVerticalPivot::CENTER;
+		//init.pivotVertical = EVerticalPivot::BOTTOM;
 		textRenderer = new_sp<DigitalClockFont>(init);
 
 		Transform spawnXform;

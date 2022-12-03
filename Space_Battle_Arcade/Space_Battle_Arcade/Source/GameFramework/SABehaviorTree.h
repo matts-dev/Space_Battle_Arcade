@@ -91,7 +91,7 @@ namespace SA
 			SingleChildNode(const std::string& name, const sp<NodeBase>& child) : NodeBase(name) { children.push_back(child); }
 		private:
 			virtual bool resultReady() const override { return bChildReturned; };
-			virtual bool result() const { return bChildExecutionResult; }
+			virtual bool result() const override { return bChildExecutionResult; }
 
 		protected:
 			virtual void notifyCurrentChildResult(bool childResult) override;
@@ -117,8 +117,8 @@ namespace SA
 		public:
 			Service(const std::string& name, float tickSecs, bool bLoop, const sp<NodeBase>& child);
 			virtual bool isProcessing() const override { return false; }; //one may could argue that some services need to execute before their children, so this may need to be more complex
-			virtual void resetNode();
-			virtual void evaluate();
+			virtual void resetNode() override;
+			virtual void evaluate() override;
 
 		private:
 			/*resetNode will cover stopping service;. so overriding abort notifications is not required*/
@@ -208,7 +208,7 @@ namespace SA
 			//virtual bool resultReady() { return true; };				//Subclass should implement
 			//virtual bool result() { return true; }					//Subclass should implement
 			//virtual void evaluate() {}								//Subclass should implement
-			virtual void notifyCurrentChildResult(bool childResult);
+			virtual void notifyCurrentChildResult(bool childResult) override;
 			virtual NodeBase* getNextChild() override;
 		protected:
 			inline size_t getCurrentChildIdx() const { return childIdx; } //shouldn't really be known about outside of subclasses
@@ -234,12 +234,12 @@ namespace SA
 		public:
 			Selector(const std::string& name, const std::vector<sp<NodeBase>>& children) : MultiChildNode(name, children) {}
 
-			virtual bool isProcessing() const { return false; }; //selector's children may be processing, but the selector should always be immediately complete
-			virtual void evaluate() { /* Selectors should not need to do any evaluation/processing */ }
-			virtual bool hasPendingChildren() const;
-			virtual bool resultReady() const;
+			virtual bool isProcessing() const override { return false; }; //selector's children may be processing, but the selector should always be immediately complete
+			virtual void evaluate() override { /* Selectors should not need to do any evaluation/processing */ }
+			virtual bool hasPendingChildren() const override;
+			virtual bool resultReady() const override;
 			virtual NodeBase* getNextChild() override;
-			virtual bool result() const;
+			virtual bool result() const override;
 			virtual void handleNodeAborted() override {} // reset node will cover required cleanup
 		};
 
@@ -252,12 +252,12 @@ namespace SA
 		{
 		public:
 			Sequence(const std::string& name, const std::vector<sp<NodeBase>>& children) : MultiChildNode(name, children) {}
-			virtual bool isProcessing() const { return false; }; //sequence's children may be processing, but the sequence should always be immediately complete
-			virtual void evaluate() { /* Sequences should not need to do any evaluation/processing */ }
-			virtual bool hasPendingChildren() const;
-			virtual bool resultReady() const;
+			virtual bool isProcessing() const override { return false; }; //sequence's children may be processing, but the sequence should always be immediately complete
+			virtual void evaluate() override { /* Sequences should not need to do any evaluation/processing */ }
+			virtual bool hasPendingChildren() const override;
+			virtual bool resultReady() const override;
 			virtual NodeBase* getNextChild() override;
-			virtual bool result() const;
+			virtual bool result() const override;
 			virtual void handleNodeAborted() override {} // reset node will cover required cleanup
 		};
 
@@ -309,14 +309,14 @@ namespace SA
 		public:
 			Random(const std::string& name, const std::vector<ChildChance> childChances, const std::vector<sp<NodeBase>>& children);
 
-			virtual bool isProcessing() const { return false; }; //children may be processing, but the RandomNode should always be immediately complete
-			virtual void evaluate() { /* Nothing to do here, get next child does random selection*/}
-			virtual bool hasPendingChildren() const;
+			virtual bool isProcessing() const override { return false; }; //children may be processing, but the RandomNode should always be immediately complete
+			virtual void evaluate() override { /* Nothing to do here, get next child does random selection*/}
+			virtual bool hasPendingChildren() const override;
 			virtual void resetNode() override;
 			virtual NodeBase* getNextChild() override;
-			virtual void notifyCurrentChildResult(bool childResult);
-			virtual bool resultReady() const;
-			virtual bool result() const;
+			virtual void notifyCurrentChildResult(bool childResult) override;
+			virtual bool resultReady() const override;
+			virtual bool result() const override;
 			virtual void handleNodeAborted() override {} // reset node will cover required cleanup
 		private:
 			/** A bucket of children ptr copies; a simplisitic approach to mapping probability to child
@@ -667,7 +667,7 @@ namespace SA
 			virtual bool isProcessing() const override { return false; };
 			virtual bool result() const override { return true; }
 			virtual void evaluate() override {}
-			virtual void notifyCurrentChildResult(bool childResult) {};
+			virtual void notifyCurrentChildResult(bool childResult) override {};
 		private:
 			/** The root node; tree structure does not change once defined */
 			const sp<NodeBase> root;

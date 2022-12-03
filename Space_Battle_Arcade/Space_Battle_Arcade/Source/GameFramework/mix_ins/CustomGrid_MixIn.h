@@ -1,9 +1,11 @@
 #pragma once
 #include <vector>
+#include <optional>
+
 #include "GameFramework/SAGameEntity.h"
+#include "GameFramework/SALog.h"
 #include "ReferenceCode/OpenGL/Algorithms/SpatialHashing/SpatialHashingComponent.h"
 #include "Tools/DataStructures/SATransform.h"
-#include <optional>
 
 namespace SA
 {
@@ -133,14 +135,16 @@ namespace SA
 	template<typename ContentType>
 	const SH::SpatialHashGrid<ContentType>* CustomGrid_MixIn::getTypedGrid() const
 	{
-		SH::SpatialHashGrid<ContentType>* nonConstThis = const_cast<SH::SpatialHashGrid<ContentType>*>(this);
+		//SH::SpatialHashGrid<ContentType>* nonConstThis = const_cast<SH::SpatialHashGrid<ContentType>*>(this);
+		CustomGrid_MixIn* nonConstThis = const_cast<CustomGrid_MixIn*>(this);
 		return nonConstThis->getTypedGrid<ContentType>();
 	}
 
 	template<typename ContentType>
 	bool CustomGrid_MixIn::hasTypedGrid() const
 	{
-		SH::SpatialHashGrid<GameEntity>* nonConstThis = const_cast<SH::SpatialHashGrid<ContentType>*>(this);
+		//SH::SpatialHashGrid<GameEntity>* nonConstThis = const_cast<SH::SpatialHashGrid<ContentType>*>(this);
+		CustomGrid_MixIn* nonConstThis = const_cast<CustomGrid_MixIn*>(this);
 		return nonConstThis->hasTypedGrid<ContentType>();
 	}
 

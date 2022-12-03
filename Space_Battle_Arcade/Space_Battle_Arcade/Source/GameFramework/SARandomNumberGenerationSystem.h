@@ -40,7 +40,7 @@ namespace SA
 		sp<RNG> getSeededRNG(uint32_t seed);
 
 	protected:
-		virtual void postConstruct();
+		virtual void postConstruct() override;
 	private:
 		sp<RNG> createNewRNG(sp<RNG>& seedSrcRNG);
 	private:

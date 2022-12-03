@@ -18,7 +18,7 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 		virtual void onActivationChanged(bool bActive) override;
-		void renderGameUI(GameUIRenderData& ui_rd);
+		void renderGameUI(GameUIRenderData& ui_rd) override;
 	private:
 		void configurSelectorPositions(GameUIRenderData& ui_rd);
 		void handleStartClicked();

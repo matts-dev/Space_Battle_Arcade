@@ -342,9 +342,9 @@ namespace SA
 
 			//choose a rotation axis based on planet index, very adhoc
 			init.rotationAxis = glm::vec3(
-				float((idxSeed + 1) * 30 % 41) * (idxSeed % 2 == 0)? 1.f : -1.f,
-				float((idxSeed + 1) * 30 % 41) * (idxSeed % 3 == 0)? 1.f : -1.f,
-				float((idxSeed + 1) * 30 % 41) * (idxSeed % 5 == 0)? 1.f : -1.f
+				(float((idxSeed + 1) * 30 % 41) * (idxSeed % 2 == 0)) ? 1.f : -1.f,
+				(float((idxSeed + 1) * 30 % 41) * (idxSeed % 3 == 0)) ? 1.f : -1.f,
+				(float((idxSeed + 1) * 30 % 41) * (idxSeed % 5 == 0)) ? 1.f : -1.f
 			);
 			if (glm::length2(init.rotationAxis) < 0.01f)
 			{

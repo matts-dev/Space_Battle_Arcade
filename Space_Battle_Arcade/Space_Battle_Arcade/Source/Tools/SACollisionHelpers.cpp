@@ -89,7 +89,7 @@ namespace SA
 		}
 	}
 
-	void ShapeRenderWrapper::render(const RenderOverrides& overrides) const
+	void ShapeRenderWrapper::render(const ShapeRenderOverrides& overrides) const
 	{
 		Shader* targetShader = bool(overrides.shader) ? overrides.shader : debugShader.get();
 

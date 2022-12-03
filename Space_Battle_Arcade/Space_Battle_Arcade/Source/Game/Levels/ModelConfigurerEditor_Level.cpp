@@ -252,10 +252,10 @@ namespace SA
 			const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
 
 			std::string activeModText = activeMod ? activeMod->getModName() : "None";
-			ImGui::Text("Active Mod: "); ImGui::SameLine(); ImGui::Text(activeModText.c_str());
+			ImGui::Text("Active Mod: "); ImGui::SameLine(); ImGui::Text("%s", activeModText.c_str());
 
 			std::string activeConfigText = activeConfig ? activeConfig->getName() : "None";
-			ImGui::Text("Loaded Config: "); ImGui::SameLine(); ImGui::Text(activeConfigText.c_str());
+			ImGui::Text("Loaded Config: "); ImGui::SameLine(); ImGui::Text("%s", activeConfigText.c_str());
 
 			if (activeConfig)
 			{
@@ -458,7 +458,7 @@ namespace SA
 			{
 				if (activeConfig)
 				{
-					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text(activeConfig->getName().c_str());
+					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text("%s", activeConfig->getName().c_str());
 					ImGui::Text("WARNING: this operation is irreversible!");
 					ImGui::Text("Do you really want to delete this spawn config?");
 
@@ -557,8 +557,8 @@ namespace SA
 				////////////////////////////////////////
 				if (ImGui::BeginPopupModal("FailedToLoadModelPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 				{
-					ImGui::Text("Filepath provided:"); ImGui::SameLine(); ImGui::Text(modRelativeModelPath.c_str());
-					ImGui::Text("Calculated path:"); ImGui::SameLine(); ImGui::Text(fullModelPath.c_str());
+					ImGui::Text("Filepath provided:"); ImGui::SameLine(); ImGui::Text("%s", modRelativeModelPath.c_str());
+					ImGui::Text("Calculated path:"); ImGui::SameLine(); ImGui::Text("%s", fullModelPath.c_str());
 					if (modelError == LoadModelErrorState::ERROR_LOADING_MODEL)
 					{
 						ImGui::Text("ERROR: Failed to load model3d");
@@ -766,25 +766,25 @@ namespace SA
 				const char* msg_3f3e = R"(
 The collision uses the "Separating Axis Theorem" (SAT) to determine if two objects are colliding. Without going into the specifics, SAT can test if two shapes are colliding via a set of tests. These tests involve the shape's faces and edges between faces. 3e 3f means this shape as 3 edges and 3 faces
 )";
-				ImGui::TextWrapped(msg_3f3e);
+				ImGui::TextWrapped("%s", msg_3f3e);
 				ImGui::Dummy(ImVec2(0, 20));
 
 				const char* msg_howtouse = R"(
 How is this useful? Collision is an expensive test. SAT works by generating a set axes (think a group of lines). It then casts shadows of the shapes onto the axes to see if there is any place where the shape's shadows doesn't overlap. If there exists a place where the shadow's don't overlap, then the shapes are not colliding. Where the 3e 3f is relevant is in how those axes are generated. Each face has an axis following its normal. Each edge from shape 'A' must be combined with every edge in the other shape 'B' to generate an axis (for the math junkies, the axis is the result of a cross product). Casting A's shadow onto a single axis is also a slow operation; each vertex in 'A' must be projected onto the axis. So, the less axes needing testing the better!
 )";
-				ImGui::TextWrapped(msg_howtouse);
+				ImGui::TextWrapped("%s", msg_howtouse);
 				ImGui::Dummy(ImVec2(0, 20));
 
 				const char* msg_example = R"(
 As an example, say we do a collision test between two cubes, A and B; that is testing (3e3f) with (3e3f). Since each cube has 3 faces, that's 6 total axes from the faces (3 + 3). However, we must multiply the edges together, not add. So that is 3e * 3e = 9 axes from the edges. That totals 15 axes to test (6 + 9). So, it is much better to have less edges. Testing a pyramid(8e5f) with a cube(3e3f) results in 8e*3e + 5f+3f = 24axes + 8axes = 32axes; yikes. So, prefer cubes if possible!
 )";
-				ImGui::TextWrapped(msg_example);
+				ImGui::TextWrapped("%s", msg_example);
 				ImGui::Dummy(ImVec2(0, 20));
 
 				const char* msg_whatShouldIDo = R"(
 So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as few shapes as possible. In regards to point 2: if each model has 3 collision shapes, then that is 3x3=9 tests that need to happen. Each of those tests entails what was described above. There is a general pre-test that uses 2 cubes (AABB pretest optimization) that does a quick filter at the expense of 2 cube tests. But if that test fails, then all the collision shapes will be tested. Which means you may see drops in framerate when objects get really close to colliding if you use a lot of shapes.
 )";
-				ImGui::TextWrapped(msg_whatShouldIDo);
+				ImGui::TextWrapped("%s", msg_whatShouldIDo);
 				ImGui::TreePop();
 			}
 
@@ -1296,7 +1296,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 				static int oneTimeInit = [this](const SoundEffectSubConfig& sfxConfig){ snprintf(text_temp_buffer, sizeof(text_temp_buffer), "%s", sfxConfig.assetPath.c_str()); return 0;}(sfxConfig);\
 				ImGui::Text(name_cstr " SFX:");\
 				ImGui::SameLine();\
-				ImGui::Text(sfxConfig.assetPath.c_str());\
+				ImGui::Text("%s", sfxConfig.assetPath.c_str());\
 				ImGui::InputText(name_cstr " SFX Mod Relative Path", text_temp_buffer, sizeof(text_temp_buffer));\
 				ImGui::InputFloat("maxDistance " name_cstr , &sfxConfig.maxDistance);\
 				ImGui::InputFloat("volume " name_cstr , &sfxConfig.gain);\
@@ -1383,7 +1383,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 //				static int oneTimeInit = [this](const SoundEffectSubConfig& sfxConfig){ snprintf(text_temp_buffer, sizeof(text_temp_buffer), "%s", sfxConfig.assetPath.c_str()); return 0;}(sfxConfig);\
 //				ImGui::Text(name_cstr " SFX:");\
 //				ImGui::SameLine();\
-//				ImGui::Text(sfxConfig.assetPath.c_str());\
+//				ImGui::Text("%s", sfxConfig.assetPath.c_str());\
 //				ImGui::InputText(name_cstr " SFX Mod Relative Path", text_temp_buffer, sizeof(text_temp_buffer));\
 //				ImGui::InputFloat("maxDistance " name_cstr , &sfxConfig.maxDistance);\
 //				ImGui::InputFloat("volume " name_cstr , &sfxConfig.gain);\
@@ -1739,7 +1739,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 												xform.rotQuat = getRotQuatFromDegrees(shape.rotationDegrees);
 												findSR->second->setXform(xform);
 
-												ShapeRenderWrapper::RenderOverrides overrides;
+												ShapeRenderOverrides overrides;
 												overrides.shader = collisionShapeShader.get();
 												overrides.parentXform = &rootModelMat;
 												findSR->second->render(overrides); //use collision model shader to get selection color features
@@ -1790,7 +1790,7 @@ So, what should you do? Well: 1. Uses as efficient shapes as possible. 2. Use as
 						Transform& shipXform = rootXform;
 						ShipUtilLibrary::setEngineParticleOffset(particleXform, shipXform, fx);
 
-						rootXform; //this is this the current model xform;
+						//rootXform; //this is this the current model xform;
 						debugRenderSystem.renderSphere(/*model*/ particleXform.getModelMatrix(), fx.color * fx.colorHdrIntensity);
 					}
 				}

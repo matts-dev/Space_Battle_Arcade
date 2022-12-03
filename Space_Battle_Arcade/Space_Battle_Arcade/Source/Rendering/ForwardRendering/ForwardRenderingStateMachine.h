@@ -26,8 +26,8 @@ namespace SA
 		void setUseMultiSample(bool bEnableMultiSample);
 	protected:
 		virtual void postConstruct() override;
-		virtual void onReleaseGPUResources();
-		virtual void onAcquireGPUResources();
+		virtual void onReleaseGPUResources() override;
+		virtual void onAcquireGPUResources() override;
 	protected:
 		void handlePrimaryWindowChanging(const sp<Window>& old_window, const sp<Window>& new_window);
 		void handleFramebufferResized(int width, int height);

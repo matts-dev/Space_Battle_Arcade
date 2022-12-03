@@ -112,7 +112,7 @@ namespace SA
 		ImGui::Begin("AI debugger Tool", nullptr, flags);
 		{
 			ImGui::SetWindowCollapsed(true, ImGuiCond_Once);
-			ImGui::TextWrapped("AI Debugger Tool");
+			ImGui::TextWrapped("%s", "AI Debugger Tool");
 			if (ImGui::Button("Destroy all ships"))
 			{
 				destroyAllShips();

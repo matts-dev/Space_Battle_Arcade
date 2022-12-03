@@ -33,7 +33,7 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC
 
 # copy preload assets for to relative path for executable
 #prepare copy assets to build directory
-set(ASSET_COPY_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/Space_Battle_Arcade/GameData/ CACHE BOOL "directory with the binary assets for game data" FORCE) 
+set(ASSET_COPY_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/Space_Battle_Arcade/GameData/ CACHE BOOL "directory with the binary assets for game data" FORCE)
 set(ASSET_COPY_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/GameData/ CACHE BOOL "directory to put assets in relative to binary directory." FORCE) 
 file(COPY ${ASSET_COPY_SOURCE} DESTINATION ${ASSET_COPY_DESTINATION})
 
@@ -78,7 +78,7 @@ if(NOT HTML_BUILD)
 	#only build this on desktop; emscripten will use the headers included with emscripten expose opengl functions
 	include(${CMAKE_DIR}/LinkGLAD.cmake) 
 	LinkGLAD(${EXECUTABLE_NAME} PUBLIC)
-	add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD) #haev imgui_impl_opengl3 pick up the corret loader.
+	add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD) #have imgui_impl_opengl3 pick up the corret loader.
 
 	include(${CMAKE_DIR}/LinkOpenAL.cmake) 
 	message(STATUS "________________________Link OpenAL________________________")

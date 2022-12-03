@@ -38,10 +38,10 @@ namespace SA
 		//virtual void onActivationChanged(bool bActive) { if (bActive) { onActivated() } else { onDeactivated(); } }
 	private:
 		//IMouseInteractable interface
-		virtual glm::mat4 getModelMatrix() const;
-		virtual const std::array<glm::vec4, 8>& getLocalAABB() const;
-		virtual glm::vec3 getWorldLocation() const;;
-		virtual bool isHitTestable() const { return isActive(); }
+		virtual glm::mat4 getModelMatrix() const override;
+		virtual const std::array<glm::vec4, 8>& getLocalAABB() const override;
+		virtual glm::vec3 getWorldLocation() const override;
+		virtual bool isHitTestable() const override { return isActive(); }
 		virtual void onHoveredhisTick() override;
 		virtual void onClickedThisTick() override;
 		//virtual bool supportsMouseDrag() const override { return true; }
@@ -52,7 +52,7 @@ namespace SA
 	//	void onActivated();
 	//	void onDeactivated();
 	private:
-		virtual void renderGameUI(GameUIRenderData& renderData);
+		virtual void renderGameUI(GameUIRenderData& renderData) override;
 		void updateCollisionData();
 		//void handlePreLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
 		void releaseLasers();

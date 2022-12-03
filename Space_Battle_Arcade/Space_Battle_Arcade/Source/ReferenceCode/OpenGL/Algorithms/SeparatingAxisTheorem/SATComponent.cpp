@@ -128,7 +128,7 @@ namespace SAT
 				vec3 statEdge = stationaryEdgeRef.pntA - stationaryEdgeRef.pntB;
 				//direction of cross product doesn't matter; projections will be consistent
 				vec3 axis = glm::normalize(cross(movEdge, statEdge));
-				if (!isnan(axis.x) && !isnan(axis.y) && !isnan(axis.z))
+				if (!glm::isnan(axis.x) && !glm::isnan(axis.y) && !glm::isnan(axis.z))
 				{
 					normalizedAxes.push_back(axis);
 				}

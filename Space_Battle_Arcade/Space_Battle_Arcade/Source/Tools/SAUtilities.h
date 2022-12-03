@@ -5,6 +5,12 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 
+#ifdef _WIN32
+	//anything needed for __debugbreak; ?
+#else
+	#include <signal.h> //for raise(SIGTRAP);
+#endif
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -104,12 +110,21 @@ namespace SA
 		};
 
 		size_t hashColor(glm::vec3 color_ldr);
+		
 #if _DEBUG | ERROR_CHECK_GL_RELEASE 
-#define NAN_BREAK(value)\
-if(SA::Utils::anyValueNAN(value))\
-{\
-	__debugbreak();\
-}
+	#ifdef _WIN32
+		#define NAN_BREAK(value)\
+			if(SA::Utils::anyValueNAN(value))\
+			{\
+				__debugbreak();\
+			}
+	#else
+		#define NAN_BREAK(value)\
+			if(SA::Utils::anyValueNAN(value))\
+			{\
+				raise(SIGTRAP);\
+			}
+	#endif
 #else
 #define NAN_BREAK(value) 
 #endif //_DEBUG

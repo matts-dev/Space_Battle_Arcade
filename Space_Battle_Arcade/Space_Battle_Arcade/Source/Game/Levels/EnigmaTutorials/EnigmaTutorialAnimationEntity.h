@@ -16,7 +16,7 @@ namespace SA
 	class EnigmaTutorialAnimationEntity : public GameEntity, public ITickable
 	{
 	public:
-		virtual bool tick(float dt_sec);
+		virtual bool tick(float dt_sec) override;
 		virtual void render(const struct RenderData& currentFrameRenderData);
 	protected:
 		virtual void postConstruct() override;

@@ -24,7 +24,7 @@ namespace SA
 
 		Parent::postConstruct();
 
-		DigitalClockFont::Data textInit;
+		DigitalClockFontInitData textInit;
 		textInit.text = "No text set on slider!";
 		valueText = new_sp<GlitchTextFont>(textInit);
 		titleText = new_sp<GlitchTextFont>(textInit);
@@ -41,11 +41,11 @@ namespace SA
 			handlePreLevelChange(nullptr, currentLevel);
 		}
 
-		valueText->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::LEFT); //by default use left pivot unless changed
+		valueText->setHorizontalPivot(EHorizontalPivot::LEFT); //by default use left pivot unless changed
 		valueText->resetAnim();//make sure text starts in a hidden state that is ready to play forward
 		valueText->play(false);//make sure text starts in a hidden state that is ready to play forward
 
-		titleText->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::RIGHT); //by default use left pivot unless changed
+		titleText->setHorizontalPivot(EHorizontalPivot::RIGHT); //by default use left pivot unless changed
 		titleText->resetAnim();//make sure text starts in a hidden state that is ready to play forward
 		titleText->play(false);//make sure text starts in a hidden state that is ready to play forward		
 	}
@@ -180,13 +180,13 @@ namespace SA
 	}
 
 	//commenting out because switching to system where two texts are used
-	//void Widget3D_Slider::setHorizontalPivot(DigitalClockFont::EHorizontalPivot& pivot)
+	//void Widget3D_Slider::setHorizontalPivot(EHorizontalPivot& pivot)
 	//{
 	//	valueText->setHorizontalPivot(pivot);
 	//	refresh();
 	//}
 
-	//void Widget3D_Slider::setVerticalPivot(DigitalClockFont::EVerticalPivot& pivot)
+	//void Widget3D_Slider::setVerticalPivot(EVerticalPivot& pivot)
 	//{
 	//	valueText->setVerticalPivot(pivot);
 	//	refresh();
@@ -393,8 +393,8 @@ namespace SA
 
 		auto updateText = [this, &sliderUp_n, &camRot](const sp<GlitchTextFont>& text, float scale)
 		{
-			DigitalClockFont::EHorizontalPivot horizontalPivot = text->getHorizontalPivot();
-			DigitalClockFont::EVerticalPivot vertPivot = text->getVerticalPivot();
+			EHorizontalPivot horizontalPivot = text->getHorizontalPivot();
+			EVerticalPivot vertPivot = text->getVerticalPivot();
 
 			//apply transform scale so we can calculate accurate width/height
 			Transform newTextXform = text->getXform();
@@ -402,12 +402,12 @@ namespace SA
 			text->setXform(newTextXform);
 
 			glm::vec3 textPosition{ 0.f };
-			if (horizontalPivot == DigitalClockFont::EHorizontalPivot::LEFT)
+			if (horizontalPivot == EHorizontalPivot::LEFT)
 			{
 				vec3 slideDir_n = glm::normalize(sliderStartPoint - sliderEndPoint);
 				textPosition = sliderStartPoint + (slideDir_n*textPadding.x) + slideDir_n*text->getWidth();
 			}
-			else if (horizontalPivot == DigitalClockFont::EHorizontalPivot::RIGHT)
+			else if (horizontalPivot == EHorizontalPivot::RIGHT)
 			{
 				vec3 slideDir_n = glm::normalize(sliderEndPoint - sliderStartPoint);
 				textPosition = sliderEndPoint + (slideDir_n * textPadding.x) + (slideDir_n*text->getWidth());
@@ -418,11 +418,11 @@ namespace SA
 			}
 
 
-			if (vertPivot == DigitalClockFont::EVerticalPivot::TOP)
+			if (vertPivot == EVerticalPivot::TOP)
 			{
 				textPosition += sliderUp_n * edgeSizeFactor + sliderUp_n*textPadding.y;
 			}
-			else if (vertPivot == DigitalClockFont::EVerticalPivot::BOTTOM)
+			else if (vertPivot == EVerticalPivot::BOTTOM)
 			{
 				textPosition += -(sliderUp_n * edgeSizeFactor + sliderUp_n * textPadding.y);
 			}

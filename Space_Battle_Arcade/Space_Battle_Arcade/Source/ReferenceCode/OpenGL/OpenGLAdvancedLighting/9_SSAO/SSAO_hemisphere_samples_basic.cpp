@@ -2,7 +2,7 @@
 //instead of new secions     being   delinated by ---------
 // new sections relevant to ssao are delinated by ///////////
 
-#pragma once
+
 #include<iostream>
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)

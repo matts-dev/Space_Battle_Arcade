@@ -418,7 +418,7 @@ namespace SA
 			//flags |= ImGuiWindowFlags_NoCollapse;
 			ImGui::Begin("Space Test Level!", nullptr, flags);
 			{
-				ImGui::TextWrapped("Debug Variables; if option is not visible it may not be compiled if specific debug macro is not defined. Check defined macros. ");
+				ImGui::TextWrapped("%s", "Debug Variables; if option is not visible it may not be compiled if specific debug macro is not defined. Check defined macros. ");
 				ImGui::Separator();
 #if SA_RENDER_DEBUG_INFO
 				ImGui::Checkbox("Render entity OBB pretests", &CollisionDebugRenderer::bRenderCollisionOBB_ui);

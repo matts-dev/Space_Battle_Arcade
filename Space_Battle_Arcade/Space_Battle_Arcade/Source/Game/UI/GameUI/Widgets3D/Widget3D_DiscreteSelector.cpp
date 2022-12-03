@@ -28,7 +28,7 @@ namespace SA
 		setRenderWithGameUIDispatch(true);
 
 		//set up text
-		DigitalClockFont::Data textInit;
+		DigitalClockFontInitData textInit;
 		textInit.text = getStringForItem(currentDiscreteIdx);
 		myText = new_sp<GlitchTextFont>(textInit);
 

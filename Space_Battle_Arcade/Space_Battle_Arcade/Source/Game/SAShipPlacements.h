@@ -1,5 +1,6 @@
 #pragma once
 #include <optional>
+#include <cmath>
 
 #include "Game/AssetConfigs/SAConfigBase.h"
 #include "Game/GameSystems/SAProjectileSystem.h"
@@ -67,7 +68,7 @@ namespace SA
 		virtual void onDestroyed() override; 
 	public:
 		virtual void render(Shader& shader) override;
-		virtual glm::vec3 getWorldPosition() const;
+		virtual glm::vec3 getWorldPosition() const override;
 		glm::vec3 getWorldForward_n() const;
 		glm::vec3 getLocalForward_n() const { return forward_ln; }
 		glm::vec3 getWorldUp_n() const;
@@ -141,7 +142,7 @@ namespace SA
 		struct Targeting
 		{
 			float accetableTargetDistance = 100.f;
-			float targetDistance2 = std::powf(accetableTargetDistance,2.f);
+			float targetDistance2 = static_cast<float>(std::pow(accetableTargetDistance,2.f));
 			float dropTargetDistance = accetableTargetDistance * 1.1f;
 			//float targetDropDistance2 = std::powf(dropTargetDistance, 2.f);
 		} targetingData;
@@ -210,7 +211,7 @@ namespace SA
 		void tick(float dt_sec) override;
 		virtual void postConstruct() override;
 		virtual void replacePlacementConfig(const PlacementSubConfig& newConfig, const ConfigBase& owningConfig) override;
-		virtual void onDestroyed();
+		virtual void onDestroyed() override;
 		virtual void render(Shader& shader) override;
 		virtual void onTargetSet(TargetType* rawTarget) override;
 	private:

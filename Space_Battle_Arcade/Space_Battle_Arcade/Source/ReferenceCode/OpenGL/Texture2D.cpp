@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Texture2D.h"
-#include "libraries/stb_image.h"
+#include "Libraries/stb_image.h"
 
 
 

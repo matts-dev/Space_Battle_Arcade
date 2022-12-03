@@ -47,11 +47,11 @@ namespace SA
 		//escapeMenuLeaveButton->onClickedDelegate.addWeakObj(sp_this(), &HUD::handleReturnToMainMenuClicked);
 		//escapeMenuLeaveButton->activate(false);
 
-		DigitalClockFont::Data textInit_LeaveButton;
+		DigitalClockFontInitData textInit_LeaveButton;
 		textInit_LeaveButton.text = "Leave Level: [SHIFT + ENTER]";
 		escapeButtonText_Leave = new_sp<GlitchTextFont>(textInit_LeaveButton);
 		escapeButtonText_Leave->resetAnim();
-		escapeButtonText_Leave->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::CENTER);
+		escapeButtonText_Leave->setHorizontalPivot(EHorizontalPivot::CENTER);
 		escapeButtonText_Leave->setAnimPlayForward(bEscapeMenuOpen);
 		escapeButtonText_Leave->play(true);
 		escapeButtonText_Leave->completeAnimation();
@@ -60,12 +60,12 @@ namespace SA
 		textInit_LeaveButton.text = "RESUME: [ESCAPE]";
 		escapeButtonText_Resume = new_sp<GlitchTextFont>(textInit_LeaveButton);
 		escapeButtonText_Resume->resetAnim();
-		escapeButtonText_Resume->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::CENTER);
+		escapeButtonText_Resume->setHorizontalPivot(EHorizontalPivot::CENTER);
 		escapeButtonText_Resume->setAnimPlayForward(bEscapeMenuOpen);
 		escapeButtonText_Resume->play(true);
 		escapeButtonText_Resume->completeAnimation();
 
-		DigitalClockFont::Data textInit_slowmo;
+		DigitalClockFontInitData textInit_slowmo;
 		textInit_slowmo.text = "slowmo ready";
 		slowmoText = new_sp<GlitchTextFont>(textInit_slowmo);
 		slowmoText->resetAnim();

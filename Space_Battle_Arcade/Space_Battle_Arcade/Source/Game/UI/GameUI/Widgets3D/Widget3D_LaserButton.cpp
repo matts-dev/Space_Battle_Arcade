@@ -73,7 +73,7 @@ namespace SA
 	{
 		setRenderWithGameUIDispatch(true);
 
-		DigitalClockFont::Data textInit;
+		DigitalClockFontInitData textInit;
 		textInit.text = textCache;
 		myGlitchText = new_sp<GlitchTextFont>(textInit);
 		updateLocalAABB();

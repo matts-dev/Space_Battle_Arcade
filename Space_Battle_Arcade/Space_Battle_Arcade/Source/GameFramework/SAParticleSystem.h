@@ -26,6 +26,7 @@ namespace SA
 	class ActiveParticleGroup;
 	struct MutableEffectData;
 	
+	class ParticleSystem;
 	namespace Particle
 	{
 		struct Effect;
@@ -157,9 +158,8 @@ namespace SA
 		private: //particle system managed data for efficient rendering
 			//#concerns this whole object probably needs copying disabled to prevent it from being corrupted. 
 			//#concerns even with copying disabled the user may recycle shaders and corrupt the particle system.
-			friend class ParticleSystem;
+			friend class SA::ParticleSystem; //NOTE: clang seems to have a lot of trouble understanding this friend declaration. Seems to be define order dependent, despite having a forward declaration.
 			std::optional<size_t> assignedShaderIndex;
-
 		};
 	}
 
@@ -316,7 +316,6 @@ namespace SA
 	public:
 		static sp<ParticleConfig> getSimpleExplosionEffect();
 	};
-
 
 
 

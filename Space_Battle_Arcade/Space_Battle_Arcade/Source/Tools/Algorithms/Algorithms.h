@@ -71,11 +71,11 @@ namespace SA
 
 			//check if point is within the triangle using crossproduct comparisons with normal
 			// X =crossproduct, @=dotproduct
-			//   C
-			//  /  \      p_out
-			// / p   \    
-			//A-------B
-			//
+			// |      C                  |
+			// |     /  \      p_out     |
+			// |    / p   \              |
+			// |   A-------B             |
+			// |                         |
 			//planeNormal = (B-A) X(C-A)
 			//
 			// verify the below by using right hand rule for crossproducts

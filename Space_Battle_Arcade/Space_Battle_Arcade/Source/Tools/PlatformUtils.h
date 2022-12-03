@@ -1,9 +1,15 @@
 #pragma once
 
+#ifdef _WIN32
+	//anything needed for __debugbreak; ?
+#else
+	#include <signal.h> //for raise(SIGTRAP);
+#endif
 
 #ifdef _WIN32
-#define STOP_DEBUGGER_HERE()\
-__debugbreak();//step up callstack to see problem code
+	#define STOP_DEBUGGER_HERE()\
+	__debugbreak();//step up callstack to see problem code
 #else
-//add platform specific debug reak statements as they exist, otherwise do nothing
+	#define STOP_DEBUGGER_HERE()\
+	raise(SIGTRAP); //step up callstack to see problem code
 #endif

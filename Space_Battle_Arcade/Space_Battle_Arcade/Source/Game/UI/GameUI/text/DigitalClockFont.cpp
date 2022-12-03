@@ -692,7 +692,7 @@ namespace SA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/*static*/sp<SA::DigitalClockGlyph> DigitalClockFont::sharedGlyph = nullptr;
 	/*static*/uint64_t DigitalClockFont::numFontInstances = 0;
-	DigitalClockFont::DigitalClockFont(const Data& init /*= {}*/) : data(init)
+	DigitalClockFont::DigitalClockFont(const DigitalClockFontInitData& init /*= {}*/) : data(init)
 	{
 		if (numFontInstances == 0)
 		{

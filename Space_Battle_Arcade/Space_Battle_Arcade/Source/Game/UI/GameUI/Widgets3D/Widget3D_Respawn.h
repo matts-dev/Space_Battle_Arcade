@@ -12,9 +12,9 @@ namespace SA
 	{
 		using Parent = Widget3D_Base;
 	protected:
-		virtual void postConstruct();
+		virtual void postConstruct() override;
 	public:
-		virtual void renderGameUI(struct GameUIRenderData& renderData);
+		virtual void renderGameUI(struct GameUIRenderData& renderData) override;
 		bool isRespawning() const { return bIsRespawning; }
 	private:
 		void handleRespawnStarted(float timeUntilRespawn);

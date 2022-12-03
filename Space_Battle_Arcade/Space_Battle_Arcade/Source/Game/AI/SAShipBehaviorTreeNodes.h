@@ -419,7 +419,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			}
 
 		private:
-			virtual void startBranchConditionCheck()
+			virtual void startBranchConditionCheck() override
 			{
 				//this decorator is primarily an event handler
 				conditionalResult = true;
@@ -501,13 +501,13 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			glm::vec3 getRandomPointNear(glm::vec3 point);
 		private:
 			sp<RNG> rng;
-			float cacheMaxTravelDistance2 = maxTravelDistance * maxTravelDistance;
 		private:
 			const std::string writeLocationKey;
 			const std::string brainKey;
 			float maxRandomPointRadius = 300.f;
 			float minRandomPointRadius = 10.f;
 			float maxTravelDistance = 200.f;
+			float cacheMaxTravelDistance2 = maxTravelDistance * maxTravelDistance;
 		};
 
 		////////////////////////////////////////////////////////
@@ -569,7 +569,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			}
 		protected:
 			virtual void childSetup() override;
-			virtual void tickPattern(float dt_sec);
+			virtual void tickPattern(float dt_sec) override;
 			virtual void taskCleanup() override;
 		private:
 			// distIncrement, rotationDegrees, and cylinderRadius have relationship that if one is a small value, all should be small value.
@@ -604,7 +604,7 @@ LogShipNodeDebugMessage(this->getTree(), *this, message);
 			}
 		protected:
 			virtual void childSetup() override;
-			virtual void tickPattern(float dt_sec);
+			virtual void tickPattern(float dt_sec) override;
 			virtual void taskCleanup() override;
 		private:
 			const float pointDistanceIncrement = 20;

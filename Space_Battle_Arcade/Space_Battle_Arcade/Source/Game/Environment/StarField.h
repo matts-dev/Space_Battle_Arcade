@@ -29,15 +29,15 @@ namespace SA
 	// Doing so in this way, rather than using a texture, allows for certain effects that require time exposure and 3d positions.
 	// stars use instanced rendering for performance.
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	struct StarFieldInitData 
+	{
+		std::optional<std::array<glm::vec3, 3>> colorScheme = std::nullopt;
+	};
 	class StarField final : public GPUResource
 	{
 	public:
-		struct InitData 
-		{
-			std::optional<std::array<glm::vec3, 3>> colorScheme = std::nullopt;
-		};
 	public:
-		StarField(const StarField::InitData& init = InitData());
+		StarField(const StarFieldInitData& init = StarFieldInitData{});
 		void render(float dt_sec, const glm::mat4& view, const glm::mat4& projection);
 
 		bool getForceCentered() { return bForceCentered; }

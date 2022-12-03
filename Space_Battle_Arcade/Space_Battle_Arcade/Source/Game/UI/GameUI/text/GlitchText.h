@@ -22,7 +22,7 @@ namespace SA
 	{
 	public:
 		/** Shader assumes structure similar to glitch text shader*/
-		GlitchTextFont(const DigitalClockFont::Data& init);
+		GlitchTextFont(const DigitalClockFontInitData& init);
 		virtual void preIndividualGlyphRender(size_t idx, Shader& shader) override;
 		virtual void onGlyphCacheRebuilt(const DigitalClockFont::GlyphCalculationCache& data) override;
 		void resetAnim();

@@ -68,7 +68,7 @@ namespace SA
 			{
 				if (activeConfig)
 				{
-					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text(activeConfig->getName().c_str());
+					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text("%s", activeConfig->getName().c_str());
 					ImGui::Text("WARNING: this operation is irreversible!");
 					ImGui::Text("Do you really want to delete this projectile config?");
 

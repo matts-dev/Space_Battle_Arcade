@@ -36,7 +36,7 @@ namespace SA
 	{
 	public:
 		virtual void tick() override;
-		virtual bool hasStarted() { return bStarted; }
+		virtual bool hasStarted() override { return bStarted; }
 
 	protected:
 		virtual void postConstruct() override;

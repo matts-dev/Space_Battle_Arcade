@@ -175,7 +175,7 @@ namespace SA
 		ImGui::Begin("Hitbox Picker Tool", nullptr, flags);
 		{
 			ImGui::SetWindowCollapsed(true, ImGuiCond_Once);
-			ImGui::TextWrapped("Hello Hitbox Picker");
+			ImGui::TextWrapped("%s", "Hello Hitbox Picker");
 			ImGui::Checkbox("draw ray casts", &bDrawPickRays);
 			ImGui::Checkbox("enable right click pick", &bPickingObject);
 			ImGui::Checkbox("stop picking after find", &bClearPickingAfterSuccessfulPick);

@@ -27,7 +27,7 @@ namespace SA
 	protected:
 		virtual void onEntitySpawned_v(const sp<WorldEntity>& spawned) override;
 		virtual void onEntityUnspawned_v(const sp<WorldEntity>& unspawned) override;
-		virtual sp<StarField> onCreateStarField();
+		virtual sp<StarField> onCreateStarField() override;
 
 	private:
 		virtual void postConstruct() override;

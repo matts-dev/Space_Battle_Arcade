@@ -13,7 +13,7 @@ namespace SA
 	public:
 		SAPlayer(int32_t playerIndex) : PlayerBase(playerIndex) {};
 		virtual ~SAPlayer() {}
-		virtual sp<CameraBase> generateDefaultCamera() const;
+		virtual sp<CameraBase> generateDefaultCamera() const override;
 		void setSettingsProfile(const sp<SettingsProfileConfig>& newSettingsProfile);
 		const sp<SettingsProfileConfig>& getSettingsProfile() { return settings; }
 		size_t getCurrentTeamIdx() { return currentTeamIdx; }

@@ -1,21 +1,22 @@
 #include "SAAudioSystem.h"
+
+#include "Audio/OpenALUtilities.h"
+#include "GameFramework/SAAssetSystem.h"
 #include "GameFramework/SAGameBase.h"
 #include "GameFramework/SAGameEntity.h"
-#include "Audio/OpenALUtilities.h"
-#include "GameFramework/SALog.h"
-#include "GameFramework/SAAssetSystem.h"
 #include "GameFramework/SALevel.h"
-#include "GameFramework/SALevel.h"
-#include "GameFramework/SATimeManagementSystem.h"
 #include "GameFramework/SALevelSystem.h"
-#include "Tools/SAUtilities.h"
-#include "GameFramework/SAPlayerSystem.h"
-#include "Rendering/Camera/SACameraBase.h"
+#include "GameFramework/SALog.h"
 #include "GameFramework/SAPlayerBase.h"
-#include "Tools/PlatformUtils.h"
-#include "TimeManagement/TickGroupManager.h"
+#include "GameFramework/SAPlayerSystem.h"
+#include "GameFramework/SATimeManagementSystem.h"
+#include "Rendering/Camera/SACameraBase.h"
 #include "SADebugRenderSystem.h"
 #include "SARandomNumberGenerationSystem.h"
+#include "TimeManagement/TickGroupManager.h"
+#include "Tools/PlatformUtils.h"
+#include "Tools/SAUtilities.h"
+
 
 namespace SA
 {

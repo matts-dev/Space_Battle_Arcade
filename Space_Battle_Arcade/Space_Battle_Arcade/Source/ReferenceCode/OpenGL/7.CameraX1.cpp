@@ -1,6 +1,5 @@
 ///Exercise1 not updating camera class, but just updating .cpp since it will be quicker and essentially to the same effect
 
-#pragma once
 
 #include<iostream>
 #include"Utilities.h"

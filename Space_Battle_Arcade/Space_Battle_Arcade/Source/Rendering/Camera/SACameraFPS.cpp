@@ -148,7 +148,7 @@ namespace SA
 
 		//based on euler calculation func
 		// camDir.y = sin(pitch); so pitch = asin(camDir.y)
-		pitch = std::asinf(dir.y);
+		pitch = glm::asin(dir.y); 
 		pitch = glm::clamp(pitch, -1.f, 1.f);
 
 		//don't let a divide by zero happen
@@ -159,22 +159,22 @@ namespace SA
 				//camDir.x = cos(pitch) * cos(yaw)
 				//camDir.x / cos(pitch) = cos(yaw)
 				//acos(camDir.x / cos(pitch)) = yaw
-				float cosval = dir.x / std::cosf(pitch);
+				float cosval = dir.x / glm::cos(pitch);
 
 				//float rounding errors like 1.000000012 are possible
 				cosval = glm::clamp(cosval, -1.f, 1.f);
-				yaw = std::acosf(cosval);
+				yaw = glm::acos(cosval);
 			}
 			else
 			{
 				//camDir.z = cos(pitch) * sin(yaw)
 				//camDir.z / cos(pitch) = sin(yaw)
 				//asin(camDir.z / cos(pitch)) = yaw
-				float sinval = dir.z / std::cosf(pitch);
+				float sinval = dir.z / glm::cos(pitch);
 
 				//float rounding errors like 1.000000012 are possible
 				sinval = glm::clamp(sinval, -1.f, 1.f); 
-				yaw = std::asinf(sinval);
+				yaw = glm::asin(sinval);
 			}
 		}
 		else //looking straight up/down

@@ -19,7 +19,7 @@ namespace SA
 		virtual const glm::vec3 getFront() const override {return -w_axis;}
 		virtual const glm::vec3 getRight() const override {return u_axis;}
 		virtual const glm::vec3 getUp() const override { return v_axis;}
-		virtual glm::mat4 getView() const;
+		virtual glm::mat4 getView() const override;
 		virtual glm::quat getQuat() const override { return myQuat; }
 		virtual void setQuat(glm::quat newQuat);
 	public:

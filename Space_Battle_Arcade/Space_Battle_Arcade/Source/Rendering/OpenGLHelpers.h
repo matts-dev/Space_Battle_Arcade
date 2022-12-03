@@ -6,8 +6,6 @@
 
 #include "Game/OptionalCompilationMacros.h"
 
-//_WIN32 is defined in both x64 and x86
-#ifdef _WIN32 
 
 //Error Check OpenGL (MSCV version)
 #if _DEBUG | ERROR_CHECK_GL_RELEASE 
@@ -18,6 +16,8 @@
 #define ec(func) func
 #endif //_DEBUG
 
+//_WIN32 is defined in both x64 and x86
+#ifdef _WIN32 
 #endif //_WIN32 
 
 namespace UtilGL

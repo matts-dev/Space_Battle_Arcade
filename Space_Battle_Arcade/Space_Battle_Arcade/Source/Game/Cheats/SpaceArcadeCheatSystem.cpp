@@ -1,5 +1,5 @@
 #include <string>
-#include <vcruntime_exception.h>
+#include <exception>
 
 #include "SpaceArcadeCheatSystem.h"
 

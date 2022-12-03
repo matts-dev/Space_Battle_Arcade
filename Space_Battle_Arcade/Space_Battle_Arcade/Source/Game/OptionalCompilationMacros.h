@@ -21,7 +21,9 @@
 //see https://docs.microsoft.com/en-us/visualstudio/debugger/finding-memory-leaks-using-the-crt-library?view=vs-2019
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
-#include <crtdbg.h>
+#ifdef _WIN32
+    #include <crtdbg.h>
+#endif //_WIN32 
 #endif //FIND_MEMORY_LEAKS
 
 //define debug build  based on platform specific 

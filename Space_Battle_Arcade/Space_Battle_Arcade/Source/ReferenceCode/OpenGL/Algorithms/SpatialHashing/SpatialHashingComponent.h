@@ -235,7 +235,7 @@ namespace SH
 	private: //methods
 
 		/*give HashEntry access to remove function*/
-		friend HashEntry<T>::~HashEntry(); 
+		friend HashEntry<T>::~HashEntry<T>(); 
 		inline bool remove(HashEntry<T>& toRemove, bool bRemoveFromValidEntries = true);
 
 		inline void projectOBBToCells(Range<int>& xCellIndices, Range<int>& yCellIndices, Range<int>& zCellIndices, const std::array<glm::vec4, 8>& localSpaceOBB);

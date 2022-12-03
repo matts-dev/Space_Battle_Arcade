@@ -54,7 +54,7 @@ namespace SA
 				BehaviorTree::Decorator(name, child), bSimulateDecorateSuccess(bSimulateDecorateSuccess)
 			{}
 
-			virtual void startBranchConditionCheck();
+			virtual void startBranchConditionCheck() override;
 		private:
 			virtual void handleNodeAborted() override {}
 

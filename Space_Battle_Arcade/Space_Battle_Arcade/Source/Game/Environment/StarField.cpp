@@ -146,7 +146,7 @@ namespace SA
 	)";
 
 
-	StarField::StarField(const StarField::InitData& init /*= InitData()*/)
+	StarField::StarField(const StarFieldInitData& init /*= StarFieldInitData{}*/)
 	{
 		if (init.colorScheme.has_value())
 		{
@@ -441,9 +441,9 @@ namespace SA
 
 			//don't let any stars close to origin exist. 
 			const float minDist = 10.f;
-			abs(pos.x) < minDist ? minDist : pos.x;
-			abs(pos.y) < minDist ? minDist : pos.y;
-			abs(pos.z) < minDist ? minDist : pos.z;
+			//abs(pos.x) < minDist ? minDist : pos.x; //TODO: these were unused, probably meant to assign to pos.x; commenting out to avoid compiler warning and not fixing this as I am doing major refactor to support clang etc.
+			//abs(pos.y) < minDist ? minDist : pos.y;
+			//abs(pos.z) < minDist ? minDist : pos.z;
 
 			//use distance to origin to scale down the instanced sphere that represents a star
 			float dist = length(pos);

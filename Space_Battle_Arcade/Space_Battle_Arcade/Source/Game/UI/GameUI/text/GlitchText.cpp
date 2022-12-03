@@ -54,7 +54,7 @@ namespace SA
 	// Glitch text font
 	////////////////////////////////////////////////////////
 
-	GlitchTextFont::GlitchTextFont(const DigitalClockFont::Data& init) : DigitalClockFont(init)
+	GlitchTextFont::GlitchTextFont(const DigitalClockFontInitData& init) : DigitalClockFont(init)
 	{
 		if (!init.shader)
 		{

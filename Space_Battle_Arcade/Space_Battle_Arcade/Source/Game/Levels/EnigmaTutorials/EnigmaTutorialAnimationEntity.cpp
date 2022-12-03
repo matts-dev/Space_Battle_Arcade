@@ -52,7 +52,7 @@ namespace SA
 
 		if (bRenderDebugText)
 		{
-			DigitalClockFont::Data debugTextInit;
+			DigitalClockFontInitData debugTextInit;
 			debugTextInit.shader = getDefaultGlyphShader_instanceBased();
 			debugTextInit.text = "debug";
 			debugText = new_sp<DigitalClockFont>(debugTextInit);
@@ -63,7 +63,7 @@ namespace SA
 			gameUISystem->onUIGameRender.addWeakObj(sp_this(), &EnigmaTutorialAnimationEntity::handleGameUIRenderDispatch);
 		}
 
-		DigitalClockFont::Data init;
+		DigitalClockFontInitData init;
 		init.shader = getGlitchTextShader();
 		init.text = "Enigma Tutorials";
 		glitchText = new_sp<GlitchTextFont>(init);

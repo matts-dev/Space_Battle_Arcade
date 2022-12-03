@@ -82,7 +82,7 @@ namespace SA
 			return std::string("% fighters to spawn at start: ") + std::to_string(value) + "%";
 		});
 
-		DigitalClockFont::Data textInit;
+		DigitalClockFontInitData textInit;
 		textInit.text = "";
 		errorText = new_sp<GlitchTextFont>(textInit);
 	}

@@ -37,13 +37,13 @@ namespace SA
 
 		if (SA_RNG_USE_TIME)
 		{
-			rootNamedRNG = sp<RNG>(new RNG{ std::initializer_list			{ (uint32_t)std::time(nullptr) } });
-			rootTimeInfluencedRNG = sp<RNG>(new RNG{ std::initializer_list	{ 2*(uint32_t)std::time(nullptr)} });
+			rootNamedRNG = sp<RNG>(new RNG{ std::initializer_list<uint32_t>			{ (uint32_t)std::time(nullptr) } });
+			rootTimeInfluencedRNG = sp<RNG>(new RNG{ std::initializer_list<uint32_t>	{ 2*(uint32_t)std::time(nullptr)} });
 		}
 		else
 		{
-			rootNamedRNG = sp<RNG>(new RNG{ std::initializer_list {7u, 54u, 11u, 29u, 0u} });
-			rootTimeInfluencedRNG = sp<RNG>(new RNG{ std::initializer_list {19u, 3u, 107u, 67u, 9u} });
+			rootNamedRNG = sp<RNG>(new RNG{ std::initializer_list<uint32_t> {7u, 54u, 11u, 29u, 0u} });
+			rootTimeInfluencedRNG = sp<RNG>(new RNG{ std::initializer_list<uint32_t> {19u, 3u, 107u, 67u, 9u} });
 		}
 	}
 

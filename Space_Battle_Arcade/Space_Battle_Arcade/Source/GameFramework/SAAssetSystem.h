@@ -7,11 +7,13 @@
 #endif
 
 #include "GameFramework/SASystemBase.h"
+
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include <set>
 #include <map>
 #include <string>
+
 #include "Tools/DataStructures/SATransform.h" //glm
 #include "AssetManagement/AssetHandle.h"
 
@@ -46,7 +48,7 @@ namespace SA
 		bool loadTexture_internal(unsigned char* textureDataBytes, int img_width, int img_height, int img_nrChannels, const char* relative_filepath, GLuint& outTexId, int texture_unit = -1, bool useGammaCorrection = false);
 	private:
 		virtual void shutdown() override;
-		virtual void tick(float deltaSec) {};
+		virtual void tick(float deltaSec) override {};
 	private:
 		std::map<std::string, sp<Model3D>> loadedModel3Ds;
 		std::map<std::string, GLuint> loadedTextureIds; //open question as to whether asset system should be managing API memory

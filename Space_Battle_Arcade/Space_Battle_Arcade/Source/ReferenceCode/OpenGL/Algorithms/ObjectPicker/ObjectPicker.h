@@ -69,10 +69,10 @@ namespace Pik
 
 			//check if point is within the triangle using crossproduct comparisons with normal
 			// X =crossproduct, @=dotproduct
-			//   C
-			//  /  \      p_out
-			// / p   \    
-			//A-------B
+			//   C                                   | fix backslack separated by newline warning
+			//  /  \      p_out                      | fix backslack separated by newline warning    
+			// / p   \                               | fix backslack separated by newline warning       
+			//A-------B                              | fix backslack separated by newline warning  
 			//
 			//planeNormal = (B-A) X(C-A)
 			//

@@ -1,5 +1,5 @@
 #pragma once
-#include "BuildConfiguration/SAPreprocessorDefines.h"
+#include "GameFramework/BuildConfiguration/SAPreprocessorDefines.h"
 
 #if USE_OPENAL_API
 #include<AL/al.h>

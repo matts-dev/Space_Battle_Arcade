@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <type_traits>
 
 #include "MultiDelegate.h"
+#include "GameFramework/SAGameBase.h"
 #include "GameFramework/SAGameEntity.h"
 #include "GameFramework/Interfaces/SATickable.h"
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
@@ -21,7 +23,7 @@
 		FrameDeferredEntityDeleter() = default;
 		void deleteLater(const sp<const GameEntity>& entity);
 	private:
-		virtual bool tick(float dt_sec);
+		virtual bool tick(float dt_sec) override;
 	protected:
 		virtual void postConstruct() override;
 	private:
@@ -176,7 +178,8 @@
 			void bind(const GameEntity& entity) { 
 				//the destroyed event is created as non-const within GameEntity constructor. So this const-cast should always be safe
 				//I'd prefer to keep subscriptions forbidden on intentionally const delegates, so doing the cast here.
-				const_cast<GameEntity&>(entity).onLifetimeOverEvent->addStrongObj(sp_this(), &EventForwarder::handleLifetimeOver); 
+				//const_cast<GameEntity&>(entity).onLifetimeOverEvent->addStrongObj(sp_this(), &EventForwarder::handleLifetimeOver); 
+				const_cast<GameEntity&>(entity).onLifetimeOverEvent->addStrongObj(sp_this(), &EventForwarder::handleLifetimeOver);
 			}
 			void release(const GameEntity& entity) {
 				//see note about const cast in bind
@@ -254,13 +257,27 @@
 	template<typename A, typename B>
 	inline bool operator!= (const LifetimePointer<A>& ptrA, const sp<B>& ptrB) { return !(ptrA == ptrB);}
 
+	//clang will not let you compile a template, if it can detect no possible instantiations are viable. so you can't just static assert false. This makes it so clang cannot determine if all instantiations are ill formed.
+	template<typename T>
+	struct WeakPointer_AlwaysFalseClangWorkaround : std::false_type
+	{};
 	//forbid weak pointer comparisions
 	template<typename A, typename B>
-	inline bool operator== (const wp<A>& ptrA, const LifetimePointer<B>& ptrB) { static_assert(false, "LIFETIME_PTR: do not directly compare weak pointers to lifetime pointers; this is expensive and should be done manually if really  required (ie locking the weak pointer into a shared ptr)."); return false; }
+	inline bool operator== (const wp<A>& ptrA, const LifetimePointer<B>& ptrB) { 
+		static_assert(WeakPointer_AlwaysFalseClangWorkaround<A>::value,
+			"LIFETIME_PTR: do not directly compare weak pointers to lifetime pointers; this is expensive and should be done manually if really  required (ie locking the weak pointer into a shared ptr).");
+		return false; 
+	}
+	//should use the above static assert to fail to compile.
 	template<typename A, typename B>
 	inline bool operator!= (const wp<A>& ptrA, const LifetimePointer<B>& ptrB) { return !(ptrA == ptrB); }
 	template<typename A, typename B>
-	inline bool operator== (const LifetimePointer<A>& ptrA, const wp<B>& ptrB) { static_assert(false, "LIFETIME_PTR: do not directly compare weak pointers to lifetime pointers; this is expensive and should be done manually if really  required (ie locking the weak pointer into a shared ptr)."); return false; }
+	inline bool operator== (const LifetimePointer<A>& ptrA, const wp<B>& ptrB) { 
+		static_assert(WeakPointer_AlwaysFalseClangWorkaround<B>::value,
+		 "LIFETIME_PTR: do not directly compare weak pointers to lifetime pointers; this is expensive and should be done manually if really  required (ie locking the weak pointer into a shared ptr).");
+		return false; 
+	}
+	//should use the above static assert to fail to compile.
 	template<typename A, typename B>
 	inline bool operator!= (const LifetimePointer<A>& ptrA, const wp<B>& ptrB) { return !(ptrA == ptrB); }
 

@@ -54,19 +54,19 @@ void Shader::initShaderHelper(const std::string& vertexShaderFilePath, const std
 	std::string vertShaderSrc, fragShaderSrc, geoShaderSrc;
 	if (stringsAreFilePaths)
 	{
-		if (failed = !Utils::convertFileToString(vertexShaderFilePath, vertShaderSrc))
+		if ( (failed = !Utils::convertFileToString(vertexShaderFilePath, vertShaderSrc)) )
 		{
 			std::cerr << "failed to load vertex shader from file" << std::endl;
 			return;
 		}
-		if (failed = !Utils::convertFileToString(fragmentShaderFilePath, fragShaderSrc))
+		if ( (failed = !Utils::convertFileToString(fragmentShaderFilePath, fragShaderSrc)) )
 		{
 			std::cerr << "failed to load fragment shader from file" << std::endl;
 			return;
 		}
 		if (hasGeometryShader)
 		{
-			if (failed = !Utils::convertFileToString(geoShaderSrc, geoShaderSrc))
+			if ( (failed = !Utils::convertFileToString(geoShaderSrc, geoShaderSrc)) )
 			{
 				std::cerr << "failed to load fragment shader from file" << std::endl;
 				return;
@@ -101,12 +101,12 @@ void Shader::initShaderHelper(const std::string& vertexShaderFilePath, const std
 		glCompileShader(geometryShader);
 	}
 
-	if (failed = !shaderCompileSuccess(vertexShader))
+	if ( (failed = !shaderCompileSuccess(vertexShader)) )
 	{
 		std::cerr << "failed to compile the vertex shader" << std::endl;
 		return;
 	}
-	if (failed = !shaderCompileSuccess(fragmentShader))
+	if ( (failed = !shaderCompileSuccess(fragmentShader)) )
 	{
 		std::cerr << "failed to compile the fragment shader" << std::endl;
 		return;
@@ -114,7 +114,7 @@ void Shader::initShaderHelper(const std::string& vertexShaderFilePath, const std
 
 	if (hasGeometryShader)
 	{
-		if (failed = !shaderCompileSuccess(geometryShader))
+		if ( (failed = !shaderCompileSuccess(geometryShader)) )
 		{
 			std::cerr << "failed to compile the geom shader" << std::endl;
 			return;
@@ -128,7 +128,7 @@ void Shader::initShaderHelper(const std::string& vertexShaderFilePath, const std
 	if (hasGeometryShader)
 		glAttachShader(linkedProgram, geometryShader);
 	glLinkProgram(linkedProgram);
-	if (failed = !programLinkSuccess(linkedProgram))
+	if ( (failed = !programLinkSuccess(linkedProgram)) )
 	{
 		std::cerr << "failed to link shader program" << std::endl;
 		return;

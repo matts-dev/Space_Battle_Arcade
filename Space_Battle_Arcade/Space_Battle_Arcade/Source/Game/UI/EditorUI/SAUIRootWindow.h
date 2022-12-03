@@ -24,7 +24,7 @@ namespace SA
 
 		virtual void tick(float dt_sec) override;
 	private:
-		virtual void postConstruct();
+		virtual void postConstruct() override;
 		void handleUIFrameStarted();
 
 		void buildMainMenu();

@@ -19,7 +19,7 @@ namespace SA
 		timerDelegate = new_sp<MultiDelegate<>>();
 		timerDelegate->addWeakObj(sp_this(), &Widget3D_Respawn::timerTick);
 
-		DigitalClockFont::Data initText;
+		DigitalClockFontInitData initText;
 		initText.shader = getDefaultGlyphShader_instanceBased();
 		//initText.shader = getDefaultGlyphShader_uniformBased();
 		textRenderer = new_sp<DigitalClockFont>(initText);

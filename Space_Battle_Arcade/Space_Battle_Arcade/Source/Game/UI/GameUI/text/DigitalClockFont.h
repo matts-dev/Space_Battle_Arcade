@@ -94,8 +94,8 @@ namespace SA
 		virtual ~DigitalClockGlyph();
 	protected:
 		virtual void postConstruct() override;
-		virtual void onReleaseGPUResources();
-		virtual void onAcquireGPUResources();
+		virtual void onReleaseGPUResources() override;
+		virtual void onAcquireGPUResources() override;
 	private:
 		std::vector<glm::vec4> vertex_positions;
 		std::vector<glm::vec2> vertex_uvs;
@@ -111,18 +111,25 @@ namespace SA
 		GLuint vbo_instance_color = 0;
 	};
 
+	enum class EHorizontalPivot { CENTER, LEFT, RIGHT };
+	enum class EVerticalPivot { CENTER, TOP, BOTTOM };
+	struct DigitalClockFontInitData
+	{
+		sp<Shader> shader = nullptr;
+		EHorizontalPivot pivotHorizontal = EHorizontalPivot::CENTER;
+		EVerticalPivot pivotVertical = EVerticalPivot::CENTER;
+		std::string text = "";
+		glm::vec4 fontColor = glm::vec4(1.f);
+	};
+
 	/** A renderer for entire strings */
 	class DigitalClockFont : public GameEntity
 	{
 		using Parent = GameEntity;
-	public:
-		enum class EHorizontalPivot { CENTER, LEFT, RIGHT };
-		enum class EVerticalPivot { CENTER, TOP, BOTTOM };
-		struct Data;
 	protected:
 		struct GlyphCalculationCache;
 	public:
-		DigitalClockFont(const Data& init = {});
+		DigitalClockFont(const DigitalClockFontInitData& init = DigitalClockFontInitData{});
 		virtual ~DigitalClockFont();
 		void render(const struct RenderData& rd);			
 		void renderGlyphsAsInstanced(const struct RenderData& rd);	//requires initialization with instanced version of shader
@@ -152,14 +159,6 @@ namespace SA
 		static uint64_t numFontInstances;
 	public: //public so this can be filled out externally and passed to ctor; d3d style
 		MultiDelegate<> onNewTextDataBuilt;
-		struct Data
-		{
-			sp<Shader> shader;
-			EHorizontalPivot pivotHorizontal = EHorizontalPivot::CENTER;
-			EVerticalPivot pivotVertical = EVerticalPivot::CENTER;
-			std::string text = "";
-			glm::vec4 fontColor = glm::vec4(1.f);
-		};
 	protected:
 		struct GlyphCalculationCache
 		{
@@ -173,7 +172,7 @@ namespace SA
 		float AdditionalGlyphSpacingFactor = 1.0f;
 		glm::vec2 paragraphSize; //width and height of the paragraph
 	private:
-		Data data;
+		DigitalClockFontInitData data;
 		GlyphCalculationCache cache;
 		Transform xform; //needs to be strongly encapsulated so we don't recalculate most of cache.
 	};

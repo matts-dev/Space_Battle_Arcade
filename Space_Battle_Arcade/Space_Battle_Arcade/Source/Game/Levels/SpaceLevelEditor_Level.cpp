@@ -153,10 +153,10 @@ namespace SA
 			const sp<Mod>& activeMod = SpaceArcade::get().getModSystem()->getActiveMod();
 
 			std::string activeModText = activeMod ? activeMod->getModName() : "None";
-			ImGui::Text("Active Mod: "); ImGui::SameLine(); ImGui::Text(activeModText.c_str());
+			ImGui::Text("Active Mod: "); ImGui::SameLine(); ImGui::Text("%s", activeModText.c_str());
 
 			std::string activeConfigText = activeLevelConfig ? activeLevelConfig->getName() : "None";
-			ImGui::Text("Loaded Level Config: "); ImGui::SameLine(); ImGui::Text(activeConfigText.c_str());
+			ImGui::Text("Loaded Level Config: "); ImGui::SameLine(); ImGui::Text("%s", activeConfigText.c_str());
 
 			if (activeLevelConfig)
 			{
@@ -308,7 +308,7 @@ namespace SA
 			{
 				if (activeLevelConfig)
 				{
-					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text(activeLevelConfig->getName().c_str());
+					ImGui::Text("DELETE:"); ImGui::SameLine(); ImGui::Text("%s", activeLevelConfig->getName().c_str());
 					ImGui::Text("WARNING: this operation is irreversible!");
 					ImGui::Text("Do you really want to delete this level?");
 
@@ -493,7 +493,7 @@ namespace SA
 					if (level.spaceLevelConfig.size() > 0)
 					{
 						ImGui::SameLine();
-						ImGui::Text(level.spaceLevelConfig.c_str());
+						ImGui::Text("%s", level.spaceLevelConfig.c_str());
 					}
 					ImGui::Separator();
 					////////////////////////////////////////////////////////

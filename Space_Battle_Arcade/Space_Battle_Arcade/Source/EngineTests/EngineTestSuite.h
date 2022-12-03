@@ -44,7 +44,7 @@ namespace SA
 	class TestSuite : public UnitTest
 	{
 	public:
-		virtual bool run(bool stopOnFail)
+		virtual bool run(bool stopOnFail) override
 		{
 			//don't print fail test for test suites, override if you want this behavior in nesting subclasses
 			return runInternal(stopOnFail);

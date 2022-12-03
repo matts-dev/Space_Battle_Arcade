@@ -48,7 +48,7 @@ namespace SA
 		virtual void renderLoop_end(float deltaTimeSecs) override;
 		virtual void onRegisterCustomSystem() override;
 		virtual sp<CheatSystemBase> createCheatSystemSubclass() override;
-		virtual sp<TickGroups> onRegisterTickGroups();
+		virtual sp<TickGroups> onRegisterTickGroups() override;
 
 		void updateInput(float detltaTimeSec);
 

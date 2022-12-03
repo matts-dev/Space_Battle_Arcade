@@ -32,11 +32,11 @@ namespace SA
 		std::array<glm::vec4, 8> getOBB();
 		void setTitleText(const std::string titleStr);
 		void setTitleTextScale(float newScale);
-		//void setHorizontalPivot(DigitalClockFont::EHorizontalPivot& pivot);
-		//void setVerticalPivot(DigitalClockFont::EVerticalPivot& pivot);
+		//void setHorizontalPivot(EHorizontalPivot& pivot);
+		//void setVerticalPivot(EVerticalPivot& pivot);
 	protected:
 		virtual void postConstruct() override;
-		virtual void renderGameUI(GameUIRenderData& renderData);
+		virtual void renderGameUI(GameUIRenderData& renderData) override;
 		void handlePreLevelChange(const sp<LevelBase>& previousLevel, const sp<LevelBase>& newCurrentLevel);
 		virtual void tick_postCamera(float dt_sec);
 	private:
@@ -47,10 +47,10 @@ namespace SA
 		void updateValueTextStr();
 		void updateTextPosition(const glm::vec3& sliderUp_n, const glm::quat& camRot);
 		//IMouseInteractable interface
-		virtual glm::mat4 getModelMatrix() const;
-		virtual const std::array<glm::vec4, 8>& getLocalAABB() const;
-		virtual glm::vec3 getWorldLocation() const;;
-		virtual bool isHitTestable() const { return isActive(); }
+		virtual glm::mat4 getModelMatrix() const override;
+		virtual const std::array<glm::vec4, 8>& getLocalAABB() const override;
+		virtual glm::vec3 getWorldLocation() const override;
+		virtual bool isHitTestable() const override { return isActive(); }
 		virtual void onHoveredhisTick() override;
 		virtual void onClickedThisTick() override;
 		virtual bool supportsMouseDrag() const override{ return true; } 

@@ -1,3 +1,8 @@
+
+#ifdef _WIN32
+	#include <xutility>
+#endif //_WIN32
+
 #include "Game/Levels/SASpaceLevelBase.h"
 #include "Rendering/BuiltInShaders.h"
 #include "GameFramework/SAPlayerSystem.h"
@@ -33,7 +38,6 @@
 #include "Game/AssetConfigs/SaveGameConfig.h"
 #include "Game/AssetConfigs/CampaignConfig.h"
 #include "Game/SAPlayer.h"
-#include <xutility>
 #include "Game/AI/GlobalSpaceArcadeBehaviorTreeKeys.h"
 #include "Game/AI/SAShipBehaviorTreeNodes.h"
 #include "GameFramework/RenderModelEntity.h"
@@ -742,7 +746,7 @@ namespace SA
 		{
 			if (bool bIsServer = true) //#TODO #multiplayer
 			{
-				if (spaceGameMode = createGamemodeFromTag(levelConfig->gamemodeTag))
+				if ( (spaceGameMode = createGamemodeFromTag(levelConfig->gamemodeTag)) )
 				{
 					spaceGameMode->setOwningLevel(sp_this());
 					spaceGameMode->initialize(ServerGameMode_SpaceBase::LevelKey{});
@@ -751,7 +755,7 @@ namespace SA
 		}
 		else if (isTestLevel() && !isMenuLevel())
 		{
-			if (spaceGameMode = createGamemodeFromTag(TAG_GAMEMODE_CARRIER_TAKEDOWN)) //default to carrier take down
+			if ( (spaceGameMode = createGamemodeFromTag(TAG_GAMEMODE_CARRIER_TAKEDOWN))) //default to carrier take down
 			{
 				spaceGameMode->setOwningLevel(sp_this());
 				spaceGameMode->initialize(ServerGameMode_SpaceBase::LevelKey{});
@@ -779,7 +783,7 @@ namespace SA
 	sp<SA::StarField> SpaceLevelBase::onCreateStarField()
 	{
 		//by default generate a star field, if no star field should be in the level return null in an override;
-		StarField::InitData initStarField;
+		StarFieldInitData initStarField;
 		if (levelConfig)
 		{
 			initStarField.colorScheme = levelConfig->getDistantStarColorScheme();;

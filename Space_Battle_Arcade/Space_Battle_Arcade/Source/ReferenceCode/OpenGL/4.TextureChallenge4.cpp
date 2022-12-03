@@ -1,5 +1,4 @@
 ///Challenge3 Try to display only the center pixels of the texture image on the rectangle in such a way that the individual pixels are getting visible by changing the texture coordinates. Try to set the texture filtering method to GL_NEAREST to see the pixels more clearly:
-#pragma once
 
 #include"Utilities.h"
 #include"Shader.h"

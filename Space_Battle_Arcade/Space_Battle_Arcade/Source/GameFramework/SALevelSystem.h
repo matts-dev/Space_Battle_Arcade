@@ -28,7 +28,7 @@ namespace SA
 		inline const sp<LevelBase>& getCurrentLevel() { return loadedLevel; }
 		
 	private:
-		virtual void tick(float deltaSec);
+		virtual void tick(float deltaSec) override;
 		virtual void shutdown() override;
 	private: //implementation
 		bool bTickingLevel = false;

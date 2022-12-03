@@ -33,7 +33,7 @@ namespace SA
 	{
 	public:
 		virtual void beginTest() override;
-		virtual bool hasStarted() { return bStarted; }
+		virtual bool hasStarted() override { return bStarted; }
 		virtual void tick() override;
 		void handleTestTimeOver();
 	private:

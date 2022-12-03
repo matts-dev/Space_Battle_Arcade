@@ -25,7 +25,7 @@ namespace SA
 		virtual void renderGameUI(GameUIRenderData& renderData) override;
 	protected:
 		virtual void postConstruct() override;
-		virtual void onActivationChanged(bool bActive);
+		virtual void onActivationChanged(bool bActive) override;
 		const fwp<PlayerBase>& getMyPlayer() { return myPlayer; }
 	private:
 		void registerPlayerEvents();
@@ -49,7 +49,7 @@ namespace SA
 		using Parent = Widget3D_PlayerStatusBarBase;
 	public:
 		Widget3D_HealthBar(size_t playerIdx);
-		virtual void renderGameUI(GameUIRenderData& renderData);
+		virtual void renderGameUI(GameUIRenderData& renderData) override;
 	protected:
 		virtual void postConstruct() override;
 	};
@@ -62,7 +62,7 @@ namespace SA
 		using Parent = Widget3D_PlayerStatusBarBase;
 	public:
 		Widget3D_EnergyBar(size_t playerIdx);
-		virtual void renderGameUI(GameUIRenderData& renderData);
+		virtual void renderGameUI(GameUIRenderData& renderData) override;
 	protected:
 		virtual void postConstruct() override;
 	};
@@ -78,7 +78,7 @@ namespace SA
 	protected:
 		virtual void postConstruct() override;
 	public:
-		virtual void renderGameUI(GameUIRenderData& renderData);
+		virtual void renderGameUI(GameUIRenderData& renderData) override;
 	private:
 		void cacheGameMode();
 		void handlePostLevelChange(const sp<LevelBase>& /*previousLevel*/, const sp<LevelBase>& /*newCurrentLevel*/);

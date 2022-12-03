@@ -19,7 +19,7 @@ namespace SA
 	{
 		// math: https://stats.stackexchange.com/questions/214877/is-there-a-formula-for-an-s-shaped-curve-with-domain-and-range-0-1
 
-		float sigmoidSample = 1.f / (1 + std::powf(a / (1.f - a), -tuning));
+		float sigmoidSample = static_cast<float>(1.f / (1 + std::pow(a / (1.f - a), -tuning)));
 		return sigmoidSample;
 	}
 

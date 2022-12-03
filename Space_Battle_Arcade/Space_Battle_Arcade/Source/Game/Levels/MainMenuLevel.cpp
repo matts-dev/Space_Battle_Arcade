@@ -35,7 +35,7 @@ namespace SA
 
 		Parent::postConstruct();
 
-		DigitalClockFont::Data debugTextInit;
+		DigitalClockFontInitData debugTextInit;
 		debugTextInit.shader = getDefaultGlyphShader_instanceBased();
 		debugTextInit.text = "debug";
 		debugText = new_sp<DigitalClockFont>(debugTextInit);
@@ -353,7 +353,8 @@ namespace SA
 
 	void MainMenuLevel::animateCameraTo(glm::vec3 endPoint, float animDuration)
 	{
-		cameraAnimData = std::make_optional<CameraAnimData>();
+		//cameraAnimData = std::make_optional<CameraAnimData>(); CLANG BUG PREVENTS THIS (works fine on msvc) https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101227
+		cameraAnimData = CameraAnimData{}; //this works... is there any reason to ever prefer to use std::make_optional? doing this is certainlly less to remember.
 		cameraAnimData->timePassedSec = 0.f;
 		cameraAnimData->startPoint = /*shouldbe(0,0,0)*/menuCamera->getPosition() + menuCamera->getFront(); //may be better to scale this vector a bit to generate a point
 		cameraAnimData->endPoint = endPoint;

@@ -1,4 +1,4 @@
-#pragma once
+
 #include<iostream>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

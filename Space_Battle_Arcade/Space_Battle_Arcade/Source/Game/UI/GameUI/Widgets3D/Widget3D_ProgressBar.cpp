@@ -168,10 +168,10 @@ namespace SA
 	{
 		myProgressBar = new_sp<Widget3D_ProgressBar>();
 
-		DigitalClockFont::Data textInit;
+		DigitalClockFontInitData textInit;
 		textInit.text = "Unset Progress Bar Text";
 		myText = new_sp<GlitchTextFont>(textInit);
-		myText->setHorizontalPivot(DigitalClockFont::EHorizontalPivot::CENTER);
+		myText->setHorizontalPivot(EHorizontalPivot::CENTER);
 		myText->resetAnim();
 		myText->play(true);
 

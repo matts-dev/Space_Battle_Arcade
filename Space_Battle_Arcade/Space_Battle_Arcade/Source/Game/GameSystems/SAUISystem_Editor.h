@@ -19,7 +19,7 @@ namespace SA
 		inline bool getEditorUIEnabled() { return bUIEnabled; }
 
 	private:
-		virtual void tick(float deltaSec) {}
+		virtual void tick(float deltaSec) override {}
 		virtual void initSystem() override;
 		virtual void shutdown() override;
 		

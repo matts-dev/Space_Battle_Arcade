@@ -31,7 +31,8 @@ namespace SA
 			}
 			else
 			{
-				log("ShipAIBrain", LogLevel::LOG_ERROR, "failed to start; no level." __FUNCTION__);
+				log("ShipAIBrain", LogLevel::LOG_ERROR, "failed to start; no level.");
+				log("ShipAIBrain", LogLevel::LOG_ERROR, __FUNCTION__);
 				return false;
 			}
 		}
@@ -99,7 +100,8 @@ namespace SA
 		}
 		else
 		{
-			log("ContinuousFireBrain", LogLevel::LOG_ERROR, __FUNCTION__ "failed to create timer; no level." );
+			log("ContinuousFireBrain", LogLevel::LOG_ERROR, "failed to create timer; no level." );
+			log("ContinuousFireBrain", LogLevel::LOG_ERROR, __FUNCTION__);
 		}
 	}
 

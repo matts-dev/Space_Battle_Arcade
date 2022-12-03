@@ -34,7 +34,7 @@ namespace SA
 		void setLeftToRight(bool bProgressFromLeft) { bLeftToRight = bProgressFromLeft; }
 		void setTransform(const Transform& inXform) { xform = inXform; }
 	protected:
-		virtual void onActivationChanged(bool bActive);
+		virtual void onActivationChanged(bool bActive) override;
 	private:
 		void updateLasers(bool bResetAnimation);
 		bool hasLasers();

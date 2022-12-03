@@ -286,7 +286,7 @@ namespace SA
 
 	bool Planet::tick(float dt_sec)
 	{
-		data.xform.rotQuat;
+		//data.xform.rotQuat;
 
 		if (data.rotSpeedSec_rad != 0.0f)
 		{

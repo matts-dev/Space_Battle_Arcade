@@ -8,7 +8,7 @@
 namespace SA
 {
 #define GAMEMENUSCREENBASE_EXPOSE_CLICK_DELEGATE(FUNC_NAME, field)\
-MultiDelegate<>& ##FUNC_NAME(){return field->onClickedDelegate;}
+MultiDelegate<>& FUNC_NAME(){return field->onClickedDelegate;}
 
 	class Widget3D_MenuScreenBase : public Widget3D_ActivatableBase
 	{

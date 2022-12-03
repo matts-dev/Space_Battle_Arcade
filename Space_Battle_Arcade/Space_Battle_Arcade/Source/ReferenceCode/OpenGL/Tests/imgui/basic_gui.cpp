@@ -1,4 +1,4 @@
-#pragma once
+
 #include<iostream>
 
 #include<glad/glad.h> //include opengl headers, so should be before anything that uses those headers (such as GLFW)
@@ -291,7 +291,7 @@ namespace
 					ImVec2 windowSize = ImGui::GetWindowSize();
 					float rightPaddingSize = (windowSize.x - textSize.x) / 2.0f;
 					ImGui::SameLine(rightPaddingSize); //center text by padding on the right 
-					ImGui::Text(windowText);
+					ImGui::Text("%s", windowText);
 					if (ImGui::Button("Click to print a message!"))
 					{
 						std::cout << "you pressed the button(last frame?)!" << std::endl;

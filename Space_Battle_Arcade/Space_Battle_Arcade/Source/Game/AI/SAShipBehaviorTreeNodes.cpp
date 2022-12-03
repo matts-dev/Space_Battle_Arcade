@@ -1900,7 +1900,7 @@ namespace SA
 			//70visc and 70speedDist make it so that AI gets on average at least 1 shot in
 			float AiVsPlayer_ViscosityRange = 70.f; 
 			float AiVsPlayer_SpeedBoostRange = 70.f;
-			extern float AiVsPlayer_MaxSpeedBoost = 4.f;
+			float AiVsPlayer_MaxSpeedBoost = 4.f;
 		}
 
 		void Task_DogfightNode::notifyTreeEstablished()
@@ -2438,4 +2438,3 @@ namespace SA
 
 
 }
-

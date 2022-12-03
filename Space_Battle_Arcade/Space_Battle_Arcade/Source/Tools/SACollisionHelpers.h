@@ -22,6 +22,13 @@ namespace SA
 
 	SAT::DynamicTriangleMeshShape::TriangleProcessor modelToCollisionTriangles(const Model3D& model);
 
+	//Clang require this be defined outside the scope of the ShapeRendererWrapper class because it uses default initializers.
+	struct ShapeRenderOverrides
+	{
+		Shader* shader = nullptr;
+		glm::mat4* parentXform = nullptr;
+	};
+
 	/**
 	This can be used to debug the rendered model shape.
 	It has a external dependency on SAT, so should be used sparingly
@@ -32,12 +39,7 @@ namespace SA
 		ShapeRenderWrapper(const sp<SAT::Shape>& IncollisionShape);
 		~ShapeRenderWrapper();
 
-		struct RenderOverrides
-		{
-			Shader* shader = nullptr;
-			glm::mat4* parentXform = nullptr;
-		};
-		virtual void render(const RenderOverrides& overrides = {}) const;
+		virtual void render(const ShapeRenderOverrides& overrides = ShapeRenderOverrides{}) const;
 		void setXform(const Transform& xform) { this->xform = xform; }
 	private:
 		virtual void onReleaseGPUResources() override;

@@ -307,7 +307,7 @@ namespace SA
 
 	void UISystem_Game::initSystem()
 	{
-		DigitalClockFont::Data initBatcher;
+		DigitalClockFontInitData initBatcher;
 		initBatcher.shader = getDefaultGlyphShader_instanceBased();
 		defaultTextBatcher = new_sp<DigitalClockFont>(initBatcher);
 

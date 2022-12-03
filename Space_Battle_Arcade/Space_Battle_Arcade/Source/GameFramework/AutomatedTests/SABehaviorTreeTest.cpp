@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <utility>
+#include <string>
 
 #include "GameFramework/SABehaviorTree.h"
 #include "GameFramework/AutomatedTests/SABehaviorTreeTest.h"
@@ -349,7 +350,7 @@ namespace SA
 			assert(this->referenceValue == referenceValue);
 		}
 	protected:
-		virtual void startBranchConditionCheck()
+		virtual void startBranchConditionCheck() override
 		{
 			BehaviorTree::Memory& memory = getMemory();
 			const bool* memoryValue = memory.getReadValueAs<bool>(memoryKey);
@@ -602,7 +603,7 @@ namespace SA
 			BehaviorTree::Decorator(name, child), boolKeyValue(boolKeyValue)
 		{}
 
-		virtual void startBranchConditionCheck()
+		virtual void startBranchConditionCheck() override
 		{
 			BehaviorTree::Memory& memory = getMemory();
 
@@ -641,7 +642,7 @@ namespace SA
 			timerDelegate = new_sp<MultiDelegate<>>();
 		}
 
-		virtual void startBranchConditionCheck()
+		virtual void startBranchConditionCheck() override
 		{
 			static LevelSystem& lvlSystem = GameBase::get().getLevelSystem();
 			const sp<LevelBase>& currentLevel = lvlSystem.getCurrentLevel();
@@ -781,7 +782,7 @@ namespace SA
 			{
 			}
 
-			virtual void startBranchConditionCheck()
+			virtual void startBranchConditionCheck() override
 			{
 				conditionalResult = true;
 			}
@@ -835,7 +836,7 @@ namespace SA
 			{
 			}
 
-			virtual void startBranchConditionCheck()
+			virtual void startBranchConditionCheck() override
 			{
 				conditionalResult = true;
 			}
@@ -1077,7 +1078,7 @@ namespace SA
 		}
 
 	private:
-		virtual void startBranchConditionCheck()
+		virtual void startBranchConditionCheck() override
 		{
 			//once we've aborted, don't let this branch execute anymore. prevents cyclic aborting behavior and models what I believe the use cases of abort to be.
 			conditionalResult = !bHasAborted;
@@ -1137,7 +1138,7 @@ namespace SA
 		{}
 
 	private:
-		virtual void startBranchConditionCheck()
+		virtual void startBranchConditionCheck() override
 		{
 			if (const MemoryUpdateTester* readValue = getMemory().getReadValueAs<MemoryUpdateTester>(keyValue))
 			{
@@ -1211,7 +1212,7 @@ namespace SA
 		}
 
 	private:
-		virtual void startBranchConditionCheck()
+		virtual void startBranchConditionCheck() override
 		{
 			conditionalResult = true;
 		}

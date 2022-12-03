@@ -55,7 +55,7 @@ namespace SA
 				}
 			}
 		protected:
-			virtual void startBranchConditionCheck()
+			virtual void startBranchConditionCheck() override
 			{
 				Memory& memory = getMemory();
 				const T* memoryValue = memory.getReadValueAs<T>(memoryKey);
@@ -102,11 +102,11 @@ namespace SA
 					bSubscribedDelegates = true;
 					if (abortPref == AbortPreference::ABORT_ON_MODIFY)
 					{
-						memory.getModifiedDelegate(this->memoryKey).addStrongObj<Decorator_Aborting_Is<T>>(sp_this(), &Decorator_Aborting_Is<T>::handleValueModified);
+						memory.getModifiedDelegate(this->memoryKey).template addStrongObj<Decorator_Aborting_Is<T>>(sp_this(), &Decorator_Aborting_Is<T>::handleValueModified);
 					}
 					else if (abortPref == AbortPreference::ABORT_ON_REPLACE)
 					{
-						memory.getReplacedDelegate(this->memoryKey).addStrongObj<Decorator_Aborting_Is<T>>(sp_this(), &Decorator_Aborting_Is<T>::handleValueReplaced);
+						memory.getReplacedDelegate(this->memoryKey).template addStrongObj<Decorator_Aborting_Is<T>>(sp_this(), &Decorator_Aborting_Is<T>::handleValueReplaced);
 					}
 					else if (abortPref == AbortPreference::NO_ABORT)
 					{

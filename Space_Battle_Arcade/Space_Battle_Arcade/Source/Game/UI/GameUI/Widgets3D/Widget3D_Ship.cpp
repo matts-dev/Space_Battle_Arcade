@@ -43,7 +43,7 @@ namespace SA
 		const sp<UISystem_Game>& gameUISystem = SpaceArcade::get().getGameUISystem();
 		gameUISystem->onUIGameRender.addStrongObj(sp_this(), &Widget3D_Ship::handleRenderGameUI);
 
-		DigitalClockFont::Data textInit;
+		DigitalClockFontInitData textInit;
 		if constexpr (TEXT_RENDER_MODE == ETextRenderMode::SINGLE_GLYPH)
 		{
 			textInit.shader = getDefaultGlyphShader_uniformBased();

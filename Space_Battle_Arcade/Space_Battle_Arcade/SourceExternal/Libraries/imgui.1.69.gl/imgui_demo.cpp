@@ -358,10 +358,10 @@ void ImGui::ShowDemoWindow(bool* p_open)
 
         if (ImGui::TreeNode("Capture/Logging"))
         {
-            ImGui::TextWrapped("The logging API redirects all text output so you can easily capture the content of a window or a block. Tree nodes can be automatically expanded.");
+            ImGui::TextWrapped("%s", "The logging API redirects all text output so you can easily capture the content of a window or a block. Tree nodes can be automatically expanded.");
             HelpMarker("Try opening any of the contents below in this window and then click one of the \"Log To\" button.");
             ImGui::LogButtons();
-            ImGui::TextWrapped("You can also call ImGui::LogText() to output directly to the log without a visual output.");
+            ImGui::TextWrapped("%s", "You can also call ImGui::LogText() to output directly to the log without a visual output.");
             if (ImGui::Button("Copy \"Hello, world!\" to clipboard"))
             {
                 ImGui::LogToClipboard();
@@ -670,7 +670,7 @@ static void ShowDemoWindowWidgets()
         if (ImGui::TreeNode("Word Wrapping"))
         {
             // Using shortcut. You can use PushTextWrapPos()/PopTextWrapPos() for more flexibility.
-            ImGui::TextWrapped("This text should automatically wrap on the edge of the window. The current implementation for text wrapping follows simple rules suitable for English and possibly other languages.");
+            ImGui::TextWrapped("%s", "This text should automatically wrap on the edge of the window. The current implementation for text wrapping follows simple rules suitable for English and possibly other languages.");
             ImGui::Spacing();
 
             static float wrap_width = 200.0f;
@@ -705,7 +705,7 @@ static void ShowDemoWindowWidgets()
             //   Instead we are encoding a few strings with hexadecimal constants. Don't do this in your application!
             //   Please use u8"text in any language" in your application!
             // Note that characters values are preserved even by InputText() if the font cannot be displayed, so you can safely copy & paste garbled characters into another application.
-            ImGui::TextWrapped("CJK text will only appears if the font was loaded with the appropriate CJK character ranges. Call io.Font->AddFontFromFileTTF() manually to load extra character ranges. Read misc/fonts/README.txt for details.");
+            ImGui::TextWrapped("%s", "CJK text will only appears if the font was loaded with the appropriate CJK character ranges. Call io.Font->AddFontFromFileTTF() manually to load extra character ranges. Read misc/fonts/README.txt for details.");
             ImGui::Text("Hiragana: \xe3\x81\x8b\xe3\x81\x8d\xe3\x81\x8f\xe3\x81\x91\xe3\x81\x93 (kakikukeko)"); // Normally we would use u8"blah blah" with the proper characters directly in the string.
             ImGui::Text("Kanjis: \xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e (nihongo)");
             static char buf[32] = "\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e";
@@ -719,7 +719,7 @@ static void ShowDemoWindowWidgets()
     if (ImGui::TreeNode("Images"))
     {
         ImGuiIO& io = ImGui::GetIO();
-        ImGui::TextWrapped("Below we are displaying the font texture (which is the only texture we have access to in this demo). Use the 'ImTextureID' type as storage to pass pointers or identifier to your own texture data. Hover the texture for a zoomed view!");
+        ImGui::TextWrapped("%s", "Below we are displaying the font texture (which is the only texture we have access to in this demo). Use the 'ImTextureID' type as storage to pass pointers or identifier to your own texture data. Hover the texture for a zoomed view!");
 
         // Here we are grabbing the font texture because that's the only one we have access to inside the demo code.
         // Remember that ImTextureID is just storage for whatever you want it to be, it is essentially a value that will be passed to the render function inside the ImDrawCmd structure.
@@ -749,7 +749,7 @@ static void ShowDemoWindowWidgets()
             ImGui::Image(my_tex_id, ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1, ImColor(255,255,255,255), ImColor(255,255,255,128));
             ImGui::EndTooltip();
         }
-        ImGui::TextWrapped("And now some textured buttons..");
+        ImGui::TextWrapped("%s", "And now some textured buttons..");
         static int pressed_count = 0;
         for (int i = 0; i < 8; i++)
         {
@@ -1758,7 +1758,7 @@ static void ShowDemoWindowLayout()
 
     if (ImGui::TreeNode("Basic Horizontal Layout"))
     {
-        ImGui::TextWrapped("(Use ImGui::SameLine() to keep adding items to the right of the preceding item)");
+        ImGui::TextWrapped("%s", "(Use ImGui::SameLine() to keep adding items to the right of the preceding item)");
 
         // Text
         ImGui::Text("Two items: Hello"); ImGui::SameLine();
@@ -2105,9 +2105,9 @@ static void ShowDemoWindowLayout()
     if (ImGui::TreeNode("Clipping"))
     {
         static ImVec2 size(100, 100), offset(50, 20);
-        ImGui::TextWrapped("On a per-widget basis we are occasionally clipping text CPU-side if it won't fit in its frame. Otherwise we are doing coarser clipping + passing a scissor rectangle to the renderer. The system is designed to try minimizing both execution and CPU/GPU rendering cost.");
+        ImGui::TextWrapped("%s", "On a per-widget basis we are occasionally clipping text CPU-side if it won't fit in its frame. Otherwise we are doing coarser clipping + passing a scissor rectangle to the renderer. The system is designed to try minimizing both execution and CPU/GPU rendering cost.");
         ImGui::DragFloat2("size", (float*)&size, 0.5f, 1.0f, 200.0f, "%.0f");
-        ImGui::TextWrapped("(Click and drag)");
+        ImGui::TextWrapped("%s", "(Click and drag)");
         ImVec2 pos = ImGui::GetCursorScreenPos();
         ImVec4 clip_rect(pos.x, pos.y, pos.x + size.x, pos.y + size.y);
         ImGui::InvisibleButton("##dummy", size);
@@ -2141,7 +2141,7 @@ static void ShowDemoWindowPopups()
 
     if (ImGui::TreeNode("Popups"))
     {
-        ImGui::TextWrapped("When a popup is active, it inhibits interacting with windows that are behind the popup. Clicking outside the popup closes it.");
+        ImGui::TextWrapped("%s", "When a popup is active, it inhibits interacting with windows that are behind the popup. Clicking outside the popup closes it.");
 
         static int selected_fish = -1;
         const char* names[] = { "Bream", "Haddock", "Mackerel", "Pollock", "Tilefish" };
@@ -2254,7 +2254,7 @@ static void ShowDemoWindowPopups()
 
     if (ImGui::TreeNode("Modals"))
     {
-        ImGui::TextWrapped("Modal windows are like popups but the user cannot close them by clicking outside the window.");
+        ImGui::TextWrapped("%s", "Modal windows are like popups but the user cannot close them by clicking outside the window.");
 
         if (ImGui::Button("Delete.."))
             ImGui::OpenPopup("Delete?");
@@ -2324,7 +2324,7 @@ static void ShowDemoWindowPopups()
 
     if (ImGui::TreeNode("Menus inside a regular window"))
     {
-        ImGui::TextWrapped("Below we are testing adding menu items to a regular window. It's rather unusual but should work!");
+        ImGui::TextWrapped("%s", "Below we are testing adding menu items to a regular window. It's rather unusual but should work!");
         ImGui::Separator();
         // NB: As a quirk in this very specific example, we want to differentiate the parent of this menu from the parent of the various popup menus above.
         // To do so we are encloding the items in a PushID()/PopID() block to make them two different menusets. If we don't, opening any popup above and hovering our menu here
@@ -2430,11 +2430,11 @@ static void ShowDemoWindowColumns()
     {
         ImGui::Columns(2, "word-wrapping");
         ImGui::Separator();
-        ImGui::TextWrapped("The quick brown fox jumps over the lazy dog.");
-        ImGui::TextWrapped("Hello Left");
+        ImGui::TextWrapped("%s", "The quick brown fox jumps over the lazy dog.");
+        ImGui::TextWrapped("%s", "Hello Left");
         ImGui::NextColumn();
-        ImGui::TextWrapped("The quick brown fox jumps over the lazy dog.");
-        ImGui::TextWrapped("Hello Right");
+        ImGui::TextWrapped("%s", "The quick brown fox jumps over the lazy dog.");
+        ImGui::TextWrapped("%s", "Hello Right");
         ImGui::Columns(1);
         ImGui::Separator();
         ImGui::TreePop();
@@ -2636,13 +2636,13 @@ static void ShowDemoWindowMisc()
             if (focus_ahead != -1) ImGui::SetKeyboardFocusHere(focus_ahead);
             ImGui::SliderFloat3("Float3", &f3[0], 0.0f, 1.0f);
 
-            ImGui::TextWrapped("NB: Cursor & selection are preserved when refocusing last used item in code.");
+            ImGui::TextWrapped("%s", "NB: Cursor & selection are preserved when refocusing last used item in code.");
             ImGui::TreePop();
         }
 
         if (ImGui::TreeNode("Dragging"))
         {
-            ImGui::TextWrapped("You can use ImGui::GetMouseDragDelta(0) to query for the dragged amount on any widget.");
+            ImGui::TextWrapped("%s", "You can use ImGui::GetMouseDragDelta(0) to query for the dragged amount on any widget.");
             for (int button = 0; button < 3; button++)
                 ImGui::Text("IsMouseDragging(%d):\n  w/ default threshold: %d,\n  w/ zero threshold: %d\n  w/ large threshold: %d",
                     button, ImGui::IsMouseDragging(button), ImGui::IsMouseDragging(button, 0.0f), ImGui::IsMouseDragging(button, 20.0f));
@@ -3271,8 +3271,8 @@ struct ExampleAppConsole
             ImGui::EndPopup();
         }
 
-        ImGui::TextWrapped("This example implements a console with basic coloring, completion and history. A more elaborate implementation may want to store entries along with extra data such as timestamp, emitter, etc.");
-        ImGui::TextWrapped("Enter 'HELP' for help, press TAB to use text completion.");
+        ImGui::TextWrapped("%s", "This example implements a console with basic coloring, completion and history. A more elaborate implementation may want to store entries along with extra data such as timestamp, emitter, etc.");
+        ImGui::TextWrapped("%s", "Enter 'HELP' for help, press TAB to use text completion.");
 
         // TODO: display items starting from the bottom
 
@@ -3719,7 +3719,7 @@ static void ShowExampleAppLayout(bool* p_open)
                 {
                     if (ImGui::BeginTabItem("Description"))
                     {
-                        ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
+                        ImGui::TextWrapped("%s", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("Details"))
@@ -4182,7 +4182,7 @@ struct MyDocument
         ImGui::PushID(doc);
         ImGui::Text("Document \"%s\"", doc->Name);
         ImGui::PushStyleColor(ImGuiCol_Text, doc->Color);
-        ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+        ImGui::TextWrapped("%s", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
         ImGui::PopStyleColor();
         if (ImGui::Button("Modify", ImVec2(100, 0)))
             doc->Dirty = true;
