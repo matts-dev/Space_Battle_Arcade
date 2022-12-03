@@ -2,6 +2,7 @@
 
 #include "GameFramework/SAGameEntity.h"
 #include <set>
+#include <string>
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
 #include "Tools/DataStructures/MultiDelegate.h"
 #include "Tools/DataStructures/IterableHashSet.h"

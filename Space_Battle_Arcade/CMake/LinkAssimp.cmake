@@ -36,6 +36,18 @@ macro(LinkASSIMP TARGET ACCESS)
 		# set_target_properties(zlibstatic PROPERTIES FOLDER ${PROJECT_NAME}/thirdparty) #example I found used this, but not sure it is necessary
 
 		
+		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+			message(STATUS "detected mac build")
+			# TODO - remove these warning supressions when macOS can compile our third party dependencies.
+			# todo - perhaps we can link third party dependencies as "system" libraries so the warnings are surprised.
+			# https://stackoverflow.com/questions/56707123/how-to-suppress-clang-warnings-in-third-party-library-header-file-in-cmakelists
+			target_compile_options(assimp PRIVATE
+				#disable warnings in assimp about using vsprintf, hopefully this will be addressed in a later version of assimp
+				-Wno-deprecated-declarations
+			)
+		endif()
+
+		
 	endif()
 
 	target_include_directories(${TARGET} ${ACCESS} ${assimp_SOURCE_DIR}/include)

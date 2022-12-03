@@ -7,6 +7,7 @@
 
 #include<cstdint>
 #include<cmath>
+#include<string>
 
 #include <glad/glad.h>
 #include <array>

@@ -62,6 +62,11 @@ message(STATUS "HTML_BUILD Value: ${HTML_BUILD}")
 #set(SHARED_CMAKE_UTILITES_DIR "${CMAKE_CURRENT_LIST_DIR}/CMake" CACHE STRING "global location to include helpers from" FORCE) 
 set(CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/CMake" CACHE STRING "global location to include helpers from" FORCE) 
 
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	message(STATUS "detected mac build")
+endif()
+
 # --------------------------------------------------------------
 # Set up libraries
 # --------------------------------------------------------------
