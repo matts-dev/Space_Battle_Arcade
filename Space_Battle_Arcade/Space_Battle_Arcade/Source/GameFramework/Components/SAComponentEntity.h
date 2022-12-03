@@ -4,6 +4,7 @@
 #include <map>
 #include <typeindex>
 #include <assert.h>
+#include <cstdio>
 #include "GameFramework/SALog.h"
 #include "Tools/RemoveSpecialMemberFunctionUtils.h"
 
