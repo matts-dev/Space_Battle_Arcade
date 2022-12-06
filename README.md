@@ -74,6 +74,17 @@ A visual studio project is provided to build the game, but Microsoft does not re
 If you don't want to set up the dependencies manually, you will need to replace the .suo file with the copy.suo file; be sure to change the name from `copy.suo` to `.suo` ( the `.suo` file is found at the generated directory `s/Space_Battle_Arcade/Space_Battle_Arcade/.vs/Space_Battle_Arcade/v15/.suo`; running the visual studio .sln a single time is required for this directory to be generated)
 
 
+# Packaging For Release
+When packaging for release, it is important to test on a fresh computer.
+A virtual machine is useful for that type of test.
+Though virtual machines may not support needed versions of OpenGL, they should identify missing dlls before attempting to create an opengl context.
+
+For example, on windws the executables will link against visual studio development libraries already present on the machine.
+But on a machine without visual studio, those libraries will not be available from the system.
+The solution is to provide the library dlls with the binary, copying the libraries next to the executable.
+For example, the old windows project required getting the `ucrtbased.dll`, `vcruntime140.dll`, `msvcp140.dll` from the visual studio install directory and shipping them with the game, to avoid having an installer. (see `packaging_for_release_instructions.txt` for where to find these files)
+
+
 # Modding The Game
 
 When at the main menu, there is a section for mods. Following these menus will let you create modifications. The entire game is json. I recommend copying the base game, which itself is a mod, as a starting point for your mod.  `Space_Battle_Arcade\GameData\mods\SpaceArcade` is the base game mod.
