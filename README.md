@@ -47,6 +47,29 @@ Remember, this was a learning project, so there are some inconsistencies in the 
 
 # Building The Game
 
+## New Build Method
+The project has been refactored to a cross platform CMake project targeting Linux, Windows, and Mac. I recommend opening the folder containing the top-level CMakeLists.txt file in your IDE (folder: `repository/Space_Battle_Arcade`). VSCode, VisualStudio, and CLion support opening CMake projects natively. Alternatively, you can build from the command line. 
+```
+#change directory to the directory containing the root level CMakeLists.txt
+cd path/to/repository/Space_Battle_Arcade
+
+#make a folder to build the project in
+mkdir build
+
+#change directories to our build folder
+cd build
+
+# configure the cmake project in the build folder, this generates platform specific project files 
+# (like visual studio solutions, etc.).
+# We pass .. to cmake, so cmake goes up a directory to find the appropriate CMakeLists.txt file.
+cmake ..
+
+# build the platform specific projects via command line in the current directory
+cmake --build .
+```
+Note: this used to be a windows only project, and the original `.sln` is still checked in. When building the CMake project from visual studio, make sure you target the `SpaceBattleArcade.exe` and not the `SpaceBattleArcade.sln`. The `SpaceBattleArcade.sln` is the old visual studio project and appears as a build option even when opening the folder as a CMake project. I may remove this old way of building in a later commit.
+
+## Old Build Method
 A visual studio project is provided to build the game, but Microsoft does not recommend checking in files needed to set up the linker. So, I have provided a `copy.suo` file which is a copy of my `.suo` file that defines the linker settings. 
 If you don't want to set up the dependencies manually, you will need to replace the .suo file with the copy.suo file; be sure to change the name from `copy.suo` to `.suo` ( the `.suo` file is found at the generated directory `s/Space_Battle_Arcade/Space_Battle_Arcade/.vs/Space_Battle_Arcade/v15/.suo`; running the visual studio .sln a single time is required for this directory to be generated)
 
