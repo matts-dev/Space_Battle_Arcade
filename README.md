@@ -35,7 +35,7 @@ Complete with tools to make new levels and new space ships based on user created
 
 I have provided a zipped game binary in `GameBinary.zip`. Just extract that and run `Space_Battle_Arcade.exe`. Alternatively you can build it from the source (See below). If using the old method, once you have done built, be sure to copy all the dll and other files in `OPEN_GL_REQUIREMENTS\dlls` and `OPEN_AL_REQUIREMENTS\lib\OpenAL` into the same folder that the game exe is in. 
 
-note for `linux` / `macOS`: you may need to launch the application from terminal for relative paths for GameData to be found correctly.
+note for `macOS`: you may need to launch the application from terminal for relative paths for GameData to be found correctly. **Open a terminal at the directory; do not use right click menus**. In the terminal, type `./SpaceBattleArcade` to launch the game such that the game can find the files in `./GameData/`.
 
 # The Game Code
 

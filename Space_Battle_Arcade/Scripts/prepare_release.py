@@ -21,6 +21,7 @@ copy_exclusions = {
 	, "VSInheritEnvironments.txt"
 	, "_deps"
 	, "Makefile"
+	, "compile_commands.json"
 }
 copy_excluded_filetypes = {
 	"obj"
