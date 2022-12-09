@@ -33,7 +33,9 @@ Complete with tools to make new levels and new space ships based on user created
 
 # Running The Game
 
-I have provided a zipped game binary in `GameBinary.zip`. Just extract that and run `Space_Battle_Arcade.exe`. Alternatively you can build it from the source. Once you have done that (see below), Be sure to copy all the dll and other files in `OPEN_GL_REQUIREMENTS\dlls` and `OPEN_AL_REQUIREMENTS\lib\OpenAL` into the same folder that the game exe is in. 
+I have provided a zipped game binary in `GameBinary.zip`. Just extract that and run `Space_Battle_Arcade.exe`. Alternatively you can build it from the source (See below). If using the old method, once you have done built, be sure to copy all the dll and other files in `OPEN_GL_REQUIREMENTS\dlls` and `OPEN_AL_REQUIREMENTS\lib\OpenAL` into the same folder that the game exe is in. 
+
+note for `linux` / `macOS`: you may need to launch the application from terminal for relative paths for GameData to be found correctly.
 
 # The Game Code
 
@@ -76,7 +78,21 @@ A visual studio project is provided to build the game, but Microsoft does not re
 If you don't want to set up the dependencies manually, you will need to replace the .suo file with the copy.suo file; be sure to change the name from `copy.suo` to `.suo` ( the `.suo` file is found at the generated directory `s/Space_Battle_Arcade/Space_Battle_Arcade/.vs/Space_Battle_Arcade/v15/.suo`; running the visual studio .sln a single time is required for this directory to be generated)
 
 
+# Modding The Game
+
+When at the main menu, there is a section for mods. Following these menus will let you create modifications. The entire game is json. I recommend copying the base game, which itself is a mod, as a starting point for your mod.  `Space_Battle_Arcade\GameData\mods\SpaceArcade` is the base game mod.
+The `GameData` folder will need to be placed wherever your .exe is located. If debugging with visual studio, the `GameData` folder will not be in the release folder or debug folder, rather it will be in a path something like this `Space_Battle_Arcade\Space_Battle_Arcade\Space_Battle_Arcade\GameData`. You'll need to copy any changes you make here to your Release and Debug folders if you want to run the .exe standalone while developing a mod. I recommend building mods while running the game through visual studio, that way you will know the cause of any crashes you may encounter.
+Check out the dev blog for videos specifically on modding as they may provide some help in understanding how this works. https://www.youtube.com/playlist?list=PL22CMuqloY0qiYlv1Lm_QtfwuFz9OB0NE For the most part, modding is done within the model editor, which lets you set up models, collision, teams, projectiles, etc. And the level editor, used to layout levels in a campaign. 
+
+
 # Packaging For Release
+
+Build the game with `Release Min Size`. Then run the `prepare_release.py` script to copy only relevant files (skipping build files) to a created PACKAGE_GAME folder. You must pass the path to the application as a argument, and it will copy the relevant files to a subdirectory.
+eg
+`python prepare_release.py "c:/path/to/repo/SpaceBattleArcade_CMake/Space_Battle_Arcade/out/build/x64-Release-MinSize"`
+Test running the application. Rename the folder to something useful, like PACKAGE_GAME_Win64_V1.0. Compress the folder. The game is now ready to distribute the compressed folder.
+
+
 When packaging for release, it is important to test on a fresh computer.
 A virtual machine is useful for that type of test.
 Though virtual machines may not support needed versions of OpenGL, they should identify missing dlls before attempting to create an opengl context.
@@ -86,12 +102,6 @@ But on a machine without visual studio, those libraries will not be available fr
 The solution is to provide the library dlls with the binary, copying the libraries next to the executable.
 For example, the old windows project required getting the `ucrtbased.dll`, `vcruntime140.dll`, `msvcp140.dll` from the visual studio install directory and shipping them with the game, to avoid having an installer. (see `packaging_for_release_instructions.txt` for where to find these files)
 
-
-# Modding The Game
-
-When at the main menu, there is a section for mods. Following these menus will let you create modifications. The entire game is json. I recommend copying the base game, which itself is a mod, as a starting point for your mod.  `Space_Battle_Arcade\GameData\mods\SpaceArcade` is the base game mod.
-The `GameData` folder will need to be placed wherever your .exe is located. If debugging with visual studio, the `GameData` folder will not be in the release folder or debug folder, rather it will be in a path something like this `Space_Battle_Arcade\Space_Battle_Arcade\Space_Battle_Arcade\GameData`. You'll need to copy any changes you make here to your Release and Debug folders if you want to run the .exe standalone while developing a mod. I recommend building mods while running the game through visual studio, that way you will know the cause of any crashes you may encounter.
-Check out the dev blog for videos specifically on modding as they may provide some help in understanding how this works. https://www.youtube.com/playlist?list=PL22CMuqloY0qiYlv1Lm_QtfwuFz9OB0NE For the most part, modding is done within the model editor, which lets you set up models, collision, teams, projectiles, etc. And the level editor, used to layout levels in a campaign. 
 
 # note
 
