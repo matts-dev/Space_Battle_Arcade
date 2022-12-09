@@ -67,7 +67,9 @@ cmake ..
 # build the platform specific projects via command line in the current directory
 cmake --build .
 ```
-Note: this used to be a windows only project, and the original `.sln` is still checked in. When building the CMake project from visual studio, make sure you target the `SpaceBattleArcade.exe` and not the `SpaceBattleArcade.sln`. The `SpaceBattleArcade.sln` is the old visual studio project and appears as a build option even when opening the folder as a CMake project. I may remove this old way of building in a later commit.
+`Note`: there are some large file file names, cloning this repository to a minimal directory will avoid windows path limit issues. eg something like `c:\repos\SpaceArcade\` will probably be fine.
+
+`Note`: this used to be a windows only project, and the original `.sln` is still checked in. When building the CMake project from visual studio, make sure you target the `SpaceBattleArcade.exe` and not the `SpaceBattleArcade.sln`. The `SpaceBattleArcade.sln` is the old visual studio project and appears as a build option even when opening the folder as a CMake project. I may remove this old way of building in a later commit.
 
 ## Old Build Method
 A visual studio project is provided to build the game, but Microsoft does not recommend checking in files needed to set up the linker. So, I have provided a `copy.suo` file which is a copy of my `.suo` file that defines the linker settings. 
