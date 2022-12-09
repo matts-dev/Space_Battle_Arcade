@@ -20,6 +20,7 @@ copy_exclusions = {
 	, "version.h"
 	, "VSInheritEnvironments.txt"
 	, "_deps"
+	, "Makefile"
 }
 copy_excluded_filetypes = {
 	"obj"
