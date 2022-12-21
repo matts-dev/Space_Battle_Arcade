@@ -51,6 +51,13 @@ Remember, this was a learning project, so there are some inconsistencies in the 
 
 ## New Build Method
 The project has been refactored to a cross platform CMake project targeting Linux, Windows, and Mac. I recommend opening the folder containing the top-level CMakeLists.txt file in your IDE (folder: `repository/Space_Battle_Arcade`). VSCode, VisualStudio, and CLion support opening CMake projects natively. Alternatively, you can build from the command line. 
+
+**Linux Note 1**: on linux I needed to install these dependencies system wide:
+`sudo apt-get install cmake clang build-essential libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libpulse-dev libasound2-dev` there may be others you need; when attempting to configure in CMake it will alert you to the dependencies you may be missing; I believe you want to install those libraries with the -dev extension. eg if mixxing `libxi`, install `libxi-dev`.
+
+**Linux Note 2**: I highly recommend using Ninja instead of the default unix make file generators with cmake. The default makefiles do not seem to detect changes to source files and do not build your changes. Using ninja, it correctly detects source file changes are reubilds those files. I had to install `sudo apt-get install ninja-build` and then in vscode's file->preferences->settings, find the location for generator and set it to the case sensitive Cmake:Generator `Ninja`; or put this in your settings json file `"cmake.generator": "Ninja"` 
+
+On linux I recommend compiling with `clang`, as that is what I tested.
 ```
 #change directory to the directory containing the root level CMakeLists.txt
 cd path/to/repository/Space_Battle_Arcade
