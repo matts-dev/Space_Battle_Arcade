@@ -419,7 +419,6 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMappingBasic_FragShaderTransform.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMappingBasic_VertexShaderTransform.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_FixUVIssueTest.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_LoadedModel_ManualBTCalculation_FragShaderTransform.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_ModelStarterFile.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_StarterFile.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\5_ParallaxMapping\ParallaxMapping_Simple_BEST.cpp" />
@@ -500,7 +499,6 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_AsteroidField_NoInstancing.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_BasicInstanceIDWithUniforms.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers_With_gl_InstanceID_toshrinkquads.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_ShaderCustomOffscreenAA.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OffscreenOpenglMSAA.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OnscreenOpenglMSAA.cpp" />
@@ -734,7 +732,6 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_Challenge2TweakingLightingConstants.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_Challenge4GouraudShading.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLighting.cpp" />
-    <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLightingV2TransformInVertShader.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_FinalModalSpace_UseAsExample.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\Colors\Colors.cpp" />
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\Materials\Materials.cpp" />

@@ -1640,9 +1640,6 @@
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLighting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_Challenge3ViewSpaceLightingV2TransformInVertShader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\Lighting\BasicLighting\BasicLighting_Challenge4GouraudShading.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1767,9 +1764,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_FixUVIssueTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_LoadedModel_ManualBTCalculation_FragShaderTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedLighting\4_NormalMapping\NormalMapping_ModelStarterFile.cpp">
@@ -1992,9 +1986,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\Instancing\Instancing_InstanceArrayBuffers_With_gl_InstanceID_toshrinkquads.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ReferenceCode\OpenGL\OpenGLAdvancedTopics\MSAA_AntiAliasing\AA_OffscreenOpenglMSAA.cpp">
