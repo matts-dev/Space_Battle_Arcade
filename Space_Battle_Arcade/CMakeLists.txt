@@ -31,11 +31,16 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC
 	Space_Battle_Arcade/SourceExternal/ # TODO - once compiling see if perhaps can remove this and pull down our own dependencies
 )
 
+message(STATUS "________________________ Begin Content File Copy ________________________")
+message(STATUS "!!READ ME!!: on windows vscode generates additional folders for binaries; you **may** need to set your working directory to CMAKE_CURRENT_BINARY_DIR: \n\t\t ${CMAKE_CURRENT_BINARY_DIR}")
 # copy preload assets for to relative path for executable
 #prepare copy assets to build directory
 set(ASSET_COPY_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/Space_Battle_Arcade/GameData/ CACHE BOOL "directory with the binary assets for game data" FORCE)
 set(ASSET_COPY_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/GameData/ CACHE BOOL "directory to put assets in relative to binary directory." FORCE) 
+message(STATUS "file copy source: ${ASSET_COPY_SOURCE}")
+message(STATUS "file copy destintation: ${ASSET_COPY_DESTINATION}")
 file(COPY ${ASSET_COPY_SOURCE} DESTINATION ${ASSET_COPY_DESTINATION})
+message(STATUS "________________________ End Content File Copy ________________________")
 
 # --- NOTE: html build is end goal, so copying this over from the gles2 project I have set up. ----
 # if html build, instruct files to be preloaded, so that they can be loaded (eg textures)

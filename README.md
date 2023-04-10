@@ -113,3 +113,14 @@ For example, the old windows project required getting the `ucrtbased.dll`, `vcru
 # note
 
 I've not yet chosen on a license, but know that this game is not a commercial project, and you can not sell it.
+
+# todo 
+Investigate alternative file copying.
+File copying on vscode on windows seems problematic. The working directory does not seem to match the output build directory. 
+Perhaps the cmake TARGET_FILE_DIR output generator can be used to copy files instead.
+However this did not seem to printout the directory I expected in the cmakelists.txt, hence this is a todo.
+`message(STATUS " target file dir generator expression $<TARGET_FILE_DIR:SpaceBattleArcade>")`
+So this will require debugging to get working as a alternative file copying method;
+it seems like generator expressions might not work in all contexts, rather only in contexts that are related to a target 
+(like `add_custom_cmmand(Target target_name POST BUILD command ...... )`)
+Currently the asset copy works with visual studio on windows, so it is not pressing to get done and not needed for the cmake refactor mvp.
